@@ -1,5 +1,6 @@
 /src/**/*.s
 /data/*
+/tools/agbcc
 
 *.gba
 *.elf
@@ -12,7 +13,9 @@
 *.dll
 *.deps.json
 *.runtimeconfig.json
+c_extractor
 
 include/**/*.s
 tools/*.txt
 .vscode
+*.log
