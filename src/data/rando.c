@@ -2,6 +2,8 @@
 
 const struct Seed sRandoSeed = {
     .playerNumber = 0,
-    .playerName = {0},
-    .seedName = {0},
+    .playerName = {},
+    .seedName = {},
 };
+
+const struct PlacedItem sPlacedItems[100] = {};

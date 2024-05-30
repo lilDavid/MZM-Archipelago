@@ -11,8 +11,15 @@ struct Seed {
     u8 seedName[64];
 };
 
+struct PlacedItem {
+    u16* playerName;
+    u16* itemName;  // If null, use name determined by item ID
+    u8 itemId;
+};
+
 // Globals
 
-extern struct Seed gRandoSeed;
+extern const struct Seed sRandoSeed;
+extern const struct PlacedItem sPlacedItems[100];
 
-#endif /* SAMUS_STRUCT_H */
+#endif /* RANDO_STRUCT_H */

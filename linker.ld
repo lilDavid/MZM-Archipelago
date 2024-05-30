@@ -2067,5 +2067,6 @@ SECTIONS {
         src/data/nes_metroid.o(.rodata);
 
         src/data/rando.o(.rodata);
+        src/data/rando_names.o(.rodata);
     } >rom
 }
