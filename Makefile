@@ -1,7 +1,8 @@
 # Disable built-in rules
 .SUFFIXES:
 
-TARGET = mzm_us.gba
+TARGET = mzm_us_ap.gba
+PATCH = basepatch.bsdiff
 BASEROM = mzm_us_baserom.gba
 SHA1FILE = mzm.sha1
 ELF = $(TARGET:.gba=.elf)
@@ -36,6 +37,7 @@ GBAFIX = tools/gbafix/gbafix
 PYTHON = python3
 EXTRACTOR = tools/extractor.py
 PREPROC = tools/preproc/preproc
+BSDIFF = bsdiff
 
 # Flags
 ASFLAGS = -mcpu=arm7tdmi
@@ -59,20 +61,10 @@ else
 endif
 
 .PHONY: all
-all: $(TARGET)
+all: $(PATCH)
 
-.PHONY: check
-check: all
-	$(MSG) SHA1SUM $(SHA1FILE)
-	$Q$(SHA1SUM) -c $(SHA1FILE)
-
-.PHONY: dump
-dump: $(DUMPS)
-
-.PHONY: diff
-diff: $(DUMPS)
-	$(MSG) DIFF $^
-	$Q$(DIFF) $^
+.PHONY: baserom
+baserom: $(TARGET)
 
 .PHONY: clean
 clean:
@@ -90,19 +82,23 @@ clean:
 	$Q$(RM) $(GBAFIX)
 	$(MSG) RM data/
 	$Q$(RM) -r data	
+	$(MSG) RM $(PATCH)
+	$Q$(RM) $(PATCH)
 
 .PHONY: help
 help:
 	@echo 'Targets:'
-	@echo '  all: build the ROM'
-	@echo '  check: checksum the ROM'
-	@echo '  dump: dump the ROMs'
-	@echo '  diff: compare the ROM with the original'
-	@echo '  clean: remove the ROM and intermediate files'
+	@echo '  all: create the bsdiff patch'
+	@echo '  baserom: build the ROM'
+	@echo '  clean: remove the patch and intermediate files'
 	@echo '  help: show this message'
 	@echo ''
 	@echo 'Flags:'
 	@echo '  V=1: enable verbose output'
+
+$(PATCH): $(TARGET)
+	$(MSG) BSDIFF $@
+	$Q$(BSDIFF) $(BASEROM) $(TARGET) $(PATCH)
 
 $(TARGET): $(ELF) $(GBAFIX)
 	$(MSG) OBJCOPY $@
