@@ -24,4 +24,6 @@ extern struct Message gCurrentMessage;
 extern u32 gCurrentCharacterGfx[32];
 extern s8 gCurrentItemBeingAcquired;
 
+extern u16 gDynamicMessageBuffer[2 + 32 + 1 + sizeof("Received from") + 16 + 2];
+
 #endif /* TEXT_STRUCT_H */

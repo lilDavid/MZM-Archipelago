@@ -1,6 +1,7 @@
 #include "gba.h"
 #include "sprites_AI/deorem.h"
 #include "macros.h"
+#include "rando_item.h"
 
 #include "data/sprites/deorem.h"
 #include "data/sprite_data.h"
@@ -323,7 +324,7 @@ void DeoremInit(void)
             EVENT_DEOREM_ENCOUNTERED_AT_FIRST_LOCATION_OR_KILLED))
         {
             if (EventFunction(EVENT_ACTION_CHECKING, EVENT_DEOREM_ENCOUNTERED_AT_SECOND_LOCATION_OR_KILLED) &&
-                !(gEquipment.beamBombs & BBF_CHARGE_BEAM) &&
+                !RandoIsLocationChecked(RC_BRINSTAR_WORM_DROP) &&
                 !EventFunction(EVENT_ACTION_CHECKING, EVENT_DEOREM_KILLED_AT_SECOND_LOCATION))
             {
                 gCurrentSprite.pose = DEOREM_POSE_CALL_SPAWN_CHARGE_BEAM;
@@ -342,7 +343,7 @@ void DeoremInit(void)
         {
         
             if (EventFunction(EVENT_ACTION_CHECKING, EVENT_DEOREM_ENCOUNTERED_AT_FIRST_LOCATION_OR_KILLED) &&
-                !(gEquipment.beamBombs & BBF_CHARGE_BEAM) &&
+                !RandoIsLocationChecked(RC_BRINSTAR_WORM_DROP) &&
                 EventFunction(EVENT_ACTION_CHECKING, EVENT_DEOREM_KILLED_AT_SECOND_LOCATION))
             {
                 gCurrentSprite.pose = DEOREM_POSE_CALL_SPAWN_CHARGE_BEAM;

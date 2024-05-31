@@ -385,6 +385,9 @@ SECTIONS {
         . = 0x00005b54; gUnk_3005b54 = .;
         . = 0x00005b60; gCableLinkInfo = .;
 
+        . = 0x00005d04; gRandoLocationBitfields = .;
+        . = 0x00005d20; gDynamicMessageBuffer = .;
+
 
         . = 0x00007e60; sp_sys = .;
         . = 0x00007fa0; sp_irq = .;
@@ -568,6 +571,8 @@ SECTIONS {
         src/menus/title_screen.o(.text);
         src/menus/game_over.o(.text);
         src/menus/file_select.o(.text);
+
+        src/rando_item.o(.text);
 
         src/softreset.o(.text);
         src/time_attack.o(.text);

@@ -19,7 +19,7 @@
 
 /**
  * @brief 1b6b8 | 110 | Initializes an item banner sprite
- * 
+ *
  */
 void ItemBannerInit(void)
 {
@@ -97,7 +97,7 @@ void ItemBannerInit(void)
 
 /**
  * @brief 1b7c8 | 5c | Initializes the Gfx for an item banner
- * 
+ *
  */
 void ItemBannerGfxInit(void)
 {
@@ -108,7 +108,7 @@ void ItemBannerGfxInit(void)
         SpriteLoadGfx(PSPRITE_ITEM_BANNER, gCurrentSprite.spritesetGfxSlot); // Load Gfx
     else if (gCurrentSprite.yPositionSpawn == 8)
         SpriteLoadPal(PSPRITE_ITEM_BANNER, gCurrentSprite.spritesetGfxSlot, 1); // Load Pal
-    
+
     if (gCurrentSprite.yPositionSpawn == 0)
     {
         // Loading done, set pop up behavior
@@ -120,14 +120,14 @@ void ItemBannerGfxInit(void)
 
 /**
  * @brief 1b824 | 184 | Handles the pop up animation and the custom behavior based on the current message
- * 
+ *
  */
 void ItemBannerPopUp(void)
 {
     u16 music;
     u8 msg;
     u8 timer;
-    
+
     // Work Variable 2 is used as a bool, 1 if getting new item (leading to status screen), 0 otherwise
     gPreventMovementTimer = SAMUS_ITEM_PMT;
 
@@ -172,14 +172,15 @@ void ItemBannerPopUp(void)
             else if (msg != MESSAGE_SAVE_PROMPT)
             {
                 if (msg == MESSAGE_ENERGY_TANK_ACQUIRED || msg == MESSAGE_MISSILE_TANK_ACQUIRED ||
-                    msg == MESSAGE_SUPER_MISSILE_TANK_ACQUIRED || msg == MESSAGE_POWER_BOMB_TANK_ACQUIRED)
+                    msg == MESSAGE_SUPER_MISSILE_TANK_ACQUIRED || msg == MESSAGE_POWER_BOMB_TANK_ACQUIRED ||
+                    msg == MESSAGE_DYNAMIC)
                 {
                     BackupTrackData2SoundChannels();
                 }
 
                 SoundPlay(MUSIC_GETTING_TANK_JINGLE);
             }
-            
+
             // Check is one line message (new item/ability, save complete, map text)
             if (gCurrentSprite.workVariable2 || msg == MESSAGE_SAVE_COMPLETE ||
                 (msg == MESSAGE_BRINSTAR_MAP_ACQUIRED || msg == MESSAGE_KRAID_MAP_ACQUIRED ||
@@ -232,7 +233,7 @@ void ItemBannerPopUp(void)
 
 /**
  * @brief 1b9a8 | 68 | Handles the item banner being static
- * 
+ *
  */
 void ItemBannerStatic(void)
 {
@@ -255,7 +256,7 @@ void ItemBannerStatic(void)
 
 /**
  * @brief 1ba10 | 50 | Initializes the item banner to be removing
- * 
+ *
  */
 void ItemBannerRemovalInit(void)
 {
@@ -275,7 +276,7 @@ void ItemBannerRemovalInit(void)
 
 /**
  * @brief 1ba60 | b4 | Handles behavior during the removal animation
- * 
+ *
  */
 void ItemBannerRemovalAnimation(void)
 {
@@ -315,7 +316,7 @@ void ItemBannerRemovalAnimation(void)
 
 /**
  * @brief 1bb14 | e8 | Item banner AI
- * 
+ *
  */
 void ItemBanner(void)
 {
@@ -326,7 +327,7 @@ void ItemBanner(void)
         case SPRITE_POSE_UNINITIALIZED:
             ItemBannerInit();
             break;
-        
+
         case ITEM_BANNER_POSE_GFX_INIT:
             ItemBannerGfxInit();
             break;
@@ -351,7 +352,7 @@ void ItemBanner(void)
 
 /**
  * @brief 1bbfc | 190 | Save yes no cursor AI
- * 
+ *
  */
 void SaveYesNoCursor(void)
 {

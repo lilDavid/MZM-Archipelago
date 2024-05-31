@@ -13,6 +13,7 @@
 #include "structs/in_game_timer.h"
 #include "structs/time_attack.h"
 #include "structs/demo.h"
+#include "structs/rando.h"
 
 #define CORRUPTED_FILE_FLAG_CURRENT 1
 #define CORRUPTED_FILE_FLAG_CURRENT_AND_BACKUP 2
@@ -116,7 +117,9 @@ struct SaveFile {
 
     u8 SamusAran_Text[SRAM_TEXT_SIZE];
 
-    u8 freespace[160];
+    u32 randoChecks[AREA_NORMAL_END + 1];
+
+    u8 freespace[160 - 4 * sizeof(u32)];
 
     struct SaveWorldData worldData;
 };

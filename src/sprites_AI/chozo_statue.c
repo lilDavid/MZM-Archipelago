@@ -1,3 +1,5 @@
+#include "rando_item.h"
+
 #include "sprites_AI/chozo_statue.h"
 #include "sprites_AI/unknown_item_chozo_statue.h"
 
@@ -57,42 +59,42 @@ void ChozoStatueRegisterItem(u8 spriteId)
     switch (spriteId)
     {
         case PSPRITE_CHOZO_STATUE_LONG:
-            gEquipment.beamBombs |= BBF_LONG_BEAM;
+            RandoGiveItemFromCheck(RC_BRINSTAR_LONG_BEAM);
 
         case PSPRITE_CHOZO_STATUE_LONG_HINT:
             EventFunction(EVENT_ACTION_SETTING, EVENT_STATUE_LONG_BEAM_GRABBED);
             break;
 
         case PSPRITE_CHOZO_STATUE_ICE:
-            gEquipment.beamBombs |= BBF_ICE_BEAM;
+            RandoGiveItemFromCheck(RC_NORFAIR_ICE_BEAM);
 
         case PSPRITE_CHOZO_STATUE_ICE_HINT:
             EventFunction(EVENT_ACTION_SETTING, EVENT_STATUE_ICE_BEAM_GRABBED);
             break;
 
         case PSPRITE_CHOZO_STATUE_WAVE:
-            gEquipment.beamBombs |= BBF_WAVE_BEAM;
+            RandoGiveItemFromCheck(RC_NORFAIR_WAVE_BEAM);
 
         case PSPRITE_CHOZO_STATUE_WAVE_HINT:
             EventFunction(EVENT_ACTION_SETTING, EVENT_STATUE_WAVE_BEAM_GRABBED);
             break;
 
         case PSPRITE_CHOZO_STATUE_BOMB:
-            gEquipment.beamBombs |= BBF_BOMBS;
+            RandoGiveItemFromCheck(RC_BRINSTAR_BOMB);
 
         case PSPRITE_CHOZO_STATUE_BOMB_HINT:
             EventFunction(EVENT_ACTION_SETTING, EVENT_STATUE_BOMBS_GRABBED);
             break;
 
         case PSPRITE_CHOZO_STATUE_SPEEDBOOSTER:
-            gEquipment.suitMisc |= SMF_SPEEDBOOSTER;
+            RandoGiveItemFromCheck(RC_KRAID_SPEED_BOOSTER);
 
         case PSPRITE_CHOZO_STATUE_SPEEDBOOSTER_HINT:
             EventFunction(EVENT_ACTION_SETTING, EVENT_STATUE_SPEEDBOOSTER_GRABBED);
             break;
 
         case PSPRITE_CHOZO_STATUE_HIGH_JUMP:
-            gEquipment.suitMisc |= SMF_HIGH_JUMP;
+            RandoGiveItemFromCheck(RC_NORFAIR_HIJUMP);
             EventFunction(EVENT_ACTION_SETTING, EVENT_HIGH_JUMP_OBTAINED);
 
         case PSPRITE_CHOZO_STATUE_HIGH_JUMP_HINT:
@@ -100,7 +102,7 @@ void ChozoStatueRegisterItem(u8 spriteId)
             break;
 
         case PSPRITE_CHOZO_STATUE_SCREW:
-            gEquipment.suitMisc |= SMF_SCREW_ATTACK;
+            RandoGiveItemFromCheck(RC_NORFAIR_SCREW_ATTACK);
             EventFunction(EVENT_ACTION_SETTING, EVENT_SCREW_ATTACK_OBTAINED);
 
         case PSPRITE_CHOZO_STATUE_SCREW_HINT:
@@ -108,7 +110,7 @@ void ChozoStatueRegisterItem(u8 spriteId)
             break;
 
         case PSPRITE_CHOZO_STATUE_VARIA:
-            gEquipment.suitMisc |= SMF_VARIA_SUIT;
+            RandoGiveItemFromCheck(RC_BRINSTAR_VARIA_SUIT);
             EventFunction(EVENT_ACTION_SETTING, EVENT_VARIA_SUIT_OBTAINED);
 
         case PSPRITE_CHOZO_STATUE_VARIA_HINT:
@@ -116,17 +118,17 @@ void ChozoStatueRegisterItem(u8 spriteId)
             break;
 
         case PSPRITE_CHOZO_STATUE_SPACE_JUMP:
-            gEquipment.suitMisc |= SMF_SPACE_JUMP;
+            RandoGiveItemFromCheck(RC_KRAID_SPACE_JUMP);
             EventFunction(EVENT_ACTION_SETTING, EVENT_SPACE_JUMP_OBTAINED);
             break;
 
         case PSPRITE_CHOZO_STATUE_GRAVITY:
-            gEquipment.suitMisc |= SMF_GRAVITY_SUIT;
+            RandoGiveItemFromCheck(RC_RIDLEY_GRAVITY_SUIT);
             EventFunction(EVENT_ACTION_SETTING, EVENT_GRAVITY_SUIT_OBTAINED);
             break;
 
         case PSPRITE_CHOZO_STATUE_PLASMA_BEAM:
-            gEquipment.beamBombs |= BBF_PLASMA_BEAM;
+            RandoGiveItemFromCheck(RC_CRATERIA_PLASMA_BEAM);
             EventFunction(EVENT_ACTION_SETTING, EVENT_PLASMA_BEAM_OBTAINED);
             break;
     }
@@ -237,57 +239,57 @@ u8 ChozoStatueGetBehavior(u8 spriteId)
             break;
 
         case PSPRITE_CHOZO_STATUE_LONG:
-            if (gEquipment.beamBombs & BBF_LONG_BEAM)
+            if (RandoIsLocationChecked(RC_BRINSTAR_LONG_BEAM))
                 behavior++;
             break;
         
         case PSPRITE_CHOZO_STATUE_ICE:
-            if (gEquipment.beamBombs & BBF_ICE_BEAM)
+            if (RandoIsLocationChecked(RC_NORFAIR_ICE_BEAM))
                 behavior++;
             break;
 
         case PSPRITE_CHOZO_STATUE_WAVE:
-            if (gEquipment.beamBombs & BBF_WAVE_BEAM)
+            if (RandoIsLocationChecked(RC_NORFAIR_WAVE_BEAM))
                 behavior++;
             break;
 
         case PSPRITE_CHOZO_STATUE_PLASMA_BEAM:
-            if (gEquipment.beamBombs & BBF_PLASMA_BEAM)
+            if (RandoIsLocationChecked(RC_CRATERIA_PLASMA_BEAM))
                 behavior++;
             break;
 
         case PSPRITE_CHOZO_STATUE_BOMB:
-            if (gEquipment.beamBombs & BBF_BOMBS)
+            if (RandoIsLocationChecked(RC_BRINSTAR_BOMB))
                 behavior++;
             break;
 
         case PSPRITE_CHOZO_STATUE_SPEEDBOOSTER:
-            if (gEquipment.suitMisc & SMF_SPEEDBOOSTER)
+            if (RandoIsLocationChecked(RC_KRAID_SPEED_BOOSTER))
                 behavior++;
             break;
 
         case PSPRITE_CHOZO_STATUE_HIGH_JUMP:
-            if (gEquipment.suitMisc & SMF_HIGH_JUMP)
+            if (RandoIsLocationChecked(RC_NORFAIR_HIJUMP))
                 behavior++;
             break;
 
         case PSPRITE_CHOZO_STATUE_SCREW:
-            if (gEquipment.suitMisc & SMF_SCREW_ATTACK)
+            if (RandoIsLocationChecked(RC_NORFAIR_SCREW_ATTACK))
                 behavior++;
             break;
 
         case PSPRITE_CHOZO_STATUE_VARIA:
-            if (gEquipment.suitMisc & SMF_VARIA_SUIT)
+            if (RandoIsLocationChecked(RC_BRINSTAR_VARIA_SUIT))
                 behavior++;
             break;
 
         case PSPRITE_CHOZO_STATUE_SPACE_JUMP:
-            if (gEquipment.suitMisc & SMF_SPACE_JUMP)
+            if (RandoIsLocationChecked(RC_KRAID_SPACE_JUMP))
                 behavior++;
             break;
 
         case PSPRITE_CHOZO_STATUE_GRAVITY:
-            if (gEquipment.suitMisc & SMF_GRAVITY_SUIT)
+            if (RandoIsLocationChecked(RC_RIDLEY_GRAVITY_SUIT))
                 behavior++;
             break;
     }

@@ -179,6 +179,8 @@ const u16 sEnglishText_Message_ActivateEasySleep[] = INCTEXT("{WIDTH(52)}Activat
 const u16 sEnglishText_Message_PressSelectLAndR[] = INCTEXT("{WIDTH(37)}press {Select_button}, {L_button_left}, and {R_button_left}\n{WIDTH(72)}simultaneously.");
 const u16 sEnglishText_Message_EasySleepPrompt[] = INCTEXT("{WIDTH(101)}Yes\n{WIDTH(104)}No");
 
+const u16 sEnglishText_MessageFragment_Sent[] = INCTEXT("Sent to ");
+
 const u16 sEnglishText_Location_Brinstar[] = INCTEXT("{WIDTH(83)}BRINSTAR");
 const u16 sEnglishText_Location_Kraid[] = INCTEXT("{WIDTH(93)}KRAID");
 const u16 sEnglishText_Location_Norfair[] = INCTEXT("{WIDTH(86)}NORFAIR");

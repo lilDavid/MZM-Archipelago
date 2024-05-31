@@ -1,5 +1,6 @@
 #include "sprites_AI/morph_ball.h"
 #include "macros.h"
+#include "rando_item.h"
 
 #include "data/sprites/morph_ball.h"
 
@@ -16,7 +17,7 @@
  */
 void MorphBallInit(void)
 {
-    if (gEquipment.suitMisc & SMF_MORPH_BALL)
+    if (RandoIsLocationChecked(RC_BRINSTAR_MORPH_BALL))
     {
         gCurrentSprite.status = 0;
         return;
@@ -55,7 +56,6 @@ void MorphBallGet(void)
 {
     if (gCurrentSprite.status & SPRITE_STATUS_SAMUS_COLLIDING)
     {
-        gPreventMovementTimer = SAMUS_ITEM_PMT;
         gCurrentSprite.properties |= SP_ALWAYS_ACTIVE;
         gCurrentSprite.ignoreSamusCollisionTimer = 1;
 
@@ -63,10 +63,8 @@ void MorphBallGet(void)
 
         gCurrentSprite.timer = 0;
 
-        // Give morph ball
-        gEquipment.suitMisc |= SMF_MORPH_BALL;
-
-        SpriteSpawnPrimary(PSPRITE_ITEM_BANNER, MESSAGE_MORPH_BALL, 6, gCurrentSprite.yPosition, gCurrentSprite.xPosition, 0);
+        // Give morph ball check
+        RandoGiveItemFromCheck(RC_BRINSTAR_MORPH_BALL);
     }
 }
 

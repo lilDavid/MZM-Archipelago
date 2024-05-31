@@ -274,7 +274,6 @@ void ChozoBallRegisterItem(void)
 
         spriteId = gSpriteData[gCurrentSprite.primarySpriteRamSlot].spriteId;
         ChozoStatueRegisterItem(spriteId);
-        ChozoBallSpawnItemBanner(spriteId);
     }
 }
 

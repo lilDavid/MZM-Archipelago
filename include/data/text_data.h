@@ -181,6 +181,9 @@ extern const u16 sEnglishText_Message_ActivateEasySleep[];
 extern const u16 sEnglishText_Message_PressSelectLAndR[];
 extern const u16 sEnglishText_Message_EasySleepPrompt[];
 
+extern const u16 sEnglishText_Message_UnknownItemAP[];
+extern const u16 sEnglishText_MessageFragment_Sent[];
+
 extern const u16 sEnglishText_Location_Brinstar[];
 extern const u16 sEnglishText_Location_Kraid[];
 extern const u16 sEnglishText_Location_Norfair[];

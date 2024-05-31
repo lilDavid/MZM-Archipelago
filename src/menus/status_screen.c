@@ -752,14 +752,15 @@ void StatusScreenSetBombsVisibility(u16* pTilemap)
         PAUSE_SCREEN_DATA.statusScreenData.bombActivation[0] |= 1;
     }
 
-    if (nbrToProcess == 0)
-        return;
-
     if (gEquipment.maxPowerBombs != 0)
     {
         nbrToProcess = 3;
+        PAUSE_SCREEN_DATA.statusScreenData.bombActivation[0] |= 1;
         PAUSE_SCREEN_DATA.statusScreenData.bombActivation[1] |= 1;
     }
+
+    if (nbrToProcess == 0)
+        return;
 
     for (i = 0; i < nbrToProcess; i++)
     {

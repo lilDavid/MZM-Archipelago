@@ -18,6 +18,7 @@
 #include "structs/bg_clip.h"
 #include "structs/chozodia_escape.h"
 #include "structs/display.h"
+#include "structs/rando.h"
 
 /**
  * @brief 8784c | ec | V-blank code for the chozodia escape
@@ -218,8 +219,19 @@ u32 ChozodiaEscapeGetItemCountAndEndingNumber(void)
     if (gEquipment.beamBombs & BBF_BOMBS)
         abilityCount++;
 
-    // Calculate completion percentage (sum of every item/tank)
-    percentage = abilityCount + energyNbr + missilesNbr + superMissilesNbr + powerBombNbr;
+    // Count completion percentage as number of checked location bits
+    // If extra bits are set, the percentage will be higher, but they shouldn't be set
+    percentage = 0;
+    for (i = AREA_BRINSTAR; i <= AREA_NORMAL_END; i++) {
+        mask = 1;
+        for (i = 0; i < 32; i++)
+        {
+            if (gRandoLocationBitfields[i] & mask)
+                percentage++;
+
+            mask <<= 1;
+        }
+    }
 
     // Determine ending
     ending = 0;

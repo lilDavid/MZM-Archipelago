@@ -1,5 +1,6 @@
 #include "sprites_AI/charge_beam.h"
 #include "macros.h"
+#include "rando_item.h"
 
 #include "data/sprites/charge_beam.h"
 
@@ -13,11 +14,11 @@
 
 /**
  * @brief 13498 | a4 | Initializes the charge beam sprite
- * 
+ *
  */
 void ChargeBeamInit(void)
 {
-    if (gEquipment.beamBombs & BBF_CHARGE_BEAM)
+    if (RandoIsLocationChecked(RC_BRINSTAR_WORM_DROP))
     {
         gCurrentSprite.status = 0;
         return;
@@ -49,7 +50,7 @@ void ChargeBeamInit(void)
 
 /**
  * @brief 1353c | 4c | Spawns the charge beam glow
- * 
+ *
  */
 void ChargeBeamSpawnGlow(void)
 {
@@ -66,7 +67,7 @@ void ChargeBeamSpawnGlow(void)
 
 /**
  * @brief 13588 | 44 | Initializes the charge beam to be visible/idle
- * 
+ *
  */
 void ChargeBeamVisibleInit(void)
 {
@@ -84,7 +85,7 @@ void ChargeBeamVisibleInit(void)
 
 /**
  * @brief 135cc | 44 | Handles the charge beam being idle
- * 
+ *
  */
 void ChargeBeamIdle(void)
 {
@@ -120,20 +121,17 @@ void ChargeBeamIdle(void)
         gCurrentSprite.animationDurationCounter = 0;
         gCurrentSprite.currentAnimationFrame = 0;
 
-        // Set charge beam
-        gEquipment.beamBombs |= BBF_CHARGE_BEAM;
+        // Give charge beam check
+        RandoGiveItemFromCheck(RC_BRINSTAR_WORM_DROP);
 
         // Set event
         EventFunction(EVENT_ACTION_SETTING, EVENT_CHARGE_BEAM_OBTAINED);
-
-        // Spawn banner
-        SpriteSpawnPrimary(PSPRITE_ITEM_BANNER, MESSAGE_CHARGE_BEAM, 6, gCurrentSprite.yPosition, gCurrentSprite.xPosition, 0);
     }
 }
 
 /**
  * @brief 13694 | 44 | Handles the flashing animation of the charge beam
- * 
+ *
  */
 void ChargeBeamFlashingAnim(void)
 {
@@ -151,7 +149,7 @@ void ChargeBeamFlashingAnim(void)
 
 /**
  * @brief 136d8 | 64 | Initializes the charge beam glow sprite
- * 
+ *
  */
 void ChargeBeamGlowInit(void)
 {
@@ -177,7 +175,7 @@ void ChargeBeamGlowInit(void)
 
 /**
  * @brief 1373c | 20 | Synchronises the charge beam glow Y position with the charge beam
- * 
+ *
  */
 void ChargeBeamGlowMovement(void)
 {
@@ -189,7 +187,7 @@ void ChargeBeamGlowMovement(void)
 
 /**
  * @brief 1375c | d0 | Charge beam AI
- * 
+ *
  */
 void ChargeBeam(void)
 {
@@ -218,7 +216,7 @@ void ChargeBeam(void)
 
 /**
  * @brief 1382c | 24 | Charge beam glow AI
- * 
+ *
  */
 void ChargeBeamGlow(void)
 {
