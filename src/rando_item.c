@@ -188,7 +188,7 @@ void RandoGiveItemFromCheck(u32 location) {
         isFirstTank = FALSE;
         switch (placement->itemId) {
             case ITEM_ETANK:
-                if (sNumberOfTanksPerArea[MAX_AMOUNT_OF_AREAS - 1].energy * sTankIncreaseAmount[gDifficulty].energy + sStartingHealthAmmo.energy < gEquipment.maxMissiles + sTankIncreaseAmount[gDifficulty].energy)
+                if (sStartingHealthAmmo.energy + sTankIncreaseAmount[gDifficulty].energy > 1299)
                     break;
                 gEquipment.maxEnergy += sTankIncreaseAmount[gDifficulty].energy;
                 gEquipment.currentEnergy = gEquipment.maxEnergy;
@@ -196,8 +196,6 @@ void RandoGiveItemFromCheck(u32 location) {
                 break;
             case ITEM_MISSILE:
             case ITEM_MISSILE_TANK:
-                if (sNumberOfTanksPerArea[MAX_AMOUNT_OF_AREAS - 1].missile * sTankIncreaseAmount[gDifficulty].missile + sStartingHealthAmmo.missile < gEquipment.maxMissiles + sTankIncreaseAmount[gDifficulty].missile)
-                    break;
                 if (gEquipment.maxMissiles == 0)
                     isFirstTank = TRUE;
                 gEquipment.maxMissiles += sTankIncreaseAmount[gDifficulty].missile;
@@ -206,8 +204,6 @@ void RandoGiveItemFromCheck(u32 location) {
                 break;
             case ITEM_SUPER:
             case ITEM_SUPER_MISSILE_TANK:
-                if (sNumberOfTanksPerArea[MAX_AMOUNT_OF_AREAS - 1].superMissile * sTankIncreaseAmount[gDifficulty].superMissile + sStartingHealthAmmo.superMissile < gEquipment.maxMissiles + sTankIncreaseAmount[gDifficulty].superMissile)
-                    break;
                 if (gEquipment.maxSuperMissiles == 0)
                     isFirstTank = TRUE;
                 gEquipment.maxSuperMissiles += sTankIncreaseAmount[gDifficulty].superMissile;
@@ -216,8 +212,6 @@ void RandoGiveItemFromCheck(u32 location) {
                 break;
             case ITEM_POWER_BOMB:
             case ITEM_POWER_BOMB_TANK:
-                if (sNumberOfTanksPerArea[MAX_AMOUNT_OF_AREAS - 1].powerBomb * sTankIncreaseAmount[gDifficulty].powerBomb + sStartingHealthAmmo.powerBomb < gEquipment.maxMissiles + sTankIncreaseAmount[gDifficulty].powerBomb)
-                    break;
                 if (gEquipment.maxPowerBombs == 0)
                     isFirstTank = TRUE;
                 gEquipment.maxPowerBombs += sTankIncreaseAmount[gDifficulty].powerBomb;
