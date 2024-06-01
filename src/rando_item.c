@@ -17,6 +17,32 @@
 #include "structs/text.h"
 
 
+static u32 TextFindCharacter(const u16* str, u16 terminator) {
+    u32 i = 0;
+    while (str[i] != terminator)
+        i += 1;
+    return i;
+}
+
+static u32 TextCopyUntilCharacter(const u16* src, u16* dst, u16 terminator) {
+    const u16* start = src;
+    while (*src != terminator) {
+        *dst = *src;
+        dst++;
+        src++;
+    }
+    return src - start;
+}
+
+static u32 TextGetStringWidth(const u16* str, u32 length) {
+    u32 i;
+    u32 textWidth = 0;
+    for (i = 0; i < length; i++)
+        textWidth += TextGetCharacterWidth(str[i]);
+
+    return textWidth;
+}
+
 static u32 RandoGetRegion(u32 location) {
     if (location < RC_BRINSTAR_MAX)
         return AREA_BRINSTAR;
@@ -69,6 +95,9 @@ void RandoGiveItemFromPosition(u32 area, struct RoomEntry* pRoomEntry, u32 xPosi
     u32 itemX;
     u32 itemY;
     u32 i;
+    u32 messageLength;
+    u32 lineLength;
+    u32 lineWidth;
     const struct TankLocation* location;
 
     itemX = (xPosition - 2) / 15 + pRoomEntry->mapX;
@@ -81,16 +110,40 @@ void RandoGiveItemFromPosition(u32 area, struct RoomEntry* pRoomEntry, u32 xPosi
             return;
         }
     }
+
+    // Create error message
+    messageLength = TextCopyUntilCharacter(sEnglishText_Message_CheckFromPositionError,
+                                           gDynamicMessageBuffer,
+                                           CHAR_TERMINATOR);
+    messageLength += TextCopyUntilCharacter(sLocationTextPointers[LANGUAGE_ENGLISH][gCurrentArea] + 1,
+                                            gDynamicMessageBuffer + messageLength,
+                                            CHAR_TERMINATOR);
+    gDynamicMessageBuffer[messageLength++] = CHAR_EMPTY_SPACE;
+    gDynamicMessageBuffer[messageLength++] = CHAR_OPENING_PARENTHESIS;
+    gDynamicMessageBuffer[messageLength++] = CHAR_0 + (itemX / 10) % 10;
+    gDynamicMessageBuffer[messageLength++] = CHAR_0 + itemX % 10;
+    gDynamicMessageBuffer[messageLength++] = CHAR_COMMA;
+    gDynamicMessageBuffer[messageLength++] = CHAR_EMPTY_SPACE;
+    gDynamicMessageBuffer[messageLength++] = CHAR_0 + (itemY / 10) % 10;
+    gDynamicMessageBuffer[messageLength++] = CHAR_0 + itemY % 10;
+    gDynamicMessageBuffer[messageLength++] = CHAR_CLOSING_PARENTHESIS;
+    gDynamicMessageBuffer[messageLength++] = CHAR_TERMINATOR;
+    lineLength = TextFindCharacter(gDynamicMessageBuffer + 2, CHAR_NEW_LINE);
+    lineLength = TextFindCharacter(gDynamicMessageBuffer + lineLength + 4, CHAR_TERMINATOR);
+    lineWidth = TextGetStringWidth(gDynamicMessageBuffer + lineLength + 4, lineLength);
+    gDynamicMessageBuffer[messageLength - lineLength - 2] = CHAR_WIDTH_MASK | (224 - lineWidth) / 2;
+
+    SpriteSpawnPrimary(PSPRITE_ITEM_BANNER, MESSAGE_DYNAMIC, 6, gSamusData.yPosition, gSamusData.xPosition, 0);
 }
 
 void RandoGiveItemFromCheck(u32 location) {
     const struct PlacedItem* placement;
     s32 isFirstTank;
     s32 messageID;
-    u16* pMessage;
+    u32 messageLength;
+    u32 lineLength;
+    u32 lineWidth;
     u16* pLine2;
-    const u16* pName;
-    u32 textWidth;
 
     RandoCheckLocation(location);
     placement = &sPlacedItems[location];
@@ -99,56 +152,36 @@ void RandoGiveItemFromCheck(u32 location) {
 
     messageID = sItemMessages[placement->itemId];
     if (placement->playerName) {
-        pMessage = gDynamicMessageBuffer;
+        // Item name
         if (placement->itemName) {
-            textWidth = 0;
-            pName = placement->itemName;
-
-            pMessage++;
-            *pMessage = CHAR_COLOR_MASK | 5;
-            pMessage++;
-            while (*pName != 0 && pName - placement->itemName < 32) {
-                textWidth += TextGetCharacterWidth(*pName);
-                *pMessage = *pName;
-                pMessage++;
-                pName++;
-            }
-            *gDynamicMessageBuffer = CHAR_WIDTH_MASK | (224 - textWidth) / 2;
+            messageLength = 1;
+            gDynamicMessageBuffer[messageLength++] = CHAR_COLOR_MASK | 5;
+            messageLength += TextCopyUntilCharacter(placement->itemName,
+                                                    gDynamicMessageBuffer + messageLength,
+                                                    CHAR_TERMINATOR);
+            lineWidth = TextGetStringWidth(gDynamicMessageBuffer + 2, messageLength - 2);  // Drop width and color
+            gDynamicMessageBuffer[0] = CHAR_WIDTH_MASK | (224 - lineWidth) / 2;
         } else {
-            pName = sMessageTextPointers[gLanguage][messageID];
-            while (*pName != CHAR_NEW_LINE) {
-                *pMessage = *pName;
-                pMessage++;
-                pName++;
-            }
+            messageLength = TextCopyUntilCharacter(sMessageTextPointers[gLanguage][messageID],
+                                                   gDynamicMessageBuffer,
+                                                   CHAR_NEW_LINE);
         }
-        *pMessage = CHAR_NEW_LINE;
-        pMessage++;
+        gDynamicMessageBuffer[messageLength++] = CHAR_NEW_LINE;
 
-        pLine2 = pMessage;
-        pMessage++;
-        textWidth = 0;
-
-        pName = sEnglishText_MessageFragment_Sent;
-        while (*pName != CHAR_TERMINATOR) {
-            textWidth += TextGetCharacterWidth(*pName);
-            *pMessage = *pName;
-            pMessage++;
-            pName++;
-        }
-        pName = placement->playerName;
-        while (*pName != 0) {
-            textWidth += TextGetCharacterWidth(*pName);
-            *pMessage = *pName;
-            pMessage++;
-            pName++;
-        }
-        textWidth += TextGetCharacterWidth(CHAR_DOT);
-        *pMessage = CHAR_DOT;
-        pMessage++;
-
-        *pLine2 = CHAR_WIDTH_MASK | (224 - textWidth) / 2;
-        *pMessage = CHAR_TERMINATOR;
+        // "Sent to <player name>."
+        pLine2 = gDynamicMessageBuffer + messageLength;
+        messageLength++;
+        messageLength += TextCopyUntilCharacter(sEnglishText_MessageFragment_Sent,
+                                                gDynamicMessageBuffer + messageLength,
+                                                CHAR_TERMINATOR);
+        messageLength += TextCopyUntilCharacter(placement->playerName,
+                                                gDynamicMessageBuffer + messageLength,
+                                                CHAR_TERMINATOR);
+        gDynamicMessageBuffer[messageLength++] = CHAR_DOT;
+        gDynamicMessageBuffer[messageLength++] = CHAR_TERMINATOR;
+        lineLength = TextFindCharacter(pLine2 + 1, CHAR_TERMINATOR);
+        lineWidth = TextGetStringWidth(pLine2 + 1, lineLength);
+        pLine2[0] = CHAR_WIDTH_MASK | (224 - lineWidth) / 2;
 
         messageID = MESSAGE_DYNAMIC;
     } else {
