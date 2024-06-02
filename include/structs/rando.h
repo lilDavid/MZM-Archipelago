@@ -8,10 +8,16 @@
 
 // Structs
 
+struct RandomizerOptions {
+    u8 unknownItemsAlwaysUsable;
+};
+
 struct Seed {
     u16 playerNumber;
     u8 playerName[64];
     u8 seedName[64];
+
+    struct RandomizerOptions options;
 };
 
 struct PlacedItem {

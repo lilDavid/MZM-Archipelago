@@ -232,15 +232,23 @@ void RandoGiveItemFromCheck(u32 location) {
                 break;
             case ITEM_PLASMA_BEAM:
                 gEquipment.beamBombs |= BBF_PLASMA_BEAM;
+                if (!sRandoSeed.options.unknownItemsAlwaysUsable && gEquipment.suitType != SUIT_FULLY_POWERED)
+                    messageID = MESSAGE_UKNOWN_ITEM_PLASMA;
                 break;
             case ITEM_BOMB:
                 gEquipment.beamBombs |= BBF_BOMBS;
                 break;
             case ITEM_VARIA_SUIT:
                 gEquipment.suitMisc |= SMF_VARIA_SUIT;
+                if (sRandoSeed.options.unknownItemsAlwaysUsable)
+                    gEquipment.suitType = SUIT_FULLY_POWERED;
                 break;
             case ITEM_GRAVITY_SUIT:
                 gEquipment.suitMisc |= SMF_GRAVITY_SUIT;
+                if (sRandoSeed.options.unknownItemsAlwaysUsable)
+                    gEquipment.suitType = SUIT_FULLY_POWERED;
+                else if (gEquipment.suitType != SUIT_FULLY_POWERED)
+                    messageID = MESSAGE_UNKNOWN_ITEM_GRAVITY;
                 break;
             case ITEM_MORPH_BALL:
                 gEquipment.suitMisc |= SMF_MORPH_BALL;
@@ -256,6 +264,8 @@ void RandoGiveItemFromCheck(u32 location) {
                 break;
             case ITEM_SPACE_JUMP:
                 gEquipment.suitMisc |= SMF_SPACE_JUMP;
+                if (!sRandoSeed.options.unknownItemsAlwaysUsable && gEquipment.suitType != SUIT_FULLY_POWERED)
+                    messageID = MESSAGE_UNKNOWN_ITEM_SPACE_JUMP;
                 break;
             case ITEM_POWER_GRIP:
                 gEquipment.suitMisc |= SMF_POWER_GRIP;

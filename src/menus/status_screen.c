@@ -20,6 +20,7 @@
 #include "structs/samus.h"
 #include "structs/text.h"
 #include "structs/menus/pause_screen.h"
+#include "structs/rando.h"
 
 /**
  * @brief 6fd00 | 118 | Updates the minimap animated palette
@@ -504,7 +505,8 @@ void StatusScreenSetBeamsVisibility(u16* pTilemap)
         srcPosition = 0;
 
         if (sStatusScreenFlagsOrderPointers[ABILITY_GROUP_BEAMS][i] == BBF_PLASMA_BEAM &&
-            (gEquipment.suitType != SUIT_FULLY_POWERED || gPauseScreenFlag == PAUSE_SCREEN_FULLY_POWERED_SUIT_ITEMS))
+            ((gEquipment.suitType != SUIT_FULLY_POWERED && !sRandoSeed.options.unknownItemsAlwaysUsable) ||
+             gPauseScreenFlag == PAUSE_SCREEN_FULLY_POWERED_SUIT_ITEMS))
         {
             j = 9;
             srcPosition = 10;
@@ -590,7 +592,8 @@ void StatusScreenSetSuitsVisibility(u16* pTilemap)
         j = i;
 
         if (sStatusScreenFlagsOrderPointers[ABILITY_GROUP_SUITS][i] == SMF_GRAVITY_SUIT &&
-            (gEquipment.suitType != SUIT_FULLY_POWERED || gPauseScreenFlag == PAUSE_SCREEN_FULLY_POWERED_SUIT_ITEMS))
+            ((gEquipment.suitType != SUIT_FULLY_POWERED && !sRandoSeed.options.unknownItemsAlwaysUsable) ||
+             gPauseScreenFlag == PAUSE_SCREEN_FULLY_POWERED_SUIT_ITEMS))
         {
             j = 3;
         }
@@ -663,7 +666,7 @@ void StatusScreenSetMiscsVisibility(u16* pTilemap)
 
         if (sStatusScreenFlagsOrderPointers[ABILITY_GROUP_MISC][i] == SMF_SPACE_JUMP)
         {
-            if (gEquipment.suitType != SUIT_FULLY_POWERED)
+            if (gEquipment.suitType != SUIT_FULLY_POWERED && !sRandoSeed.options.unknownItemsAlwaysUsable)
                 k = -1;
             else if (gPauseScreenFlag == PAUSE_SCREEN_FULLY_POWERED_SUIT_ITEMS)
                 k = -1;
@@ -1108,8 +1111,10 @@ u32 StatusScreenSuitlessItems(void)
                     case ITEM_ACQUISITION_PLASMA_BEAM:
                     case ITEM_ACQUISITION_GRAVITY:
                     case ITEM_ACQUISITION_SPACE_JUMP:
-                        // Play unknown item sound
-                        SoundPlay(0x20F);
+                        if (sRandoSeed.options.unknownItemsAlwaysUsable)
+                            SoundPlay(0x1F7);  // Normal item sound
+                        else
+                            SoundPlay(0x20F);  // Unknown item sound
                         break;
     
                     case ITEM_ACQUISITION_MISSILES:
@@ -1665,7 +1670,7 @@ u8 StatusScreenGetCurrentEquipmentSelected(u8 statusSlot)
                 if (activation & BBF_PLASMA_BEAM)
                 {
                     // Handle unknown item
-                    if (gEquipment.suitType == SUIT_FULLY_POWERED)
+                    if (gEquipment.suitType == SUIT_FULLY_POWERED || sRandoSeed.options.unknownItemsAlwaysUsable)
                         result = DESCRIPTION_TEXT_PLASMA_BEAM;
                     else
                         result = DESCRIPTION_TEXT_UNKNOWN_ITEM;
@@ -1717,7 +1722,7 @@ u8 StatusScreenGetCurrentEquipmentSelected(u8 statusSlot)
                 if (activation & SMF_GRAVITY_SUIT)
                 {
                     // Handle unknown item
-                    if (gEquipment.suitType == SUIT_FULLY_POWERED)
+                    if (gEquipment.suitType == SUIT_FULLY_POWERED || sRandoSeed.options.unknownItemsAlwaysUsable)
                         result = DESCRIPTION_TEXT_GRAVITY_SUIT;
                     else
                         result = DESCRIPTION_TEXT_UNKNOWN_ITEM;
@@ -1767,7 +1772,7 @@ u8 StatusScreenGetCurrentEquipmentSelected(u8 statusSlot)
                 if (activation & SMF_SPACE_JUMP)
                 {
                     // Handle unknown item
-                    if (gEquipment.suitType == SUIT_FULLY_POWERED)
+                    if (gEquipment.suitType == SUIT_FULLY_POWERED || sRandoSeed.options.unknownItemsAlwaysUsable)
                         result = DESCRIPTION_TEXT_SPACE_JUMP;
                     else
                         result = DESCRIPTION_TEXT_UNKNOWN_ITEM;
@@ -1877,7 +1882,7 @@ u32 StatusScreenToggleItem(u8 statusSlot, u8 action)
 
             if (flag == BBF_PLASMA_BEAM)
             {
-                if (gEquipment.suitType != SUIT_FULLY_POWERED)
+                if (gEquipment.suitType != SUIT_FULLY_POWERED && !sRandoSeed.options.unknownItemsAlwaysUsable)
                     flag = 0;
             }
             break;
@@ -1899,7 +1904,7 @@ u32 StatusScreenToggleItem(u8 statusSlot, u8 action)
 
             if (flag == SMF_GRAVITY_SUIT)
             {
-                if (gEquipment.suitType != SUIT_FULLY_POWERED)
+                if (gEquipment.suitType != SUIT_FULLY_POWERED && !sRandoSeed.options.unknownItemsAlwaysUsable)
                     flag = 0;
             }
 
@@ -1913,7 +1918,7 @@ u32 StatusScreenToggleItem(u8 statusSlot, u8 action)
 
             if (flag == SMF_SPACE_JUMP)
             {
-                if (gEquipment.suitType != SUIT_FULLY_POWERED)
+                if (gEquipment.suitType != SUIT_FULLY_POWERED && !sRandoSeed.options.unknownItemsAlwaysUsable)
                     flag = 0;
             }
             break;
@@ -2000,7 +2005,7 @@ u32 StatusScreenToggleItem(u8 statusSlot, u8 action)
                 break;
 
             case ABILITY_GROUP_MISC:
-                if (flag == SMF_SPACE_JUMP && gEquipment.suitType != SUIT_FULLY_POWERED)
+                if (flag == SMF_SPACE_JUMP && (gEquipment.suitType != SUIT_FULLY_POWERED && !sRandoSeed.options.unknownItemsAlwaysUsable))
                     isActivated = UCHAR_MAX;
         }
 

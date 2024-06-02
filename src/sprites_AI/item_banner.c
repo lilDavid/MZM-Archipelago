@@ -145,7 +145,8 @@ void ItemBannerPopUp(void)
                 msg == MESSAGE_WAVE_BEAM || msg == MESSAGE_UKNOWN_ITEM_PLASMA || msg == MESSAGE_BOMB ||
                 msg == MESSAGE_VARIA_SUIT || msg == MESSAGE_UNKNOWN_ITEM_GRAVITY || msg == MESSAGE_MORPH_BALL ||
                 msg == MESSAGE_SPEED_BOOSTER || msg == MESSAGE_HIGH_JUMP || msg == MESSAGE_SCREW_ATTACK ||
-                msg == MESSAGE_UNKNOWN_ITEM_SPACE_JUMP || msg == MESSAGE_POWER_GRIP)
+                msg == MESSAGE_UNKNOWN_ITEM_SPACE_JUMP || msg == MESSAGE_POWER_GRIP ||
+                msg == MESSAGE_PLASMA_BEAM || msg == MESSAGE_GRAVITY_SUIT || msg == MESSAGE_SPACE_JUMP)
             {
                 // New item
                 gCurrentSprite.workVariable2 = TRUE;

@@ -815,9 +815,14 @@ u8 TextProcessItemBanner(void)
 
         case 3:
             gCurrentMessage.line++;
-            if (gCurrentMessage.messageID <= MESSAGE_POWER_GRIP)
+            if (gCurrentMessage.messageID <= MESSAGE_SPACE_JUMP)
             {
-                gCurrentItemBeingAcquired = gCurrentMessage.messageID;
+                switch (gCurrentMessage.messageID) {
+                    case MESSAGE_PLASMA_BEAM: gCurrentItemBeingAcquired = ITEM_ACQUISITION_PLASMA_BEAM; break;
+                    case MESSAGE_GRAVITY_SUIT: gCurrentItemBeingAcquired = ITEM_ACQUISITION_GRAVITY; break;
+                    case MESSAGE_SPACE_JUMP: gCurrentItemBeingAcquired = ITEM_ACQUISITION_SPACE_JUMP; break;
+                    default: gCurrentItemBeingAcquired = gCurrentMessage.messageID; break;
+                }
                 if (gCurrentMessage.messageID >= MESSAGE_LONG_BEAM)
                     BgClipFinishCollectingAbility();
             }

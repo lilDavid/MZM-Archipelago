@@ -54,6 +54,7 @@ void RoomLoad(void)
         ScrollLoad();
         RoomSetBackgroundScrolling();
     }
+#if 0
     // Getting an item, init cutscene
     else if (gPauseScreenFlag == PAUSE_SCREEN_ITEM_ACQUISITION)
     {
@@ -74,6 +75,7 @@ void RoomLoad(void)
             gSamusData.lastWallTouchedMidAir = TRUE;
         }
     }
+#endif // 0
     else if (gPauseScreenFlag == PAUSE_SCREEN_FULLY_POWERED_SUIT_ITEMS)
     {
         gEquipment.suitMiscActivation &= ~SMF_GRAVITY_SUIT;

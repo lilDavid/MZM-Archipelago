@@ -45,6 +45,10 @@ const u16 sJapaneseText_Message_ActivateEasySleep[] = INCTEXT("{WIDTH(53)}スリ
 const u16 sJapaneseText_Message_PressSelectLAndR[] = INCTEXT("{WIDTH(50)}{Select_button} と {L_button_left} と {R_button_left} を\n{WIDTH(67)}同時に押してください");
 const u16 sJapaneseText_Message_EasySleepPrompt[] = INCTEXT("{WIDTH(101)}Yes\n{WIDTH(104)}No");
 
+const u16 sJapaneseText_Message_PlasmaBeam[] = INCTEXT("{WIDTH(40)}{COLOR(5)}PLASMA BEAM チャージビーム\n{WIDTH(110)}");
+const u16 sJapaneseText_Message_GravitySuit[] = INCTEXT("{WIDTH(50)}{COLOR(5)}GRAVITY SUIT バリアスーツ\n{WIDTH(110)}");
+const u16 sJapaneseText_Message_SpaceJump[] = INCTEXT("{WIDTH(30)}{COLOR(5)}SPACE JUMP スクリューアタック\n{WIDTH(110)}");
+
 const u16 sJapaneseText_Location_Brinstar[] = INCTEXT("{WIDTH(43)}BRINSTAR  - ブリンスタ -");
 const u16 sJapaneseText_Location_Kraid[] = INCTEXT("{WIDTH(57)}KRAID  - クレイド -");
 const u16 sJapaneseText_Location_Norfair[] = INCTEXT("{WIDTH(46)}NORFAIR  - ノルフェア -");
@@ -111,6 +115,10 @@ const u16 sHiraganaText_Message_EnemyLocationAbnormal[] = INCTEXT("{WIDTH(58)}�
 const u16 sHiraganaText_Message_ActivateEasySleep[] = INCTEXT("{WIDTH(50)}スリープモードにはいりますか?\n{WIDTH(50)}スリープモードからもどるときは");
 const u16 sHiraganaText_Message_PressSelectLAndR[] = INCTEXT("{WIDTH(50)}{Select_button} と {L_button_left} と {R_button_left} を\n{WIDTH(66)}どうじにおしてください");
 const u16 sHiraganaText_Message_EasySleepPrompt[] = INCTEXT("{WIDTH(102)}はい\n{WIDTH(98)}いいえ");
+
+const u16 sHiraganaText_Message_PlasmaBeam[] = INCTEXT("{WIDTH(82)}{COLOR(5)}チャージビーム\n{WIDTH(110)}");
+const u16 sHiraganaText_Message_GravitySuit[] = INCTEXT("{WIDTH(86)}{COLOR(5)}バリアスーツ\n{WIDTH(110)}");
+const u16 sHiraganaText_Message_SpaceJump[] = INCTEXT("{WIDTH(74)}{COLOR(5)}スクリューアタック\n{WIDTH(110)}");
 
 const u16 sHiraganaText_Location_Brinstar[] = INCTEXT("{WIDTH(90)}ブリンスタ");
 const u16 sHiraganaText_Location_Kraid[] = INCTEXT("{WIDTH(94)}クレイド");
@@ -179,6 +187,9 @@ const u16 sEnglishText_Message_ActivateEasySleep[] = INCTEXT("{WIDTH(52)}Activat
 const u16 sEnglishText_Message_PressSelectLAndR[] = INCTEXT("{WIDTH(37)}press {Select_button}, {L_button_left}, and {R_button_left}\n{WIDTH(72)}simultaneously.");
 const u16 sEnglishText_Message_EasySleepPrompt[] = INCTEXT("{WIDTH(101)}Yes\n{WIDTH(104)}No");
 
+const u16 sEnglishText_Message_PlasmaBeam[] = INCTEXT("{WIDTH(76)}{COLOR(5)}Plasma Beam\n{WIDTH(110)}");
+const u16 sEnglishText_Message_GravitySuit[] = INCTEXT("{WIDTH(84)}{COLOR(5)}Gravity Suit\n{WIDTH(110)}");
+const u16 sEnglishText_Message_SpaceJump[] = INCTEXT("{WIDTH(75)}{COLOR(5)}Space Jump\n{WIDTH(110)}");
 const u16 sEnglishText_Message_CheckFromPositionError[] = INCTEXT("{WIDTH(12)}{COLOR(5)}Error determining randomizer location.\n{WIDTH(0)}Location: ");
 const u16 sEnglishText_MessageFragment_Sent[] = INCTEXT("Sent to ");
 
