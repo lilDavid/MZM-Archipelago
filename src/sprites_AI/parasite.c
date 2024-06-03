@@ -82,7 +82,7 @@ void ParasiteInit(struct SpriteData* pSprite)
     if (spriteId == PSPRITE_PARASITE_MULTIPLE)
     {
         // Check lock doors
-        if (RandoIsLocationChecked(RC_BRINSTAR_BOMB) && !EventFunction(EVENT_ACTION_CHECKING, EVENT_BUGS_KILLED))
+        if (gEquipment.beamBombs & BBF_BOMBS && !EventFunction(EVENT_ACTION_CHECKING, EVENT_BUGS_KILLED))
             gDoorUnlockTimer = 0x1;
 
         // Check is main parasite (spawned via room data and not with SpriteSpawnPrimary since it adds the Not Drawn flag)
