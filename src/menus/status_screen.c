@@ -1926,8 +1926,10 @@ u32 StatusScreenToggleItem(u8 statusSlot, u8 action)
         case ABILITY_GROUP_MISSILES:
     }
 
+#if 0
     if (!(PAUSE_SCREEN_DATA.typeFlags & PAUSE_SCREEN_TYPE_GETTING_SUITLESS) && gPauseScreenFlag != PAUSE_SCREEN_ITEM_ACQUISITION)
         flag = 0;
+#endif // 0
 
     if (flag == 0)
     {
