@@ -240,14 +240,10 @@ void RandoGiveItemFromCheck(u32 location) {
                 break;
             case ITEM_VARIA_SUIT:
                 gEquipment.suitMisc |= SMF_VARIA_SUIT;
-                if (sRandoSeed.options.unknownItemsAlwaysUsable)
-                    gEquipment.suitType = SUIT_FULLY_POWERED;
                 break;
             case ITEM_GRAVITY_SUIT:
                 gEquipment.suitMisc |= SMF_GRAVITY_SUIT;
-                if (sRandoSeed.options.unknownItemsAlwaysUsable)
-                    gEquipment.suitType = SUIT_FULLY_POWERED;
-                else if (gEquipment.suitType != SUIT_FULLY_POWERED)
+                if (!sRandoSeed.options.unknownItemsAlwaysUsable && gEquipment.suitType != SUIT_FULLY_POWERED)
                     messageID = MESSAGE_UNKNOWN_ITEM_GRAVITY;
                 break;
             case ITEM_MORPH_BALL:

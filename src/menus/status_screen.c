@@ -1975,6 +1975,8 @@ u32 StatusScreenToggleItem(u8 statusSlot, u8 action)
                     break;
 
                 case ABILITY_GROUP_SUITS:
+                    if (sRandoSeed.options.unknownItemsAlwaysUsable && gEquipment.suitMiscActivation & SMF_ALL_SUITS)
+                        gEquipment.suitType = SUIT_FULLY_POWERED;
                     PauseScreenUpdateWireframeSamus(2);
                     break;
 

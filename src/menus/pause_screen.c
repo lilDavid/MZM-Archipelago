@@ -639,7 +639,7 @@ void PauseScreenUpdateWireframeSamus(u8 param_1)
 
     if (gEquipment.suitType == SUIT_NORMAL)
         oamId = MISC_OAM_ID_SAMUS_POWER_SUIT_WIREFRAME;
-    else if (gEquipment.suitType == SUIT_FULLY_POWERED)
+    else if (gEquipment.suitType == SUIT_FULLY_POWERED && gEquipment.suitMiscActivation & SMF_ALL_SUITS)
         oamId = MISC_OAM_ID_SAMUS_FULL_SUIT_WIREFRAME;
     else if (gEquipment.suitType == SUIT_SUITLESS)
         oamId = MISC_OAM_ID_SAMUS_SUITLESS_WIREFRAME;
