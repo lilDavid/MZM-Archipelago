@@ -3,8 +3,10 @@
 
 TARGET = mzm_us_ap.gba
 PATCH = basepatch.bsdiff
+SYMBOLS = extracted_symbols.json
 BASEROM = mzm_us_baserom.gba
 SHA1FILE = mzm.sha1
+SYMBOL_INSTRUCTIONS = extracts.json
 ELF = $(TARGET:.gba=.elf)
 MAP = $(TARGET:.gba=.map)
 DUMPS = $(BASEROM:.gba=.dump) $(TARGET:.gba=.dump)
@@ -38,6 +40,7 @@ PYTHON = python3
 EXTRACTOR = tools/extractor.py
 PREPROC = tools/preproc/preproc
 BSDIFF = bsdiff
+SYMBOLEXTRACTOR = tools/extract_symbols.py
 
 # Flags
 ASFLAGS = -mcpu=arm7tdmi
@@ -61,7 +64,7 @@ else
 endif
 
 .PHONY: all
-all: $(PATCH)
+all: $(PATCH) $(SYMBOLS)
 
 .PHONY: baserom
 baserom: $(TARGET)
@@ -84,6 +87,8 @@ clean:
 	$Q$(RM) -r data	
 	$(MSG) RM $(PATCH)
 	$Q$(RM) $(PATCH)
+	$(MSG) RM $(SYMBOLS)
+	$Q$(RM) $(SYMBOLS)
 
 .PHONY: help
 help:
@@ -99,6 +104,10 @@ help:
 $(PATCH): $(TARGET)
 	$(MSG) BSDIFF $@
 	$Q$(BSDIFF) $(BASEROM) $(TARGET) $(PATCH)
+
+$(SYMBOLS): $(SYMBOLEXTRACTOR) $(SYMBOL_INSTRUCTIONS) $(TARGET)
+	$(MSG) SYMBOLEXTRACTOR $@
+	$Q$(PYTHON) $(SYMBOLEXTRACTOR) $(MAP) $(SYMBOLS)
 
 $(TARGET): $(ELF) $(GBAFIX)
 	$(MSG) OBJCOPY $@
