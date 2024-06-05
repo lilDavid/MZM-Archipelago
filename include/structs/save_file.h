@@ -119,7 +119,7 @@ struct SaveFile {
 
     u32 randoChecks[AREA_NORMAL_END + 1];
 
-    u8 freespace[160 - 4 * sizeof(u32)];
+    u8 freespace[160 - sizeof(u32[AREA_NORMAL_END + 1])];
 
     struct SaveWorldData worldData;
 };

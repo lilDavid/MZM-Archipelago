@@ -66,7 +66,7 @@ static u32 RandoGetRegionFlag(u32 location, u32 region) {
 
     if (region == AREA_NONE)
         return 0;
-    offset = sRegionLocationOffsets[region];
+    offset = sRegionLocationOffsets[region][0];
     location -= offset;
     return 1 << location;
 }
@@ -91,24 +91,38 @@ static u32 RandoCheckLocation(u32 location) {
     gRandoLocationBitfields[region] |= flag;
 }
 
-void RandoGiveItemFromPosition(u32 area, struct RoomEntry* pRoomEntry, u32 xPosition, u32 yPosition) {
-    u32 itemX;
-    u32 itemY;
+static u32 RandoGetLocationAtPosition(u32 area, u32 room, u32 xPosition, u32 yPosition) {
     u32 i;
+    u32 end;
+    const struct ItemInfo* location;
+
+    end = sRegionLocationOffsets[area][1];
+    for (i = sRegionLocationOffsets[area][0]; i < end; i++) {
+        location = &sItemLocations[i];
+        if (location->room == gCurrentRoom && xPosition == location->xPosition && yPosition == location->yPosition) {
+            return i;
+        }
+    }
+
+    return RC_MAX;
+}
+
+u32 RandoGetItemAtPosition(u32 area, u32 room, u32 xPosition, u32 yPosition) {
+    u32 location = RandoGetLocationAtPosition(area, room, xPosition, yPosition);
+    if (location < RC_MAX)
+        return sPlacedItems[location].itemId;
+    return ITEM_NONE;
+}
+
+void RandoGiveItemFromPosition(u32 area, u32 room, u32 xPosition, u32 yPosition) {
     u32 messageLength;
     u32 lineLength;
     u32 lineWidth;
-    const struct TankLocation* location;
 
-    itemX = (xPosition - 2) / 15 + pRoomEntry->mapX;
-    itemY = (yPosition - 2) / 10 + pRoomEntry->mapY;
-
-    for (i = 0; i < RC_MAX; i++) {
-        location = &sLocationMapPositions[i];
-        if (location->area == area && location->xPosition == itemX && location->yPosition == itemY) {
-            RandoGiveItemFromCheck(i);
-            return;
-        }
+    u32 location = RandoGetLocationAtPosition(area, room, xPosition, yPosition);
+    if (location < RC_MAX) {
+        RandoGiveItemFromCheck(location);
+        return;
     }
 
     // Create error message
@@ -119,13 +133,18 @@ void RandoGiveItemFromPosition(u32 area, struct RoomEntry* pRoomEntry, u32 xPosi
                                             gDynamicMessageBuffer + messageLength,
                                             CHAR_TERMINATOR);
     gDynamicMessageBuffer[messageLength++] = CHAR_EMPTY_SPACE;
+    gDynamicMessageBuffer[messageLength++] = CHAR_0 + (room / 10) % 10;
+    gDynamicMessageBuffer[messageLength++] = CHAR_0 + room % 10;
+    gDynamicMessageBuffer[messageLength++] = CHAR_EMPTY_SPACE;
     gDynamicMessageBuffer[messageLength++] = CHAR_OPENING_PARENTHESIS;
-    gDynamicMessageBuffer[messageLength++] = CHAR_0 + (itemX / 10) % 10;
-    gDynamicMessageBuffer[messageLength++] = CHAR_0 + itemX % 10;
+    gDynamicMessageBuffer[messageLength++] = CHAR_0 + (xPosition / 100) % 10;
+    gDynamicMessageBuffer[messageLength++] = CHAR_0 + (xPosition / 10) % 10;
+    gDynamicMessageBuffer[messageLength++] = CHAR_0 + xPosition % 10;
     gDynamicMessageBuffer[messageLength++] = CHAR_COMMA;
     gDynamicMessageBuffer[messageLength++] = CHAR_EMPTY_SPACE;
-    gDynamicMessageBuffer[messageLength++] = CHAR_0 + (itemY / 10) % 10;
-    gDynamicMessageBuffer[messageLength++] = CHAR_0 + itemY % 10;
+    gDynamicMessageBuffer[messageLength++] = CHAR_0 + (yPosition / 100) % 10;
+    gDynamicMessageBuffer[messageLength++] = CHAR_0 + (yPosition / 10) % 10;
+    gDynamicMessageBuffer[messageLength++] = CHAR_0 + yPosition % 10;
     gDynamicMessageBuffer[messageLength++] = CHAR_CLOSING_PARENTHESIS;
     gDynamicMessageBuffer[messageLength++] = CHAR_TERMINATOR;
     lineLength = TextFindCharacter(gDynamicMessageBuffer + 2, CHAR_NEW_LINE);

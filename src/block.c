@@ -1,6 +1,7 @@
 #include "block.h"
 #include "macros.h"
 #include "gba.h"
+#include "rando_item.h"
 
 #include "data/block_data.h"
 #include "data/engine_pointers.h"
@@ -31,6 +32,7 @@ u32 BlockCheckCCAA(struct ClipdataBlockData* pClipBlock)
     u32 destroy;
     u32 behavior;
     u16 block;
+    u32 item;
 
     result = FALSE;
 
@@ -173,6 +175,8 @@ u32 BlockCheckCCAA(struct ClipdataBlockData* pClipBlock)
                 behavior = sTankBehaviors[BEHAVIOR_TO_TANK(pClipBlock->behavior)].revealedClipdata;
                 if (behavior != 0)
                 {
+                    item = RandoGetItemAtPosition(gCurrentArea, gCurrentRoom, pClipBlock->xPosition, pClipBlock->yPosition);
+
                     BgClipSetBg1BlockValue(behavior, pClipBlock->yPosition, pClipBlock->xPosition);
                     BgClipSetClipdataBlockValue(behavior, pClipBlock->yPosition, pClipBlock->xPosition);
                     result = TRUE;
@@ -409,22 +413,10 @@ u32 BlockCheckCCAA(struct ClipdataBlockData* pClipBlock)
         and r0, r1 \n\
         cmp r0, #0 \n\
         beq lbl_080592ae \n\
-        ldr r1, lbl_080592c0 @ =sTankBehaviors \n\
-        ldrh r0, [r5, #4] \n\
-        sub r0, #0x34 \n\
-        lsl r0, r0, #3 \n\
-        add r0, r0, r1 \n\
-        ldrh r4, [r0, #4] \n\
-        cmp r4, #0 \n\
+        mov r0, r5 \n\
+        bl BlockRevealTank \n\
+        cmp r0, #0 \n\
         beq lbl_080592ae \n\
-        ldrh r1, [r5, #2] \n\
-        ldrh r2, [r5] \n\
-        add r0, r4, #0 \n\
-        bl BgClipSetBg1BlockValue \n\
-        ldrh r1, [r5, #2] \n\
-        ldrh r2, [r5] \n\
-        add r0, r4, #0 \n\
-        bl BgClipSetClipdataBlockValue \n\
     lbl_080592ac: \n\
         movs r7, #1 \n\
     lbl_080592ae: \n\
@@ -438,6 +430,44 @@ u32 BlockCheckCCAA(struct ClipdataBlockData* pClipBlock)
     lbl_080592bc: .4byte gCurrentClipdataAffectingAction \n\
     lbl_080592c0: .4byte sTankBehaviors \n\
     ");
+}
+
+static u32 BlockRevealTank(struct ClipdataBlockData* pClipBlock) {
+    u32 appearance;
+    u32 behavior;
+    u32 item;
+
+    behavior = sTankBehaviors[BEHAVIOR_TO_TANK(pClipBlock->behavior)].revealedClipdata;
+    if (behavior != 0)
+    {
+        item = RandoGetItemAtPosition(gCurrentArea, gCurrentRoom, pClipBlock->xPosition, pClipBlock->yPosition);
+        switch (item) {
+            case ITEM_ETANK:
+                appearance = CLIPDATA_TILEMAP_FLAG | CLIPDATA_TILEMAP_ENERGY_TANK;
+                break;
+            case ITEM_MISSILE:
+            case ITEM_MISSILE_TANK:
+                appearance = CLIPDATA_TILEMAP_FLAG | CLIPDATA_TILEMAP_MISSILE_TANK;
+                break;
+            case ITEM_SUPER:
+            case ITEM_SUPER_MISSILE_TANK:
+                appearance = CLIPDATA_TILEMAP_FLAG | CLIPDATA_TILEMAP_SUPER_MISSILE_TANK;
+                break;
+            case ITEM_POWER_BOMB:
+            case ITEM_POWER_BOMB_TANK:
+                appearance = CLIPDATA_TILEMAP_FLAG | CLIPDATA_TILEMAP_POWER_BOMB_TANK;
+                break;
+            default:
+                appearance = behavior;
+                break;
+        }
+
+        BgClipSetBg1BlockValue(appearance, pClipBlock->yPosition, pClipBlock->xPosition);
+        BgClipSetClipdataBlockValue(behavior, pClipBlock->yPosition, pClipBlock->xPosition);
+        return TRUE;
+    }
+
+    return FALSE;
 }
 #endif
 

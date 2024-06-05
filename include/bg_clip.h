@@ -21,6 +21,7 @@ void BgClipCheckGrabbingCrumbleBlock(u8 dontDestroy);
 u8 BgClipCheckOpeningHatch(u16 xPosition, u16 yPosition);
 void BgClipSetItemAsCollected(u16 xPosition, u16 yPosition, u8 type);
 void BgClipRemoveCollectedTanks(void);
+void BgClipSetRandoTanks(void);
 void BgClipCallMotherBrainUpdateGlass(u8 stage);
 
 #endif /* BG_CLIP_H */

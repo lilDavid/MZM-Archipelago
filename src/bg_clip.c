@@ -11,6 +11,7 @@
 #include "constants/connection.h"
 #include "constants/clipdata.h"
 #include "constants/game_state.h"
+#include "constants/rando.h"
 #include "constants/samus.h"
 #include "constants/sprite.h"
 #include "constants/text.h"
@@ -20,6 +21,7 @@
 #include "structs/connection.h"
 #include "structs/transparency.h"
 #include "structs/game_state.h"
+#include "structs/rando.h"
 #include "structs/room.h"
 #include "structs/samus.h"
 
@@ -506,7 +508,7 @@ void BgClipCheckTouchingTransitionOrTank(void)
                 gLastTankCollected.yPosition = yPositions[sHatchRelated_345cee[j][0]];
 
                 // Give tank check
-                RandoGiveItemFromPosition(gCurrentArea, &gCurrentRoomEntry, gLastTankCollected.xPosition, gLastTankCollected.yPosition);
+                RandoGiveItemFromPosition(gCurrentArea, gCurrentRoom, gLastTankCollected.xPosition, gLastTankCollected.yPosition);
             }
         }
 
@@ -804,6 +806,60 @@ void BgClipRemoveCollectedTanks(void)
                 gBgPointersAndDimensions.pClipDecomp[position] = 0;
                 gBgPointersAndDimensions.backgrounds[1].pDecomp[position] = 0;
             }
+        }
+    }
+}
+
+void BgClipSetRandoTanks(void) {
+    const struct ItemInfo* pLocation;
+    u32 itemId;
+    u32 i;
+    u32 end;
+    s32 position;
+    s32 behavior;
+    s32 appearance;
+
+    if (gCurrentArea > AREA_CHOZODIA)
+        return;
+
+    if (gPauseScreenFlag != PAUSE_SCREEN_NONE)
+        return;
+
+    end = sRegionLocationOffsets[gCurrentArea][1];
+    for (i = sRegionLocationOffsets[gCurrentArea][0]; i < end; i++) {
+        pLocation = &sItemLocations[i];
+        itemId = sPlacedItems[i].itemId;
+        if (pLocation->room == gCurrentRoom) {
+            // Get offset
+            position = gBgPointersAndDimensions.clipdataWidth * pLocation->yPosition + pLocation->xPosition;
+
+            // Get behavior
+            behavior = gTilemapAndClipPointers.pClipBehaviors[gBgPointersAndDimensions.pClipDecomp[position]];
+
+            if (sTankBehaviors[BEHAVIOR_TO_TANK(behavior)].itemType == ITEM_TYPE_NONE)
+                continue;
+
+            switch (itemId) {
+                case ITEM_ETANK:
+                    appearance = CLIPDATA_TILEMAP_FLAG | CLIPDATA_TILEMAP_ENERGY_TANK;
+                    break;
+                case ITEM_MISSILE:
+                case ITEM_MISSILE_TANK:
+                    appearance = CLIPDATA_TILEMAP_FLAG | CLIPDATA_TILEMAP_MISSILE_TANK;
+                    break;
+                case ITEM_SUPER:
+                case ITEM_SUPER_MISSILE_TANK:
+                    appearance = CLIPDATA_TILEMAP_FLAG | CLIPDATA_TILEMAP_SUPER_MISSILE_TANK;
+                    break;
+                case ITEM_POWER_BOMB:
+                case ITEM_POWER_BOMB_TANK:
+                    appearance = CLIPDATA_TILEMAP_FLAG | CLIPDATA_TILEMAP_POWER_BOMB_TANK;
+                    break;
+                default:
+                    continue;
+            }
+
+            gBgPointersAndDimensions.backgrounds[1].pDecomp[position] = appearance;
         }
     }
 }

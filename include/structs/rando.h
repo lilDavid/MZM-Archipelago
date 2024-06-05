@@ -6,6 +6,8 @@
 #include "constants/connection.h"
 #include "constants/rando.h"
 
+#include "structs/bg_clip.h"
+
 // Structs
 
 struct RandomizerOptions {
@@ -26,20 +28,14 @@ struct PlacedItem {
     u8 itemId;
 };
 
-struct TankLocation {
-    u8 area;
-    u8 xPosition;
-    u8 yPosition;
-};
-
 // Globals
 
 extern const struct Seed sRandoSeed;
 extern const struct PlacedItem sPlacedItems[RC_MAX];
 
 extern const u8 sItemMessages[ITEM_MAX];
-extern const u8 sRegionLocationOffsets[AREA_NORMAL_END + 1];
-extern const struct TankLocation sLocationMapPositions[RC_MAX];
+extern const u8 sRegionLocationOffsets[AREA_NORMAL_END + 1][2];  // Items are pairs: [start, end]
+extern const struct ItemInfo sItemLocations[RC_MAX];
 
 extern u32 gRandoLocationBitfields[AREA_NORMAL_END + 1];
 

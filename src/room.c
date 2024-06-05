@@ -370,6 +370,7 @@ void RoomLoadBackgrounds(void)
 void RoomRemoveNeverReformBlocksAndCollectedTanks(void)
 {
 	BlockRemoveNeverReformBlocks();
+    BgClipSetRandoTanks();
 	BgClipRemoveCollectedTanks();
 }
 
