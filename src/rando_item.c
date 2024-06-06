@@ -179,8 +179,8 @@ void RandoGiveItemFromCheck(u32 location) {
                                                 CHAR_TERMINATOR);
         gDynamicMessageBuffer[messageLength++] = CHAR_DOT;
         gDynamicMessageBuffer[messageLength++] = CHAR_TERMINATOR;
-        lineLength = TextFindCharacter(pLine2 + 1, CHAR_TERMINATOR);
-        lineWidth = TextGetStringWidth(pLine2 + 1, lineLength);
+        lineLength = TextFindCharacter(pLine2 + 2, CHAR_TERMINATOR);
+        lineWidth = TextGetStringWidth(pLine2 + 2, lineLength);
         pLine2[0] = CHAR_WIDTH_MASK | (224 - lineWidth) / 2;
 
         messageID = MESSAGE_DYNAMIC;

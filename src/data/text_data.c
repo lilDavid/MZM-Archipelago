@@ -190,8 +190,8 @@ const u16 sEnglishText_Message_EasySleepPrompt[] = INCTEXT("{WIDTH(101)}Yes\n{WI
 const u16 sEnglishText_Message_PlasmaBeam[] = INCTEXT("{WIDTH(76)}{COLOR(5)}Plasma Beam\n{WIDTH(110)}");
 const u16 sEnglishText_Message_GravitySuit[] = INCTEXT("{WIDTH(84)}{COLOR(5)}Gravity Suit\n{WIDTH(110)}");
 const u16 sEnglishText_Message_SpaceJump[] = INCTEXT("{WIDTH(75)}{COLOR(5)}Space Jump\n{WIDTH(110)}");
-const u16 sEnglishText_Message_CheckFromPositionError[] = INCTEXT("{WIDTH(12)}{COLOR(5)}Error determining randomizer location.\n{WIDTH(0)}Location: ");
-const u16 sEnglishText_MessageFragment_Sent[] = INCTEXT("Sent to ");
+const u16 sEnglishText_Message_CheckFromPositionError[] = INCTEXT("{WIDTH(12)}{COLOR(5)}Error determining randomizer location.\n{WIDTH(0)}{COLOR(0)}Location: ");
+const u16 sEnglishText_MessageFragment_Sent[] = INCTEXT("{COLOR(0)}Sent to ");
 
 const u16 sEnglishText_Location_Brinstar[] = INCTEXT("{WIDTH(83)}BRINSTAR");
 const u16 sEnglishText_Location_Kraid[] = INCTEXT("{WIDTH(93)}KRAID");
