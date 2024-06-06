@@ -717,9 +717,14 @@ u8 unk_6f0a8(u8 textID, u8 gfxSlot, u8 param_3)
 
         case 3:
             gCurrentMessage.line++;
-            if (gCurrentMessage.messageID <= MESSAGE_POWER_GRIP)
+            if (gCurrentMessage.messageID <= MESSAGE_DYNAMIC_ITEM)
             {
-                gCurrentItemBeingAcquired = gCurrentMessage.messageID;
+                switch (gCurrentMessage.messageID) {
+                    case MESSAGE_PLASMA_BEAM: gCurrentItemBeingAcquired = ITEM_ACQUISITION_PLASMA_BEAM; break;
+                    case MESSAGE_GRAVITY_SUIT: gCurrentItemBeingAcquired = ITEM_ACQUISITION_GRAVITY; break;
+                    case MESSAGE_SPACE_JUMP: gCurrentItemBeingAcquired = ITEM_ACQUISITION_SPACE_JUMP; break;
+                    default: gCurrentItemBeingAcquired = gCurrentMessage.messageID; break;
+                }
                 if (gCurrentMessage.messageID >= MESSAGE_ENERGY_TANK_ACQUIRED && !gCollectingTank)
                     BgClipFinishCollectingAbility();
             }
@@ -823,7 +828,7 @@ u8 TextProcessItemBanner(void)
                     case MESSAGE_SPACE_JUMP: gCurrentItemBeingAcquired = ITEM_ACQUISITION_SPACE_JUMP; break;
                     default: gCurrentItemBeingAcquired = gCurrentMessage.messageID; break;
                 }
-                if (gCurrentMessage.messageID >= MESSAGE_LONG_BEAM)
+                if (gCurrentMessage.messageID >= MESSAGE_ENERGY_TANK_ACQUIRED && !gCollectingTank)
                     BgClipFinishCollectingAbility();
             }
             gCurrentMessage.stage++;
