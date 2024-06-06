@@ -154,13 +154,9 @@ void RandoGiveItemFromCheck(u32 location) {
     if (placement->playerName) {
         // Item name
         if (placement->itemName) {
-            messageLength = 1;
-            gDynamicMessageBuffer[messageLength++] = CHAR_COLOR_MASK | 5;
-            messageLength += TextCopyUntilCharacter(placement->itemName,
-                                                    gDynamicMessageBuffer + messageLength,
+            messageLength = TextCopyUntilCharacter(placement->itemName,
+                                                    gDynamicMessageBuffer,
                                                     CHAR_TERMINATOR);
-            lineWidth = TextGetStringWidth(gDynamicMessageBuffer + 2, messageLength - 2);  // Drop width and color
-            gDynamicMessageBuffer[0] = CHAR_WIDTH_MASK | (224 - lineWidth) / 2;
         } else {
             messageLength = TextCopyUntilCharacter(sMessageTextPointers[gLanguage][messageID],
                                                    gDynamicMessageBuffer,
