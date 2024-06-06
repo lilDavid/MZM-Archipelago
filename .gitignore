@@ -20,3 +20,4 @@ include/**/*.s
 tools/*.txt
 .vscode
 *.log
+extracted_symbols.json

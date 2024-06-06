@@ -174,7 +174,7 @@ void ItemBannerPopUp(void)
             {
                 if (msg == MESSAGE_ENERGY_TANK_ACQUIRED || msg == MESSAGE_MISSILE_TANK_ACQUIRED ||
                     msg == MESSAGE_SUPER_MISSILE_TANK_ACQUIRED || msg == MESSAGE_POWER_BOMB_TANK_ACQUIRED ||
-                    msg == MESSAGE_DYNAMIC)
+                    msg == MESSAGE_DYNAMIC_ITEM)
                 {
                     BackupTrackData2SoundChannels();
                 }

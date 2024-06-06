@@ -24,6 +24,6 @@ extern struct Message gCurrentMessage;
 extern u32 gCurrentCharacterGfx[32];
 extern s8 gCurrentItemBeingAcquired;
 
-extern u16 gDynamicMessageBuffer[74];  // Enough for rando check error message
+extern u16 gDynamicMessageBuffer[75];  // Enough for rando check error message
 
 #endif /* TEXT_STRUCT_H */

@@ -152,7 +152,7 @@ void RandoGiveItemFromPosition(u32 area, u32 room, u32 xPosition, u32 yPosition)
     lineWidth = TextGetStringWidth(gDynamicMessageBuffer + lineLength + 4, lineLength);
     gDynamicMessageBuffer[messageLength - lineLength - 2] = CHAR_WIDTH_MASK | (224 - lineWidth) / 2;
 
-    SpriteSpawnPrimary(PSPRITE_ITEM_BANNER, MESSAGE_DYNAMIC, 6, gSamusData.yPosition, gSamusData.xPosition, 0);
+    SpriteSpawnPrimary(PSPRITE_ITEM_BANNER, MESSAGE_DYNAMIC_ITEM, 6, gSamusData.yPosition, gSamusData.xPosition, 0);
 }
 
 void RandoGiveItemFromCheck(u32 location) {
@@ -173,13 +173,9 @@ void RandoGiveItemFromCheck(u32 location) {
     if (placement->playerName) {
         // Item name
         if (placement->itemName) {
-            messageLength = 1;
-            gDynamicMessageBuffer[messageLength++] = CHAR_COLOR_MASK | 5;
-            messageLength += TextCopyUntilCharacter(placement->itemName,
-                                                    gDynamicMessageBuffer + messageLength,
+            messageLength = TextCopyUntilCharacter(placement->itemName,
+                                                    gDynamicMessageBuffer,
                                                     CHAR_TERMINATOR);
-            lineWidth = TextGetStringWidth(gDynamicMessageBuffer + 2, messageLength - 2);  // Drop width and color
-            gDynamicMessageBuffer[0] = CHAR_WIDTH_MASK | (224 - lineWidth) / 2;
         } else {
             messageLength = TextCopyUntilCharacter(sMessageTextPointers[gLanguage][messageID],
                                                    gDynamicMessageBuffer,
@@ -198,11 +194,11 @@ void RandoGiveItemFromCheck(u32 location) {
                                                 CHAR_TERMINATOR);
         gDynamicMessageBuffer[messageLength++] = CHAR_DOT;
         gDynamicMessageBuffer[messageLength++] = CHAR_TERMINATOR;
-        lineLength = TextFindCharacter(pLine2 + 1, CHAR_TERMINATOR);
-        lineWidth = TextGetStringWidth(pLine2 + 1, lineLength);
+        lineLength = TextFindCharacter(pLine2 + 2, CHAR_TERMINATOR);
+        lineWidth = TextGetStringWidth(pLine2 + 2, lineLength);
         pLine2[0] = CHAR_WIDTH_MASK | (224 - lineWidth) / 2;
 
-        messageID = MESSAGE_DYNAMIC;
+        messageID = MESSAGE_DYNAMIC_ITEM;
     } else {
         isFirstTank = FALSE;
         switch (placement->itemId) {
