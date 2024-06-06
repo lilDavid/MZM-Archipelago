@@ -815,7 +815,7 @@ u8 TextProcessItemBanner(void)
 
         case 3:
             gCurrentMessage.line++;
-            if (gCurrentMessage.messageID <= MESSAGE_SPACE_JUMP)
+            if (gCurrentMessage.messageID <= MESSAGE_DYNAMIC_ITEM)
             {
                 switch (gCurrentMessage.messageID) {
                     case MESSAGE_PLASMA_BEAM: gCurrentItemBeingAcquired = ITEM_ACQUISITION_PLASMA_BEAM; break;
@@ -1307,7 +1307,7 @@ u8 TextProcessCurrentMessage(struct Message* pMessage, const u16* pText, u32* ds
     state = TEXT_STATE_NONE;
     pMessage->timer++;
 
-    if (pMessage->messageID == MESSAGE_DYNAMIC)
+    if (pMessage->messageID == MESSAGE_DYNAMIC_ITEM)
         pText = gDynamicMessageBuffer;
 
     // Check for message delay

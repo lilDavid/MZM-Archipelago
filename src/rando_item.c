@@ -133,7 +133,7 @@ void RandoGiveItemFromPosition(u32 area, struct RoomEntry* pRoomEntry, u32 xPosi
     lineWidth = TextGetStringWidth(gDynamicMessageBuffer + lineLength + 4, lineLength);
     gDynamicMessageBuffer[messageLength - lineLength - 2] = CHAR_WIDTH_MASK | (224 - lineWidth) / 2;
 
-    SpriteSpawnPrimary(PSPRITE_ITEM_BANNER, MESSAGE_DYNAMIC, 6, gSamusData.yPosition, gSamusData.xPosition, 0);
+    SpriteSpawnPrimary(PSPRITE_ITEM_BANNER, MESSAGE_DYNAMIC_ITEM, 6, gSamusData.yPosition, gSamusData.xPosition, 0);
 }
 
 void RandoGiveItemFromCheck(u32 location) {
@@ -183,7 +183,7 @@ void RandoGiveItemFromCheck(u32 location) {
         lineWidth = TextGetStringWidth(pLine2 + 2, lineLength);
         pLine2[0] = CHAR_WIDTH_MASK | (224 - lineWidth) / 2;
 
-        messageID = MESSAGE_DYNAMIC;
+        messageID = MESSAGE_DYNAMIC_ITEM;
     } else {
         isFirstTank = FALSE;
         switch (placement->itemId) {
