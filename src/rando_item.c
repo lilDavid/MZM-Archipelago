@@ -291,11 +291,16 @@ void RandoGiveItemFromCheck(u32 location) {
 
 void RandoPlaceItemInSpriteGraphics(u32 location, u32 row, u32 column, u32 palette) {
     void* pal;
+    u32 i;
+    u32 y;
 
-    u32 tiles_per_row = 2 * 3;
     u32 item = sPlacedItems[location].itemId;
-    DmaTransfer(3, sItemGfxPointers[item].gfx, VRAM_BASE + 0x14000 + (row * 0x800) + (column * 0x40), 32 * tiles_per_row, 32);
-    DmaTransfer(3, sItemGfxPointers[item].gfx + 8 * tiles_per_row, VRAM_BASE + 0x14000 + (row * 0x800 + 0x400) + (column * 0x40), 32 * tiles_per_row, 32);
+    for (i = 0; i < 3; i++) {
+        for (y = 0; y < 2; y++) {
+            DmaTransfer(3, sItemGfxPointers[item].gfx + (0x80 * i) + (0x40 * y), VRAM_BASE + 0x14000 + (row * 0x800) + (y * 0x400) + ((column + i) * 0x40), 32 * 2, 32);
+        }
+    }
+
     if (gGameModeSub1 == SUB_GAME_MODE_DOOR_TRANSITION || gGameModeSub1 == SUB_GAME_MODE_LOADING_ROOM || location == RC_BRINSTAR_MORPH_BALL)
         pal = EWRAM_BASE + 0x35700;
     else

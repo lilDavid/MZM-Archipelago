@@ -7,7 +7,7 @@
 
 
 struct ItemGraphicsInfo {
-    const u32* gfx;
+    const u8* gfx;
     const u16* palette;
 };
 

@@ -80,15 +80,10 @@ def get_tile(tiledata: bytes, x: int, y: int) -> bytes:
 
 
 def get_sprites(tileset: bytes, start_x: int, start_y: int, sprites: int, rows: int = 2):
-    return b"".join(get_tile(tileset, x, y)
+    return b"".join(get_tile(tileset, 2 * t + x, y)
+                    for t in range(sprites)
                     for y in range(start_y, start_y + rows)
-                    for x in range(start_x, start_x + 2 * sprites))
-
-
-def extract_tank(tank_gfx: bytes, outfilename: str):
-    top = tank_gfx[0:0x40] + tank_gfx[0x80:0xC0] + tank_gfx[0x100:0x140]
-    bottom = tank_gfx[0x40:0x80] + tank_gfx[0xC0:0x100] + tank_gfx[0x140:0x180]
-    save(rando_data / outfilename, top + bottom)
+                    for x in range(start_x, start_x + 2))
 
 
 def extract_chozo_statue_sprite(infilename: str, outfilename: str):
@@ -101,34 +96,26 @@ def extract_unknown_chozo_statue_sprite(infilename: str, outfilename: str, y_off
     statue = decompress_file(sprite_data / infilename)
     tiles = get_sprites(statue, 4, 4, 2)
     byte_offset = y_offset * 4
-    top = tiles[byte_offset:0x20] + tiles[0x80:0x80 + byte_offset] + tiles[0x20 + byte_offset:0x40] + tiles[0xA0:0xA0 + byte_offset]
-    bottom = tiles[0x80 + byte_offset:0xA0] + tiles[0x40:0x40 + byte_offset] + tiles[0xA0 + byte_offset:0xC0] + tiles[0x60:0x60 + byte_offset]
-    save(rando_data / outfilename, 3 * top + 3 * bottom)
+    shifted = (tiles[byte_offset:0x20] + tiles[0x40:0x40 + byte_offset]
+             + tiles[0x20 + byte_offset:0x40] + tiles[0x60:0x60 + byte_offset]
+             + tiles[0x40 + byte_offset:0x60] + tiles[0x80:0x80 + byte_offset]
+             + tiles[0x60 + byte_offset:0x80] + tiles[0xA0:0xA0 + byte_offset])
+    save(rando_data / outfilename, 3 * shifted)
 
 
 def main():
-    # Tanks
-    tanks = load(data / "animated_tiles/Tanks.gfx")
-    extract_tank(tanks[0:0x180], "missiletank.gfx")
-    extract_tank(tanks[0x200:0x380], "energytank.gfx")
-    extract_tank(tanks[0x400:0x580], "powerbombtank.gfx")
-    extract_tank(tanks[0x600:0x780], "supermissiletank.gfx")
+    # Tanks are already in needed format
 
     # Long Beam
     extract_chozo_statue_sprite("ChozoStatueLongBeam.gfx.lz", "longbeam.gfx")
 
     # Charge Beam
     charge = decompress_file(sprite_data / "ChargeBeam.gfx.lz")
-    charge1 = get_sprites(charge, 18, 0, 2, 1)
-    charge2 = get_sprites(charge, 18, 1, 2, 1)
-    charge_final_1 = bytearray(0x20 * 2 * 3)
-    charge_final_2 = bytearray(0x20 * 2 * 3)
-    charge_final_1[0:0x80] = charge1
-    charge_final_1[0x80:0xA0] = charge1[:0x20]
-    charge_final_1[0xA0:] = get_tile(charge, 22, 0)
-    charge_final_2[0:0x80] = charge2
-    charge_final_2[0x80:] = charge2[:0x40]
-    save(rando_data / "chargebeam.gfx", bytes(charge_final_1 + charge_final_2))
+    charge1 = get_sprites(charge, 18, 0, 1)
+    charge2 = get_sprites(charge, 20, 0, 1)
+    charge3 = bytearray(charge1)
+    charge3[0x20:0x40] = get_tile(charge, 22, 0)
+    save(rando_data / "chargebeam.gfx", bytes(charge1 + charge2 + charge3))
 
     # Ice Beam
     extract_chozo_statue_sprite("ChozoStatueIceBeam.gfx.lz", "icebeam.gfx")
@@ -158,14 +145,14 @@ def main():
             for i in range(0x40):
                 glass_pair = morph_glass[i + 0x40 * y]
                 glass_left, glass_right = glass_pair & 0xF, glass_pair >> 4
-                ball_pair = morph_core[0x40 * t + i + 3 * 0x40 * y]
+                ball_pair = morph_core[i + 0x40 * y + 0x80 * t]
                 ball_left, ball_right = ball_pair & 0xF, ball_pair >> 4
                 if glass_left != 0:
                     ball_left = glass_left
                 if glass_right != 0:
                     ball_right = glass_right
                 combined = ball_right << 4 | ball_left
-                morph_composited[0x40 * t + i + 3 * 0x40 * y] = combined
+                morph_composited[i + 0x40 * y + 0x80 * t] = combined
     save(rando_data / "morphball.gfx", morph_composited)
 
     # Speed Booster
