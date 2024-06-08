@@ -43,9 +43,14 @@ void MorphBallInit(void)
     gCurrentSprite.pose = MORPH_BALL_POSE_IDLE;
     gCurrentSprite.drawOrder = 3;
 
-    // Spawn outside
-    SpriteSpawnSecondary(SSPRITE_MORPH_BALL_OUTSIDE, gCurrentSprite.roomSlot, gCurrentSprite.spritesetGfxSlot,
-        gCurrentSprite.primarySpriteRamSlot, gCurrentSprite.yPosition, gCurrentSprite.xPosition, 0);
+    if (sPlacedItems[RC_BRINSTAR_MORPH_BALL].itemId == ITEM_MORPH_BALL) {
+        // Spawn outside
+        SpriteSpawnSecondary(SSPRITE_MORPH_BALL_OUTSIDE, gCurrentSprite.roomSlot, gCurrentSprite.spritesetGfxSlot,
+            gCurrentSprite.primarySpriteRamSlot, gCurrentSprite.yPosition, gCurrentSprite.xPosition, 0);
+    } else {
+        u32 gfxSlot = gCurrentSprite.spritesetGfxSlot;
+        RandoPlaceItemInSpriteGraphics(RC_BRINSTAR_MORPH_BALL, gfxSlot, 0, gfxSlot);
+    }
 }
 
 /**

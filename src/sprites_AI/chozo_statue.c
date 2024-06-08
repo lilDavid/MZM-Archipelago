@@ -309,6 +309,7 @@ void ChozoStatueInit(void)
     u16 yPosition;
     u16 xPosition;
     u8 newRamSlot;
+    u8 randoCheck;
 
     gCurrentSprite.properties |= (SP_ALWAYS_ACTIVE | SP_SOLID_FOR_PROJECTILES);
 
@@ -409,6 +410,25 @@ void ChozoStatueInit(void)
     newRamSlot = SpriteSpawnSecondary(SSPRITE_CHOZO_STATUE_PART, CHOZO_STATUE_PART_GLOW, gfxSlot,
         ramSlot, yPosition, xPosition, gCurrentSprite.status & SPRITE_STATUS_XFLIP);
     gSpriteData[newRamSlot].workVariable = behavior;
+
+    randoCheck = RC_MAX;
+    switch (gCurrentSprite.spriteId) {
+        case PSPRITE_CHOZO_STATUE_LONG: randoCheck = RC_BRINSTAR_LONG_BEAM; break;
+        case PSPRITE_CHOZO_STATUE_ICE: randoCheck = RC_NORFAIR_ICE_BEAM; break;
+        case PSPRITE_CHOZO_STATUE_WAVE: randoCheck = RC_NORFAIR_WAVE_BEAM; break;
+        case PSPRITE_CHOZO_STATUE_BOMB: randoCheck = RC_BRINSTAR_BOMB; break;
+        case PSPRITE_CHOZO_STATUE_SPEEDBOOSTER: randoCheck = RC_KRAID_SPEED_BOOSTER; break;
+        case PSPRITE_CHOZO_STATUE_HIGH_JUMP: randoCheck = RC_NORFAIR_HIJUMP; break;
+        case PSPRITE_CHOZO_STATUE_SCREW: randoCheck = RC_NORFAIR_SCREW_ATTACK; break;
+        case PSPRITE_CHOZO_STATUE_VARIA: randoCheck = RC_BRINSTAR_VARIA_SUIT; break;
+        case PSPRITE_CHOZO_STATUE_GRAVITY: break;  // TODO
+        case PSPRITE_CHOZO_STATUE_SPACE_JUMP: break; // TODO
+        case PSPRITE_CHOZO_STATUE_PLASMA_BEAM: break; // TODO
+        default: break;
+    }
+    if (randoCheck < RC_MAX) {
+        RandoPlaceItemInSpriteGraphics(randoCheck, gfxSlot + 2, 2, gfxSlot);
+    }
 }
 
 /**

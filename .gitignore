@@ -19,5 +19,6 @@ c_extractor
 include/**/*.s
 tools/*.txt
 .vscode
+.venv*
 *.log
 extracted_symbols.json

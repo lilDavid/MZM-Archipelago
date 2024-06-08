@@ -3,6 +3,7 @@
 #include "rando_item.h"
 
 #include "data/sprites/charge_beam.h"
+#include "data/sprites/morph_ball.h"
 
 #include "constants/sprite.h"
 #include "constants/event.h"
@@ -54,14 +55,22 @@ void ChargeBeamInit(void)
  */
 void ChargeBeamSpawnGlow(void)
 {
+    u8 gfxSlot;
+
     gCurrentSprite.ignoreSamusCollisionTimer = 1;
 
     if (SpriteUtilCheckNearEndCurrentSpriteAnim())
     {
         gCurrentSprite.pose = CHARGE_BEAM_POSE_IDLE_INIT;
 
-        gCurrentSprite.workVariable = SpriteSpawnSecondary(SSPRITE_CHARGE_BEAM_GLOW, 0, gCurrentSprite.spritesetGfxSlot,
-            gCurrentSprite.primarySpriteRamSlot, gCurrentSprite.yPosition, gCurrentSprite.xPosition, 0);
+        gfxSlot = gCurrentSprite.spritesetGfxSlot;
+        if (sPlacedItems[RC_BRINSTAR_WORM_DROP].itemId == ITEM_CHARGE_BEAM) {
+            gCurrentSprite.workVariable = SpriteSpawnSecondary(SSPRITE_CHARGE_BEAM_GLOW, 0, gfxSlot,
+                gCurrentSprite.primarySpriteRamSlot, gCurrentSprite.yPosition, gCurrentSprite.xPosition, 0);
+        } else {
+            gCurrentSprite.workVariable = MAX_AMOUNT_OF_SPRITES;
+            RandoPlaceItemInSpriteGraphics(RC_BRINSTAR_WORM_DROP, gfxSlot, 0, gfxSlot);
+        }
     }
 }
 
@@ -74,7 +83,10 @@ void ChargeBeamVisibleInit(void)
     gCurrentSprite.ignoreSamusCollisionTimer = 1;
     gCurrentSprite.pose = CHARGE_BEAM_POSE_IDLE;
 
-    gCurrentSprite.pOam = sChargeBeamOAM_Visible;
+    if (sPlacedItems[RC_BRINSTAR_WORM_DROP].itemId == ITEM_CHARGE_BEAM)
+        gCurrentSprite.pOam = sChargeBeamOAM_Visible;
+    else
+        gCurrentSprite.pOam = sMorphBallOam_Idle;
     gCurrentSprite.animationDurationCounter = 0;
     gCurrentSprite.currentAnimationFrame = 0;
 

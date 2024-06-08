@@ -19,6 +19,8 @@
  */
 void PowerGrip(void)
 {
+    u32 gfxSlot;
+
     switch (gCurrentSprite.pose)
     {
         case SPRITE_POSE_UNINITIALIZED:
@@ -50,6 +52,9 @@ void PowerGrip(void)
             // Spawn glow
             SpriteSpawnSecondary(SSPRITE_POWER_GRIP_GLOW, gCurrentSprite.roomSlot, gCurrentSprite.spritesetGfxSlot,
                 gCurrentSprite.primarySpriteRamSlot, gCurrentSprite.yPosition, gCurrentSprite.xPosition, 0);
+
+            gfxSlot = gCurrentSprite.spritesetGfxSlot;
+            RandoPlaceItemInSpriteGraphics(RC_CRATERIA_POWER_GRIP, gfxSlot, 0, gfxSlot);
             break;
 
         case POWER_GRIP_POSE_IDLE:

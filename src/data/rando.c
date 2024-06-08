@@ -1,3 +1,5 @@
+#include "macros.h"
+
 #include "structs/rando.h"
 
 #include "constants/block.h"

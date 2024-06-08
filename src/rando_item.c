@@ -1,4 +1,5 @@
 #include "rando_item.h"
+#include "gba.h"
 
 #include "constants/samus.h"
 #include "constants/sprite.h"
@@ -7,6 +8,7 @@
 #include "data/block_data.h"
 #include "data/text_data.h"
 #include "data/text_pointers.h"
+#include "data/rando_data.h"
 
 #include "structs/bg_clip.h"
 #include "structs/game_state.h"
@@ -285,4 +287,18 @@ void RandoGiveItemFromCheck(u32 location) {
     }
 
     SpriteSpawnPrimary(PSPRITE_ITEM_BANNER, messageID, 6, gSamusData.yPosition, gSamusData.xPosition, 0);
+}
+
+void RandoPlaceItemInSpriteGraphics(u32 location, u32 row, u32 column, u32 palette) {
+    void* pal;
+
+    u32 tiles_per_row = 2 * 3;
+    u32 item = sPlacedItems[location].itemId;
+    DmaTransfer(3, sItemGfxPointers[item].gfx, VRAM_BASE + 0x14000 + (row * 0x800) + (column * 0x40), 32 * tiles_per_row, 32);
+    DmaTransfer(3, sItemGfxPointers[item].gfx + 8 * tiles_per_row, VRAM_BASE + 0x14000 + (row * 0x800 + 0x400) + (column * 0x40), 32 * tiles_per_row, 32);
+    if (gGameModeSub1 == SUB_GAME_MODE_DOOR_TRANSITION || gGameModeSub1 == SUB_GAME_MODE_LOADING_ROOM || location == RC_BRINSTAR_MORPH_BALL)
+        pal = EWRAM_BASE + 0x35700;
+    else
+        pal = PALRAM_BASE + 0x300;
+    DMA_SET(3, sItemGfxPointers[item].palette, pal + (palette * 16 * sizeof(u16)), C_32_2_16(DMA_ENABLE, 16));
 }
