@@ -140,6 +140,8 @@ src/libgcc/%.s: src/libgcc/%.c
 src/sprites_AI/%.s: CFLAGS = -O2 -mthumb-interwork -fhex-asm
 src/sprites_AI/%.s: src/sram/%.c
 
+src/data/rando_data.s: data/rando/*
+
 tools/%: tools/%.c
 	$(MSG) HOSTCC $@
 	$Q$(HOSTCC) $< $(HOSTCFLAGS) $(HOSTCPPFLAGS) -o $@

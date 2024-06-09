@@ -24,6 +24,9 @@ const u8 sRandoHiJumpGfx[RANDO_GRAPHICS_SIZE] = INCBIN_U8("data/rando/hijump.gfx
 const u8 sRandoScrewAttackGfx[RANDO_GRAPHICS_SIZE] = INCBIN_U8("data/rando/screwattack.gfx");
 const u8 sRandoSpaceJumpUnknownGfx[RANDO_GRAPHICS_SIZE] = INCBIN_U8("data/rando/spacejumpunknown.gfx");
 const u8 sRandoPowerGripGfx[RANDO_GRAPHICS_SIZE] = INCBIN_U8("data/rando/powergrip.gfx");
+const u8 sRandoAPLogoGfx[RANDO_GRAPHICS_SIZE] = INCBIN_U8("data/rando/aplogo.gfx");
+
+const u16 sRandoAPLogoPal[0x20] = INCBIN_U16("data/rando/aplogo.pal");
 
 const struct ItemGraphicsInfo sItemGfxPointers[ITEM_MAX] = {
     [ITEM_ETANK] = {sAnimatedTankGfx + 512, sCommonTilesPal - 1},
@@ -47,8 +50,8 @@ const struct ItemGraphicsInfo sItemGfxPointers[ITEM_MAX] = {
     [ITEM_MISSILE_TANK] = {sAnimatedTankGfx, sCommonTilesPal - 1},
     [ITEM_SUPER_MISSILE_TANK] = {sAnimatedTankGfx + 512 * 3, sCommonTilesPal - 1},
     [ITEM_POWER_BOMB_TANK] = {sAnimatedTankGfx + 512 * 2, sCommonTilesPal - 1},
-    [ITEM_AP_FILLER] = {sAnimatedTankGfx, sCommonTilesPal - 1},  // TODO
-    [ITEM_AP_PROGRESSION] = {sRandoScrewAttackGfx, sChozoStatueScrewAttackPal},  // TODO
-    [ITEM_AP_USEFUL] = {sRandoChargeBeamGfx, sChargeBeamPal},  // TODO
-    [ITEM_AP_TRAP] = {sRandoScrewAttackGfx, sChozoStatueScrewAttackPal},  // TODO
+    [ITEM_AP_FILLER] = {sRandoAPLogoGfx, sRandoAPLogoPal},  // TODO: Distinguish AP items
+    [ITEM_AP_PROGRESSION] = {sRandoAPLogoGfx, sRandoAPLogoPal},  // TODO: Distinguish AP items
+    [ITEM_AP_USEFUL] = {sRandoAPLogoGfx, sRandoAPLogoPal},  // TODO: Distinguish AP items
+    [ITEM_AP_TRAP] = {sRandoAPLogoGfx, sRandoAPLogoPal},  // TODO: Distinguish AP items
 };
