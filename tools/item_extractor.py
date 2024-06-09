@@ -9,16 +9,6 @@ sprite_data = data / "sprites"
 rando_data = data / "rando"
 
 
-def batched(iterable, n):
-    "Batch data into tuples of length n. The last batch may be shorter."
-    # batched('ABCDEFG', 3) --> ABC DEF G
-    if n < 1:
-        raise ValueError('n must be at least one')
-    it = iter(iterable)
-    while batch := tuple(itertools.islice(it, n)):
-        yield batch
-
-
 # Direct implementation of https://problemkaputt.de/gbatek-lz-decompression-functions.htm
 # Taking only the typ = 0x10 path
 def lzss_decompress(compressed: bytes):
@@ -74,6 +64,11 @@ def decompress_file(path: Path):
     return lzss_decompress(data)
 
 
+def make_4_frame_animation(data: bytes):
+    middle_frame = data[0x80:0x100]
+    return data + middle_frame
+
+
 def get_tile(tiledata: bytes, x: int, y: int) -> bytes:
     offset = 0x20 * x + 0x400 * y
     return tiledata[offset:offset+0x20]
@@ -89,7 +84,7 @@ def get_sprites(tileset: bytes, start_x: int, start_y: int, sprites: int, rows: 
 def extract_chozo_statue_sprite(infilename: str, outfilename: str):
     statue = decompress_file(sprite_data / infilename)
     item = get_sprites(statue, 4, 4, 3)
-    save(rando_data / outfilename, item)
+    save(rando_data / outfilename, make_4_frame_animation(item))
 
 
 def extract_unknown_chozo_statue_sprite(infilename: str, outfilename: str, y_offset: int):
@@ -100,7 +95,7 @@ def extract_unknown_chozo_statue_sprite(infilename: str, outfilename: str, y_off
              + tiles[0x20 + byte_offset:0x40] + tiles[0x60:0x60 + byte_offset]
              + tiles[0x40 + byte_offset:0x60] + tiles[0x80:0x80 + byte_offset]
              + tiles[0x60 + byte_offset:0x80] + tiles[0xA0:0xA0 + byte_offset])
-    save(rando_data / outfilename, 3 * shifted)
+    save(rando_data / outfilename, 4 * shifted)
 
 
 def main():
@@ -115,7 +110,7 @@ def main():
     charge2 = get_sprites(charge, 20, 0, 1)
     charge3 = bytearray(charge1)
     charge3[0x20:0x40] = get_tile(charge, 22, 0)
-    save(rando_data / "chargebeam.gfx", bytes(charge1 + charge2 + charge3))
+    save(rando_data / "chargebeam.gfx", bytes(charge1 + charge2 + charge3 + charge2))
 
     # Ice Beam
     extract_chozo_statue_sprite("ChozoStatueIceBeam.gfx.lz", "icebeam.gfx")
@@ -153,7 +148,7 @@ def main():
                     ball_right = glass_right
                 combined = ball_right << 4 | ball_left
                 morph_composited[i + 0x40 * y + 0x80 * t] = combined
-    save(rando_data / "morphball.gfx", morph_composited)
+    save(rando_data / "morphball.gfx", make_4_frame_animation(morph_composited))
 
     # Speed Booster
     extract_chozo_statue_sprite("ChozoStatueSpeedbooster.gfx.lz", "speedbooster.gfx")
@@ -170,8 +165,7 @@ def main():
     # Power Grip
     powergrip = decompress_file(sprite_data / "PowerGrip.gfx.lz")
     powergrip = get_sprites(powergrip, 0, 0, 3)
-    save(rando_data / "powergrip.gfx", powergrip)
-
+    save(rando_data / "powergrip.gfx", make_4_frame_animation(powergrip))
 
 
 if __name__ == "__main__":

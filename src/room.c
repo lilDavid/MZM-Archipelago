@@ -1,5 +1,6 @@
 #include "room.h"
 #include "gba.h"
+#include "rando_item.h"
 
 #include "data/engine_pointers.h"
 #include "data/empty_datatypes.h"
@@ -9,6 +10,7 @@
 #include "data/rooms_data.h"
 
 #include "constants/audio.h"
+#include "constants/block.h"
 #include "constants/haze.h"
 #include "constants/connection.h"
 #include "constants/clipdata.h"
@@ -31,11 +33,33 @@
 #include "structs/demo.h"
 #include "structs/game_state.h"
 #include "structs/scroll.h"
+#include "structs/rando.h"
 #include "structs/room.h"
 #include "structs/samus.h"
 #include "structs/text.h"
 #include "structs/screen_shake.h"
 #include "structs/visual_effects.h"
+
+
+void RoomLoadRandoGraphics(void) {
+    const struct ItemInfo* pLocation;
+    u32 i;
+    u32 itemId;
+    u32 location;
+    u32 end;
+
+    end = sRegionLocationOffsets[gCurrentArea][1];
+    for (location = sRegionLocationOffsets[gCurrentArea][0]; location < end; location++) {
+        pLocation = &sItemLocations[location];
+        itemId = sPlacedItems[location].itemId;
+        if (pLocation->room == gCurrentRoom && (u8) pLocation->type != ITEM_TYPE_ABILITY &&
+            itemId > ITEM_POWER_BOMB && (itemId < ITEM_MISSILE_TANK || itemId > ITEM_POWER_BOMB_TANK))
+            RandoPlaceItemInTileGraphics(location, i);
+    }
+
+    BgClipSetRandoTanks();
+}
+
 
 /**
  * @brief 55f7c | 26c | Loads the current room
@@ -161,6 +185,8 @@ void RoomLoad(void)
         }
         gRainSoundEffect &= ~RAIN_SOUND_ENABLED;
     }
+
+    RoomLoadRandoGraphics();
 }
 
 /**
@@ -370,7 +396,6 @@ void RoomLoadBackgrounds(void)
 void RoomRemoveNeverReformBlocksAndCollectedTanks(void)
 {
 	BlockRemoveNeverReformBlocks();
-    BgClipSetRandoTanks();
 	BgClipRemoveCollectedTanks();
 }
 

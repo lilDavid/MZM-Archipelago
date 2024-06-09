@@ -4,6 +4,7 @@
 #include "minimap.h"
 #include "connection.h"
 #include "macros.h"
+#include "rando_item.h"
 
 #include "data/block_data.h"
 
@@ -828,17 +829,19 @@ void BgClipSetRandoTanks(void) {
     end = sRegionLocationOffsets[gCurrentArea][1];
     for (i = sRegionLocationOffsets[gCurrentArea][0]; i < end; i++) {
         pLocation = &sItemLocations[i];
-        itemId = sPlacedItems[i].itemId;
         if (pLocation->room == gCurrentRoom) {
             // Get offset
             position = gBgPointersAndDimensions.clipdataWidth * pLocation->yPosition + pLocation->xPosition;
 
             // Get behavior
             behavior = gTilemapAndClipPointers.pClipBehaviors[gBgPointersAndDimensions.pClipDecomp[position]];
+            if (behavior < CLIP_BEHAVIOR_ENERGY_TANK || behavior > CLIP_BEHAVIOR_UNDERWATER_POWER_BOMB_TANK)
+                continue;
 
             if (sTankBehaviors[BEHAVIOR_TO_TANK(behavior)].itemType == ITEM_TYPE_NONE)
                 continue;
 
+            itemId = sPlacedItems[i].itemId;
             switch (itemId) {
                 case ITEM_ETANK:
                     appearance = CLIPDATA_TILEMAP_FLAG | CLIPDATA_TILEMAP_ENERGY_TANK;
@@ -856,7 +859,8 @@ void BgClipSetRandoTanks(void) {
                     appearance = CLIPDATA_TILEMAP_FLAG | CLIPDATA_TILEMAP_POWER_BOMB_TANK;
                     break;
                 default:
-                    continue;
+                    appearance = CLIPDATA_TILEMAP_FLAG | RandoGetTileEntry(itemId);
+                    break;
             }
 
             gBgPointersAndDimensions.backgrounds[1].pDecomp[position] = appearance;

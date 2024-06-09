@@ -458,7 +458,7 @@ static u32 BlockRevealTank(struct ClipdataBlockData* pClipBlock) {
                 appearance = CLIPDATA_TILEMAP_FLAG | CLIPDATA_TILEMAP_POWER_BOMB_TANK;
                 break;
             default:
-                appearance = behavior;
+                appearance = CLIPDATA_TILEMAP_FLAG | RandoGetTileEntry(item);
                 break;
         }
 
