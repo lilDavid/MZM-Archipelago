@@ -69,7 +69,7 @@ void ChargeBeamSpawnGlow(void)
                 gCurrentSprite.primarySpriteRamSlot, gCurrentSprite.yPosition, gCurrentSprite.xPosition, 0);
         } else {
             gCurrentSprite.workVariable = MAX_AMOUNT_OF_SPRITES;
-            RandoPlaceItemInSpriteGraphics(RC_BRINSTAR_WORM_DROP, gfxSlot, 0, gfxSlot);
+            RandoPlaceItemInSpriteGraphics(RC_BRINSTAR_WORM_DROP, gfxSlot, 0, gfxSlot, 3);
         }
     }
 }

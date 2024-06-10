@@ -388,21 +388,18 @@ const u16 sChozoBallOam_UnknownRevealing_Frame2[19] = {
 };
 
 const u16 sChozoBallOam_UnknownRevealed_Frame0[7] = {
-    0x2,
-    0xf4, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x284,
-    OBJ_SHAPE_HORIZONTAL | 0x4, 0x1f8, OBJ_SPRITE_OAM | 0x286
+    0x1,
+    0xf8, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x284,
 };
 
 const u16 sChozoBallOam_UnknownRevealed_Frame1[7] = {
-    0x2,
-    0xf4, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x284,
-    OBJ_SHAPE_HORIZONTAL | 0x4, 0x1f8, OBJ_SPRITE_OAM | 0x286
+    0x1,
+    0xf8, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x284,
 };
 
 const u16 sChozoBallOam_UnknownRevealed_Frame2[7] = {
-    0x2,
-    0xf4, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x284,
-    OBJ_SHAPE_HORIZONTAL | 0x4, 0x1f8, OBJ_SPRITE_OAM | 0x286
+    0x1,
+    0xf8, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x284,
 };
 
 const u16 sUnknownItemChozoStatueRefillOAM_Frame0[13] = {

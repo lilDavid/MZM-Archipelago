@@ -421,14 +421,10 @@ void ChozoStatueInit(void)
         case PSPRITE_CHOZO_STATUE_HIGH_JUMP: randoCheck = RC_NORFAIR_HIJUMP; break;
         case PSPRITE_CHOZO_STATUE_SCREW: randoCheck = RC_NORFAIR_SCREW_ATTACK; break;
         case PSPRITE_CHOZO_STATUE_VARIA: randoCheck = RC_BRINSTAR_VARIA_SUIT; break;
-        case PSPRITE_CHOZO_STATUE_GRAVITY: break;  // TODO
-        case PSPRITE_CHOZO_STATUE_SPACE_JUMP: break; // TODO
-        case PSPRITE_CHOZO_STATUE_PLASMA_BEAM: break; // TODO
         default: break;
     }
-    if (randoCheck < RC_MAX) {
-        RandoPlaceItemInSpriteGraphics(randoCheck, gfxSlot + 2, 2, gfxSlot);
-    }
+    if (randoCheck < RC_MAX)
+        RandoPlaceItemInSpriteGraphics(randoCheck, gfxSlot + 2, 2, gfxSlot, 3);
 }
 
 /**

@@ -1,4 +1,5 @@
 #include "sprites_AI/unknown_item_chozo_statue.h"
+#include "rando_item.h"
 
 #include "data/frame_data_pointers.h"
 #include "data/sprites/unknown_item_chozo_statue.h"
@@ -58,6 +59,7 @@ void UnknownItemChozoStatueInit(void)
     u16 yPosition;
     u16 xPosition;
     u8 newRamSlot;
+    u32 randoCheck;
 
     gCurrentSprite.properties |= (SP_ALWAYS_ACTIVE | SP_SOLID_FOR_PROJECTILES);
 
@@ -158,6 +160,16 @@ void UnknownItemChozoStatueInit(void)
     newRamSlot = SpriteSpawnSecondary(SSPRITE_UNKNOWN_ITEM_CHOZO_STATUE_PART, UNKNOWN_ITEM_CHOZO_STATUE_PART_GLOW, gfxSlot,
         ramSlot, yPosition, xPosition, gCurrentSprite.status & SPRITE_STATUS_XFLIP);
     gSpriteData[newRamSlot].workVariable = behavior;
+
+    randoCheck = RC_MAX;
+    switch (gCurrentSprite.spriteId) {
+        case PSPRITE_CHOZO_STATUE_PLASMA_BEAM: randoCheck = RC_CRATERIA_PLASMA_BEAM; break;
+        case PSPRITE_CHOZO_STATUE_SPACE_JUMP: randoCheck = RC_KRAID_SPACE_JUMP; break;
+        case PSPRITE_CHOZO_STATUE_GRAVITY: randoCheck = RC_RIDLEY_GRAVITY_SUIT; break;
+        default: break;
+    }
+    if (randoCheck < RC_MAX)
+        RandoPlaceItemInSpriteGraphics(randoCheck, gfxSlot + 2, 2, gfxSlot, 3);
 }
 
 /**

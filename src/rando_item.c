@@ -343,15 +343,21 @@ u32 RandoGetTileEntry(u32 item) {
     return 0xD0;
 }
 
-void RandoPlaceItemInSpriteGraphics(u32 location, u32 row, u32 column, u32 palette) {
+void RandoPlaceItemInSpriteGraphics(u32 location, u32 row, u32 column, u32 palette, u32 frames) {
     void* pal;
     u32 i;
     u32 y;
+    u32 start;
+    u32 item;
 
-    u32 item = sPlacedItems[location].itemId;
-    for (i = 0; i < 3; i++) {
+    start = 0;
+    if (frames == 1)
+        start = 1;
+
+    item = sPlacedItems[location].itemId;
+    for (i = 0; i < frames; i++) {
         for (y = 0; y < 2; y++) {
-            DmaTransfer(3, sItemGfxPointers[item].gfx + (0x80 * i) + (0x40 * y), VRAM_BASE + 0x14000 + (row * 0x800) + (y * 0x400) + ((column + i) * 0x40), 32 * 2, 32);
+            DmaTransfer(3, sItemGfxPointers[item].gfx + (0x80 * (start + i)) + (0x40 * y), VRAM_BASE + 0x14000 + (row * 0x800) + (y * 0x400) + ((column + i) * 0x40), 32 * 2, 32);
         }
     }
 

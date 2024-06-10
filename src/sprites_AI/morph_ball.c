@@ -49,7 +49,7 @@ void MorphBallInit(void)
             gCurrentSprite.primarySpriteRamSlot, gCurrentSprite.yPosition, gCurrentSprite.xPosition, 0);
     } else {
         u32 gfxSlot = gCurrentSprite.spritesetGfxSlot;
-        RandoPlaceItemInSpriteGraphics(RC_BRINSTAR_MORPH_BALL, gfxSlot, 0, gfxSlot);
+        RandoPlaceItemInSpriteGraphics(RC_BRINSTAR_MORPH_BALL, gfxSlot, 0, gfxSlot, 3);
     }
 }
 

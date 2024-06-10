@@ -54,7 +54,7 @@ void PowerGrip(void)
                 gCurrentSprite.primarySpriteRamSlot, gCurrentSprite.yPosition, gCurrentSprite.xPosition, 0);
 
             gfxSlot = gCurrentSprite.spritesetGfxSlot;
-            RandoPlaceItemInSpriteGraphics(RC_CRATERIA_POWER_GRIP, gfxSlot, 0, gfxSlot);
+            RandoPlaceItemInSpriteGraphics(RC_CRATERIA_POWER_GRIP, gfxSlot, 0, gfxSlot, 3);
             break;
 
         case POWER_GRIP_POSE_IDLE:
