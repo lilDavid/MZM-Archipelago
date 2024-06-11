@@ -37,6 +37,10 @@ extern const u8 sItemMessages[ITEM_MAX];
 extern const u8 sRegionLocationOffsets[AREA_NORMAL_END + 1][2];  // Items are pairs: [start, end]
 extern const struct ItemInfo sItemLocations[RC_MAX];
 
+extern u8 gIncomingItemId;
+extern u8 gReceivingFromMultiworld;
+extern u8 gMultiworldItemCount;
+extern u16 gMultiworldItemSenderName[17];
 extern u32 gRandoLocationBitfields[AREA_NORMAL_END + 1];
 
 #endif /* RANDO_STRUCT_H */

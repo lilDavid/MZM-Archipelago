@@ -28,6 +28,7 @@
 #include "structs/room.h"
 #include "structs/sprite.h"
 #include "structs/connection.h"
+#include "structs/rando.h"
 
 /**
  * @brief c4b4 | 244 | Main loop in game
@@ -81,6 +82,8 @@ u32 InGameMainLoop(void)
                 {
                     SamusUpdate();
                     SamusUpdateHitboxMovingDirection();
+
+                    RandoHandleMultiworld();
                 }
 
                 InGameTimerUpdate();

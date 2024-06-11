@@ -744,6 +744,7 @@ void SramWrite_ToEwram(void)
     for (i = 0; i <= AREA_NORMAL_END; i++) {
         pFile->randoChecks[i] = gRandoLocationBitfields[i];
     }
+    pFile->multiworldItemCount = gMultiworldItemCount;
 
     // Calculate checksum
     ptr = (u32*)&sSramEwramPointer->files[gMostRecentSaveFile];
@@ -840,6 +841,7 @@ void SramRead_FromEwram(void)
     for (i = 0; i <= AREA_NORMAL_END; i++) {
         gRandoLocationBitfields[i] = pFile->randoChecks[i];
     }
+    gMultiworldItemCount = pFile->multiworldItemCount;
 }
 
 /**
@@ -2120,6 +2122,7 @@ void Sram_CheckLoadSaveFile(void)
 
         for (i = 0; i <= AREA_NORMAL_END; i++)
             gRandoLocationBitfields[i] = 0;
+        gMultiworldItemCount = 0;
     }
     else
     {

@@ -16,6 +16,7 @@
 #include "structs/game_state.h"
 #include "structs/sprite.h"
 #include "structs/samus.h"
+#include "structs/rando.h"
 
 /**
  * @brief 1b6b8 | 110 | Initializes an item banner sprite
@@ -146,14 +147,16 @@ void ItemBannerPopUp(void)
                 msg == MESSAGE_VARIA_SUIT || msg == MESSAGE_UNKNOWN_ITEM_GRAVITY || msg == MESSAGE_MORPH_BALL ||
                 msg == MESSAGE_SPEED_BOOSTER || msg == MESSAGE_HIGH_JUMP || msg == MESSAGE_SCREW_ATTACK ||
                 msg == MESSAGE_UNKNOWN_ITEM_SPACE_JUMP || msg == MESSAGE_POWER_GRIP ||
-                msg == MESSAGE_PLASMA_BEAM || msg == MESSAGE_GRAVITY_SUIT || msg == MESSAGE_SPACE_JUMP)
+                msg == MESSAGE_PLASMA_BEAM || msg == MESSAGE_GRAVITY_SUIT || msg == MESSAGE_SPACE_JUMP ||
+                msg == MESSAGE_DYNAMIC_ITEM_MAJOR || msg == MESSAGE_DYNAMIC_ITEM_UNKNOWN)
             {
                 // New item
                 gCurrentSprite.workVariable2 = TRUE;
                 BackupTrackData2SoundChannels();
 
                 // Play item jingle
-                if (msg == MESSAGE_UKNOWN_ITEM_PLASMA || msg == MESSAGE_UNKNOWN_ITEM_GRAVITY || msg == MESSAGE_UNKNOWN_ITEM_SPACE_JUMP)
+                if (msg == MESSAGE_UKNOWN_ITEM_PLASMA || msg == MESSAGE_UNKNOWN_ITEM_GRAVITY || msg == MESSAGE_UNKNOWN_ITEM_SPACE_JUMP ||
+                    msg == MESSAGE_DYNAMIC_ITEM_UNKNOWN)
                     InsertMusicAndQueueCurrent(MUSIC_GETTING_UNKNOWN_ITEM_JINGLE, 0); // Unknown item
                 else
                     InsertMusicAndQueueCurrent(MUSIC_GETTING_ITEM_JINGLE, 0); // Normal item
@@ -183,7 +186,8 @@ void ItemBannerPopUp(void)
             }
 
             // Check is one line message (new item/ability, save complete, map text)
-            if (gCurrentSprite.workVariable2 || msg == MESSAGE_SAVE_COMPLETE ||
+            if (gCurrentSprite.workVariable2 && !(msg >= MESSAGE_DYNAMIC_ITEM && msg <= MESSAGE_DYNAMIC_ITEM_UNKNOWN) ||
+                msg == MESSAGE_SAVE_COMPLETE ||
                 (msg == MESSAGE_BRINSTAR_MAP_ACQUIRED || msg == MESSAGE_KRAID_MAP_ACQUIRED ||
                 msg == MESSAGE_NORFAIR_MAP_ACQUIRED || msg == MESSAGE_RIDLEY_MAP_ACQUIRED ||
                 msg == MESSAGE_MOTHER_SHIP_MAP_ACQUIRED || msg == MESSAGE_FULLY_POWERED_SUIT))
@@ -263,6 +267,9 @@ void ItemBannerRemovalInit(void)
 {
     if (gCollectingTank)
         BgClipFinishCollectingTank();
+
+    if (gReceivingFromMultiworld)
+        gReceivingFromMultiworld = FALSE;
 
     if (gCurrentSprite.pOam == sItemBannerOAM_OneLineStatic)
         gCurrentSprite.pOam = sItemBannerOAM_OneLineRemoving;

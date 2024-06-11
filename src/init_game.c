@@ -10,6 +10,7 @@
 #include "constants/game_state.h"
 #include "structs/audio.h"
 #include "structs/game_state.h"
+#include "structs/rando.h"
 
 void InitializeGame(void)
 {
@@ -55,6 +56,9 @@ void InitializeGame(void)
 
     gDisableSoftreset = FALSE;
     gStereoFlag = FALSE;
+
+    gIncomingItemId = ITEM_NONE;
+    gReceivingFromMultiworld = FALSE;
 
     write16(REG_IF, USHORT_MAX);
     write16(REG_IME, TRUE);

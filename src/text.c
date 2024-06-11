@@ -717,15 +717,28 @@ u8 unk_6f0a8(u8 textID, u8 gfxSlot, u8 param_3)
 
         case 3:
             gCurrentMessage.line++;
-            if (gCurrentMessage.messageID <= MESSAGE_DYNAMIC_ITEM)
+            if (gCurrentMessage.messageID <= MESSAGE_DYNAMIC_ITEM_UNKNOWN)
             {
                 switch (gCurrentMessage.messageID) {
-                    case MESSAGE_PLASMA_BEAM: gCurrentItemBeingAcquired = ITEM_ACQUISITION_PLASMA_BEAM; break;
-                    case MESSAGE_GRAVITY_SUIT: gCurrentItemBeingAcquired = ITEM_ACQUISITION_GRAVITY; break;
-                    case MESSAGE_SPACE_JUMP: gCurrentItemBeingAcquired = ITEM_ACQUISITION_SPACE_JUMP; break;
-                    default: gCurrentItemBeingAcquired = gCurrentMessage.messageID; break;
+                    case MESSAGE_PLASMA_BEAM:
+                        gCurrentItemBeingAcquired = ITEM_ACQUISITION_PLASMA_BEAM;
+                        break;
+                    case MESSAGE_GRAVITY_SUIT:
+                        gCurrentItemBeingAcquired = ITEM_ACQUISITION_GRAVITY;
+                        break;
+                    case MESSAGE_SPACE_JUMP:
+                        gCurrentItemBeingAcquired = ITEM_ACQUISITION_SPACE_JUMP;
+                        break;
+                    case MESSAGE_DYNAMIC_ITEM:
+                    case MESSAGE_DYNAMIC_ITEM_MAJOR:
+                    case MESSAGE_DYNAMIC_ITEM_UNKNOWN:
+                        // Set previously
+                        break;
+                    default:
+                        gCurrentItemBeingAcquired = gCurrentMessage.messageID;
+                        break;
                 }
-                if (gCurrentMessage.messageID >= MESSAGE_ENERGY_TANK_ACQUIRED && !gCollectingTank)
+                if (gCurrentMessage.messageID >= MESSAGE_ENERGY_TANK_ACQUIRED && !gCollectingTank && !gReceivingFromMultiworld)
                     BgClipFinishCollectingAbility();
             }
             gCurrentMessage.stage++;
@@ -820,15 +833,28 @@ u8 TextProcessItemBanner(void)
 
         case 3:
             gCurrentMessage.line++;
-            if (gCurrentMessage.messageID <= MESSAGE_DYNAMIC_ITEM)
+            if (gCurrentMessage.messageID <= MESSAGE_DYNAMIC_ITEM_UNKNOWN)
             {
                 switch (gCurrentMessage.messageID) {
-                    case MESSAGE_PLASMA_BEAM: gCurrentItemBeingAcquired = ITEM_ACQUISITION_PLASMA_BEAM; break;
-                    case MESSAGE_GRAVITY_SUIT: gCurrentItemBeingAcquired = ITEM_ACQUISITION_GRAVITY; break;
-                    case MESSAGE_SPACE_JUMP: gCurrentItemBeingAcquired = ITEM_ACQUISITION_SPACE_JUMP; break;
-                    default: gCurrentItemBeingAcquired = gCurrentMessage.messageID; break;
+                    case MESSAGE_PLASMA_BEAM:
+                        gCurrentItemBeingAcquired = ITEM_ACQUISITION_PLASMA_BEAM;
+                        break;
+                    case MESSAGE_GRAVITY_SUIT:
+                        gCurrentItemBeingAcquired = ITEM_ACQUISITION_GRAVITY;
+                        break;
+                    case MESSAGE_SPACE_JUMP:
+                        gCurrentItemBeingAcquired = ITEM_ACQUISITION_SPACE_JUMP;
+                        break;
+                    case MESSAGE_DYNAMIC_ITEM:
+                    case MESSAGE_DYNAMIC_ITEM_MAJOR:
+                    case MESSAGE_DYNAMIC_ITEM_UNKNOWN:
+                        // Set previously
+                        break;
+                    default:
+                        gCurrentItemBeingAcquired = gCurrentMessage.messageID;
+                        break;
                 }
-                if (gCurrentMessage.messageID >= MESSAGE_ENERGY_TANK_ACQUIRED && !gCollectingTank)
+                if (gCurrentMessage.messageID >= MESSAGE_ENERGY_TANK_ACQUIRED && !gCollectingTank && !gReceivingFromMultiworld)
                     BgClipFinishCollectingAbility();
             }
             gCurrentMessage.stage++;
@@ -1312,7 +1338,7 @@ u8 TextProcessCurrentMessage(struct Message* pMessage, const u16* pText, u32* ds
     state = TEXT_STATE_NONE;
     pMessage->timer++;
 
-    if (pMessage->messageID == MESSAGE_DYNAMIC_ITEM)
+    if (pMessage->messageID >= MESSAGE_DYNAMIC_ITEM && pMessage->messageID <= MESSAGE_DYNAMIC_ITEM_UNKNOWN)
         pText = gDynamicMessageBuffer;
 
     // Check for message delay

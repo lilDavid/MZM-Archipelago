@@ -386,7 +386,11 @@ SECTIONS {
         . = 0x00005b60; gCableLinkInfo = .;
 
         . = 0x00005d04; gRandoLocationBitfields = .;
-        . = 0x00005d20; gDynamicMessageBuffer = .;
+        . = 0x00005d20; gIncomingItemId = .;
+        . = 0x00005d21; gReceivingFromMultiworld = .;
+        . = 0x00005d22; gMultiworldItemCount = .;
+        . = 0x00005d24; gMultiworldItemSenderName = .;
+        . = 0x00005d48; gDynamicMessageBuffer = .;
 
 
         . = 0x00007e60; sp_sys = .;
