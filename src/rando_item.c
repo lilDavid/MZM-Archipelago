@@ -392,7 +392,7 @@ void RandoHandleMultiworld() {
     u32 lineWidth;
     u16* pLine2;
 
-    if (InGameCutsceneCheckFlag(FALSE, IGC_CLOSE_UP))
+    if (gPreventMovementTimer || gDisablePause || gShipLandingFlag)
         return;
 
     if (gIncomingItemId == ITEM_NONE)

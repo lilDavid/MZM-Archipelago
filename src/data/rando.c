@@ -159,7 +159,7 @@ const struct Seed sRandoSeed = {
     .seedName = {},
 
     .options = {
-        .unknownItemsAlwaysUsable = 0,
+        .unknownItemsAlwaysUsable = FALSE,
     }
 };
 
