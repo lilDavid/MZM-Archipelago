@@ -50,6 +50,7 @@ extern const u16 sJapaneseText_Message_EasySleepPrompt[];
 extern const u16 sJapaneseText_Message_PlasmaBeam[];
 extern const u16 sJapaneseText_Message_GravitySuit[];
 extern const u16 sJapaneseText_Message_SpaceJump[];
+extern const u16 sJapaneseText_Message_NothingAcquired[];
 
 extern const u16 sJapaneseText_Location_Brinstar[];
 extern const u16 sJapaneseText_Location_Kraid[];
@@ -121,6 +122,7 @@ extern const u16 sHiraganaText_Message_EasySleepPrompt[];
 extern const u16 sHiraganaText_Message_PlasmaBeam[];
 extern const u16 sHiraganaText_Message_GravitySuit[];
 extern const u16 sHiraganaText_Message_SpaceJump[];
+extern const u16 sHiraganaText_Message_NothingAcquired[];
 
 extern const u16 sHiraganaText_Location_Brinstar[];
 extern const u16 sHiraganaText_Location_Kraid[];
@@ -192,6 +194,7 @@ extern const u16 sEnglishText_Message_EasySleepPrompt[];
 extern const u16 sEnglishText_Message_PlasmaBeam[];
 extern const u16 sEnglishText_Message_GravitySuit[];
 extern const u16 sEnglishText_Message_SpaceJump[];
+extern const u16 sEnglishText_Message_NothingAcquired[];
 extern const u16 sEnglishText_Message_CheckFromPositionError[];
 extern const u16 sEnglishText_MessageFragment_Sent[];
 extern const u16 sEnglishText_MessageFragment_Received[];

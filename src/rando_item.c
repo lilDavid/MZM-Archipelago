@@ -125,7 +125,7 @@ u32 RandoGiveItem(u32 itemId) {
     s32 isFirstTank;
     s32 messageID;
 
-    if (itemId >= ITEM_AP_FILLER)
+    if (itemId > ITEM_NOTHING)
         return MESSAGE_DUMMY;
 
     gPreventMovementTimer = SAMUS_ITEM_PMT;
@@ -133,14 +133,13 @@ u32 RandoGiveItem(u32 itemId) {
     messageID = sItemMessages[itemId];
     isFirstTank = FALSE;
     switch (itemId) {
-        case ITEM_ETANK:
+        case ITEM_ENERGY_TANK:
             if (sStartingHealthAmmo.energy + sTankIncreaseAmount[gDifficulty].energy > 1299)
                 break;
             gEquipment.maxEnergy += sTankIncreaseAmount[gDifficulty].energy;
             gEquipment.currentEnergy = gEquipment.maxEnergy;
             messageID = MESSAGE_ENERGY_TANK_ACQUIRED;
             break;
-        case ITEM_MISSILE:
         case ITEM_MISSILE_TANK:
             if (gEquipment.maxMissiles == 0)
                 isFirstTank = TRUE;
@@ -148,7 +147,6 @@ u32 RandoGiveItem(u32 itemId) {
             gEquipment.currentMissiles += sTankIncreaseAmount[gDifficulty].missile;
             messageID = isFirstTank ? MESSAGE_FIRST_MISSILE_TANK : MESSAGE_MISSILE_TANK_ACQUIRED;
             break;
-        case ITEM_SUPER:
         case ITEM_SUPER_MISSILE_TANK:
             if (gEquipment.maxSuperMissiles == 0)
                 isFirstTank = TRUE;
@@ -156,7 +154,6 @@ u32 RandoGiveItem(u32 itemId) {
             gEquipment.currentSuperMissiles += sTankIncreaseAmount[gDifficulty].superMissile;
             messageID = isFirstTank ? MESSAGE_FIRST_SUPER_MISSILE_TANK : MESSAGE_SUPER_MISSILE_TANK_ACQUIRED;
             break;
-        case ITEM_POWER_BOMB:
         case ITEM_POWER_BOMB_TANK:
             if (gEquipment.maxPowerBombs == 0)
                 isFirstTank = TRUE;

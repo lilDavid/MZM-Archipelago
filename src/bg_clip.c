@@ -843,18 +843,15 @@ void BgClipSetRandoTanks(void) {
 
             itemId = sPlacedItems[i].itemId;
             switch (itemId) {
-                case ITEM_ETANK:
+                case ITEM_ENERGY_TANK:
                     appearance = CLIPDATA_TILEMAP_FLAG | CLIPDATA_TILEMAP_ENERGY_TANK;
                     break;
-                case ITEM_MISSILE:
                 case ITEM_MISSILE_TANK:
                     appearance = CLIPDATA_TILEMAP_FLAG | CLIPDATA_TILEMAP_MISSILE_TANK;
                     break;
-                case ITEM_SUPER:
                 case ITEM_SUPER_MISSILE_TANK:
                     appearance = CLIPDATA_TILEMAP_FLAG | CLIPDATA_TILEMAP_SUPER_MISSILE_TANK;
                     break;
-                case ITEM_POWER_BOMB:
                 case ITEM_POWER_BOMB_TANK:
                     appearance = CLIPDATA_TILEMAP_FLAG | CLIPDATA_TILEMAP_POWER_BOMB_TANK;
                     break;

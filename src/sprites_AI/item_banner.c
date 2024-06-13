@@ -177,7 +177,7 @@ void ItemBannerPopUp(void)
             {
                 if (msg == MESSAGE_ENERGY_TANK_ACQUIRED || msg == MESSAGE_MISSILE_TANK_ACQUIRED ||
                     msg == MESSAGE_SUPER_MISSILE_TANK_ACQUIRED || msg == MESSAGE_POWER_BOMB_TANK_ACQUIRED ||
-                    msg == MESSAGE_DYNAMIC_ITEM)
+                    msg == MESSAGE_NOTHING_ACQUIRED || msg == MESSAGE_DYNAMIC_ITEM)
                 {
                     BackupTrackData2SoundChannels();
                 }
@@ -187,7 +187,7 @@ void ItemBannerPopUp(void)
 
             // Check is one line message (new item/ability, save complete, map text)
             if (gCurrentSprite.workVariable2 && !(msg >= MESSAGE_DYNAMIC_ITEM && msg <= MESSAGE_DYNAMIC_ITEM_UNKNOWN) ||
-                msg == MESSAGE_SAVE_COMPLETE ||
+                msg == MESSAGE_NOTHING_ACQUIRED || msg == MESSAGE_SAVE_COMPLETE ||
                 (msg == MESSAGE_BRINSTAR_MAP_ACQUIRED || msg == MESSAGE_KRAID_MAP_ACQUIRED ||
                 msg == MESSAGE_NORFAIR_MAP_ACQUIRED || msg == MESSAGE_RIDLEY_MAP_ACQUIRED ||
                 msg == MESSAGE_MOTHER_SHIP_MAP_ACQUIRED || msg == MESSAGE_FULLY_POWERED_SUIT))
