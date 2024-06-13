@@ -1,5 +1,5 @@
 {
-    "sections": [ "iwram", "rom" ],
+    "sections": [ "ewram", "iwram", "rom" ],
     "rom": [
         "src/data/rando.o",
         "src/data/rando_names.o"
