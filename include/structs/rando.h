@@ -20,6 +20,15 @@ struct Seed {
     } options;
 };
 
+struct StartingInventory {
+    u8 energyTanks;
+    u16 missileTanks;
+    u8 superMissileTanks;
+    u8 powerBombTanks;
+    u8 beamBombs;
+    u8 suitMisc;
+};
+
 struct PlacedItem {
     const u16* playerName;
     const u16* itemName;  // If null, use name determined by item ID
@@ -30,6 +39,7 @@ struct PlacedItem {
 
 extern const struct Seed sRandoSeed;
 extern const struct PlacedItem sPlacedItems[RC_MAX];
+extern const struct StartingInventory sRandoStartingInventory;
 
 extern const u8 sItemMessages[ITEM_MAX];
 extern const u8 sRegionLocationOffsets[AREA_NORMAL_END + 1][2];  // Items are pairs: [start, end]

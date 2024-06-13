@@ -161,4 +161,13 @@ const struct Seed sRandoSeed = {
     }
 };
 
+const struct StartingInventory sRandoStartingInventory = {
+    .energyTanks = 0,
+    .missileTanks = 0,
+    .superMissileTanks = 0,
+    .powerBombTanks = 0,
+    .beamBombs = 0,
+    .suitMisc = 0,
+};
+
 const struct PlacedItem sPlacedItems[100] = {};

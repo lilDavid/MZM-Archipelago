@@ -1,5 +1,6 @@
 #include "rando_item.h"
 #include "gba.h"
+#include "macros.h"
 #include "in_game_cutscene.h"
 
 #include "constants/animated_graphics.h"
@@ -134,31 +135,29 @@ u32 RandoGiveItem(u32 itemId) {
     isFirstTank = FALSE;
     switch (itemId) {
         case ITEM_ENERGY_TANK:
-            if (sStartingHealthAmmo.energy + sTankIncreaseAmount[gDifficulty].energy > 1299)
-                break;
-            gEquipment.maxEnergy += sTankIncreaseAmount[gDifficulty].energy;
+            gEquipment.maxEnergy = MIN(1299, gEquipment.maxEnergy + sTankIncreaseAmount[gDifficulty].energy);
             gEquipment.currentEnergy = gEquipment.maxEnergy;
             messageID = MESSAGE_ENERGY_TANK_ACQUIRED;
             break;
         case ITEM_MISSILE_TANK:
             if (gEquipment.maxMissiles == 0)
                 isFirstTank = TRUE;
-            gEquipment.maxMissiles += sTankIncreaseAmount[gDifficulty].missile;
-            gEquipment.currentMissiles += sTankIncreaseAmount[gDifficulty].missile;
+            gEquipment.maxMissiles = MIN(999, gEquipment.maxMissiles + sTankIncreaseAmount[gDifficulty].missile);
+            gEquipment.currentMissiles = MIN(999, gEquipment.currentMissiles + sTankIncreaseAmount[gDifficulty].missile);
             messageID = isFirstTank ? MESSAGE_FIRST_MISSILE_TANK : MESSAGE_MISSILE_TANK_ACQUIRED;
             break;
         case ITEM_SUPER_MISSILE_TANK:
             if (gEquipment.maxSuperMissiles == 0)
                 isFirstTank = TRUE;
-            gEquipment.maxSuperMissiles += sTankIncreaseAmount[gDifficulty].superMissile;
-            gEquipment.currentSuperMissiles += sTankIncreaseAmount[gDifficulty].superMissile;
+            gEquipment.maxSuperMissiles = MIN(99, gEquipment.maxSuperMissiles + sTankIncreaseAmount[gDifficulty].superMissile);
+            gEquipment.currentSuperMissiles = MIN(99, gEquipment.currentSuperMissiles + sTankIncreaseAmount[gDifficulty].superMissile);
             messageID = isFirstTank ? MESSAGE_FIRST_SUPER_MISSILE_TANK : MESSAGE_SUPER_MISSILE_TANK_ACQUIRED;
             break;
         case ITEM_POWER_BOMB_TANK:
             if (gEquipment.maxPowerBombs == 0)
                 isFirstTank = TRUE;
-            gEquipment.maxPowerBombs += sTankIncreaseAmount[gDifficulty].powerBomb;
-            gEquipment.currentPowerBombs += sTankIncreaseAmount[gDifficulty].powerBomb;
+            gEquipment.maxPowerBombs = MIN(99, gEquipment.maxPowerBombs + sTankIncreaseAmount[gDifficulty].powerBomb);
+            gEquipment.currentPowerBombs = MIN(99, gEquipment.currentPowerBombs + sTankIncreaseAmount[gDifficulty].powerBomb);
             messageID = isFirstTank ? MESSAGE_FIRST_POWER_BOMB_TANK : MESSAGE_POWER_BOMB_TANK_ACQUIRED;
             break;
         case ITEM_LONG_BEAM:

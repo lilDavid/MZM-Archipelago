@@ -9,6 +9,7 @@
 #include "data/samus/samus_palette_data.h"
 #include "data/samus/samus_animation_pointers.h"
 #include "data/samus/samus_graphics.h"
+#include "data/block_data.h"
 
 #include "constants/audio.h"
 #include "constants/clipdata.h"
@@ -24,6 +25,7 @@
 #include "structs/samus.h"
 #include "structs/screen_shake.h"
 #include "structs/scroll.h"
+#include "structs/rando.h"
 
 /**
  * @brief 5368 | 10c | Checks for screw attack and speedbooster damage to the environment
@@ -7876,8 +7878,16 @@ void SamusInit(void)
             gSamusData.pose = SPOSE_FACING_THE_FOREGROUND;
             gSamusData.direction = KEY_LEFT;
 
-            gEquipment.maxEnergy = 99;
-            gEquipment.currentEnergy = 99;
+            gEquipment.currentEnergy = gEquipment.maxEnergy = MIN(1299, sStartingHealthAmmo.energy + sRandoStartingInventory.energyTanks * sTankIncreaseAmount[gDifficulty].energy);
+            gEquipment.currentMissiles = gEquipment.maxMissiles = MIN(999, sStartingHealthAmmo.missile + sRandoStartingInventory.missileTanks * sTankIncreaseAmount[gDifficulty].missile);
+            gEquipment.currentSuperMissiles = gEquipment.maxSuperMissiles = MIN(99, sStartingHealthAmmo.superMissile + sRandoStartingInventory.superMissileTanks * sTankIncreaseAmount[gDifficulty].superMissile);
+            gEquipment.currentPowerBombs = gEquipment.maxPowerBombs = MIN(99, sStartingHealthAmmo.powerBomb + sRandoStartingInventory.powerBombTanks * sTankIncreaseAmount[gDifficulty].powerBomb);
+            gEquipment.beamBombsActivation = gEquipment.beamBombs | sRandoStartingInventory.beamBombs;
+            gEquipment.suitMiscActivation = gEquipment.suitType | sRandoStartingInventory.suitMisc;
+            if (!sRandoSeed.options.unknownItemsAlwaysUsable) {
+                gEquipment.beamBombsActivation &= ~BBF_PLASMA_BEAM;
+                gEquipment.suitMiscActivation &= ~(SMF_GRAVITY_SUIT | SMF_SPACE_JUMP);
+            }
         }
         else
         {

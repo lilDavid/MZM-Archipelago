@@ -61,6 +61,7 @@
 
 #define CEIL(v) ((int)(((float)v) + .5) == (int)(v) ? ((int)(v)) : (int)(((float)v) + .5))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
 
 #define STATIC_ASSERT(expr, id) typedef char id[(expr) ? 1 : -1];
 
