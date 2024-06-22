@@ -905,7 +905,7 @@ s32 ChozoStatueHintCheckTargetIsActivated(u8 target)
     result = -1;
 
     // Check for status 
-    if (EventFunction(EVENT_ACTION_CHECKING, sChozoStatueHintEvents[target]))
+    if (FALSE /*EventFunction(EVENT_ACTION_CHECKING, sChozoStatueHintEvents[target])*/)
     {
         if (sChozoStatueTargetConditions[target][0] == CHOZO_STATUE_HINT_CONDITION_TYPE_BEAM_BOMBS)
         {
