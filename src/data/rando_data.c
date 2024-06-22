@@ -10,20 +10,20 @@
 #include "data/sprites/unknown_item_chozo_statue.h"
 
 
-const u8 sRandoLongBeamGfx[RANDO_GRAPHICS_SIZE] = INCBIN_U8("data/rando/longbeam.gfx");
-const u8 sRandoChargeBeamGfx[RANDO_GRAPHICS_SIZE] = INCBIN_U8("data/rando/chargebeam.gfx");
-const u8 sRandoPlasmaBeamUnknownGfx[RANDO_GRAPHICS_SIZE] = INCBIN_U8("data/rando/plasmabeamunknown.gfx");
-const u8 sRandoIceBeamGfx[RANDO_GRAPHICS_SIZE] = INCBIN_U8("data/rando/icebeam.gfx");
-const u8 sRandoWaveBeamGfx[RANDO_GRAPHICS_SIZE] = INCBIN_U8("data/rando/wavebeam.gfx");
-const u8 sRandoMorphBallGfx[RANDO_GRAPHICS_SIZE] = INCBIN_U8("data/rando/morphball.gfx");
-const u8 sRandoBombGfx[RANDO_GRAPHICS_SIZE] = INCBIN_U8("data/rando/bomb.gfx");
-const u8 sRandoVariaSuitGfx[RANDO_GRAPHICS_SIZE] = INCBIN_U8("data/rando/variasuit.gfx");
-const u8 sRandoGravitySuitUnknownGfx[RANDO_GRAPHICS_SIZE] = INCBIN_U8("data/rando/gravitysuitunknown.gfx");
-const u8 sRandoSpeedBoosterGfx[RANDO_GRAPHICS_SIZE] = INCBIN_U8("data/rando/speedbooster.gfx");
-const u8 sRandoHiJumpGfx[RANDO_GRAPHICS_SIZE] = INCBIN_U8("data/rando/hijump.gfx");
-const u8 sRandoScrewAttackGfx[RANDO_GRAPHICS_SIZE] = INCBIN_U8("data/rando/screwattack.gfx");
-const u8 sRandoSpaceJumpUnknownGfx[RANDO_GRAPHICS_SIZE] = INCBIN_U8("data/rando/spacejumpunknown.gfx");
-const u8 sRandoPowerGripGfx[RANDO_GRAPHICS_SIZE] = INCBIN_U8("data/rando/powergrip.gfx");
+const u8 sRandoLongBeamGfx[RANDO_GRAPHICS_SIZE] = {};
+const u8 sRandoChargeBeamGfx[RANDO_GRAPHICS_SIZE] = {};
+const u8 sRandoPlasmaBeamUnknownGfx[RANDO_GRAPHICS_SIZE] = {};
+const u8 sRandoIceBeamGfx[RANDO_GRAPHICS_SIZE] = {};
+const u8 sRandoWaveBeamGfx[RANDO_GRAPHICS_SIZE] = {};
+const u8 sRandoMorphBallGfx[RANDO_GRAPHICS_SIZE] = {};
+const u8 sRandoBombGfx[RANDO_GRAPHICS_SIZE] = {};
+const u8 sRandoVariaSuitGfx[RANDO_GRAPHICS_SIZE] = {};
+const u8 sRandoGravitySuitUnknownGfx[RANDO_GRAPHICS_SIZE] = {};
+const u8 sRandoSpeedBoosterGfx[RANDO_GRAPHICS_SIZE] = {};
+const u8 sRandoHiJumpGfx[RANDO_GRAPHICS_SIZE] = {};
+const u8 sRandoScrewAttackGfx[RANDO_GRAPHICS_SIZE] = {};
+const u8 sRandoSpaceJumpUnknownGfx[RANDO_GRAPHICS_SIZE] = {};
+const u8 sRandoPowerGripGfx[RANDO_GRAPHICS_SIZE] = {};
 const u8 sRandoNothingGfx[RANDO_GRAPHICS_SIZE] = INCBIN_U8("data/rando/itemsphere.gfx");
 const u8 sRandoAPLogoGfx[RANDO_GRAPHICS_SIZE] = INCBIN_U8("data/rando/aplogo.gfx");
 

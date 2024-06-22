@@ -1,7 +1,13 @@
 {
     "sections": [ "ewram", "iwram", "rom" ],
     "rom": [
+        "src/data/sprites/charge_beam.o",
+        "src/data/sprites/chozo_statue.o",
+        "src/data/sprites/morph_ball.o",
+        "src/data/sprites/power_grip.o",
+        "src/data/sprites/unknown_item_chozo_statue.o",
         "src/data/rando.o",
+        "src/data/rando_data.o",
         "src/data/rando_names.o"
     ]
 }
