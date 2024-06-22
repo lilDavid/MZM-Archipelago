@@ -41,7 +41,7 @@
 #include "structs/visual_effects.h"
 
 
-void RoomLoadRandoGraphics(void) {
+static void RoomLoadRandoGraphics(void) {
     const struct ItemInfo* pLocation;
     u32 i;
     u32 itemId;
@@ -53,12 +53,9 @@ void RoomLoadRandoGraphics(void) {
         pLocation = &sItemLocations[location];
         itemId = sPlacedItems[location].itemId;
         if (pLocation->room == gCurrentRoom && (u8) pLocation->type != ITEM_TYPE_ABILITY && itemId > ITEM_POWER_BOMB_TANK)
-            RandoPlaceItemInTileGraphics(location, i);
+            RandoPlaceItemInTileGraphics(location);
     }
-
-    BgClipSetRandoTanks();
 }
-
 
 /**
  * @brief 55f7c | 26c | Loads the current room
@@ -146,7 +143,9 @@ void RoomLoad(void)
     RoomSetInitialTilemap(0x1);
     RoomSetInitialTilemap(0x2);
     AnimatedGraphicsLoad();
+    RoomLoadRandoGraphics();
     AnimatedGraphicsTanksAnimationReset();
+    BgClipSetRandoTanks();
     HazeSetBackgroundEffect();
     HazeProcess();
     MinimapCheckOnTransition();
@@ -184,8 +183,6 @@ void RoomLoad(void)
         }
         gRainSoundEffect &= ~RAIN_SOUND_ENABLED;
     }
-
-    RoomLoadRandoGraphics();
 }
 
 /**

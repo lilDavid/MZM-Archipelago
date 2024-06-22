@@ -304,7 +304,7 @@ void RandoGiveItemFromCheck(u32 location) {
     SpriteSpawnPrimary(PSPRITE_ITEM_BANNER, messageID, 6, gSamusData.yPosition, gSamusData.xPosition, 0);
 }
 
-void RandoPlaceItemInTileGraphics(u32 location, u32 position) {
+void RandoPlaceItemInTileGraphics(u32 location) {
     u32 i;
     u32 j;
     u32 k;

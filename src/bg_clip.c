@@ -860,7 +860,7 @@ void BgClipSetRandoTanks(void) {
                     break;
             }
 
-            gBgPointersAndDimensions.backgrounds[1].pDecomp[position] = appearance;
+            BgClipSetBg1BlockValue(appearance, pLocation->yPosition, pLocation->xPosition);
         }
     }
 }
