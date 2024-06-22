@@ -24,11 +24,8 @@ void GeronNorfair(void)
 
     if (gCurrentSprite.pose == SPRITE_POSE_UNINITIALIZED)
     {
-        if (EventFunction(EVENT_ACTION_CHECKING, EVENT_POWER_GRIP_OBTAINED))
-        {
-            gCurrentSprite.status = 0;
-            return;
-        }
+        gCurrentSprite.status = 0;
+        return;
 
         gCurrentSprite.drawDistanceTopOffset = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 3);
         gCurrentSprite.drawDistanceBottomOffset = SUB_PIXEL_TO_PIXEL(0);
