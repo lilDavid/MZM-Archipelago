@@ -7882,11 +7882,13 @@ void SamusInit(void)
             gEquipment.currentMissiles = gEquipment.maxMissiles = MIN(999, sStartingHealthAmmo.missile + sRandoStartingInventory.missileTanks * sTankIncreaseAmount[gDifficulty].missile);
             gEquipment.currentSuperMissiles = gEquipment.maxSuperMissiles = MIN(99, sStartingHealthAmmo.superMissile + sRandoStartingInventory.superMissileTanks * sTankIncreaseAmount[gDifficulty].superMissile);
             gEquipment.currentPowerBombs = gEquipment.maxPowerBombs = MIN(99, sStartingHealthAmmo.powerBomb + sRandoStartingInventory.powerBombTanks * sTankIncreaseAmount[gDifficulty].powerBomb);
-            gEquipment.beamBombsActivation = gEquipment.beamBombs | sRandoStartingInventory.beamBombs;
-            gEquipment.suitMiscActivation = gEquipment.suitType | sRandoStartingInventory.suitMisc;
+            gEquipment.beamBombsActivation = gEquipment.beamBombs = sRandoStartingInventory.beamBombs;
+            gEquipment.suitMiscActivation = gEquipment.suitMisc = sRandoStartingInventory.suitMisc;
             if (!sRandoSeed.options.unknownItemsAlwaysUsable) {
                 gEquipment.beamBombsActivation &= ~BBF_PLASMA_BEAM;
                 gEquipment.suitMiscActivation &= ~(SMF_GRAVITY_SUIT | SMF_SPACE_JUMP);
+            } else {
+                gEquipment.suitType = !!(gEquipment.suitMisc & SMF_ALL_SUITS);
             }
         }
         else
