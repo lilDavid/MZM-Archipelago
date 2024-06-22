@@ -395,7 +395,7 @@ void DeoremSpawnGoingDown(void)
 
     gCurrentSprite.timer++;
 
-    if (gEquipment.maxMissiles == 0)
+    if (gEquipment.maxMissiles == 0 && gEquipment.maxSuperMissiles == 0)
     {
         if (samusX > xPosition - (BLOCK_SIZE * 16) && samusX < xPosition + (BLOCK_SIZE * 16))
         {
