@@ -2408,6 +2408,8 @@ u8 TourianEscapeCallSubroutines(void)
     ended = FALSE;
     gNextOamSlot = 0;
 
+    return TRUE;
+
     switch (gGameModeSub1)
     {
         case 0:

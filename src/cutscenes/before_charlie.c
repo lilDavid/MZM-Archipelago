@@ -407,6 +407,7 @@ u8 BeforeCharlieInit(void)
 u8 BeforeCharlieSubroutine(void)
 {
     u8 ended;
+    return TRUE;
 
     ended = sBeforeCharlieSubroutineData[CUTSCENE_DATA.timeInfo.stage].pFunction();
 

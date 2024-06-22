@@ -1005,11 +1005,14 @@ void ConnectionCheckPlayCutsceneDuringElevator(void)
         case ELEVATOR_ROUTE_NORFAIR_TO_RIDLEY:
             if (gLastElevatorUsed.direction == ELEVATOR_DIRECTION_DOWN && !EventFunction(EVENT_ACTION_CHECKING, EVENT_ENTER_RIDLEY_DEMO_PLAYED))
             {
+                #if 0
                 gCurrentCutscene = CUTSCENE_RIDLEY_LANDING;
 
                 ColorFadingStart(COLOR_FADING_CANCEL);
                 SoundFade(0x10E, 0xA);
                 FadeMusic(0xA);
+                #endif // 0
+                EventFunction(EVENT_ACTION_SETTING, EVENT_ENTER_RIDLEY_DEMO_PLAYED);
             }
             break;
 

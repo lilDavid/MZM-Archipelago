@@ -4,6 +4,8 @@
 #include "clipdata.h" // Necessary
 #include "macros.h"
 #include "temp_globals.h"
+#include "event.h"
+#include "in_game_cutscene.h"
 
 #include "data/samus_sprites_pointers.h"
 #include "data/samus/samus_palette_data.h"
@@ -14,6 +16,8 @@
 #include "constants/audio.h"
 #include "constants/clipdata.h"
 #include "constants/color_fading.h"
+#include "constants/event.h"
+#include "constants/in_game_cutscene.h"
 #include "constants/game_state.h"
 #include "constants/samus.h"
 #include "constants/projectile.h"
@@ -7878,6 +7882,7 @@ void SamusInit(void)
             gSamusData.pose = SPOSE_FACING_THE_FOREGROUND;
             gSamusData.direction = KEY_LEFT;
 
+            // Starting inventory
             gEquipment.currentEnergy = gEquipment.maxEnergy = MIN(1299, sStartingHealthAmmo.energy + sRandoStartingInventory.energyTanks * sTankIncreaseAmount[gDifficulty].energy);
             gEquipment.currentMissiles = gEquipment.maxMissiles = MIN(999, sStartingHealthAmmo.missile + sRandoStartingInventory.missileTanks * sTankIncreaseAmount[gDifficulty].missile);
             gEquipment.currentSuperMissiles = gEquipment.maxSuperMissiles = MIN(99, sStartingHealthAmmo.superMissile + sRandoStartingInventory.superMissileTanks * sTankIncreaseAmount[gDifficulty].superMissile);
@@ -7890,6 +7895,12 @@ void SamusInit(void)
             } else {
                 gEquipment.suitType = !!(gEquipment.suitMisc & SMF_ALL_SUITS);
             }
+
+            // Starting events
+            for (i = EVENT_ENTER_NORFAIR_DEMO_PLAYED; i <= EVENT_STATUE_SCREW_ATTACK_GRABBED; i++)
+                EventFunction(EVENT_ACTION_SETTING, i);
+            EventFunction(EVENT_ACTION_CLEARING, EVENT_ENTER_RIDLEY_DEMO_PLAYED);
+            InGameCutsceneCheckFlag(TRUE, IGC_LONG_BEAM_HINT);
         }
         else
         {
