@@ -169,7 +169,7 @@ void UnknownItemChozoStatueInit(void)
         default: break;
     }
     if (randoCheck < RC_MAX)
-        RandoPlaceItemInSpriteGraphics(randoCheck, gfxSlot + 2, 2, gfxSlot, 3);
+        RandoPlaceItemInSpriteGraphics(randoCheck, gfxSlot + 2, 2, gfxSlot, 1);
 }
 
 /**
