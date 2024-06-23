@@ -56,8 +56,13 @@ u8 TourianEscapeSubroutine(void)
         {
             ColorFadingStart(COLOR_FADING_CANCEL);
             gCurrentArea = AREA_CHOZODIA;
-            gCurrentRoom = 0;
-            gLastDoorUsed = 0;
+            if (sRandoSeed.options.skipChozodiaStealth) {
+                gCurrentRoom = 40;
+                gLastDoorUsed = 85;
+            } else {
+                gCurrentRoom = 0;
+                gLastDoorUsed = 0;
+            }
             gCurrentCutscene = CUTSCENE_COULD_I_SURVIVE;
             gGameModeSub2 = 10;
         }

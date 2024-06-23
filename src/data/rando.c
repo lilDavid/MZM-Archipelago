@@ -158,6 +158,7 @@ const struct Seed sRandoSeed = {
 
     .options = {
         .unknownItemsAlwaysUsable = FALSE,
+        .skipChozodiaStealth = FALSE,
     }
 };
 
