@@ -60,14 +60,14 @@ void ItemBannerInit(void)
     gCurrentSprite.currentAnimationFrame = 0;
 
     gCurrentSprite.yPositionSpawn = 9;
-    gCurrentSprite.timer = 1;
-    gCurrentSprite.workVariable2 = FALSE;
+    gCurrentSprite.work0 = 1;
+    gCurrentSprite.work2 = FALSE;
 
     // Flag if the message is the save prompt
     if (message == MESSAGE_SAVE_PROMPT)
-        gCurrentSprite.workVariable = TRUE;
+        gCurrentSprite.work1 = TRUE;
     else
-        gCurrentSprite.workVariable = FALSE;
+        gCurrentSprite.work1 = FALSE;
 
     gfxSlot = 0x80; // Default
 
@@ -174,13 +174,13 @@ void ItemBannerPopUp(void)
     gPreventMovementTimer = SAMUS_ITEM_PMT;
 
     msg = gCurrentSprite.roomSlot;
-    if (gCurrentSprite.timer != 0)
+    if (gCurrentSprite.work0 != 0)
     {
         gCurrentSprite.animationDurationCounter--;
         if (TextProcessItemBanner()) // Process text
         {
             // If done processing
-            gCurrentSprite.timer = 0;
+            gCurrentSprite.work0 = 0;
             gCurrentSprite.status &= ~SPRITE_STATUS_NOT_DRAWN;
 
             if (sRandoSeed.options.fastItemAcquisitions)
@@ -194,14 +194,14 @@ void ItemBannerPopUp(void)
                 {
                     if (ITEM_MESSAGE_IS_MAJOR(msg) || ITEM_MESSAGE_IS_FIRST_TANK(msg))
                         // New item or tank
-                        gCurrentSprite.workVariable2 = TRUE;
+                        gCurrentSprite.work2 = TRUE;
 
                     SoundPlay(sRandoItemAcquisitionSfx[gCurrentItemBeingAcquired]);
                 }
                 else if (ITEM_MESSAGE_IS_MAJOR(msg) || ITEM_MESSAGE_IS_FIRST_TANK(msg))
                 {
                     // New item or tank
-                    gCurrentSprite.workVariable2 = TRUE;
+                    gCurrentSprite.work2 = TRUE;
 
                     SoundPlay(sRandoItemAcquisitionSfx[msg]);
                 }
@@ -219,7 +219,7 @@ void ItemBannerPopUp(void)
                 if (ITEM_MESSAGE_IS_MAJOR(msg))
                 {
                     // New item
-                    gCurrentSprite.workVariable2 = TRUE;
+                    gCurrentSprite.work2 = TRUE;
                     BackupTrackData2SoundChannels();
 
                     // Play item jingle
@@ -231,7 +231,7 @@ void ItemBannerPopUp(void)
                 else if (ITEM_MESSAGE_IS_FIRST_TANK(msg))
                 {
                     // New tank
-                    gCurrentSprite.workVariable2 = TRUE;
+                    gCurrentSprite.work2 = TRUE;
                     BackupTrackData2SoundChannels();
                     InsertMusicAndQueueCurrent(MUSIC_GETTING_ITEM_JINGLE, 0);
                 }
@@ -252,7 +252,7 @@ void ItemBannerPopUp(void)
             }
             
             // Check is one line message (new item/ability, save complete, map text)
-            if (gCurrentSprite.workVariable2 && !ITEM_MESSAGE_IS_DYNAMIC(msg) ||
+            if (gCurrentSprite.work2 && !ITEM_MESSAGE_IS_DYNAMIC(msg) ||
                 msg == MESSAGE_NOTHING_ACQUIRED || msg == MESSAGE_SAVE_COMPLETE ||
                 (msg == MESSAGE_BRINSTAR_MAP_ACQUIRED || msg == MESSAGE_KRAID_MAP_ACQUIRED ||
                 msg == MESSAGE_NORFAIR_MAP_ACQUIRED || msg == MESSAGE_RIDLEY_MAP_ACQUIRED ||
@@ -387,13 +387,11 @@ void ItemBannerRemovalAnimation(void)
 
         gPreventMovementTimer = 0;
 
-        if (gCurrentSprite.workVariable2)
+        if (gCurrentSprite.work2)
         {
             if (sRandoSeed.options.fastItemAcquisitions) {
                 RandoActivateAcquiredItem();
-            }
-            else
-            {
+            } else {
                 gPauseScreenFlag = PAUSE_SCREEN_ITEM_ACQUISITION;
             }
         }
@@ -508,7 +506,7 @@ void SaveYesNoCursor(void)
                 {
                     // On left, "yes" option selected
                     SoundPlay(0x208);
-                    gSpriteData[ramSlot].workVariable = TRUE;
+                    gSpriteData[ramSlot].work1 = TRUE;
                     if (gSpriteData[ramSlot].roomSlot == MESSAGE_SAVE_PROMPT)
                     {
                         gCurrentSprite.pose = SAVE_YES_NO_CURSOR_POSE_SAVING;
@@ -521,7 +519,7 @@ void SaveYesNoCursor(void)
                 {
                     // On right, "no" option selected
                     SoundPlay(0x209);
-                    gSpriteData[ramSlot].workVariable = FALSE;
+                    gSpriteData[ramSlot].work1 = FALSE;
 
                     if ((gButtonInput & STARTWARP_KEYS) == STARTWARP_KEYS)
                         ConnectionStartWarp();

@@ -64,7 +64,7 @@ void PowerGrip(void)
                 gCurrentSprite.properties |= SP_ALWAYS_ACTIVE;
                 gCurrentSprite.ignoreSamusCollisionTimer = 1;
                 gCurrentSprite.pose = POWER_GRIP_POSE_BEING_ACQUIRED;
-                gCurrentSprite.timer = 0;
+                gCurrentSprite.work0 = 0;
                 EventFunction(EVENT_ACTION_SETTING, EVENT_POWER_GRIP_OBTAINED);
 
                 RandoGiveItemFromCheck(RC_CRATERIA_POWER_GRIP);
@@ -75,7 +75,7 @@ void PowerGrip(void)
             gCurrentSprite.ignoreSamusCollisionTimer = 1;
 
             // Flicker
-            if (MOD_AND(gCurrentSprite.timer, 2) == 0)
+            if (MOD_AND(gCurrentSprite.work0, 2) == 0)
                 gCurrentSprite.status ^= SPRITE_STATUS_NOT_DRAWN;
 
             // Check message banner disappeared

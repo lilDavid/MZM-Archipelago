@@ -66,7 +66,7 @@ void MorphBallGet(void)
 
         gCurrentSprite.pose = MORPH_BALL_POSE_BEING_ACQUIRED;
 
-        gCurrentSprite.timer = 0;
+        gCurrentSprite.work0 = 0;
 
         // Give morph ball check
         RandoGiveItemFromCheck(RC_BRINSTAR_MORPH_BALL);
@@ -82,7 +82,7 @@ void MorphBallFlashAnim(void)
     gCurrentSprite.ignoreSamusCollisionTimer = 1;
 
     // Flicker (timer will always be 0 though)
-    if (MOD_AND(gCurrentSprite.timer, 2) == 0)
+    if (MOD_AND(gCurrentSprite.work0, 2) == 0)
         gCurrentSprite.status ^= SPRITE_STATUS_NOT_DRAWN;
 
     // Check message banner disappeared
