@@ -7833,6 +7833,8 @@ void SamusUpdateArmCannonPositionOffset(u8 direction)
         pPhysics->armCannonXPositionOffset = offset;
 }
 
+#define DEBUG_SKIP_BOSSES FALSE
+
 /**
  * @brief bcb8 | 130 | Initializes samus data
  * 
@@ -7901,6 +7903,13 @@ void SamusInit(void)
                 EventFunction(EVENT_ACTION_SETTING, i);
             EventFunction(EVENT_ACTION_CLEARING, EVENT_ENTER_RIDLEY_DEMO_PLAYED);
             InGameCutsceneCheckFlag(TRUE, IGC_LONG_BEAM_HINT);
+
+#if DEBUG_SKIP_BOSSES
+            EventFunction(EVENT_ACTION_SETTING, EVENT_KRAID_KILLED);
+            EventFunction(EVENT_ACTION_SETTING, EVENT_RIDLEY_KILLED);
+            for (i = EVENT_FIRST_METROID_ROOM_CLEARED; i <= EVENT_ZEBETITE_FOUR_DESTROYED; i++)
+                EventFunction(EVENT_ACTION_SETTING, i);
+#endif // DEBUG_SKIP_BOSSES
         }
         else
         {

@@ -1,4 +1,5 @@
 #include "rando_item.h"
+#include "event.h"
 #include "gba.h"
 #include "macros.h"
 #include "in_game_cutscene.h"
@@ -6,6 +7,7 @@
 #include "constants/animated_graphics.h"
 #include "constants/in_game_cutscene.h"
 #include "constants/menus/pause_screen.h"
+#include "constants/event.h"
 #include "constants/samus.h"
 #include "constants/sprite.h"
 #include "constants/text.h"
@@ -336,6 +338,10 @@ void RandoPlaceItemInTileGraphics(u32 location) {
             gCommonTilemap[4 * (0xD0 + i) + 1] = 4 * i + 1 | (j << 12);
             gCommonTilemap[4 * (0xD0 + i) + 2] = 4 * i + 2 | (j << 12);
             gCommonTilemap[4 * (0xD0 + i) + 3] = 4 * i + 3 | (j << 12);
+
+            // Fixes issues with the spotlight effect having the wrong color for the darkness
+            if (gCurrentArea == AREA_CHOZODIA && !EventFunction(EVENT_ACTION_CHECKING, EVENT_FULLY_POWERED_SUIT_OBTAINED))
+                return;
 
             DMA_SET(3, sItemGfxPointers[item].palette, PALRAM_BASE + (j * 16 * sizeof(u16)), C_32_2_16(DMA_ENABLE, 16));
 
