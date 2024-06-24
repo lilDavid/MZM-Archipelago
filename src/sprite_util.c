@@ -9,6 +9,7 @@
 
 #include "constants/audio.h"
 #include "constants/clipdata.h"
+#include "constants/connection.h"
 #include "constants/game_state.h"
 #include "constants/samus.h"
 #include "constants/sprite.h"
@@ -18,6 +19,7 @@
 
 #include "structs/clipdata.h"
 #include "structs/game_state.h"
+#include "structs/rando.h"
 #include "structs/screen_shake.h"
 #include "structs/sprite.h"
 
@@ -3623,24 +3625,23 @@ u32 SpriteUtilCheckInRoomEffect(u16 oldY, u16 yPosition, u16 xPosition, u8 size)
  */
 u32 SpriteUtilGetFinalCompletionPercentage(void)
 {
-    u32 result;
-    u8 energy;
-    u8 missile;
-    u8 superMissile;
-    u8 powerBomb;
-    u8 ability;
-    u32 pen;
+    u32 percentage;
+    u32 mask;
+    u32 i;
 
-    pen = ChozodiaEscapeGetItemCountAndEndingNumber();
+    // Count completion percentage as number of checked location bits
+    // If extra bits are set, the percentage will be higher, but they shouldn't be set
+    percentage = 0;
+    for (i = AREA_BRINSTAR; i <= AREA_NORMAL_END; i++) {
+        mask = 1;
+        for (i = 0; i < 32; i++)
+        {
+            if (gRandoLocationBitfields[i] & mask)
+                percentage++;
 
-    energy = PEN_GET_ENERGY(pen);
-    missile = PEN_GET_MISSILE(pen);
+            mask <<= 1;
+        }
+    }
 
-    superMissile = PEN_GET_SUPER_MISSILE(pen);
-    powerBomb = PEN_GET_POWER_BOMB(pen);
-    ability = PEN_GET_ABILITY(pen);
-
-    result = energy + missile + superMissile + powerBomb + ability;
-
-    return result;
+    return percentage;
 }
