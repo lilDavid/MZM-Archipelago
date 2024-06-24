@@ -395,6 +395,7 @@ void RandoPlaceItemInSpriteGraphics(u32 location, u32 row, u32 column, u32 palet
 }
 
 void RandoHandleMultiworld() {
+    u32 sourceItemMessage;
     u32 messageId;
     u32 messageLength;
     u32 lineLength;
@@ -407,7 +408,7 @@ void RandoHandleMultiworld() {
     if (gIncomingItemId == ITEM_NONE)
         return;
 
-    gCurrentItemBeingAcquired = RandoGiveItem(gIncomingItemId);
+    sourceItemMessage = gCurrentItemBeingAcquired = RandoGiveItem(gIncomingItemId);
     gIncomingItemId = ITEM_NONE;
     gMultiworldItemCount += 1;
     gReceivingFromMultiworld = TRUE;
@@ -445,7 +446,7 @@ void RandoHandleMultiworld() {
     }
 
     // Item name
-    messageLength = TextCopyUntilCharacter(sMessageTextPointers[gLanguage][gCurrentItemBeingAcquired],
+    messageLength = TextCopyUntilCharacter(sMessageTextPointers[gLanguage][sourceItemMessage],
                                            gDynamicMessageBuffer,
                                            CHAR_NEW_LINE);
     gDynamicMessageBuffer[messageLength++] = CHAR_NEW_LINE;
