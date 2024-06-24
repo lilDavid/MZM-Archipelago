@@ -114,6 +114,13 @@ static u32 RandoGetLocationAtPosition(u32 area, u32 room, u32 xPosition, u32 yPo
         }
     }
 
+    // The larva room has an alternative version when you enter it at first.
+    // You can scout the energy tank location with wave beam or a power bomb, but that version of
+    // the room doesn't actually have the check in it, so it will display garbage instead.
+    // This makes the energy tank in the ceiling behave correctly in that room.
+    if (gCurrentArea == AREA_NORFAIR && gCurrentRoom == 46)
+        return RC_NORFAIR_LARVA_CEILING_ETANK;
+
     return RC_MAX;
 }
 
