@@ -55,6 +55,13 @@ def main():
     source_image = Image.open(in_path).convert('P', palette=Image.Palette.ADAPTIVE)
     if len(source_image.palette.colors) > 16:
         raise ValueError(f"Image has {len(source_image.palette.colors)} colors")
+    for color, i in source_image.palette.colors.items():
+        if color[3] == 0:
+            palette_map = list(range(16))
+            palette_map[0] = i
+            palette_map[i] = 0
+            break
+    source_image = source_image.remap_palette(palette_map)
 
     width, height = map(pixels_to_tiles, source_image.size)
     pixels = []

@@ -25,7 +25,7 @@ const u8 sRandoScrewAttackGfx[RANDO_GRAPHICS_SIZE] = {};
 const u8 sRandoSpaceJumpGfx[RANDO_GRAPHICS_SIZE] = INCBIN_U8("data/rando/spacejump.gfx");  // paperkoopa
 const u8 sRandoPowerGripGfx[RANDO_GRAPHICS_SIZE] = {};
 const u8 sRandoNothingGfx[RANDO_GRAPHICS_SIZE] = INCBIN_U8("data/rando/itemsphere.gfx");  // @lilDavid
-const u8 sRandoAPLogoGfx[RANDO_GRAPHICS_SIZE] = INCBIN_U8("data/rando/aplogo.gfx");  // @lilDavid + paperkoopa
+const u8 sRandoAPLogoGfx[RANDO_GRAPHICS_SIZE * 3] = INCBIN_U8("data/rando/aplogo.gfx");  // @lilDavid + paperkoopa
 
 const u16 sRandoPlasmaBeamPal[0x20] = INCBIN_U16("data/rando/plasmabeam.pal");
 const u16 sRandoGravitySuitPal[0x20] = INCBIN_U16("data/rando/gravitysuit.pal");
