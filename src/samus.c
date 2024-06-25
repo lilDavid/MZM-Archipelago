@@ -3179,7 +3179,8 @@ void SamusCheckNewProjectile(struct SamusData* pData, struct WeaponInfo* pWeapon
         case SPOSE_MORPH_BALL_MIDAIR:
         case SPOSE_MORPH_BALL_ON_ZIPLINE:
             // Check for bombs
-            if (gChangedInput & KEY_B && pWeapon->cooldown == 0 && pEquipment->beamBombsActivation & BBF_BOMBS)
+            if (gChangedInput & KEY_B && pWeapon->cooldown == 0 &&
+                (pEquipment->beamBombsActivation & BBF_BOMBS || (pWeapon->weaponHighlighted & WH_POWER_BOMB)))
             {
                 // Check if power bombs selected
                 if (pWeapon->weaponHighlighted & WH_POWER_BOMB)
@@ -3269,7 +3270,8 @@ void SamusSetHighlightedWeapon(struct SamusData* pData, struct WeaponInfo* pWeap
         case SPOSE_GETTING_HURT_IN_MORPH_BALL:
         case SPOSE_GETTING_KNOCKED_BACK_IN_MORPH_BALL:
             // Check select power bombs
-            if (gButtonInput & gButtonAssignments.armWeapon && pEquipment->currentPowerBombs != 0)
+            if (gButtonInput & gButtonAssignments.armWeapon && pEquipment->currentPowerBombs != 0 &&
+                (pEquipment->beamBombs & BBF_BOMBS || sRandoSeed.options.usePowerBombsWithoutBomb))
                 weaponHigh = WH_POWER_BOMB;
             break;
 

@@ -18,6 +18,7 @@ struct Seed {
     struct {
         u8 unknownItemsAlwaysUsable;
         u8 skipChozodiaStealth;
+        u8 usePowerBombsWithoutBomb;
     } options;
 };
 
