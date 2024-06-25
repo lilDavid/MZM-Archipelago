@@ -29,7 +29,6 @@ const u8 sItemMessages[] = {
     [ITEM_AP_FILLER] = MESSAGE_DUMMY,
     [ITEM_AP_PROGRESSION] = MESSAGE_DUMMY,
     [ITEM_AP_USEFUL] = MESSAGE_DUMMY,
-    [ITEM_AP_TRAP] = MESSAGE_DUMMY,
 };
 
 const u8 sRegionLocationOffsets[][2] = {

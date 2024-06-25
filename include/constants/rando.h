@@ -142,7 +142,6 @@ enum RandoItem {
     ITEM_AP_FILLER,
     ITEM_AP_PROGRESSION,
     ITEM_AP_USEFUL,
-    ITEM_AP_TRAP,
     ITEM_MAX,
     ITEM_NONE = 0xFF
 };

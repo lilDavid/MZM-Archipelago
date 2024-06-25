@@ -56,5 +56,4 @@ const struct ItemGraphicsInfo sItemGfxPointers[ITEM_MAX] = {
     [ITEM_AP_FILLER] = {sRandoAPLogoGfx, sRandoAPLogoPal},
     [ITEM_AP_PROGRESSION] = {sRandoAPLogoGfx + RANDO_GRAPHICS_SIZE, sRandoAPLogoPal},
     [ITEM_AP_USEFUL] = {sRandoAPLogoGfx + RANDO_GRAPHICS_SIZE * 2, sRandoAPLogoPal},
-    [ITEM_AP_TRAP] = {sRandoAPLogoGfx + RANDO_GRAPHICS_SIZE, sRandoAPLogoPal},
 };
