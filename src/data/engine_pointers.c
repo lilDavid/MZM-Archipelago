@@ -423,10 +423,10 @@ const u16* const sBackgroundEffectBehaviorPointers[9] = {
 const struct HatchLockEvent* const sHatchLockEventsPointers[MAX_AMOUNT_OF_AREAS - 1] = {
     [AREA_BRINSTAR] = sHatchLockEventsBrinstar,
     [AREA_KRAID] = sHatchLockEventsKraid,
-    [AREA_NORFAIR] = sHatchLockEventsNorfair,
-    [AREA_RIDLEY] = sHatchLockEventsNorfair,
-    [AREA_TOURIAN] = sHatchLockEventsNorfair,
-    [AREA_CRATERIA] = sHatchLockEventsNorfair,
+    [AREA_NORFAIR] = sHatchLockEventsCrateria,
+    [AREA_RIDLEY] = sHatchLockEventsCrateria,
+    [AREA_TOURIAN] = sHatchLockEventsCrateria,
+    [AREA_CRATERIA] = sHatchLockEventsCrateria,
     [AREA_CHOZODIA] = sHatchLockEventsChozodia
 };
 

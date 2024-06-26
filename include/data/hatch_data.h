@@ -13,7 +13,7 @@ extern const struct HatchLockEvent sHatchLockEventsBrinstar[1];
 
 extern const struct HatchLockEvent sHatchLockEventsKraid[1];
 
-extern const struct HatchLockEvent sHatchLockEventsNorfair[2];
+extern const struct HatchLockEvent sHatchLockEventsCrateria[4];
 
 extern const struct HatchLockEvent sHatchLockEventsChozodia[15];
 

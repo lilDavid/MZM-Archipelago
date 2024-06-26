@@ -67,7 +67,7 @@ const struct HatchLockEvent sHatchLockEventsKraid[1] = {
     }
 };
 
-const struct HatchLockEvent sHatchLockEventsNorfair[2] = {
+const struct HatchLockEvent sHatchLockEventsCrateria[4] = {
     {
         .room = 0,
         .event = EVENT_MOTHER_BRAIN_KILLED,
@@ -95,6 +95,48 @@ const struct HatchLockEvent sHatchLockEventsNorfair[2] = {
         .isBefore = FALSE,
         .hatchesToLock1 = TRUE,
         .hatchesToLock2 = FALSE,
+        .hatchesToLock3 = FALSE,
+        .hatchesToLock4 = FALSE,
+        .hatchesToLock5 = FALSE,
+        .hatchesToLock6 = FALSE,
+        .hatchesToLock7 = FALSE,
+        .hatchesToLock8 = FALSE,
+        .hatchesToLockPart2_1 = FALSE,
+        .hatchesToLockPart2_2 = FALSE,
+        .hatchesToLockPart2_3 = FALSE,
+        .hatchesToLockPart2_4 = FALSE,
+        .hatchesToLockPart2_5 = FALSE,
+        .hatchesToLockPart2_6 = FALSE,
+        .hatchesToLockPart2_7 = FALSE,
+        .hatchesToLockPart2_8 = FALSE
+    },
+    {
+        .room = 7,
+        .event = EVENT_MOTHER_BRAIN_KILLED,
+        .isBefore = TRUE,
+        .hatchesToLock1 = FALSE,
+        .hatchesToLock2 = TRUE,
+        .hatchesToLock3 = FALSE,
+        .hatchesToLock4 = FALSE,
+        .hatchesToLock5 = FALSE,
+        .hatchesToLock6 = FALSE,
+        .hatchesToLock7 = FALSE,
+        .hatchesToLock8 = FALSE,
+        .hatchesToLockPart2_1 = FALSE,
+        .hatchesToLockPart2_2 = FALSE,
+        .hatchesToLockPart2_3 = FALSE,
+        .hatchesToLockPart2_4 = FALSE,
+        .hatchesToLockPart2_5 = FALSE,
+        .hatchesToLockPart2_6 = FALSE,
+        .hatchesToLockPart2_7 = FALSE,
+        .hatchesToLockPart2_8 = FALSE
+    },
+    {
+        .room = 9,
+        .event = EVENT_MOTHER_BRAIN_KILLED,
+        .isBefore = TRUE,
+        .hatchesToLock1 = FALSE,
+        .hatchesToLock2 = TRUE,
         .hatchesToLock3 = FALSE,
         .hatchesToLock4 = FALSE,
         .hatchesToLock5 = FALSE,
