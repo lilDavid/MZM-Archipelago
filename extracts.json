@@ -1,6 +1,7 @@
 {
     "sections": [ "ewram", "iwram", "rom" ],
     "rom": [
+        "src/data/engine_pointers.o",
         "src/data/sprites/charge_beam.o",
         "src/data/sprites/chozo_statue.o",
         "src/data/sprites/morph_ball.o",
