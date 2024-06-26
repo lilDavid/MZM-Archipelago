@@ -440,6 +440,7 @@ void InitAndLoadGenerics(void)
     gPauseScreenFlag = PAUSE_SCREEN_NONE;
     gCurrentCutscene = 0;
     gTourianEscapeCutsceneStage = 0;
+    gIncomingItemId = ITEM_NONE;
 
     CallbackSetVBlank(VBlankCodeInGameLoad);
 }

@@ -402,10 +402,7 @@ void RandoHandleMultiworld() {
     u32 lineWidth;
     u16* pLine2;
 
-    if (gPreventMovementTimer || gDisablePause || gShipLandingFlag)
-        return;
-
-    if (gIncomingItemId == ITEM_NONE)
+    if (gPreventMovementTimer || gDisablePause || gShipLandingFlag || gIncomingItemId > ITEM_MAX)
         return;
 
     sourceItemMessage = gCurrentItemBeingAcquired = RandoGiveItem(gIncomingItemId);
