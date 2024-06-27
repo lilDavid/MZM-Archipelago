@@ -2,6 +2,7 @@
 #include "gba.h"
 #include "callbacks.h"
 #include "complex_oam.h" // Required
+#include "sprite_util.h"
 
 #include "data/block_data.h"
 #include "data/haze_data.h"
@@ -219,19 +220,7 @@ u32 ChozodiaEscapeGetItemCountAndEndingNumber(void)
     if (gEquipment.beamBombs & BBF_BOMBS)
         abilityCount++;
 
-    // Count completion percentage as number of checked location bits
-    // If extra bits are set, the percentage will be higher, but they shouldn't be set
-    percentage = 0;
-    for (i = AREA_BRINSTAR; i <= AREA_NORMAL_END; i++) {
-        mask = 1;
-        for (i = 0; i < 32; i++)
-        {
-            if (gRandoLocationBitfields[i] & mask)
-                percentage++;
-
-            mask <<= 1;
-        }
-    }
+    percentage = SpriteUtilGetFinalCompletionPercentage();
 
     // Determine ending
     ending = 0;

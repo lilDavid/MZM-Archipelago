@@ -3633,14 +3633,9 @@ u32 SpriteUtilGetFinalCompletionPercentage(void)
     // If extra bits are set, the percentage will be higher, but they shouldn't be set
     percentage = 0;
     for (i = AREA_BRINSTAR; i <= AREA_NORMAL_END; i++) {
-        mask = 1;
-        for (i = 0; i < 32; i++)
-        {
+        for (mask = 1; mask; mask <<= 1)
             if (gRandoLocationBitfields[i] & mask)
                 percentage++;
-
-            mask <<= 1;
-        }
     }
 
     return percentage;
