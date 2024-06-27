@@ -11,7 +11,7 @@ void InGameTimerUpdate(void)
         return;
 
     gInGameTimer.frames++;
-    if (gInGameTimer.frames > 63)
+    if (gInGameTimer.frames > 59)
     {
         gInGameTimer.frames = 0;
         gInGameTimer.seconds++;
@@ -34,6 +34,6 @@ void InGameTimerUpdate(void)
         gInGameTimer.hours = 99;
         gInGameTimer.minutes = 59;
         gInGameTimer.seconds = 59;
-        gInGameTimer.frames = 63;
+        gInGameTimer.frames = 59;
     }
 }
