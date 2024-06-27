@@ -159,6 +159,7 @@ const struct Seed sRandoSeed = {
         .unknownItemsAlwaysUsable = FALSE,
         .skipChozodiaStealth = FALSE,
         .usePowerBombsWithoutBomb = FALSE,
+        .removeGravityHeatResistance = FALSE,
     }
 };
 

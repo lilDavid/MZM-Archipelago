@@ -873,6 +873,7 @@ u8 ColorFading_GettingFullyPowered(void)
             ColorFadingStart(COLOR_FADING_CANCEL);
 
             gSubSpriteData1.workVariable3 = RUINS_TEST_FIGHT_STAGE_STARTING_CUTSCENE;
+#if 0
             EventFunction(EVENT_ACTION_SETTING, EVENT_STATUE_VARIA_SUIT_GRABBED);
 
             if (!EventFunction(EVENT_ACTION_CHECKING, EVENT_VARIA_SUIT_OBTAINED))
@@ -882,6 +883,7 @@ u8 ColorFading_GettingFullyPowered(void)
             }
 
             gEquipment.suitMisc |= SMF_VARIA_SUIT;
+#endif // 0
             return TRUE;
     }
 

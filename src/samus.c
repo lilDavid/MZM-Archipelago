@@ -3473,14 +3473,49 @@ u8 SamusTakeHazardDamage(struct SamusData* pData, struct Equipment* pEquipment, 
     // Get hazard at the current position
     hazard = LOW_BYTE(ClipdataCheckCurrentAffectingAtPosition(yPosition, pData->xPosition));
 
-    if (pEquipment->suitMiscActivation & SMF_GRAVITY_SUIT)
+    if (pEquipment->suitMiscActivation & SMF_GRAVITY_SUIT &&
+        (pEquipment->suitMiscActivation & SMF_VARIA_SUIT || !sRandoSeed.options.removeGravityHeatResistance))
     {
-        // Has gravity, only check for acid
+        // Has both suits or vanilla gravity, only check for acid
         if (hazard == HAZARD_TYPE_ACID)
         {
             damaged = TRUE;
             if (pHazard->damageTimer > 3)
                 damageType = SAMUS_HAZARD_DAMAGE_TYPE_LIQUID;
+        }
+    }
+    else if (pEquipment->suitMiscActivation & SMF_GRAVITY_SUIT)
+    {
+        // Has gravity, check for acid, heat, and unused cold
+        if (hazard == HAZARD_TYPE_ACID)
+        {
+            damaged = TRUE;
+            damageType = SAMUS_HAZARD_DAMAGE_TYPE_LIQUID;
+        }
+        else if (hazard == HAZARD_TYPE_COLD_KNOCKBACK)
+        {
+            damaged = TRUE;
+            if (pHazard->damageTimer > 3)
+                damageType = SAMUS_HAZARD_DAMAGE_TYPE_ROOM;
+
+            // Check for knockback
+            if (pHazard->knockbackTimer++ > 87)
+            {
+                pHazard->knockbackTimer = 0;
+                knockback = TRUE;
+            }
+        }
+        else if (hazard == HAZARD_TYPE_HEAT)
+        {
+            damaged = TRUE;
+            if (pHazard->damageTimer > 5)
+                damageType = SAMUS_HAZARD_DAMAGE_TYPE_ROOM;
+        }
+        else if (hazard == HAZARD_TYPE_COLD)
+        {
+            damaged = TRUE;
+            if (pHazard->damageTimer > 5)
+                damageType = SAMUS_HAZARD_DAMAGE_TYPE_ROOM;
         }
     }
     else if (pEquipment->suitMiscActivation & SMF_VARIA_SUIT)
