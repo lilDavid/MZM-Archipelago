@@ -1,5 +1,6 @@
 #include "sprites_AI/imago.h"
 #include "macros.h"
+#include "rando_item.h"
 
 #include "data/frame_data_pointers.h"
 #include "data/sprites/imago.h"
@@ -1038,9 +1039,8 @@ void ImagoDying(void)
 void ImagoSetEvent(void)
 {
     gCurrentSprite.ignoreSamusCollisionTimer = 0x1;
-    if (gEquipment.maxSuperMissiles > gSubSpriteData1.workVariable4)
+    if (RandoIsLocationChecked(RC_RIDLEY_IMAGO_SUPER_MISSILE))
     {
-        // More supers than at the beginning of the fight
         // Unlock doors
         gDoorUnlockTimer = -0x3C;
         gCurrentSprite.status = 0x0;
