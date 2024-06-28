@@ -829,7 +829,7 @@ void BgClipSetRandoTanks(void) {
     end = sRegionLocationOffsets[gCurrentArea][1];
     for (i = sRegionLocationOffsets[gCurrentArea][0]; i < end; i++) {
         pLocation = &sItemLocations[i];
-        if (pLocation->room == gCurrentRoom) {
+        if (pLocation->room == gCurrentRoom || i == RC_NORFAIR_LARVA_CEILING_ETANK && gCurrentRoom == 46) {
             // Get offset
             position = gBgPointersAndDimensions.clipdataWidth * pLocation->yPosition + pLocation->xPosition;
 

@@ -52,7 +52,8 @@ static void RoomLoadRandoGraphics(void) {
     for (location = sRegionLocationOffsets[gCurrentArea][0]; location < end; location++) {
         pLocation = &sItemLocations[location];
         itemId = sPlacedItems[location].itemId;
-        if (pLocation->room == gCurrentRoom && (u8) pLocation->type != ITEM_TYPE_ABILITY && itemId > ITEM_POWER_BOMB_TANK)
+        if ((pLocation->room == gCurrentRoom || location == RC_NORFAIR_LARVA_CEILING_ETANK && gCurrentRoom == 46)
+            && (u8) pLocation->type != ITEM_TYPE_ABILITY && itemId > ITEM_POWER_BOMB_TANK)
             RandoPlaceItemInTileGraphics(location);
     }
 }
