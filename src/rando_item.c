@@ -391,7 +391,13 @@ void RandoHandleMultiworld() {
     u32 lineWidth;
     u16* pLine2;
 
-    if (gPreventMovementTimer || gDisablePause || gShipLandingFlag || gIncomingItemId > ITEM_MAX)
+    if (gGameModeSub1 != SUB_GAME_MODE_PLAYING)
+        return;
+
+    if (gPreventMovementTimer || gDisablePause || gShipLandingFlag)
+        return;
+
+    if (gIncomingItemId > ITEM_MAX)
         return;
 
     sourceItemMessage = gCurrentItemBeingAcquired = RandoGiveItem(gIncomingItemId);

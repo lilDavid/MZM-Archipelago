@@ -82,8 +82,6 @@ u32 InGameMainLoop(void)
                 {
                     SamusUpdate();
                     SamusUpdateHitboxMovingDirection();
-
-                    RandoHandleMultiworld();
                 }
 
                 InGameTimerUpdate();
@@ -152,6 +150,8 @@ u32 InGameMainLoop(void)
         
         ResetFreeOam();
         RoomUpdate();
+
+        RandoHandleMultiworld();
     
         if (gGameModeSub1 == SUB_GAME_MODE_PLAYING)
             SamusCallCheckLowHealth();
