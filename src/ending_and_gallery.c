@@ -1,5 +1,6 @@
 #include "ending_and_gallery.h"
 #include "callbacks.h"
+#include "sprite_util.h"
 
 #include "data/shortcut_pointers.h"
 #include "data/ending_and_gallery_data.h"
@@ -1542,7 +1543,7 @@ void EndingImageInit(void)
     BitFill(3, 0x4FF04FF, VRAM_BASE + 0xE800, 0x800, 0x20);
     DMA_SET(3, sEndingImagesPalPointers[endingNumber], PALRAM_BASE, DMA_ENABLE << 16 | 0x100);
 
-    ENDING_DATA.completionPercentage = part1 + part2 + part3 + part4 + part5;
+    ENDING_DATA.completionPercentage = SpriteUtilGetFinalCompletionPercentage();
 
     LZ77UncompVRAM(sEndingImageNumbersMiscGfx, VRAM_OBJ);
 
