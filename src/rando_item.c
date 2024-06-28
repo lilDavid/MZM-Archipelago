@@ -76,7 +76,7 @@ static u32 RandoGetRegionFlag(u32 location, u32 region) {
 
     if (region == AREA_NONE)
         return 0;
-    offset = sRegionLocationOffsets[region][0];
+    offset = sRegionLocationOffsets[region];
     location -= offset;
     return 1 << location;
 }
@@ -106,8 +106,8 @@ static u32 RandoGetLocationAtPosition(u32 area, u32 room, u32 xPosition, u32 yPo
     u32 end;
     const struct ItemInfo* location;
 
-    end = sRegionLocationOffsets[area][1];
-    for (i = sRegionLocationOffsets[area][0]; i < end; i++) {
+    end = sRegionLocationOffsets[area + 1];
+    for (i = sRegionLocationOffsets[area]; i < end; i++) {
         location = &sItemLocations[i];
         if (location->room == gCurrentRoom && xPosition == location->xPosition && yPosition == location->yPosition) {
             return i;

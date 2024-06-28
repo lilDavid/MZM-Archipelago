@@ -48,8 +48,8 @@ static void RoomLoadRandoGraphics(void) {
     u32 location;
     u32 end;
 
-    end = sRegionLocationOffsets[gCurrentArea][1];
-    for (location = sRegionLocationOffsets[gCurrentArea][0]; location < end; location++) {
+    end = sRegionLocationOffsets[gCurrentArea + 1];
+    for (location = sRegionLocationOffsets[gCurrentArea]; location < end; location++) {
         pLocation = &sItemLocations[location];
         itemId = sPlacedItems[location].itemId;
         if ((pLocation->room == gCurrentRoom || location == RC_NORFAIR_LARVA_CEILING_ETANK && gCurrentRoom == 46)
