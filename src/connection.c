@@ -5,6 +5,7 @@
 #include "data/empty_datatypes.h"
 #include "data/hatch_data.h"
 
+#include "constants/audio.h"
 #include "constants/connection.h"
 #include "constants/color_fading.h"
 #include "constants/clipdata.h"
@@ -1031,4 +1032,40 @@ void ConnectionCheckPlayCutsceneDuringElevator(void)
         case ELEVATOR_ROUTE_CRATERIA_TO_BRINSTAR:
             return;
     }
+}
+
+void ConnectionStartWarp(void) {
+    if (gEquipment.suitType == SUIT_SUITLESS)
+        return;
+
+    gWhichBGPositionIsWrittenToBG3OFS = 4;
+    gUseMotherShipDoors = FALSE;
+    gAreaBeforeTransition = gCurrentArea;
+    gCurrentArea = AREA_BRINSTAR;
+    gCurrentRoom = 0;
+    gLastDoorUsed = 0;
+
+    gGameModeSub1 = SUB_GAME_MODE_START_WARP;
+    gIsLoadingFile = TRUE;
+
+    CheckSetNewMusicTrack(MUSIC_BRINSTAR);
+    ColorFadingStart(COLOR_FADING_NO_TRANSITION);
+}
+
+void ConnectionStartWarpApply(void) {
+    gSamusData.xPosition = gPreviousXPosition = BLOCK_SIZE * 39 + BLOCK_SIZE / 2;
+    gSamusData.yPosition = gPreviousYPosition = BLOCK_SIZE * 30 - 1;
+    gSamusData.timer = FALSE;
+    gCamera = (struct Camera) {
+        .xPosition = 0x800,
+        .yPosition = 0x580,
+        .xVelocity = 0,
+        .yVelocity = 0,
+    };
+    gBg1XPosition = gCamera.xPosition;
+    gBg1YPosition = gCamera.yPosition;
+    ScrollBg3Related();
+    ScrollProcessGeneral();
+    gPreventMovementTimer = 0;
+    SamusSetPose(SPOSE_FACING_THE_FOREGROUND);
 }

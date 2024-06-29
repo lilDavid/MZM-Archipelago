@@ -110,6 +110,17 @@ u32 InGameMainLoop(void)
             UpdateFreeMovement_Debug();
             RoomUpdateGfxInfo();
             break;
+
+        case SUB_GAME_MODE_START_WARP:
+            IoWriteRegistersDuringTransition();
+            if (ColorFadingProcess())
+            {
+                gGameModeSub1 = 0;
+                if (gPauseScreenFlag != PAUSE_SCREEN_NONE || gCurrentCutscene != 0 || gTourianEscapeCutsceneStage != 0)
+                    changing = TRUE;
+                ConnectionStartWarpApply();
+            }
+            break;
     }
 
     if (gGameModeSub1 == SUB_GAME_MODE_DYING)
@@ -171,6 +182,7 @@ void SetVBlankCodeInGame(void)
         case 0:
         case SUB_GAME_MODE_DOOR_TRANSITION:
         case SUB_GAME_MODE_LOADING_ROOM:
+        case SUB_GAME_MODE_START_WARP:
             CallbackSetVBlank(VBlankCodeInGameLoad);
             break;
 
