@@ -15,4 +15,8 @@ struct ItemGraphicsInfo {
 
 extern const struct ItemGraphicsInfo sItemGfxPointers[ITEM_MAX];
 
+extern const u8 sRandoMultiworldDangerousSpritesets[16];
+extern const u8 sRandoMultiworldDangerousRooms[18][2];
+extern const u8 sRandoChozodiaSaveAndMapRooms[8];
+
 #endif // RANDO_DATA_H

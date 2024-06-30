@@ -383,6 +383,35 @@ void RandoPlaceItemInSpriteGraphics(u32 location, u32 row, u32 column, u32 palet
     DMA_SET(3, sItemGfxPointers[item].palette, pal + (palette * 16 * sizeof(u16)), C_32_2_16(DMA_ENABLE, 16));
 }
 
+static u32 RandoCheckDangerousRooms() {
+    u32 i;
+    u32 dangerousSpriteset;
+
+    if (gAlarmTimer) {
+        for (i = 0; i < ARRAY_SIZE(sRandoChozodiaSaveAndMapRooms); i++) {
+            if (sRandoChozodiaSaveAndMapRooms[i] == gCurrentRoom)
+                return TRUE;
+        }
+    }
+
+    dangerousSpriteset = FALSE;
+    for (i = 0; i < ARRAY_SIZE(sRandoMultiworldDangerousSpritesets); i++) {
+        if (sRandoMultiworldDangerousSpritesets[i] == gSpriteset) {
+            dangerousSpriteset = TRUE;
+            break;
+        }
+    }
+    if (!dangerousSpriteset)
+        return FALSE;
+
+    for (i = 0; i < ARRAY_SIZE(sRandoMultiworldDangerousRooms); i++) {
+        if (sRandoMultiworldDangerousRooms[i][0] == gCurrentArea &&
+            sRandoMultiworldDangerousRooms[i][1] == gCurrentRoom)
+            return TRUE;
+    }
+    return FALSE;
+}
+
 void RandoHandleMultiworld() {
     u32 sourceItemMessage;
     u32 messageId;
@@ -391,10 +420,13 @@ void RandoHandleMultiworld() {
     u32 lineWidth;
     u16* pLine2;
 
-    if (gGameModeSub1 != SUB_GAME_MODE_PLAYING || gEquipment.suitType == SUIT_SUITLESS ||
-        gSamusData.pose == SPOSE_SAVING_LOADING_GAME || gSpriteData[0].spriteId == PSPRITE_AREA_BANNER ||
+    if (gGameModeSub1 != SUB_GAME_MODE_PLAYING || gIncomingItemId > ITEM_MAX ||
+        gEquipment.suitType == SUIT_SUITLESS || gSamusData.pose == SPOSE_SAVING_LOADING_GAME ||
         gPreventMovementTimer || gDisablePause || gShipLandingFlag ||
-        gIncomingItemId > ITEM_MAX)
+        (gSpriteData[0].spriteId == PSPRITE_AREA_BANNER && gSpriteData[0].status != 0))
+        return;
+
+    if (RandoCheckDangerousRooms())
         return;
 
     sourceItemMessage = gCurrentItemBeingAcquired = RandoGiveItem(gIncomingItemId);

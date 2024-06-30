@@ -1,6 +1,8 @@
 #include "data/rando_data.h"
 #include "macros.h"
 
+#include "constants/connection.h"
+
 #include "data/animated_tiles_data.h"
 #include "data/common_pals.h"
 #include "data/sprites/morph_ball.h"
@@ -56,4 +58,61 @@ const struct ItemGraphicsInfo sItemGfxPointers[ITEM_MAX] = {
     [ITEM_AP_FILLER] = {sRandoAPLogoGfx, sRandoAPLogoPal},
     [ITEM_AP_PROGRESSION] = {sRandoAPLogoGfx + RANDO_GRAPHICS_SIZE, sRandoAPLogoPal},
     [ITEM_AP_USEFUL] = {sRandoAPLogoGfx + RANDO_GRAPHICS_SIZE * 2, sRandoAPLogoPal},
+};
+
+// Affected sprites capitalized or written in parens
+const u8 sRandoMultiworldDangerousSpritesets[] = {
+      3,  // Kraid enemies, GADORA
+      7,  // KRAID
+     35,  // GLASS TUNNEL SHARDS, space pirate
+     37,  // Hives, BUGS
+//   45,  // Four item banners? (unused)
+     54,  // Metroid, rinkas (green rinka)
+     55,  // RIDLEY
+     67,  // Mother Brain, ZEBETITES, TURRETS, RINKAS
+     73,  // Vines, gerutas (green geruta)
+//   75,  // CROCOMIRE - unused
+     81,  // Brinstar-Kraid elevator, crumbling statue, GEEMER
+     86,  // TOURIAN GATE
+//   88,  // Chozodia save station, SPACE PIRATE - handled separately
+     93,  // SPACE PIRATE SHIP, space pirate
+     97,  // Imago, violas (unused Imago parts?)
+    100,  // Space pirate, atomic (atomic lightning)
+    101,  // MECHA RIDLEY
+//  103,  // Chozodia map station, SPACE PIRATE - handled separately
+};
+
+// Comments are descriptions of rooms and what graphics the message overwrites
+const u8 sRandoMultiworldDangerousRooms[][2] = {
+    {AREA_BRINSTAR, 8},  // Elevator to Kraid (geemer)
+    {AREA_BRINSTAR, 10},  // Tourian gateway (statues)
+    {AREA_BRINSTAR, 13},  // Hallway on the way to bridge and hive (bugs)
+    {AREA_KRAID, 29},  // Gadora to boss (gadora)
+    {AREA_KRAID, 30},  // Kraid boss room (Kraid)
+    {AREA_RIDLEY, 12},  // Ridley boss room (Ridley)
+    {AREA_RIDLEY, 24},  // Tangle vine room (green geruta)
+    {AREA_TOURIAN, 3},  // Farming room (green rinkas)
+    {AREA_TOURIAN, 4},  // Mother Brain boss room (zebetites, turrets, and rinkas)
+    {AREA_TOURIAN, 18},  // S-shaped room (green rinkas)
+//  {AREA_CHOZODIA, 4},  // Save room (space pirate) - handled separately
+//  {AREA_CHOZODIA, 11},  // Map room (space pirate) - handled separately
+    {AREA_CHOZODIA, 13},  // TBD (atomic lightning)
+//  {AREA_CHOZODIA, 15},  // Save room (space pirate) - handled separately
+    {AREA_CHOZODIA, 18},  // TBD (atomic lightning)
+//  {AREA_CHOZODIA, 21},  // Save room (space pirate) - handled separately
+    {AREA_CHOZODIA, 23},  // Glass tube room (tube shards)
+//  {AREA_CHOZODIA, 27},  // Save room (space pirate) - handled separately
+//  {AREA_CHOZODIA, 40},  // Save room (space pirate) - handled separately
+    {AREA_CHOZODIA, 42},  // Chozo ruins test boss room (ruins test)
+    {AREA_CHOZODIA, 48},  // TBD (ship)
+    {AREA_CHOZODIA, 58},  // TBD (atomic lightning)
+//  {AREA_CHOZODIA, 61},  // Save room (space pirate) - handled separately
+    {AREA_CHOZODIA, 72},  // Mecha Ridley boss room (Mecha Ridley)
+//  {AREA_CHOZODIA, 88},  // Save room (space pirate) - handled separately
+    {AREA_CHOZODIA, 92},  // TBD (ship)
+};
+
+// Can be allowed or disallowed depending on chase status
+const u8 sRandoChozodiaSaveAndMapRooms[] = {
+    4, 11, 15, 21, 27, 40, 61, 88
 };
