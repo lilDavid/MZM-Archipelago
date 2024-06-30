@@ -1,6 +1,7 @@
 #include "gba.h"
 #include "connection.h"
 
+#include "data/rando_data.h"
 #include "data/engine_pointers.h"
 #include "data/empty_datatypes.h"
 #include "data/hatch_data.h"
@@ -1056,12 +1057,7 @@ void ConnectionStartWarpApply(void) {
     gSamusData.xPosition = gPreviousXPosition = BLOCK_SIZE * 39 + BLOCK_SIZE / 2;
     gSamusData.yPosition = gPreviousYPosition = BLOCK_SIZE * 30 - 1;
     gSamusData.timer = FALSE;
-    gCamera = (struct Camera) {
-        .xPosition = 0x800,
-        .yPosition = 0x580,
-        .xVelocity = 0,
-        .yVelocity = 0,
-    };
+    gCamera = sStartingLocationCamera;
     gBg1XPosition = gCamera.xPosition;
     gBg1YPosition = gCamera.yPosition;
     ScrollBg3Related();

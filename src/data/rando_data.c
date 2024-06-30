@@ -60,6 +60,13 @@ const struct ItemGraphicsInfo sItemGfxPointers[ITEM_MAX] = {
     [ITEM_AP_USEFUL] = {sRandoAPLogoGfx + RANDO_GRAPHICS_SIZE * 2, sRandoAPLogoPal},
 };
 
+const struct Camera sStartingLocationCamera = {
+    .xPosition = 0x800,
+    .yPosition = 0x580,
+    .xVelocity = 0,
+    .yVelocity = 0,
+};
+
 // Affected sprites capitalized or written in parens
 const u8 sRandoMultiworldDangerousSpritesets[] = {
       3,  // Kraid enemies, GADORA

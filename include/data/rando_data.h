@@ -5,6 +5,8 @@
 
 #include "constants/rando.h"
 
+#include "structs/scroll.h"
+
 
 #define RANDO_GRAPHICS_SIZE 512
 
@@ -14,6 +16,8 @@ struct ItemGraphicsInfo {
 };
 
 extern const struct ItemGraphicsInfo sItemGfxPointers[ITEM_MAX];
+
+extern const struct Camera sStartingLocationCamera;
 
 extern const u8 sRandoMultiworldDangerousSpritesets[16];
 extern const u8 sRandoMultiworldDangerousRooms[18][2];
