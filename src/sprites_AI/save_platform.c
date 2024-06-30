@@ -239,7 +239,7 @@ void SavePlatformSavePrompt(void)
 
                 gSpriteData[gCurrentSprite.arrayOffset].pose = SAVE_PLATFORM_PART_POSE_TOP_EXTENDING_INIT;
                 gSamusData.timer = FALSE;
-                SoundPlay(0x114);
+                SoundPlay(0x114);  // Saving
             }
             else
             {
@@ -282,7 +282,7 @@ void SavePlatformOpenedOffInit(void)
     gCurrentSprite.currentAnimationFrame = 0x0;
 
     gCurrentSprite.pose = SAVE_PLATFORM_POSE_SPAWN_SAVE_DONE_MESSAGE;
-    gCurrentSprite.timer = 0x3C;
+    gCurrentSprite.timer = 0x2C;
     gCurrentSprite.paletteRow = 0x0;
     gSpriteData[gCurrentSprite.arrayOffset].paletteRow = 0x0;
 }
@@ -510,7 +510,7 @@ void SavePlatformPartSpawnRay(void)
  */
 void SavePlatformPartTubeIdle(void)
 {
-    gCurrentSprite.yPositionSpawn--;
+    gCurrentSprite.yPositionSpawn -= 4;
     if (gCurrentSprite.yPositionSpawn == 0x0)
     {
         gCurrentSprite.pose = SAVE_PLATFORM_PART_POSE_TUBE_DESPAWNING;
@@ -549,8 +549,8 @@ void SavePlatformPartTubeShadowIdle(void)
  */
 void SavePlatformPartRayIdle(void)
 {
-    gCurrentSprite.yPosition -= 0x4;
-    gCurrentSprite.timer--;
+    gCurrentSprite.yPosition -= 0x10;
+    gCurrentSprite.timer -= 4;
     if (gCurrentSprite.timer == 0x0)
     {
         gSpriteData[gCurrentSprite.primarySpriteRamSlot].pose = SAVE_PLATFORM_POSE_OPENED_OFF_INIT;

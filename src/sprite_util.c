@@ -2026,12 +2026,12 @@ u8 SpriteUtilRefillEnergy(void)
     if (gEquipment.currentEnergy < gEquipment.maxEnergy)
     {
         current = (gEquipment.maxEnergy - gEquipment.currentEnergy);
-        current /= 32;
+        current /= 32 / 4;
 
         if (current == 0)
-            current = 1;
-        else if (current >= 11)
-            current = 11;
+            current = 1 * 4;
+        else if (current >= 11 * 4)
+            current = 11 * 4;
 
         gEquipment.currentEnergy += current;
         if (gEquipment.currentEnergy > gEquipment.maxEnergy)
@@ -2058,12 +2058,12 @@ u8 SpriteUtilRefillMissiles(void)
     if (gEquipment.currentMissiles < gEquipment.maxMissiles)
     {
         current = (gEquipment.maxMissiles - gEquipment.currentMissiles);
-        current /= 32;
+        current /= 32 / 4;
 
         if (current == 0)
-            current = 1;
-        else if (current >= 6)
-            current = 6;
+            current = 1 * 4;
+        else if (current >= 6 * 4)
+            current = 6 * 4;
 
         gEquipment.currentMissiles += current;
         if (gEquipment.currentMissiles > gEquipment.maxMissiles)
@@ -2091,11 +2091,11 @@ u8 SpriteUtilRefillSuperMissiles(void)
     if (gEquipment.currentSuperMissiles < max)
     {
         current = (max - gEquipment.currentSuperMissiles);
-        current /= 16;
+        current /= 16 / 2;
         if (current == 0)
-            current = 1;
+            current = 1 * 2;
         else if (current >= 4)
-            current = 4;
+            current = 4 * 2;
 
         gEquipment.currentSuperMissiles += current;
         if (gEquipment.currentSuperMissiles > gEquipment.maxSuperMissiles)
@@ -2123,12 +2123,12 @@ u8 SpriteUtilRefillPowerBombs(void)
     if (gEquipment.currentPowerBombs < max)
     {
         current = (max - gEquipment.currentPowerBombs);
-        current /= 16;
+        current /= 16 / 2;
 
         if (current == 0)
-            current = 1;
+            current = 1 * 2;
         else if (current >= 4)
-            current = 4;
+            current = 4 * 2;
 
         gEquipment.currentPowerBombs += current;
         if (gEquipment.currentPowerBombs > gEquipment.maxPowerBombs)

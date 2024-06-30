@@ -443,7 +443,7 @@ void SavePlatformChozodiaOpenedOffInit(void)
     gCurrentSprite.currentAnimationFrame = 0x0;
 
     gCurrentSprite.pose = SAVE_PLATFORM_CHOZODIA_POSE_SPAWN_SAVE_DONE_MESSAGE;
-    gCurrentSprite.timer = 0x3C;
+    gCurrentSprite.timer = 0x2C;
     gCurrentSprite.paletteRow = 0x0;
     gSpriteData[gCurrentSprite.arrayOffset].paletteRow = 0x0;
 }
@@ -713,7 +713,7 @@ void SavePlatformChozodiaPartSpawnRay(void)
  */
 void SavePlatformChozodiaPartTubeIdle(void)
 {
-    gCurrentSprite.yPositionSpawn--;
+    gCurrentSprite.yPositionSpawn -= 4;
     if (gCurrentSprite.yPositionSpawn == 0x0)
     {
         gCurrentSprite.pose = SAVE_PLATFORM_CHOZODIA_PART_POSE_TUBE_DESPAWNING;
@@ -752,8 +752,8 @@ void SavePlatformChozodiaPartTubeShadowIdle(void)
  */
 void SavePlatformChozodiaPartRayIdle(void)
 {
-    gCurrentSprite.yPosition -= 0x4;
-    gCurrentSprite.timer--;
+    gCurrentSprite.yPosition -= 0x10;
+    gCurrentSprite.timer -= 4;
 
     if (gCurrentSprite.timer == 0x0)
     {

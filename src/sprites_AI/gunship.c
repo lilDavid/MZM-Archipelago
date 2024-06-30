@@ -249,7 +249,7 @@ void GunshipLanding(void)
         gSamusData.yPosition = gCurrentSprite.yPosition - 0x4;
         gSamusData.xPosition = gCurrentSprite.xPosition;
 
-        if (gCurrentSprite.timer == 0x1E)
+        if (gCurrentSprite.timer == 152)
         {
             // Start intro
             StartEffectForCutscene(EFFECT_CUTSCENE_INTRO_TEXT);
@@ -441,7 +441,7 @@ void GunshipAfterRefill(void)
  */
 void GunshipSaving(void)
 {
-    gCurrentSprite.timer--;
+    gCurrentSprite.timer -= 4;
     if (gCurrentSprite.timer == 0x0)
     {
         gCurrentSprite.pose = GUNSHIP_POSE_AFTER_SAVE;
