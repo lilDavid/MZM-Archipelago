@@ -441,7 +441,7 @@ void GunshipAfterRefill(void)
  */
 void GunshipSaving(void)
 {
-    gCurrentSprite.timer -= 4;
+    gCurrentSprite.timer--;
     if (gCurrentSprite.timer == 0x0)
     {
         gCurrentSprite.pose = GUNSHIP_POSE_AFTER_SAVE;

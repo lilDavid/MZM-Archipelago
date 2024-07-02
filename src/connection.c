@@ -1056,6 +1056,7 @@ void ConnectionStartWarp(void) {
 void ConnectionStartWarpApply(void) {
     gSamusData.xPosition = gPreviousXPosition = BLOCK_SIZE * 39 + BLOCK_SIZE / 2;
     gSamusData.yPosition = gPreviousYPosition = BLOCK_SIZE * 30 - 1;
+    gSamusData.standingStatus = STANDING_GROUND;
     gSamusData.timer = FALSE;
     gCamera = sStartingLocationCamera;
     gBg1XPosition = gCamera.xPosition;
