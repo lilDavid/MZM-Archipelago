@@ -2,6 +2,7 @@
 #include "macros.h"
 
 #include "constants/connection.h"
+#include "constants/samus.h"
 
 #include "data/animated_tiles_data.h"
 #include "data/common_pals.h"
@@ -122,4 +123,11 @@ const u8 sRandoMultiworldDangerousRooms[][2] = {
 // Can be allowed or disallowed depending on chase status
 const u8 sRandoChozodiaSaveAndMapRooms[] = {
     4, 11, 15, 21, 27, 40, 61, 88
+};
+
+const u8 sRandoDisallowedSamusPoses[] = {
+    SPOSE_GRABBED_BY_CHOZO_STATUE,
+    SPOSE_SAVING_LOADING_GAME,
+    SPOSE_DOWNLOADING_MAP_DATA,
+    SPOSE_IN_ESCAPE_SHIP,
 };
