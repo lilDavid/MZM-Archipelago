@@ -1,7 +1,7 @@
 #include "data/rooms/crateria_rooms_data.h"
 #include "macros.h"
 
-const u8 sCrateria_11_Clipdata[150] = INCBIN_U8("data/rooms/crateria/Crateria_11_Clipdata.gfx");
+const u8 sCrateria_11_Clipdata[151] = INCBIN_U8("data/rooms/crateria/Crateria_11_Clipdata.gfx");
 
 const u8 sCrateria_11_Bg2[241] = INCBIN_U8("data/rooms/crateria/Crateria_11_Bg2.gfx");
 
