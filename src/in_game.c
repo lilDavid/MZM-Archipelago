@@ -18,6 +18,7 @@
 #include "constants/demo.h"
 #include "constants/haze.h"
 #include "constants/game_state.h"
+#include "constants/text.h"
 
 #include "structs/bg_clip.h"
 #include "structs/haze.h"
@@ -452,7 +453,9 @@ void InitAndLoadGenerics(void)
     gPauseScreenFlag = PAUSE_SCREEN_NONE;
     gCurrentCutscene = 0;
     gTourianEscapeCutsceneStage = 0;
+
     gIncomingItemId = ITEM_NONE;
+    gMultiworldItemSenderName[0] = CHAR_TERMINATOR;  // Prevent crashes if MW does something janky
 
     CallbackSetVBlank(VBlankCodeInGameLoad);
 }
