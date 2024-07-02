@@ -7,6 +7,7 @@
 #include "constants/animated_graphics.h"
 #include "constants/in_game_cutscene.h"
 #include "constants/menus/pause_screen.h"
+#include "constants/escape.h"
 #include "constants/event.h"
 #include "constants/samus.h"
 #include "constants/sprite.h"
@@ -19,6 +20,7 @@
 
 #include "structs/animated_graphics.h"
 #include "structs/bg_clip.h"
+#include "structs/escape.h"
 #include "structs/game_state.h"
 #include "structs/rando.h"
 #include "structs/room.h"
@@ -430,10 +432,12 @@ void RandoHandleMultiworld() {
     u32 lineWidth;
     u16* pLine2;
 
-    if (gGameModeSub1 != SUB_GAME_MODE_PLAYING || gIncomingItemId > ITEM_MAX ||
-        gEquipment.suitType == SUIT_SUITLESS || gPreventMovementTimer || gDisablePause || gShipLandingFlag ||
-        (gSpriteData[0].spriteId == PSPRITE_AREA_BANNER && gSpriteData[0].status != 0) ||
-        RandoIsInDangerousPose() || RandoIsInDangerousRoom())
+    if (gGameModeSub1 != SUB_GAME_MODE_PLAYING ||                                              // Wrong game state
+        gIncomingItemId >= ITEM_MAX ||                                                         // No item queued
+        gEquipment.suitType == SUIT_SUITLESS || gCurrentEscapeStatus != ESCAPE_STATUS_NONE ||  // Stealth or escape
+        gPreventMovementTimer || gDisablePause || gShipLandingFlag ||                          // Not controlling Samus
+        (gSpriteData[0].spriteId == PSPRITE_AREA_BANNER && gSpriteData[0].status != 0) ||      // Showing area name
+        RandoIsInDangerousPose() || RandoIsInDangerousRoom())                                  // Could cause weird visuals
         return;
 
     sourceItemMessage = gCurrentItemBeingAcquired = RandoGiveItem(gIncomingItemId);
