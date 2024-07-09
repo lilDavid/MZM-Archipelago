@@ -1,4 +1,5 @@
 #include "cutscenes/cutscene_utils.h"
+#include "event.h"
 #include "gba.h"
 #include "oam.h"
 #include "color_effects.h"
@@ -65,6 +66,7 @@ u8 TourianEscapeSubroutine(void)
             }
             gCurrentCutscene = CUTSCENE_COULD_I_SURVIVE;
             gGameModeSub2 = 10;
+            EventFunction(EVENT_ACTION_CLEARING, EVENT_FULLY_POWERED_SUIT_OBTAINED);
         }
 
         return TRUE;
