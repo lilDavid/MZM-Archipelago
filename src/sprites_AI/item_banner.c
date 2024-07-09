@@ -268,8 +268,11 @@ void ItemBannerRemovalInit(void)
     if (gCollectingTank)
         BgClipFinishCollectingTank();
 
-    if (gReceivingFromMultiworld)
+    if (gReceivingFromMultiworld) {
         gReceivingFromMultiworld = FALSE;
+        gIncomingItemId = ITEM_NONE;
+        gMultiworldItemCount += 1;
+    }
 
     if (gCurrentSprite.pOam == sItemBannerOAM_OneLineStatic)
         gCurrentSprite.pOam = sItemBannerOAM_OneLineRemoving;

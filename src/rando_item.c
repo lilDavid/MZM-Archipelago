@@ -126,43 +126,58 @@ u32 RandoGetItemAtPosition(u32 area, u32 room, u32 xPosition, u32 yPosition) {
     return ITEM_NONE;
 }
 
-u32 RandoGiveItem(u32 itemId) {
-    s32 isFirstTank;
+static u32 RandoGetItemMessage(u32 itemId) {
     s32 messageID;
 
-    if (itemId > ITEM_NOTHING)
+    if (itemId >= ITEM_MAX)
         return MESSAGE_DUMMY;
 
     gPreventMovementTimer = SAMUS_ITEM_PMT;
 
     messageID = sItemMessages[itemId];
-    isFirstTank = FALSE;
+    switch (itemId) {
+        case ITEM_MISSILE_TANK:
+            messageID = (gEquipment.maxMissiles == 0) ? MESSAGE_FIRST_MISSILE_TANK : MESSAGE_MISSILE_TANK_ACQUIRED;
+            break;
+        case ITEM_SUPER_MISSILE_TANK:
+            messageID = (gEquipment.maxSuperMissiles == 0) ? MESSAGE_FIRST_SUPER_MISSILE_TANK : MESSAGE_SUPER_MISSILE_TANK_ACQUIRED;
+            break;
+        case ITEM_POWER_BOMB_TANK:
+            messageID = (gEquipment.maxPowerBombs == 0) ? MESSAGE_FIRST_POWER_BOMB_TANK : MESSAGE_POWER_BOMB_TANK_ACQUIRED;
+            break;
+        case ITEM_PLASMA_BEAM:
+            if (!sRandoSeed.options.unknownItemsAlwaysUsable && gEquipment.suitType != SUIT_FULLY_POWERED)
+                messageID = MESSAGE_UKNOWN_ITEM_PLASMA;
+            break;
+        case ITEM_GRAVITY_SUIT:
+            if (!sRandoSeed.options.unknownItemsAlwaysUsable && gEquipment.suitType != SUIT_FULLY_POWERED)
+                messageID = MESSAGE_UNKNOWN_ITEM_GRAVITY;
+            break;
+        case ITEM_SPACE_JUMP:
+            if (!sRandoSeed.options.unknownItemsAlwaysUsable && gEquipment.suitType != SUIT_FULLY_POWERED)
+                messageID = MESSAGE_UNKNOWN_ITEM_SPACE_JUMP;
+            break;
+    }
+    return messageID;
+}
+
+static void RandoItemApply(u32 itemId) {
     switch (itemId) {
         case ITEM_ENERGY_TANK:
             gEquipment.maxEnergy = MIN(1299, gEquipment.maxEnergy + sTankIncreaseAmount[gDifficulty].energy);
             gEquipment.currentEnergy = gEquipment.maxEnergy;
-            messageID = MESSAGE_ENERGY_TANK_ACQUIRED;
             break;
         case ITEM_MISSILE_TANK:
-            if (gEquipment.maxMissiles == 0)
-                isFirstTank = TRUE;
             gEquipment.maxMissiles = MIN(999, gEquipment.maxMissiles + sTankIncreaseAmount[gDifficulty].missile);
             gEquipment.currentMissiles = MIN(999, gEquipment.currentMissiles + sTankIncreaseAmount[gDifficulty].missile);
-            messageID = isFirstTank ? MESSAGE_FIRST_MISSILE_TANK : MESSAGE_MISSILE_TANK_ACQUIRED;
             break;
         case ITEM_SUPER_MISSILE_TANK:
-            if (gEquipment.maxSuperMissiles == 0)
-                isFirstTank = TRUE;
             gEquipment.maxSuperMissiles = MIN(99, gEquipment.maxSuperMissiles + sTankIncreaseAmount[gDifficulty].superMissile);
             gEquipment.currentSuperMissiles = MIN(99, gEquipment.currentSuperMissiles + sTankIncreaseAmount[gDifficulty].superMissile);
-            messageID = isFirstTank ? MESSAGE_FIRST_SUPER_MISSILE_TANK : MESSAGE_SUPER_MISSILE_TANK_ACQUIRED;
             break;
         case ITEM_POWER_BOMB_TANK:
-            if (gEquipment.maxPowerBombs == 0)
-                isFirstTank = TRUE;
             gEquipment.maxPowerBombs = MIN(99, gEquipment.maxPowerBombs + sTankIncreaseAmount[gDifficulty].powerBomb);
             gEquipment.currentPowerBombs = MIN(99, gEquipment.currentPowerBombs + sTankIncreaseAmount[gDifficulty].powerBomb);
-            messageID = isFirstTank ? MESSAGE_FIRST_POWER_BOMB_TANK : MESSAGE_POWER_BOMB_TANK_ACQUIRED;
             break;
         case ITEM_LONG_BEAM:
             gEquipment.beamBombs |= BBF_LONG_BEAM;
@@ -178,8 +193,6 @@ u32 RandoGiveItem(u32 itemId) {
             break;
         case ITEM_PLASMA_BEAM:
             gEquipment.beamBombs |= BBF_PLASMA_BEAM;
-            if (!sRandoSeed.options.unknownItemsAlwaysUsable && gEquipment.suitType != SUIT_FULLY_POWERED)
-                messageID = MESSAGE_UKNOWN_ITEM_PLASMA;
             break;
         case ITEM_BOMB:
             gEquipment.beamBombs |= BBF_BOMBS;
@@ -189,8 +202,6 @@ u32 RandoGiveItem(u32 itemId) {
             break;
         case ITEM_GRAVITY_SUIT:
             gEquipment.suitMisc |= SMF_GRAVITY_SUIT;
-            if (!sRandoSeed.options.unknownItemsAlwaysUsable && gEquipment.suitType != SUIT_FULLY_POWERED)
-                messageID = MESSAGE_UNKNOWN_ITEM_GRAVITY;
             break;
         case ITEM_MORPH_BALL:
             gEquipment.suitMisc |= SMF_MORPH_BALL;
@@ -206,15 +217,19 @@ u32 RandoGiveItem(u32 itemId) {
             break;
         case ITEM_SPACE_JUMP:
             gEquipment.suitMisc |= SMF_SPACE_JUMP;
-            if (!sRandoSeed.options.unknownItemsAlwaysUsable && gEquipment.suitType != SUIT_FULLY_POWERED)
-                messageID = MESSAGE_UNKNOWN_ITEM_SPACE_JUMP;
             break;
         case ITEM_POWER_GRIP:
             gEquipment.suitMisc |= SMF_POWER_GRIP;
             break;
     }
+}
 
-    return messageID;
+u32 RandoGiveItem(u32 itemId) {
+    u32 messageId;
+
+    messageId = RandoGetItemMessage(itemId);
+    RandoItemApply(itemId);
+    return messageId;
 }
 
 void RandoGiveItemFromPosition(u32 area, u32 room, u32 xPosition, u32 yPosition) {
@@ -440,9 +455,7 @@ void RandoHandleMultiworld() {
         RandoIsInDangerousPose() || RandoIsInDangerousRoom())                                  // Could cause weird visuals
         return;
 
-    sourceItemMessage = gCurrentItemBeingAcquired = RandoGiveItem(gIncomingItemId);
-    gIncomingItemId = ITEM_NONE;
-    gMultiworldItemCount += 1;
+    sourceItemMessage = gCurrentItemBeingAcquired = RandoGetItemMessage(gIncomingItemId);
     gReceivingFromMultiworld = TRUE;
     switch (gCurrentItemBeingAcquired) {
         case MESSAGE_PLASMA_BEAM:
@@ -477,6 +490,13 @@ void RandoHandleMultiworld() {
             break;
     }
 
+    // (Hopefully) fix the bug where the item acquisition freezes Samus in place instead of showing the message
+    if (SpriteSpawnPrimary(PSPRITE_ITEM_BANNER, messageId, 6, gSamusData.yPosition, gSamusData.xPosition, 0) == UCHAR_MAX) {
+        gPreventMovementTimer = 0;
+        return;
+    }
+    RandoItemApply(gIncomingItemId);
+
     // Item name
     messageLength = TextCopyUntilCharacter(sMessageTextPointers[gLanguage][sourceItemMessage],
                                            gDynamicMessageBuffer,
@@ -497,6 +517,4 @@ void RandoHandleMultiworld() {
     lineLength = TextFindCharacter(pLine2 + 2, CHAR_TERMINATOR);
     lineWidth = TextGetStringWidth(pLine2 + 2, lineLength);
     pLine2[0] = CHAR_WIDTH_MASK | (224 - lineWidth) / 2;
-
-    SpriteSpawnPrimary(PSPRITE_ITEM_BANNER, messageId, 6, gSamusData.yPosition, gSamusData.xPosition, 0);
 }
