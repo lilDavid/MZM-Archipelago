@@ -80,6 +80,7 @@ const u8 sRandoMultiworldDangerousSpritesets[] = {
      67,  // Mother Brain, ZEBETITES, TURRETS, RINKAS
      73,  // Vines, gerutas (green geruta)
 //   75,  // CROCOMIRE - unused
+     77,  // CHOZO RUINS TEST, FALLING PILLAR
      81,  // Brinstar-Kraid elevator, crumbling statue, GEEMER
      86,  // TOURIAN GATE
 //   88,  // Chozodia save station, SPACE PIRATE - handled separately
@@ -111,7 +112,7 @@ const u8 sRandoMultiworldDangerousRooms[][2] = {
     {AREA_CHOZODIA, 23},  // Glass tube room (tube shards)
 //  {AREA_CHOZODIA, 27},  // Save room (space pirate) - handled separately
 //  {AREA_CHOZODIA, 40},  // Save room (space pirate) - handled separately
-    {AREA_CHOZODIA, 42},  // Chozo ruins test boss room (ruins test)
+    {AREA_CHOZODIA, 42},  // Chozo ruins test boss room (ruins test and falling pillar)
     {AREA_CHOZODIA, 48},  // TBD (ship)
     {AREA_CHOZODIA, 58},  // TBD (atomic lightning)
 //  {AREA_CHOZODIA, 61},  // Save room (space pirate) - handled separately
