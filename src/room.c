@@ -97,7 +97,7 @@ void RoomLoad(void)
         }
     }
 #endif // 0
-    else if (gPauseScreenFlag == PAUSE_SCREEN_FULLY_POWERED_SUIT_ITEMS)
+    else if (gPauseScreenFlag == PAUSE_SCREEN_FULLY_POWERED_SUIT_ITEMS && gEquipment.suitMisc & SMF_GRAVITY_SUIT)
     {
         gEquipment.suitMiscActivation &= ~SMF_GRAVITY_SUIT;
         SamusSetPose(SPOSE_FACING_THE_FOREGROUND);
