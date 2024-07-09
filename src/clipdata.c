@@ -12,6 +12,7 @@
 #include "constants/samus.h"
 
 #include "structs/bg_clip.h"
+#include "structs/rando.h"
 #include "structs/room.h"
 #include "structs/samus.h"
 
@@ -299,12 +300,13 @@ s32 ClipdataCheckCurrentAffectingAtPosition(u16 yPosition, u16 xPosition)
  * @param tileY Tile Y position
  * @param tileX Tile X position
  * @param dontCheckForElevator Don't check for elevator flag
- * @return u32 Affecting clipdata (movement << 16 | hazard)
+ * @return u32 Affecting clipdata + room hazard (movement << 16 | upper room hazard << 8 | hazard)
  */
 u32 ClipdataUpdateCurrentAffecting(u16 yPosition, u16 tileY, u16 tileX, u8 dontCheckForElevator)
 {
     u32 behavior;
     u32 specialClip;
+    u32 roomHazard;
 
     // Get clipdata behavior of the current tile
     behavior = gTilemapAndClipPointers.pClipBehaviors[gBgPointersAndDimensions.pClipDecomp[
@@ -362,8 +364,14 @@ u32 ClipdataUpdateCurrentAffecting(u16 yPosition, u16 tileY, u16 tileX, u8 dontC
 
     gCurrentAffectingClipdata.hazard = specialClip;
 
+    // Check for effect-based room hazard
+    if (gCurrentRoomEntry.Bg0Prop != 0 && gCurrentRoomEntry.damageEffect != 0 &&
+        gCurrentRoomEntry.damageEffect < ARRAY_SIZE(sHazardsDefinitions))
+        // Always use hazard above
+        roomHazard = sHazardsDefinitions[gCurrentRoomEntry.damageEffect][0];
+
     // Return formatted clipdata
-    return C_32_2_16(gCurrentAffectingClipdata.movement,gCurrentAffectingClipdata.hazard);
+    return C_32_2_16(gCurrentAffectingClipdata.movement, C_16_2_8(roomHazard, gCurrentAffectingClipdata.hazard));
 }
 
 /**

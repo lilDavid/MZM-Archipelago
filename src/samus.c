@@ -3438,6 +3438,7 @@ u8 SamusTakeHazardDamage(struct SamusData* pData, struct Equipment* pEquipment, 
     u8 knockback;
     u8 damageType;
     u32 hazard;
+    u32 roomHazard;
 
     switch (pData->pose)
     {
@@ -3471,7 +3472,9 @@ u8 SamusTakeHazardDamage(struct SamusData* pData, struct Equipment* pEquipment, 
     damageType = SAMUS_HAZARD_DAMAGE_TYPE_NONE;
 
     // Get hazard at the current position
-    hazard = LOW_BYTE(ClipdataCheckCurrentAffectingAtPosition(yPosition, pData->xPosition));
+    hazard = ClipdataCheckCurrentAffectingAtPosition(yPosition, pData->xPosition);
+    roomHazard = LOW_SHORT(hazard) >> 8;
+    hazard = LOW_BYTE(hazard);
 
     if (pEquipment->suitMiscActivation & SMF_GRAVITY_SUIT &&
         (pEquipment->suitMiscActivation & SMF_VARIA_SUIT || !sRandoSeed.options.removeGravityHeatResistance))
@@ -3490,9 +3493,10 @@ u8 SamusTakeHazardDamage(struct SamusData* pData, struct Equipment* pEquipment, 
         if (hazard == HAZARD_TYPE_ACID)
         {
             damaged = TRUE;
-            damageType = SAMUS_HAZARD_DAMAGE_TYPE_LIQUID;
+            if (pHazard->damageTimer > 3)
+                damageType = SAMUS_HAZARD_DAMAGE_TYPE_LIQUID;
         }
-        else if (hazard == HAZARD_TYPE_COLD_KNOCKBACK)
+        else if (roomHazard == HAZARD_TYPE_COLD_KNOCKBACK)
         {
             damaged = TRUE;
             if (pHazard->damageTimer > 3)
@@ -3505,13 +3509,13 @@ u8 SamusTakeHazardDamage(struct SamusData* pData, struct Equipment* pEquipment, 
                 knockback = TRUE;
             }
         }
-        else if (hazard == HAZARD_TYPE_HEAT)
+        else if (roomHazard == HAZARD_TYPE_HEAT)
         {
             damaged = TRUE;
             if (pHazard->damageTimer > 5)
                 damageType = SAMUS_HAZARD_DAMAGE_TYPE_ROOM;
         }
-        else if (hazard == HAZARD_TYPE_COLD)
+        else if (roomHazard == HAZARD_TYPE_COLD)
         {
             damaged = TRUE;
             if (pHazard->damageTimer > 5)
@@ -3595,7 +3599,9 @@ u8 SamusTakeHazardDamage(struct SamusData* pData, struct Equipment* pEquipment, 
         {
             case 1:
             case 33:
-                if (hazard == HAZARD_TYPE_ACID || hazard == HAZARD_TYPE_STRONG_LAVA || hazard == HAZARD_TYPE_WEAK_LAVA)
+                if (hazard == HAZARD_TYPE_ACID ||
+                    (hazard == HAZARD_TYPE_STRONG_LAVA && !(pEquipment->suitMisc & SMF_GRAVITY_SUIT)) ||
+                    (hazard == HAZARD_TYPE_WEAK_LAVA && !(pEquipment->suitMisc & SMF_ALL_SUITS)))
                     SoundPlay(SOUND_LIQUID_DAMAGE_SUBMERGED);
                 break;
     
@@ -7870,7 +7876,7 @@ void SamusUpdateArmCannonPositionOffset(u8 direction)
         pPhysics->armCannonXPositionOffset = offset;
 }
 
-#define DEBUG_SKIP_BOSSES FALSE
+#define DEBUG_SKIP_BOSSES 2
 
 /**
  * @brief bcb8 | 130 | Initializes samus data
