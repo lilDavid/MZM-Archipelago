@@ -7876,7 +7876,7 @@ void SamusUpdateArmCannonPositionOffset(u8 direction)
         pPhysics->armCannonXPositionOffset = offset;
 }
 
-#define DEBUG_SKIP_BOSSES 2
+#define DEBUG_SKIP_BOSSES 0
 
 /**
  * @brief bcb8 | 130 | Initializes samus data
