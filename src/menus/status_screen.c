@@ -798,7 +798,8 @@ void StatusScreenSetBombsVisibility(u16* pTilemap)
         {
             if (PAUSE_SCREEN_DATA.statusScreenData.bombActivation[1] & 1)
             {
-                if (gEquipment.beamBombsActivation & sStatusScreenFlagsOrderPointers[ABILITY_GROUP_BOMBS][0])
+                if (gEquipment.beamBombsActivation & sStatusScreenFlagsOrderPointers[ABILITY_GROUP_BOMBS][0] ||
+                    sRandoSeed.options.usePowerBombsWithoutBomb)
                     PAUSE_SCREEN_DATA.statusScreenData.bombActivation[1] |= 2;
 
                 if (gEquipment.currentPowerBombs != 0)
@@ -1895,6 +1896,9 @@ u32 StatusScreenToggleItem(u8 statusSlot, u8 action)
                     flag = BBF_BOMBS;
                     pActivation = &gEquipment.beamBombsActivation;
                 }
+
+                if (!(gEquipment.beamBombs & BBF_BOMBS))
+                    flag = 0;
             }
             break;
 
