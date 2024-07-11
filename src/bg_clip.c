@@ -7,6 +7,7 @@
 #include "rando_item.h"
 
 #include "data/block_data.h"
+#include "data/rando_data.h"
 
 #include "constants/block.h"
 #include "constants/connection.h"
@@ -22,7 +23,6 @@
 #include "structs/connection.h"
 #include "structs/transparency.h"
 #include "structs/game_state.h"
-#include "structs/rando.h"
 #include "structs/room.h"
 #include "structs/samus.h"
 

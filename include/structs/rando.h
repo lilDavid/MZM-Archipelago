@@ -6,8 +6,6 @@
 #include "constants/connection.h"
 #include "constants/rando.h"
 
-#include "structs/bg_clip.h"
-
 // Structs
 
 struct Seed {
@@ -44,10 +42,6 @@ struct PlacedItem {
 extern const struct Seed sRandoSeed;
 extern const struct PlacedItem sPlacedItems[RC_MAX];
 extern const struct StartingInventory sRandoStartingInventory;
-
-extern const u8 sItemMessages[ITEM_MAX];
-extern const u8 sRegionLocationOffsets[AREA_CHOZODIA + 2];
-extern const struct ItemInfo sItemLocations[RC_MAX];
 
 extern u8 gIncomingItemId;
 extern u8 gReceivingFromMultiworld;

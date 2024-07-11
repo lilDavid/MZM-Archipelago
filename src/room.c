@@ -8,6 +8,7 @@
 #include "data/clipdata_types.h"
 #include "data/clipdata_types_tilemap.h"
 #include "data/rooms_data.h"
+#include "data/rando_data.h"
 
 #include "constants/audio.h"
 #include "constants/block.h"
@@ -33,7 +34,6 @@
 #include "structs/demo.h"
 #include "structs/game_state.h"
 #include "structs/scroll.h"
-#include "structs/rando.h"
 #include "structs/room.h"
 #include "structs/samus.h"
 #include "structs/text.h"

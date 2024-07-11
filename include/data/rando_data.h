@@ -3,8 +3,10 @@
 
 #include "types.h"
 
+#include "constants/connection.h"
 #include "constants/rando.h"
 
+#include "structs/bg_clip.h"
 #include "structs/scroll.h"
 
 
@@ -23,5 +25,8 @@ extern const u8 sRandoMultiworldDangerousSpritesets[16];
 extern const u8 sRandoMultiworldDangerousRooms[18][2];
 extern const u8 sRandoChozodiaSaveAndMapRooms[8];
 extern const u8 sRandoDisallowedSamusPoses[4];
+extern const u8 sItemMessages[ITEM_MAX];
+extern const u8 sRegionLocationOffsets[AREA_CHOZODIA + 2];
+extern const struct ItemInfo sItemLocations[RC_MAX];
 
 #endif // RANDO_DATA_H
