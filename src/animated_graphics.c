@@ -16,6 +16,7 @@
 #include "constants/event.h"
 #include "constants/game_state.h"
 #include "constants/room.h"
+#include "constants/power_bomb_explosion.h"
 
 #include "structs/animated_graphics.h"
 #include "structs/color_effects.h"
@@ -369,7 +370,7 @@ void AnimatedPaletteUpdate(void)
         return;
 
     // Don't update if a power bomb explosion is occuring
-    if (gCurrentPowerBomb.animationState != 0)
+    if (gCurrentPowerBomb.animationState != PB_STATE_NONE)
         return;
 
     // Don't update if disabled
