@@ -73,7 +73,7 @@ extern const u8 sCrateria_10_Bg2[190];
 extern const u8 sCrateria_10_Bg1[290];
 extern const u8 sCrateria_10_Spriteset0[ENEMY_ROOM_DATA_ARRAY_SIZE(1)];
 
-extern const u8 sCrateria_11_Clipdata[151];
+extern const u8 sCrateria_11_Clipdata[150];
 extern const u8 sCrateria_11_Bg2[241];
 extern const u8 sCrateria_11_Bg1[313];
 extern const u8 sCrateria_11_Spriteset0[ENEMY_ROOM_DATA_ARRAY_SIZE(7)];

@@ -9,7 +9,7 @@
 extern const u8 sNorfair_0_Scrolls[SCROLL_DATA_SIZE(1)];
 extern const u8 sNorfair_0_Clipdata[238];
 extern const u8 sNorfair_0_Bg2[167];
-extern const u8 sNorfair_0_Bg1[504];
+extern const u8 sNorfair_0_Bg1[501];
 extern const u8 sNorfair_0_Spriteset0[ENEMY_ROOM_DATA_ARRAY_SIZE(4)];
 
 extern const u8 sNorfair_1_Clipdata[310];
