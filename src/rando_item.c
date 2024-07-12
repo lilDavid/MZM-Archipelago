@@ -1,5 +1,4 @@
 #include "rando_item.h"
-#include "event.h"
 #include "gba.h"
 #include "macros.h"
 #include "in_game_cutscene.h"
@@ -8,7 +7,6 @@
 #include "constants/in_game_cutscene.h"
 #include "constants/menus/pause_screen.h"
 #include "constants/escape.h"
-#include "constants/event.h"
 #include "constants/samus.h"
 #include "constants/sprite.h"
 #include "constants/text.h"
@@ -146,15 +144,15 @@ static u32 RandoGetItemMessage(u32 itemId) {
             messageID = (gEquipment.maxPowerBombs == 0) ? MESSAGE_FIRST_POWER_BOMB_TANK : MESSAGE_POWER_BOMB_TANK_ACQUIRED;
             break;
         case ITEM_PLASMA_BEAM:
-            if (!sRandoSeed.options.unknownItemsAlwaysUsable && gEquipment.suitType != SUIT_FULLY_POWERED)
+            if (!UNKNOWN_ITEMS_ARE_USABLE)
                 messageID = MESSAGE_UKNOWN_ITEM_PLASMA;
             break;
         case ITEM_GRAVITY_SUIT:
-            if (!sRandoSeed.options.unknownItemsAlwaysUsable && gEquipment.suitType != SUIT_FULLY_POWERED)
+            if (!UNKNOWN_ITEMS_ARE_USABLE)
                 messageID = MESSAGE_UNKNOWN_ITEM_GRAVITY;
             break;
         case ITEM_SPACE_JUMP:
-            if (!sRandoSeed.options.unknownItemsAlwaysUsable && gEquipment.suitType != SUIT_FULLY_POWERED)
+            if (!UNKNOWN_ITEMS_ARE_USABLE)
                 messageID = MESSAGE_UNKNOWN_ITEM_SPACE_JUMP;
             break;
     }
