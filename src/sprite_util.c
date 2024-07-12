@@ -2637,11 +2637,8 @@ void SpriteUtilMoveSpriteTowardsSamus(u16 samusY, u16 samusX, u8 ySpeed, u8 xSpe
         }
         else
         {
-            gCurrentSprite.work1--;
-            if (gCurrentSprite.work1 != 0)
-            {
+            if (--gCurrentSprite.work1 != 0)
                 gCurrentSprite.xPosition += (gCurrentSprite.work1 >> speedDivisor);
-            }
             else
                 flip++;
         }
@@ -2669,17 +2666,12 @@ void SpriteUtilMoveSpriteTowardsSamus(u16 samusY, u16 samusX, u8 ySpeed, u8 xSpe
                 else
                 {
                     gCurrentSprite.xPosition = newPos;
-                    gCurrentSprite.yPosition += 0; // Needed to produce matching ASM.
                 }
             }
         }
         else
         {
-            u32 cond;
-
-            gCurrentSprite.work1--;
-            cond = gCurrentSprite.work1 != 0; // Needed to produce matching ASM.
-            if (cond)
+            if (--gCurrentSprite.work1 != 0)
             {
                 speed = gCurrentSprite.work1 >> speedDivisor;
                 newPos = gCurrentSprite.xPosition - speed;
@@ -2694,7 +2686,9 @@ void SpriteUtilMoveSpriteTowardsSamus(u16 samusY, u16 samusX, u8 ySpeed, u8 xSpe
                 }
             }
             else
+            {
                 flip++;
+            }
         }
     }
 
@@ -2723,11 +2717,8 @@ void SpriteUtilMoveSpriteTowardsSamus(u16 samusY, u16 samusX, u8 ySpeed, u8 xSpe
         }
         else
         {
-            gCurrentSprite.work0--;
-            if (gCurrentSprite.work0 != 0)
-            {
-                gCurrentSprite.yPosition += (gCurrentSprite.work0 >> speedDivisor);
-            }
+            if (--gCurrentSprite.work0 != 0)
+                gCurrentSprite.yPosition += gCurrentSprite.work0 >> speedDivisor;
             else
                 flip++;
         }
@@ -2760,8 +2751,7 @@ void SpriteUtilMoveSpriteTowardsSamus(u16 samusY, u16 samusX, u8 ySpeed, u8 xSpe
         }
         else
         {
-            gCurrentSprite.work0--;
-            if (gCurrentSprite.work0 != 0)
+            if (--gCurrentSprite.work0 != 0)
             {
                 speed = gCurrentSprite.work0 >> speedDivisor;
                 newPos = gCurrentSprite.yPosition - speed;
@@ -2776,7 +2766,9 @@ void SpriteUtilMoveSpriteTowardsSamus(u16 samusY, u16 samusX, u8 ySpeed, u8 xSpe
                 }
             }
             else
+            {
                 flip++;
+            }
         }
     }
 
