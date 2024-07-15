@@ -276,12 +276,14 @@ u32 InGameCutsceneUpgradingSuit(u8 cutsceneNumber, u8 cutsceneNumberNoFlag)
             }
             break;
 
+#if 0
         case 1:
             gDefaultTransparency.unk_0 = 1;
             gWrittenToBLDALPHA_H = gIoRegistersBackup.BLDALPHA_NonGameplay_EVB;
             gWrittenToBLDALPHA_L = gIoRegistersBackup.BLDALPHA_NonGameplay_EVA;
             changeStage = TRUE;
             break;
+#endif // 0
 
         case 2:
             if (MOD_AND(gInGameCutscene.timer, 2))
@@ -537,6 +539,9 @@ u32 InGameCutsceneUpgradingSuit(u8 cutsceneNumber, u8 cutsceneNumberNoFlag)
             changeStage = DIV_SHIFT(changeStage, 2);
             break;
 
+        case 1: // Instantly end cutscene
+            gInGameCutscene.stage = 19;
+            // fallthrough
         case 19:
             // Flag cutscene has ended
             if (gCurrentItemBeingAcquired == ITEM_ACQUISITION_GRAVITY)
