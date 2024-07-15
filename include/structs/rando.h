@@ -51,7 +51,7 @@ extern const struct ItemInfo sItemLocations[RC_MAX];
 extern u8 gIncomingItemId;
 extern u8 gReceivingFromMultiworld;
 extern u8 gMultiworldItemCount;
-extern u16 gMultiworldItemSenderName[17];
+extern u16 gMultiworldItemSenderName[2 * 16 + sizeof(" ()")];
 extern u32 gRandoLocationBitfields[AREA_NORMAL_END + 1];
 
 #endif /* RANDO_STRUCT_H */

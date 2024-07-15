@@ -390,7 +390,7 @@ SECTIONS {
         . = 0x00005d21; gReceivingFromMultiworld = .;
         . = 0x00005d22; gMultiworldItemCount = .;
         . = 0x00005d24; gMultiworldItemSenderName = .;
-        . = 0x00005d48; gDynamicMessageBuffer = .;
+        . = 0x00005d6c; gDynamicMessageBuffer = .;
 
 
         . = 0x00007e60; sp_sys = .;
