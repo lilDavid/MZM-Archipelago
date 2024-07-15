@@ -146,4 +146,10 @@ enum RandoItem {
     ITEM_NONE = 0xFF
 };
 
+enum RandoGoal {
+    GOAL_MECHA_RIDLEY,
+    GOAL_MAJOR_BOSSES,
+    GOAL_MAX,
+};
+
 #endif /* RANDO_CONSTANTS_H */

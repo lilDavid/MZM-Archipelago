@@ -16,6 +16,7 @@ struct Seed {
     u8 seedName[64];
 
     struct {
+        u8 goal;
         u8 unknownItemsAlwaysUsable;
         u8 skipChozodiaStealth;
         u8 usePowerBombsWithoutBomb;

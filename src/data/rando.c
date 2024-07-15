@@ -157,6 +157,7 @@ const struct Seed sRandoSeed = {
     .seedName = {},
 
     .options = {
+        .goal = GOAL_MECHA_RIDLEY,
         .unknownItemsAlwaysUsable = FALSE,
         .skipChozodiaStealth = FALSE,
         .usePowerBombsWithoutBomb = FALSE,

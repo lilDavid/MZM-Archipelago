@@ -15,7 +15,7 @@ extern const struct HatchLockEvent sHatchLockEventsKraid[1];
 
 extern const struct HatchLockEvent sHatchLockEventsCrateria[4];
 
-extern const struct HatchLockEvent sHatchLockEventsChozodia[15];
+extern const struct HatchLockEvent sHatchLockEventsChozodia[16];
 
 extern const u8 sEventBasedConnections[MAX_AMOUNT_OF_EVENT_BASED_CONNECTIONS][4];
 

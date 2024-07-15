@@ -154,7 +154,7 @@ const struct HatchLockEvent sHatchLockEventsCrateria[4] = {
     }
 };
 
-const struct HatchLockEvent sHatchLockEventsChozodia[15] = {
+const struct HatchLockEvent sHatchLockEventsChozodia[16] = {
     {
         .room = 13,
         .event = EVENT_MECHA_RIDLEY_KILLED,
@@ -469,7 +469,28 @@ const struct HatchLockEvent sHatchLockEventsChozodia[15] = {
         .hatchesToLockPart2_6 = FALSE,
         .hatchesToLockPart2_7 = FALSE,
         .hatchesToLockPart2_8 = FALSE
-    }
+    },
+    {
+        .room = 70,
+        .event = EVENT_NONE,
+        .isBefore = TRUE,
+        .hatchesToLock1 = FALSE,
+        .hatchesToLock2 = TRUE,
+        .hatchesToLock3 = FALSE,
+        .hatchesToLock4 = FALSE,
+        .hatchesToLock5 = FALSE,
+        .hatchesToLock6 = FALSE,
+        .hatchesToLock7 = FALSE,
+        .hatchesToLock8 = FALSE,
+        .hatchesToLockPart2_1 = FALSE,
+        .hatchesToLockPart2_2 = FALSE,
+        .hatchesToLockPart2_3 = FALSE,
+        .hatchesToLockPart2_4 = FALSE,
+        .hatchesToLockPart2_5 = FALSE,
+        .hatchesToLockPart2_6 = FALSE,
+        .hatchesToLockPart2_7 = FALSE,
+        .hatchesToLockPart2_8 = FALSE
+    },
 };
 
 const u8 sEventBasedConnections[MAX_AMOUNT_OF_EVENT_BASED_CONNECTIONS][4] = {
