@@ -101,7 +101,7 @@ static u32 RandoCheckLocation(u32 location) {
     gRandoLocationBitfields[region] |= flag;
 }
 
-static u32 RandoGetLocationAtPosition(u32 area, u32 room, u32 xPosition, u32 yPosition) {
+u32 RandoGetLocationAtPosition(u32 area, u32 room, u32 xPosition, u32 yPosition) {
     u32 i;
     u32 end;
     const struct ItemInfo* location;
@@ -115,13 +115,6 @@ static u32 RandoGetLocationAtPosition(u32 area, u32 room, u32 xPosition, u32 yPo
     }
 
     return RC_MAX;
-}
-
-u32 RandoGetItemAtPosition(u32 area, u32 room, u32 xPosition, u32 yPosition) {
-    u32 location = RandoGetLocationAtPosition(area, room, xPosition, yPosition);
-    if (location < RC_MAX)
-        return sPlacedItems[location].itemId;
-    return ITEM_NONE;
 }
 
 static u32 RandoGetItemMessage(u32 itemId) {
@@ -321,56 +314,30 @@ void RandoGiveItemFromCheck(u32 location) {
     SpriteSpawnPrimary(PSPRITE_ITEM_BANNER, messageID, 6, gSamusData.yPosition, gSamusData.xPosition, 0);
 }
 
-void RandoPlaceItemInTileGraphics(u32 location) {
+u32 RandoGetTileEntry(u32 locationId) {
     u32 i;
-    u32 j;
-    u32 k;
-    struct AnimatedGraphicsInfo* pGraphics;
+    u32 location;
 
-    u32 item = sPlacedItems[location].itemId;
-    for (pGraphics = gAnimatedGraphicsData, i = 0; i < ARRAY_SIZE(gAnimatedGraphicsData); i++, pGraphics++) {
-        if (pGraphics->type == ANIMATED_GFX_TYPE_NONE) {
-            pGraphics->type = ANIMATED_GFX_TYPE_NORMAL;
-            pGraphics->framesPerState = 10;
-            pGraphics->numberOfStates = 4;
-            pGraphics->pGraphics = sItemGfxPointers[item].gfx;
-            pGraphics->currentAnimationFrame = 0;
-            pGraphics->animationDurationCounter = 0;
-            pGraphics->graphicsEntry = ANIMATED_GFX_ID_RANDO + item;
-
-            for (j = 0; j < 16; j++) {
-                for (k = 2; k < 16; k++) {
-                    if (((u16*) PALRAM_BASE)[16 * j + k] != ((u16*) PALRAM_BASE)[16 * j + 1])
-                        break;
-                }
-                if (k >= 16)
-                    break;
-            }
-            if (j >= 256)
-                j = 15;  // Give up and use palette 15
-
-            gCommonTilemap[4 * (0xD0 + i)] = 4 * i | (j << 12);
-            gCommonTilemap[4 * (0xD0 + i) + 1] = 4 * i + 1 | (j << 12);
-            gCommonTilemap[4 * (0xD0 + i) + 2] = 4 * i + 2 | (j << 12);
-            gCommonTilemap[4 * (0xD0 + i) + 3] = 4 * i + 3 | (j << 12);
-
-            DMA_SET(3, sItemGfxPointers[item].palette, PALRAM_BASE + (j * 16 * sizeof(u16)), C_32_2_16(DMA_ENABLE, 16));
-
-            return;
-        }
+    if (sPlacedItems[locationId].itemId <= ITEM_POWER_BOMB_TANK) {
+        return CLIPDATA_TILEMAP_ENERGY_TANK + sPlacedItems[locationId].itemId;
     }
-}
 
-u32 RandoGetTileEntry(u32 item) {
-    u32 i;
-    struct AnimatedGraphicsInfo* pGraphics;
-
-    for (pGraphics = gAnimatedGraphicsData, i = 0; i < ARRAY_SIZE(gAnimatedGraphicsData); i++, pGraphics++) {
-        if (pGraphics->graphicsEntry == ANIMATED_GFX_ID_RANDO + item)
+    for (i = 0, location = sRegionLocationOffsets[gCurrentArea];
+         i < 3;
+         i++, location++)
+    {
+        while (location < sRegionLocationOffsets[gCurrentArea + 1] &&
+               (sItemLocations[location].room != gCurrentRoom ||
+                sPlacedItems[location].itemId <= ITEM_POWER_BOMB_TANK))
+            location++;
+        if (location >= sRegionLocationOffsets[gCurrentArea + 1])
+            break;
+        if (locationId == location)
             return 0xD0 + i;
     }
 
-    return 0xD0;
+    // Show something obviously wrong
+    return CLIPDATA_TILEMAP_CRUMBLE;
 }
 
 void RandoPlaceItemInSpriteGraphics(u32 location, u32 row, u32 column, u32 palette, u32 frames) {

@@ -813,7 +813,6 @@ void BgClipRemoveCollectedTanks(void)
 
 void BgClipSetRandoTanks(void) {
     const struct ItemInfo* pLocation;
-    u32 itemId;
     u32 i;
     u32 end;
     s32 position;
@@ -841,24 +840,7 @@ void BgClipSetRandoTanks(void) {
             if (sTankBehaviors[BEHAVIOR_TO_TANK(behavior)].itemType == ITEM_TYPE_NONE)
                 continue;
 
-            itemId = sPlacedItems[i].itemId;
-            switch (itemId) {
-                case ITEM_ENERGY_TANK:
-                    appearance = CLIPDATA_TILEMAP_FLAG | CLIPDATA_TILEMAP_ENERGY_TANK;
-                    break;
-                case ITEM_MISSILE_TANK:
-                    appearance = CLIPDATA_TILEMAP_FLAG | CLIPDATA_TILEMAP_MISSILE_TANK;
-                    break;
-                case ITEM_SUPER_MISSILE_TANK:
-                    appearance = CLIPDATA_TILEMAP_FLAG | CLIPDATA_TILEMAP_SUPER_MISSILE_TANK;
-                    break;
-                case ITEM_POWER_BOMB_TANK:
-                    appearance = CLIPDATA_TILEMAP_FLAG | CLIPDATA_TILEMAP_POWER_BOMB_TANK;
-                    break;
-                default:
-                    appearance = CLIPDATA_TILEMAP_FLAG | RandoGetTileEntry(itemId);
-                    break;
-            }
+            appearance = CLIPDATA_TILEMAP_FLAG | RandoGetTileEntry(i);
 
             BgClipSetBg1BlockValue(appearance, pLocation->yPosition, pLocation->xPosition);
         }

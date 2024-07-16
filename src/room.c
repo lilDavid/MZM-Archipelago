@@ -41,23 +41,6 @@
 #include "structs/visual_effects.h"
 
 
-static void RoomLoadRandoGraphics(void) {
-    const struct ItemInfo* pLocation;
-    u32 i;
-    u32 itemId;
-    u32 location;
-    u32 end;
-
-    end = sRegionLocationOffsets[gCurrentArea + 1];
-    for (location = sRegionLocationOffsets[gCurrentArea]; location < end; location++) {
-        pLocation = &sItemLocations[location];
-        itemId = sPlacedItems[location].itemId;
-        if ((pLocation->room == gCurrentRoom || location == RC_NORFAIR_LARVA_CEILING_ETANK && gCurrentRoom == 46)
-            && (u8) pLocation->type != ITEM_TYPE_ABILITY && itemId > ITEM_POWER_BOMB_TANK)
-            RandoPlaceItemInTileGraphics(location);
-    }
-}
-
 /**
  * @brief 55f7c | 26c | Loads the current room
  * 
@@ -149,7 +132,6 @@ void RoomLoad(void)
     RoomSetInitialTilemap(0x1);
     RoomSetInitialTilemap(0x2);
     AnimatedGraphicsLoad();
-    RoomLoadRandoGraphics();
     AnimatedGraphicsTanksAnimationReset();
     BgClipSetRandoTanks();
     HazeSetBackgroundEffect();
@@ -199,6 +181,7 @@ void RoomLoadTileset(void)
 {
     struct TilesetEntry entry;
     u32 backgroundGfxSize;
+    u32 i;
 
     entry = sTilesetEntries[gCurrentRoomEntry.tileset];
 
@@ -222,6 +205,14 @@ void RoomLoadTileset(void)
     DmaTransfer(3, sCommonTilemap, gCommonTilemap, sizeof(gCommonTilemap) * 2, 0x10);
     DmaTransfer(3, sClipdataCollisionTypes_Tilemap, gClipdataCollisionTypes_Tilemap, sizeof(gClipdataCollisionTypes_Tilemap), 0x10);
     DmaTransfer(3, sClipdataBehaviorTypes_Tilemap, gClipdataBehaviorTypes_Tilemap, sizeof(gClipdataBehaviorTypes_Tilemap), 0x10);
+
+    // TODO: Palettes
+    for (i = 0; i < 12; i += 4) {
+        gCommonTilemap[ARRAY_SIZE(sCommonTilemap) + i] = 4 * sRandoAnimatedTileGaps[gAnimatedGraphicsEntry.tileset] + i | (0 << 12);
+        gCommonTilemap[ARRAY_SIZE(sCommonTilemap) + i + 1] = 4 * sRandoAnimatedTileGaps[gAnimatedGraphicsEntry.tileset] + i + 1 | (0 << 12);
+        gCommonTilemap[ARRAY_SIZE(sCommonTilemap) + i + 2] = 4 * sRandoAnimatedTileGaps[gAnimatedGraphicsEntry.tileset] + i + 2 | (0 << 12);
+        gCommonTilemap[ARRAY_SIZE(sCommonTilemap) + i + 3] = 4 * sRandoAnimatedTileGaps[gAnimatedGraphicsEntry.tileset] + i + 3 | (0 << 12);
+    }
 
     CallLZ77UncompVram(entry.pTileGraphics, VRAM_BASE + 0x5800);
     DmaTransfer(3, entry.pPalette + 0x10, PALRAM_BASE + 0x60, 0x1A0, 0x10);

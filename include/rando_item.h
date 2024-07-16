@@ -16,10 +16,9 @@
 
 void RandoGiveItemFromCheck(u32 location);
 void RandoGiveItemFromPosition(u32 area, u32 room, u32 xPosition, u32 yPosition);
-u32 RandoGetItemAtPosition(u32 area, u32 room, u32 xPosition, u32 yPosition);
+u32 RandoGetLocationAtPosition(u32 area, u32 room, u32 xPosition, u32 yPosition);
 u32 RandoIsLocationChecked(u32 location);
 
-void RandoPlaceItemInTileGraphics(u32 location);
 void RandoPlaceItemInSpriteGraphics(u32 location, u32 row, u32 column, u32 palette, u32 frames);
 
 #endif  // RANDO_ITEM_H

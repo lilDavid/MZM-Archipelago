@@ -175,7 +175,7 @@ u32 BlockCheckCCAA(struct ClipdataBlockData* pClipBlock)
                 behavior = sTankBehaviors[BEHAVIOR_TO_TANK(pClipBlock->behavior)].revealedClipdata;
                 if (behavior != 0)
                 {
-                    item = RandoGetItemAtPosition(gCurrentArea, gCurrentRoom, pClipBlock->xPosition, pClipBlock->yPosition);
+                    item = RandoGetLocationAtPosition(gCurrentArea, gCurrentRoom, pClipBlock->xPosition, pClipBlock->yPosition);
 
                     BgClipSetBg1BlockValue(behavior, pClipBlock->yPosition, pClipBlock->xPosition);
                     BgClipSetClipdataBlockValue(behavior, pClipBlock->yPosition, pClipBlock->xPosition);
@@ -435,29 +435,13 @@ u32 BlockCheckCCAA(struct ClipdataBlockData* pClipBlock)
 static u32 BlockRevealTank(struct ClipdataBlockData* pClipBlock) {
     u32 appearance;
     u32 behavior;
-    u32 item;
+    u32 location;
 
     behavior = sTankBehaviors[BEHAVIOR_TO_TANK(pClipBlock->behavior)].revealedClipdata;
     if (behavior != 0)
     {
-        item = RandoGetItemAtPosition(gCurrentArea, gCurrentRoom, pClipBlock->xPosition, pClipBlock->yPosition);
-        switch (item) {
-            case ITEM_ENERGY_TANK:
-                appearance = CLIPDATA_TILEMAP_FLAG | CLIPDATA_TILEMAP_ENERGY_TANK;
-                break;
-            case ITEM_MISSILE_TANK:
-                appearance = CLIPDATA_TILEMAP_FLAG | CLIPDATA_TILEMAP_MISSILE_TANK;
-                break;
-            case ITEM_SUPER_MISSILE_TANK:
-                appearance = CLIPDATA_TILEMAP_FLAG | CLIPDATA_TILEMAP_SUPER_MISSILE_TANK;
-                break;
-            case ITEM_POWER_BOMB_TANK:
-                appearance = CLIPDATA_TILEMAP_FLAG | CLIPDATA_TILEMAP_POWER_BOMB_TANK;
-                break;
-            default:
-                appearance = CLIPDATA_TILEMAP_FLAG | RandoGetTileEntry(item);
-                break;
-        }
+        location = RandoGetLocationAtPosition(gCurrentArea, gCurrentRoom, pClipBlock->xPosition, pClipBlock->yPosition);
+        appearance = CLIPDATA_TILEMAP_FLAG | RandoGetTileEntry(location);
 
         BgClipSetBg1BlockValue(appearance, pClipBlock->yPosition, pClipBlock->xPosition);
         BgClipSetClipdataBlockValue(behavior, pClipBlock->yPosition, pClipBlock->xPosition);

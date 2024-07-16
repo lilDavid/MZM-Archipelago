@@ -279,3 +279,14 @@ const struct ItemInfo sItemLocations[RC_MAX] = {
     [RC_CHOZODIA_UNDER_MECHA_RIDLEY_HALLWAY] = {71, ITEM_TYPE_ENERGY, 59, 19},
     [RC_CHOZODIA_SE_CORNER_IN_HULL] = {87, ITEM_TYPE_POWER_BOMB, 18, 18},
 };
+
+const u8 sRandoAnimatedTileGaps[8] = {
+    [0] = 0,
+    [1] = 0,
+    [2] = 12,
+    [3] = 8,
+    [4] = 2,
+    [5] = 4,
+    [6] = 3,
+    [7] = 9,
+};
