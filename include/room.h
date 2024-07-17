@@ -5,6 +5,7 @@
 
 void RoomLoad(void);
 void RoomLoadTileset(void);
+void RoomLoadRandomizerTiles(void);
 void RoomLoadEntry(void);
 void RoomLoadBackgrounds(void);
 void RoomRemoveNeverReformBlocksAndCollectedTanks(void);

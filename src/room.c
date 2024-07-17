@@ -107,6 +107,7 @@ void RoomLoad(void)
 
     // Load graphics
     RoomLoadTileset();
+    RoomLoadRandomizerTiles();
     RoomLoadBackgrounds();
     RoomRemoveNeverReformBlocksAndCollectedTanks();
     gPreviousXPosition = gSamusData.xPosition;
@@ -133,7 +134,6 @@ void RoomLoad(void)
     RoomSetInitialTilemap(0x2);
     AnimatedGraphicsLoad();
     AnimatedGraphicsTanksAnimationReset();
-    BgClipSetRandoTanks();
     HazeSetBackgroundEffect();
     HazeProcess();
     MinimapCheckOnTransition();
@@ -181,7 +181,6 @@ void RoomLoadTileset(void)
 {
     struct TilesetEntry entry;
     u32 backgroundGfxSize;
-    u32 i;
 
     entry = sTilesetEntries[gCurrentRoomEntry.tileset];
 
@@ -205,14 +204,6 @@ void RoomLoadTileset(void)
     DmaTransfer(3, sCommonTilemap, gCommonTilemap, sizeof(gCommonTilemap) * 2, 0x10);
     DmaTransfer(3, sClipdataCollisionTypes_Tilemap, gClipdataCollisionTypes_Tilemap, sizeof(gClipdataCollisionTypes_Tilemap), 0x10);
     DmaTransfer(3, sClipdataBehaviorTypes_Tilemap, gClipdataBehaviorTypes_Tilemap, sizeof(gClipdataBehaviorTypes_Tilemap), 0x10);
-
-    // TODO: Palettes
-    for (i = 0; i < 12; i += 4) {
-        gCommonTilemap[ARRAY_SIZE(sCommonTilemap) + i] = 4 * sRandoAnimatedTileGaps[gAnimatedGraphicsEntry.tileset] + i | (0 << 12);
-        gCommonTilemap[ARRAY_SIZE(sCommonTilemap) + i + 1] = 4 * sRandoAnimatedTileGaps[gAnimatedGraphicsEntry.tileset] + i + 1 | (0 << 12);
-        gCommonTilemap[ARRAY_SIZE(sCommonTilemap) + i + 2] = 4 * sRandoAnimatedTileGaps[gAnimatedGraphicsEntry.tileset] + i + 2 | (0 << 12);
-        gCommonTilemap[ARRAY_SIZE(sCommonTilemap) + i + 3] = 4 * sRandoAnimatedTileGaps[gAnimatedGraphicsEntry.tileset] + i + 3 | (0 << 12);
-    }
 
     CallLZ77UncompVram(entry.pTileGraphics, VRAM_BASE + 0x5800);
     DmaTransfer(3, entry.pPalette + 0x10, PALRAM_BASE + 0x60, 0x1A0, 0x10);
@@ -244,6 +235,39 @@ void RoomLoadTileset(void)
 
     if (gCurrentRoomEntry.Bg2Prop == BG_PROP_MOVING)
         BitFill(3, 0x40, VRAM_BASE + 0x2000, 0x1000, 0x10);
+}
+
+void RoomLoadRandomizerTiles(void) {
+    u32 i, j;
+    u32 itemRoom;
+
+    for (itemRoom = 0;
+         itemRoom < sRandoAreaItemListLengths[gCurrentArea] && sRandoAreaItemLists[gCurrentArea][itemRoom] != gCurrentRoom;
+         itemRoom += 2);
+    for (i = 0;
+         itemRoom < sRandoAreaItemListLengths[gCurrentArea] && sRandoAreaItemLists[gCurrentArea][itemRoom] == gCurrentRoom;
+         i += 4, itemRoom += 2)
+    {
+        u32 item, baseTile;
+
+        item = sPlacedItems[sRandoAreaItemLists[gCurrentArea][itemRoom + 1]].itemId;
+        if (item <= ITEM_POWER_BOMB_TANK)
+            baseTile = sRandoItemToTankTilemap[item];
+        else
+            baseTile = 4 * sRandoAnimatedTileGaps[gAnimatedGraphicsEntry.tileset] + i | (0 << 12); // TODO: Palettes
+        for (j = 0; j < 4; j++) {
+            gCommonTilemap[4 * CLIPDATA_TILEMAP_ENERGY_TANK + i + j] = baseTile + j;
+            gTilemap[4 * 0x48 + (i ^ 4) + j] = baseTile + j;
+        }
+    }
+    for (; i < 16; i += 4) {
+        // Set the rest to the placeholder gem
+        u32 baseTile = 4 * sRandoAnimatedTileGaps[gAnimatedGraphicsEntry.tileset] + i;
+        for (j = 0; j < 4; j++) {
+            gCommonTilemap[4 * CLIPDATA_TILEMAP_ENERGY_TANK + i + j] = baseTile + j;
+            gTilemap[4 * 0x48 + (i ^ 4) + j] = baseTile + j;
+        }
+    }
 }
 
 /**

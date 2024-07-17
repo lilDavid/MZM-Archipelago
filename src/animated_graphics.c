@@ -233,7 +233,7 @@ void AnimatedGraphicsLoad(void)
     const u8* dst;
     struct AnimatedGraphicsInfo* pGraphics;
     const struct AnimatedGraphicsData* pData;
-    s32 location;
+    s32 itemRoom;
 
     gAnimatedGraphicsToUpdate = 0;
 
@@ -279,16 +279,17 @@ void AnimatedGraphicsLoad(void)
     DMA_SET(3, ANIMATED_GFX_VRAM_POS(12), ANIMATED_GFX_VRAM_END_POS(4 - 1), C_32_2_16(DMA_ENABLE, ANIMATED_GFX_SIZE * 4 / 2));
 
     // Rando items
-    for (i = 0, pGraphics = gAnimatedGraphicsData + sRandoAnimatedTileGaps[gAnimatedGraphicsEntry.tileset], location = sRegionLocationOffsets[gCurrentArea];
-         i < 3;
-         i++, pGraphics++, location++)
+    for (itemRoom = 0; sRandoAreaItemLists[gCurrentArea][itemRoom] != gCurrentRoom; itemRoom += 2)
+        if (itemRoom >= sRandoAreaItemListLengths[gCurrentArea])
+            return;
+    for (i = 0, pGraphics = gAnimatedGraphicsData + sRandoAnimatedTileGaps[gAnimatedGraphicsEntry.tileset];
+         i < 2;
+         i++, pGraphics++, itemRoom += 2)
     {
-        while (location < sRegionLocationOffsets[gCurrentArea + 1] &&
-               (sItemLocations[location].room != gCurrentRoom ||
-                sPlacedItems[location].itemId <= ITEM_POWER_BOMB_TANK))
-            location++;
-        if (location >= sRegionLocationOffsets[gCurrentArea + 1])
-            break;
+        if (itemRoom >= sRandoAreaItemListLengths[gCurrentArea] || sRandoAreaItemLists[gCurrentArea][itemRoom] != gCurrentRoom)
+            return;
+        if (sPlacedItems[sRandoAreaItemLists[gCurrentArea][itemRoom + 1]].itemId <= ITEM_POWER_BOMB_TANK)
+            continue;
 
         pGraphics->type = ANIMATED_GFX_TYPE_NORMAL;
         pGraphics->framesPerState = 10;
@@ -296,7 +297,7 @@ void AnimatedGraphicsLoad(void)
 
         pGraphics->animationDurationCounter = 0;
         pGraphics->currentAnimationFrame = 0;
-        pGraphics->pGraphics = sItemGfxPointers[sPlacedItems[location].itemId].gfx;
+        pGraphics->pGraphics = sItemGfxPointers[sPlacedItems[sRandoAreaItemLists[gCurrentArea][itemRoom + 1]].itemId].gfx;
 
         src = pGraphics->pGraphics;
         dst = ANIMATED_GFX_VRAM_POS(i + sRandoAnimatedTileGaps[gAnimatedGraphicsEntry.tileset]);

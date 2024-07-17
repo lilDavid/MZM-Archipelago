@@ -4,6 +4,7 @@
 #include "in_game_cutscene.h"
 
 #include "constants/animated_graphics.h"
+#include "constants/clipdata.h"
 #include "constants/in_game_cutscene.h"
 #include "constants/menus/pause_screen.h"
 #include "constants/escape.h"
@@ -99,22 +100,6 @@ static u32 RandoCheckLocation(u32 location) {
     flag = RandoGetRegionFlag(location, region);
 
     gRandoLocationBitfields[region] |= flag;
-}
-
-u32 RandoGetLocationAtPosition(u32 area, u32 room, u32 xPosition, u32 yPosition) {
-    u32 i;
-    u32 end;
-    const struct ItemInfo* location;
-
-    end = sRegionLocationOffsets[area + 1];
-    for (i = sRegionLocationOffsets[area]; i < end; i++) {
-        location = &sItemLocations[i];
-        if (location->room == gCurrentRoom && xPosition == location->xPosition && yPosition == location->yPosition) {
-            return i;
-        }
-    }
-
-    return RC_MAX;
 }
 
 static u32 RandoGetItemMessage(u32 itemId) {
@@ -223,47 +208,6 @@ u32 RandoGiveItem(u32 itemId) {
     return messageId;
 }
 
-void RandoGiveItemFromPosition(u32 area, u32 room, u32 xPosition, u32 yPosition) {
-    u32 messageLength;
-    u32 lineLength;
-    u32 lineWidth;
-
-    u32 location = RandoGetLocationAtPosition(area, room, xPosition, yPosition);
-    if (location < RC_MAX) {
-        RandoGiveItemFromCheck(location);
-        return;
-    }
-
-    // Create error message
-    messageLength = TextCopyUntilCharacter(sEnglishText_Message_CheckFromPositionError,
-                                           gDynamicMessageBuffer,
-                                           CHAR_TERMINATOR);
-    messageLength += TextCopyUntilCharacter(sLocationTextPointers[LANGUAGE_ENGLISH][gCurrentArea] + 1,
-                                            gDynamicMessageBuffer + messageLength,
-                                            CHAR_TERMINATOR);
-    gDynamicMessageBuffer[messageLength++] = CHAR_EMPTY_SPACE;
-    gDynamicMessageBuffer[messageLength++] = CHAR_0 + (room / 10) % 10;
-    gDynamicMessageBuffer[messageLength++] = CHAR_0 + room % 10;
-    gDynamicMessageBuffer[messageLength++] = CHAR_EMPTY_SPACE;
-    gDynamicMessageBuffer[messageLength++] = CHAR_OPENING_PARENTHESIS;
-    gDynamicMessageBuffer[messageLength++] = CHAR_0 + (xPosition / 100) % 10;
-    gDynamicMessageBuffer[messageLength++] = CHAR_0 + (xPosition / 10) % 10;
-    gDynamicMessageBuffer[messageLength++] = CHAR_0 + xPosition % 10;
-    gDynamicMessageBuffer[messageLength++] = CHAR_COMMA;
-    gDynamicMessageBuffer[messageLength++] = CHAR_EMPTY_SPACE;
-    gDynamicMessageBuffer[messageLength++] = CHAR_0 + (yPosition / 100) % 10;
-    gDynamicMessageBuffer[messageLength++] = CHAR_0 + (yPosition / 10) % 10;
-    gDynamicMessageBuffer[messageLength++] = CHAR_0 + yPosition % 10;
-    gDynamicMessageBuffer[messageLength++] = CHAR_CLOSING_PARENTHESIS;
-    gDynamicMessageBuffer[messageLength++] = CHAR_TERMINATOR;
-    lineLength = TextFindCharacter(gDynamicMessageBuffer + 2, CHAR_NEW_LINE);
-    lineLength = TextFindCharacter(gDynamicMessageBuffer + lineLength + 4, CHAR_TERMINATOR);
-    lineWidth = TextGetStringWidth(gDynamicMessageBuffer + lineLength + 4, lineLength);
-    gDynamicMessageBuffer[messageLength - lineLength - 2] = CHAR_WIDTH_MASK | (224 - lineWidth) / 2;
-
-    SpriteSpawnPrimary(PSPRITE_ITEM_BANNER, MESSAGE_DYNAMIC_ITEM, 6, gSamusData.yPosition, gSamusData.xPosition, 0);
-}
-
 void RandoGiveItemFromCheck(u32 location) {
     const struct PlacedItem* placement;
     s32 messageID;
@@ -312,32 +256,6 @@ void RandoGiveItemFromCheck(u32 location) {
     }
 
     SpriteSpawnPrimary(PSPRITE_ITEM_BANNER, messageID, 6, gSamusData.yPosition, gSamusData.xPosition, 0);
-}
-
-u32 RandoGetTileEntry(u32 locationId) {
-    u32 i;
-    u32 location;
-
-    if (sPlacedItems[locationId].itemId <= ITEM_POWER_BOMB_TANK) {
-        return CLIPDATA_TILEMAP_ENERGY_TANK + sPlacedItems[locationId].itemId;
-    }
-
-    for (i = 0, location = sRegionLocationOffsets[gCurrentArea];
-         i < 3;
-         i++, location++)
-    {
-        while (location < sRegionLocationOffsets[gCurrentArea + 1] &&
-               (sItemLocations[location].room != gCurrentRoom ||
-                sPlacedItems[location].itemId <= ITEM_POWER_BOMB_TANK))
-            location++;
-        if (location >= sRegionLocationOffsets[gCurrentArea + 1])
-            break;
-        if (locationId == location)
-            return 0xD0 + i;
-    }
-
-    // Show something obviously wrong
-    return CLIPDATA_TILEMAP_CRUMBLE;
 }
 
 void RandoPlaceItemInSpriteGraphics(u32 location, u32 row, u32 column, u32 palette, u32 frames) {
