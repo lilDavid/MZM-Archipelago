@@ -259,7 +259,7 @@ void RoomLoadRandomizerTiles(void) {
             baseTile = 4 * (sRandoAnimatedTileGaps[gAnimatedGraphicsEntry.tileset] + i) | ((palette == UCHAR_MAX ? 0 : palette) << 12);
         }
         for (j = 0; j < 4; j++) {
-            gCommonTilemap[(4 * CLIPDATA_TILEMAP_ENERGY_TANK + i) + j] = baseTile + j;
+            gCommonTilemap[4 * (CLIPDATA_TILEMAP_ENERGY_TANK + i) + j] = baseTile + j;
             gTilemap[4 * (0x48 + (i ^ 1)) + j] = baseTile + j;
         }
 
@@ -270,7 +270,7 @@ void RoomLoadRandomizerTiles(void) {
         // Set the rest to the placeholder gem
         u32 baseTile = 4 * (sRandoAnimatedTileGaps[gAnimatedGraphicsEntry.tileset] + i);
         for (j = 0; j < 4; j++) {
-            gCommonTilemap[(4 * CLIPDATA_TILEMAP_ENERGY_TANK + i) + j] = baseTile + j;
+            gCommonTilemap[4 * (CLIPDATA_TILEMAP_ENERGY_TANK + i) + j] = baseTile + j;
             gTilemap[4 * (0x48 + (i ^ 1)) + j] = baseTile + j;
         }
     }
