@@ -246,26 +246,32 @@ void RoomLoadRandomizerTiles(void) {
          itemRoom += 2);
     for (i = 0;
          itemRoom < sRandoAreaItemListLengths[gCurrentArea] && sRandoAreaItemLists[gCurrentArea][itemRoom] == gCurrentRoom;
-         i += 4, itemRoom += 2)
+         i++, itemRoom += 2)
     {
-        u32 item, baseTile;
+        u32 item, baseTile, palette;
 
         item = sPlacedItems[sRandoAreaItemLists[gCurrentArea][itemRoom + 1]].itemId;
-        if (item <= ITEM_POWER_BOMB_TANK)
+        if (item <= ITEM_POWER_BOMB_TANK) {
+            palette = UCHAR_MAX;
             baseTile = sRandoItemToTankTilemap[item];
-        else
-            baseTile = 4 * sRandoAnimatedTileGaps[gAnimatedGraphicsEntry.tileset] + i | (0 << 12); // TODO: Palettes
-        for (j = 0; j < 4; j++) {
-            gCommonTilemap[4 * CLIPDATA_TILEMAP_ENERGY_TANK + i + j] = baseTile + j;
-            gTilemap[4 * 0x48 + (i ^ 4) + j] = baseTile + j;
+        } else {
+            palette = sRandoPaletteSlots[gCurrentRoomEntry.tileset * 2 + i];
+            baseTile = 4 * (sRandoAnimatedTileGaps[gAnimatedGraphicsEntry.tileset] + i) | ((palette == UCHAR_MAX ? 0 : palette) << 12);
         }
-    }
-    for (; i < 16; i += 4) {
-        // Set the rest to the placeholder gem
-        u32 baseTile = 4 * sRandoAnimatedTileGaps[gAnimatedGraphicsEntry.tileset] + i;
         for (j = 0; j < 4; j++) {
-            gCommonTilemap[4 * CLIPDATA_TILEMAP_ENERGY_TANK + i + j] = baseTile + j;
-            gTilemap[4 * 0x48 + (i ^ 4) + j] = baseTile + j;
+            gCommonTilemap[(4 * CLIPDATA_TILEMAP_ENERGY_TANK + i) + j] = baseTile + j;
+            gTilemap[4 * (0x48 + (i ^ 1)) + j] = baseTile + j;
+        }
+
+        if (palette != UCHAR_MAX)
+            DmaTransfer(3, sItemGfxPointers[item].palette, PALRAM_BASE + (palette * sizeof(u16[16])), sizeof(u16[16]), 16);
+    }
+    for (; i < 4; i++) {
+        // Set the rest to the placeholder gem
+        u32 baseTile = 4 * (sRandoAnimatedTileGaps[gAnimatedGraphicsEntry.tileset] + i);
+        for (j = 0; j < 4; j++) {
+            gCommonTilemap[(4 * CLIPDATA_TILEMAP_ENERGY_TANK + i) + j] = baseTile + j;
+            gTilemap[4 * (0x48 + (i ^ 1)) + j] = baseTile + j;
         }
     }
 }

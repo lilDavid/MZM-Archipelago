@@ -33,5 +33,6 @@ extern const u8* const sRandoAreaItemLists[AREA_NORMAL_END + 1];
 extern const u8 sRandoAreaItemListLengths[AREA_NORMAL_END + 1];
 extern const u8 sRandoItemToTankTilemap[4];
 extern const u8 sRandoAnimatedTileGaps[8];
+extern const u8 sRandoPaletteSlots[79 * 2];
 
 #endif // RANDO_DATA_H
