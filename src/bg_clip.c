@@ -28,7 +28,7 @@
 
 /**
  * @brief 5a484 | d8 | Sets the value for a BG block
- *
+ * 
  * @param bg Background
  * @param value Value
  * @param yPosition Y position
@@ -46,7 +46,7 @@ void BgClipSetBgBlockValue(u8 bg, u16 value, u16 yPosition, u16 xPosition)
     offset = gBg1YPosition / BLOCK_SIZE;
     if (offset - 4 > yPosition)
         return;
-
+    
     if (yPosition > offset + 13)
         return;
 
@@ -63,9 +63,9 @@ void BgClipSetBgBlockValue(u8 bg, u16 value, u16 yPosition, u16 xPosition)
         dst = (u16*)(VRAM_BASE + 0x800 + bg * 0x1000);
 
     dst += (yPosition & 0xF) * 64 + (xPosition & 0xF) * 2;
-
+    
     offset = value * 4;
-
+        
     dst[0] = gTilemapAndClipPointers.pTilemap[offset++];
     dst[1] = gTilemapAndClipPointers.pTilemap[offset++];
     dst[32] = gTilemapAndClipPointers.pTilemap[offset++];
@@ -74,7 +74,7 @@ void BgClipSetBgBlockValue(u8 bg, u16 value, u16 yPosition, u16 xPosition)
 
 /**
  * @brief 5a55c | cc | Sets the value for a BG1 block
- *
+ * 
  * @param value Value
  * @param yPosition Y position
  * @param xPosition X position
@@ -91,7 +91,7 @@ void BgClipSetBg1BlockValue(u16 value, u16 yPosition, u16 xPosition)
     offset = gBg1YPosition / BLOCK_SIZE;
     if (offset - 4 > yPosition)
         return;
-
+    
     if (yPosition > offset + 13)
         return;
 
@@ -108,9 +108,9 @@ void BgClipSetBg1BlockValue(u16 value, u16 yPosition, u16 xPosition)
         dst = (u16*)(VRAM_BASE + 0x1800);
 
     dst += (yPosition & 0xF) * 64 + (xPosition & 0xF) * 2;
-
+    
     offset = value * 4;
-
+        
     dst[0] = gTilemapAndClipPointers.pTilemap[offset++];
     dst[1] = gTilemapAndClipPointers.pTilemap[offset++];
     dst[32] = gTilemapAndClipPointers.pTilemap[offset++];
@@ -119,7 +119,7 @@ void BgClipSetBg1BlockValue(u16 value, u16 yPosition, u16 xPosition)
 
 /**
  * @brief 5a628 | 24 | Sets the raw value of a BG1 block
- *
+ * 
  * @param value Block value
  * @param yPosition Y Position
  * @param xPosition X Position
@@ -131,7 +131,7 @@ void BgClipSetRawBG1BlockValue(u32 value, u16 yPosition, u16 xPosition)
 
 /**
  * @brief 5a64c | 24 | Sets the value of a clipdata block
- *
+ * 
  * @param value Block value
  * @param yPosition Y Position
  * @param xPosition X Position
@@ -143,7 +143,7 @@ void BgClipSetClipdataBlockValue(u16 value, u16 yPosition, u16 xPosition)
 
 /**
  * @brief 5a670 | 58 | Calls other functions related to checking special clipdata
- *
+ * 
  */
 void BgClipCheckTouchingSpecialClipdata(void)
 {
@@ -176,7 +176,7 @@ void BgClipCheckTouchingSpecialClipdata(void)
 
 /**
  * @brief 5a6c8 | a8 | Applies clipdata that changes transparency
- *
+ * 
  */
 void BgClipApplyClipdataChangingTransparency(void)
 {
@@ -204,7 +204,7 @@ void BgClipApplyClipdataChangingTransparency(void)
     clipdata = BgClipGetNewBldalphaValue(clipdata, clipdata);
     if (clipdata == 0)
         return;
-
+    
     // Apply bldalpha
     if (clipdata == USHORT_MAX)
         TransparencyUpdateBLDALPHA(gDefaultTransparency.evaCoef, gDefaultTransparency.evbCoef, 1, 1);
@@ -214,7 +214,7 @@ void BgClipApplyClipdataChangingTransparency(void)
 
 /**
  * @brief 5a770 | 30 | Tries to get a bldalpha value based on a clipdata behavior
- *
+ * 
  * @param clip Clipdata behavior
  * @param unused Unused parameter
  * @return u16 Bldalpha value (eva on first 8 bits, then evb on next 8 bits)
@@ -239,13 +239,13 @@ u16 BgClipGetNewBldalphaValue(u16 clip, u16 unused)
         // Not an appropriate behavior, return nothing
         bldalpha = 0;
     }
-
+    
     return bldalpha;
 }
 
 /**
  * @brief 5a7a0 | 108 | Checks if samus is walking on a crumble block
- *
+ * 
  */
 void BgClipCheckWalkingOnCrumbleBlock(void)
 {
@@ -263,7 +263,7 @@ void BgClipCheckWalkingOnCrumbleBlock(void)
         behavior = TRUE;
     else
         behavior = FALSE;
-
+    
     if (gSamusPhysics.standingStatus == STANDING_NOT_IN_CONTROL)
         behavior++;
 
@@ -322,7 +322,7 @@ void BgClipCheckWalkingOnCrumbleBlock(void)
 
 /**
  * @brief 5a8a8 | c4 | Checks if samus is touching a transition during an elevator
- *
+ * 
  */
 void BgClipCheckTouchingTransitionOnElevator(void)
 {
@@ -392,7 +392,7 @@ void BgClipCheckTouchingTransitionOnElevator(void)
 
 /**
  * @brief 5a96c | 420 | Checks if samus is touching a transition or a tank
- *
+ * 
  */
 void BgClipCheckTouchingTransitionOrTank(void)
 {
@@ -521,7 +521,7 @@ void BgClipCheckTouchingTransitionOrTank(void)
 
 /**
  * @brief 5ad8c | 60 | Finishes the collection of a tank
- *
+ * 
  */
 void BgClipFinishCollectingTank(void)
 {
@@ -554,7 +554,7 @@ void BgClipFinishCollectingTank(void)
 
 /**
  * @brief 5adec | 30 | Finishes the collection of an ability
- *
+ * 
  */
 void BgClipFinishCollectingAbility(void)
 {
@@ -567,7 +567,7 @@ void BgClipFinishCollectingAbility(void)
 
 /**
  * @brief 5ae1c | 104 | Checks if samus is grabbing a crumble block
- *
+ * 
  * @param dontDestroy Don't destroy block flag
  */
 void BgClipCheckGrabbingCrumbleBlock(u8 dontDestroy)
@@ -627,14 +627,14 @@ void BgClipCheckGrabbingCrumbleBlock(u8 dontDestroy)
             setPose = TRUE;
     }
 
-    // Set
+    // Set 
     if (setPose)
         SamusSetPose(SPOSE_MID_AIR_REQUEST);
 }
 
 /**
  * @brief 5af20 | 180 | Checks if a hatch should open depending on the CCAA
- *
+ * 
  * @param xPosition X Position
  * @param yPosition Y Position
  * @return u8 Hatch opening action
@@ -679,7 +679,7 @@ u8 BgClipCheckOpeningHatch(u16 xPosition, u16 yPosition)
                         gHatchData[i].hits = sHatchBehaviors[HATCH_MISSILE][1]; // Set max health
                 }
             }
-
+            
             if (action != HATCH_OPENING_ACTION_NOT_OPENING)
             {
                 if (action == HATCH_OPENING_ACTION_OPENING)
@@ -714,7 +714,7 @@ u8 BgClipCheckOpeningHatch(u16 xPosition, u16 yPosition)
 
 /**
  * @brief 5b0a0 | 74 | Regsiters a collected item in the save
- *
+ * 
  * @param xPosition X position
  * @param yPosition Y position
  * @param type Item type
@@ -759,7 +759,7 @@ void BgClipSetItemAsCollected(u16 xPosition, u16 yPosition, u8 type)
 
 /**
  * @brief 5b114 | c4 | Removes the collected tanks of a room
- *
+ * 
  */
 void BgClipRemoveCollectedTanks(void)
 {
@@ -775,7 +775,7 @@ void BgClipRemoveCollectedTanks(void)
 
     if (gCurrentArea >= MAX_AMOUNT_OF_AREAS)
         return;
-
+    
     i = gCurrentArea;
     limit = MAX_AMOUNT_OF_ITEMS_PER_AREA;
     pItem = (struct ItemInfo*)0x2036c00 + i * MAX_AMOUNT_OF_ITEMS_PER_AREA;
@@ -867,7 +867,7 @@ void BgClipSetRandoTanks(void) {
 
 /**
  * @brief 5b1d8 | 74 | Calls the BgClipSetBgBlockValue on every block of the glass
- *
+ * 
  * @param stage Breaking stage
  */
 void BgClipCallMotherBrainUpdateGlass(u8 stage)
