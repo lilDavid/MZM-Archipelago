@@ -15,10 +15,13 @@ struct Seed {
 
     struct {
         u8 goal;
+
         u8 unknownItemsAlwaysUsable;
-        u8 skipChozodiaStealth;
-        u8 usePowerBombsWithoutBomb;
         u8 removeGravityHeatResistance;
+        u8 usePowerBombsWithoutBomb;
+
+        u8 skipChozodiaStealth;
+        u8 startWithMaps;
     } options;
 };
 

@@ -11,10 +11,13 @@ const struct Seed sRandoSeed = {
 
     .options = {
         .goal = GOAL_MECHA_RIDLEY,
+
         .unknownItemsAlwaysUsable = FALSE,
-        .skipChozodiaStealth = FALSE,
-        .usePowerBombsWithoutBomb = FALSE,
         .removeGravityHeatResistance = FALSE,
+        .usePowerBombsWithoutBomb = FALSE,
+
+        .skipChozodiaStealth = FALSE,
+        .startWithMaps = FALSE,
     }
 };
 
