@@ -193,7 +193,6 @@ const u16 sEnglishText_Message_PlasmaBeam[] = INCTEXT("{WIDTH(79)}{COLOR(5)}Plas
 const u16 sEnglishText_Message_GravitySuit[] = INCTEXT("{WIDTH(80)}{COLOR(5)}Gravity Suit\n{WIDTH(110)}");
 const u16 sEnglishText_Message_SpaceJump[] = INCTEXT("{WIDTH(81)}{COLOR(5)}Space Jump\n{WIDTH(110)}");
 const u16 sEnglishText_Message_NothingAcquired[] = INCTEXT("{WIDTH(66)}{COLOR(5)}Nothing acquired.\n{WIDTH(110)}");
-const u16 sEnglishText_Message_CheckFromPositionError[] = INCTEXT("{WIDTH(12)}{COLOR(5)}Error determining randomizer location.\n{WIDTH(0)}{COLOR(0)}Location: ");
 const u16 sEnglishText_MessageFragment_Sent[] = INCTEXT("{COLOR(0)}Sent to ");
 const u16 sEnglishText_MessageFragment_Received[] = INCTEXT("{COLOR(0)}Received from ");
 
