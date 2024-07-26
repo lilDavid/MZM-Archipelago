@@ -41,23 +41,6 @@
 #include "structs/visual_effects.h"
 
 
-static void RoomLoadRandoGraphics(void) {
-    const struct ItemInfo* pLocation;
-    u32 i;
-    u32 itemId;
-    u32 location;
-    u32 end;
-
-    end = sRegionLocationOffsets[gCurrentArea + 1];
-    for (location = sRegionLocationOffsets[gCurrentArea]; location < end; location++) {
-        pLocation = &sItemLocations[location];
-        itemId = sPlacedItems[location].itemId;
-        if ((pLocation->room == gCurrentRoom || location == RC_NORFAIR_LARVA_CEILING_ETANK && gCurrentRoom == 46)
-            && (u8) pLocation->type != ITEM_TYPE_ABILITY && itemId > ITEM_POWER_BOMB_TANK)
-            RandoPlaceItemInTileGraphics(location);
-    }
-}
-
 /**
  * @brief 55f7c | 26c | Loads the current room
  * 
@@ -124,6 +107,7 @@ void RoomLoad(void)
 
     // Load graphics
     RoomLoadTileset();
+    RoomLoadRandomizerTiles();
     RoomLoadBackgrounds();
     RoomRemoveNeverReformBlocksAndCollectedTanks();
     gPreviousXPosition = gSamusData.xPosition;
@@ -149,9 +133,7 @@ void RoomLoad(void)
     RoomSetInitialTilemap(0x1);
     RoomSetInitialTilemap(0x2);
     AnimatedGraphicsLoad();
-    RoomLoadRandoGraphics();
     AnimatedGraphicsTanksAnimationReset();
-    BgClipSetRandoTanks();
     HazeSetBackgroundEffect();
     HazeProcess();
     MinimapCheckOnTransition();
@@ -253,6 +235,45 @@ void RoomLoadTileset(void)
 
     if (gCurrentRoomEntry.Bg2Prop == BG_PROP_MOVING)
         BitFill(3, 0x40, VRAM_BASE + 0x2000, 0x1000, 0x10);
+}
+
+void RoomLoadRandomizerTiles(void) {
+    u32 i, j;
+    u32 itemRoom;
+
+    for (itemRoom = 0;
+         itemRoom < sRandoAreaItemListLengths[gCurrentArea] && sRandoAreaItemLists[gCurrentArea][itemRoom] != gCurrentRoom;
+         itemRoom += 2);
+    for (i = 0;
+         itemRoom < sRandoAreaItemListLengths[gCurrentArea] && sRandoAreaItemLists[gCurrentArea][itemRoom] == gCurrentRoom;
+         i++, itemRoom += 2)
+    {
+        u32 item, baseTile, palette;
+
+        item = sPlacedItems[sRandoAreaItemLists[gCurrentArea][itemRoom + 1]].itemId;
+        if (item <= ITEM_POWER_BOMB_TANK) {
+            palette = UCHAR_MAX;
+            baseTile = sRandoItemToTankTilemap[item];
+        } else {
+            palette = sRandoPaletteSlots[gCurrentRoomEntry.tileset * 2 + i];
+            baseTile = 4 * (sRandoAnimatedTileGaps[gAnimatedGraphicsEntry.tileset] + i) | ((palette == UCHAR_MAX ? 0 : palette) << 12);
+        }
+        for (j = 0; j < 4; j++) {
+            gCommonTilemap[4 * (CLIPDATA_TILEMAP_ENERGY_TANK + i) + j] = baseTile + j;
+            gTilemap[4 * (0x48 + (i ^ 1)) + j] = baseTile + j;
+        }
+
+        if (palette != UCHAR_MAX)
+            DmaTransfer(3, sItemGfxPointers[item].palette, PALRAM_BASE + (palette * sizeof(u16[16])), sizeof(u16[16]), 16);
+    }
+    for (; i < 4; i++) {
+        // Set the rest to the placeholder gem
+        u32 baseTile = 4 * (sRandoAnimatedTileGaps[gAnimatedGraphicsEntry.tileset] + i);
+        for (j = 0; j < 4; j++) {
+            gCommonTilemap[4 * (CLIPDATA_TILEMAP_ENERGY_TANK + i) + j] = baseTile + j;
+            gTilemap[4 * (0x48 + (i ^ 1)) + j] = baseTile + j;
+        }
+    }
 }
 
 /**

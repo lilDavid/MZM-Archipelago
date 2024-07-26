@@ -8,6 +8,7 @@
 #include "data/shortcut_pointers.h"
 #include "data/animated_graphics_data.h"
 #include "data/animated_tiles_data.h"
+#include "data/rando_data.h"
 
 #include "constants/animated_graphics.h"
 #include "constants/color_fading.h"
@@ -232,6 +233,7 @@ void AnimatedGraphicsLoad(void)
     const u8* dst;
     struct AnimatedGraphicsInfo* pGraphics;
     const struct AnimatedGraphicsData* pData;
+    s32 itemRoom;
 
     gAnimatedGraphicsToUpdate = 0;
 
@@ -275,6 +277,32 @@ void AnimatedGraphicsLoad(void)
 
     // Some backup?
     DMA_SET(3, ANIMATED_GFX_VRAM_POS(12), ANIMATED_GFX_VRAM_END_POS(4 - 1), C_32_2_16(DMA_ENABLE, ANIMATED_GFX_SIZE * 4 / 2));
+
+    // Rando items
+    for (itemRoom = 0; sRandoAreaItemLists[gCurrentArea][itemRoom] != gCurrentRoom; itemRoom += 2)
+        if (itemRoom >= sRandoAreaItemListLengths[gCurrentArea])
+            return;
+    for (i = 0, pGraphics = gAnimatedGraphicsData + sRandoAnimatedTileGaps[gAnimatedGraphicsEntry.tileset];
+         i < 2;
+         i++, pGraphics++, itemRoom += 2)
+    {
+        if (itemRoom >= sRandoAreaItemListLengths[gCurrentArea] || sRandoAreaItemLists[gCurrentArea][itemRoom] != gCurrentRoom)
+            return;
+        if (sPlacedItems[sRandoAreaItemLists[gCurrentArea][itemRoom + 1]].itemId <= ITEM_POWER_BOMB_TANK)
+            continue;
+
+        pGraphics->type = ANIMATED_GFX_TYPE_NORMAL;
+        pGraphics->framesPerState = 10;
+        pGraphics->numberOfStates = 4;
+
+        pGraphics->animationDurationCounter = 0;
+        pGraphics->currentAnimationFrame = 0;
+        pGraphics->pGraphics = sItemGfxPointers[sPlacedItems[sRandoAreaItemLists[gCurrentArea][itemRoom + 1]].itemId].gfx;
+
+        src = pGraphics->pGraphics;
+        dst = ANIMATED_GFX_VRAM_POS(i + sRandoAnimatedTileGaps[gAnimatedGraphicsEntry.tileset]);
+        DMA_SET(3, src, dst, DMA_ENABLE << 16 | ANIMATED_GFX_SIZE_16_BITS);
+    }
 }
 
 /**

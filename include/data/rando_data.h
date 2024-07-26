@@ -25,8 +25,14 @@ extern const u8 sRandoMultiworldDangerousSpritesets[16];
 extern const u8 sRandoMultiworldDangerousRooms[18][2];
 extern const u8 sRandoChozodiaSaveAndMapRooms[8];
 extern const u8 sRandoDisallowedSamusPoses[4];
+
 extern const u8 sItemMessages[ITEM_MAX];
 extern const u8 sRegionLocationOffsets[AREA_CHOZODIA + 2];
-extern const struct ItemInfo sItemLocations[RC_MAX];
+
+extern const u8* const sRandoAreaItemLists[AREA_NORMAL_END + 1];
+extern const u8 sRandoAreaItemListLengths[AREA_NORMAL_END + 1];
+extern const u8 sRandoItemToTankTilemap[4];
+extern const u8 sRandoAnimatedTileGaps[8];
+extern const u8 sRandoPaletteSlots[79 * 2];
 
 #endif // RANDO_DATA_H

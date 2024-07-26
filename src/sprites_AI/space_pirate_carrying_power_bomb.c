@@ -1,4 +1,5 @@
 #include "sprites_AI/space_pirate_carrying_power_bomb.h"
+#include "rando_item.h"
 
 #include "data/sprites/space_pirate_carrying_power_bomb.h"
 #include "data/sprites/space_pirate.h"
@@ -21,6 +22,7 @@ void SpacePirateCarryingPowerBomb(void)
     u8 room;
     u8 eventCheck;
     u16 xPosition;
+    u32 gfxSlot;
 
     room = gCurrentRoom + 1;
 
@@ -57,6 +59,9 @@ void SpacePirateCarryingPowerBomb(void)
             gCurrentSprite.pose = SPACE_PIRATE_CARRYING_POWER_BOMB_POSE_SPAWNING;
 
             gCurrentSprite.status |= (SPRITE_STATUS_XFLIP | SPRITE_STATUS_FACING_RIGHT);
+
+            gfxSlot = gCurrentSprite.spritesetGfxSlot;
+            RandoPlaceItemInSpriteGraphics(RC_CHOZODIA_ORIGINAL_POWER_BOMB, gfxSlot + 3, 0, gfxSlot + 3, 4);
             break;
 
         case SPACE_PIRATE_CARRYING_POWER_BOMB_POSE_SPAWNING:

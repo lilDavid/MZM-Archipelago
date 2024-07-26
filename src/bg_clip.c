@@ -19,6 +19,7 @@
 #include "constants/text.h"
 
 #include "structs/bg_clip.h"
+#include "structs/block.h"
 #include "structs/clipdata.h"
 #include "structs/connection.h"
 #include "structs/transparency.h"
@@ -401,7 +402,7 @@ void BgClipCheckTouchingTransitionOrTank(void)
     s32 xPositions[3];
     s32 i;
     s32 j;
-    s32 isFirstTank;
+    s32 itemRoom;
 
     // Get X positions
     // On the right
@@ -478,8 +479,6 @@ void BgClipCheckTouchingTransitionOrTank(void)
     if (gCollectingTank || gReceivingFromMultiworld)
         return;
 
-    isFirstTank = FALSE;
-
     for (j = 3; j >= 0; j--)
     {
         // No behavior, continue
@@ -509,7 +508,10 @@ void BgClipCheckTouchingTransitionOrTank(void)
                 gLastTankCollected.yPosition = yPositions[sHatchRelated_345cee[j][0]];
 
                 // Give tank check
-                RandoGiveItemFromPosition(gCurrentArea, gCurrentRoom, gLastTankCollected.xPosition, gLastTankCollected.yPosition);
+                for (itemRoom = 0; sRandoAreaItemLists[gCurrentArea][itemRoom] != gCurrentRoom; itemRoom += 2)
+                    if (itemRoom >= sRandoAreaItemListLengths[gCurrentArea])
+                        break;
+                RandoGiveItemFromCheck(sRandoAreaItemLists[gCurrentArea][itemRoom + 2 * (ITEM_TYPE_ENERGY - i) + 1]);
             }
         }
 
@@ -807,60 +809,6 @@ void BgClipRemoveCollectedTanks(void)
                 gBgPointersAndDimensions.pClipDecomp[position] = 0;
                 gBgPointersAndDimensions.backgrounds[1].pDecomp[position] = 0;
             }
-        }
-    }
-}
-
-void BgClipSetRandoTanks(void) {
-    const struct ItemInfo* pLocation;
-    u32 itemId;
-    u32 i;
-    u32 end;
-    s32 position;
-    s32 behavior;
-    s32 appearance;
-
-    if (gCurrentArea > AREA_CHOZODIA)
-        return;
-
-    if (gPauseScreenFlag != PAUSE_SCREEN_NONE)
-        return;
-
-    end = sRegionLocationOffsets[gCurrentArea + 1];
-    for (i = sRegionLocationOffsets[gCurrentArea]; i < end; i++) {
-        pLocation = &sItemLocations[i];
-        if (pLocation->room == gCurrentRoom || i == RC_NORFAIR_LARVA_CEILING_ETANK && gCurrentRoom == 46) {
-            // Get offset
-            position = gBgPointersAndDimensions.clipdataWidth * pLocation->yPosition + pLocation->xPosition;
-
-            // Get behavior
-            behavior = gTilemapAndClipPointers.pClipBehaviors[gBgPointersAndDimensions.pClipDecomp[position]];
-            if (behavior < CLIP_BEHAVIOR_ENERGY_TANK || behavior > CLIP_BEHAVIOR_UNDERWATER_POWER_BOMB_TANK)
-                continue;
-
-            if (sTankBehaviors[BEHAVIOR_TO_TANK(behavior)].itemType == ITEM_TYPE_NONE)
-                continue;
-
-            itemId = sPlacedItems[i].itemId;
-            switch (itemId) {
-                case ITEM_ENERGY_TANK:
-                    appearance = CLIPDATA_TILEMAP_FLAG | CLIPDATA_TILEMAP_ENERGY_TANK;
-                    break;
-                case ITEM_MISSILE_TANK:
-                    appearance = CLIPDATA_TILEMAP_FLAG | CLIPDATA_TILEMAP_MISSILE_TANK;
-                    break;
-                case ITEM_SUPER_MISSILE_TANK:
-                    appearance = CLIPDATA_TILEMAP_FLAG | CLIPDATA_TILEMAP_SUPER_MISSILE_TANK;
-                    break;
-                case ITEM_POWER_BOMB_TANK:
-                    appearance = CLIPDATA_TILEMAP_FLAG | CLIPDATA_TILEMAP_POWER_BOMB_TANK;
-                    break;
-                default:
-                    appearance = CLIPDATA_TILEMAP_FLAG | RandoGetTileEntry(itemId);
-                    break;
-            }
-
-            BgClipSetBg1BlockValue(appearance, pLocation->yPosition, pLocation->xPosition);
         }
     }
 }
