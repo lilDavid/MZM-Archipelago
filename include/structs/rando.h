@@ -22,6 +22,8 @@ struct Seed {
 
         u8 skipChozodiaStealth;
         u8 startWithMaps;
+
+        u8 fastItemAcquisitions;
     } options;
 };
 

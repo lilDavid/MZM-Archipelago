@@ -208,6 +208,68 @@ u32 RandoGiveItem(u32 itemId) {
     return messageId;
 }
 
+void RandoActivateAcquiredItem(void) {
+    switch (gCurrentItemBeingAcquired) {
+        case ITEM_ACQUISITION_LONG_BEAM:
+            gEquipment.beamBombsActivation |= BBF_LONG_BEAM;
+            ProjectileCallLoadGraphicsAndClearProjectiles();
+            break;
+        case ITEM_ACQUISITION_CHARGE_BEAM:
+            gEquipment.beamBombsActivation |= BBF_CHARGE_BEAM;
+            break;
+        case ITEM_ACQUISITION_ICE_BEAM:
+            gEquipment.beamBombsActivation |= BBF_ICE_BEAM;
+            ProjectileCallLoadGraphicsAndClearProjectiles();
+            break;
+        case ITEM_ACQUISITION_WAVE_BEAM:
+            gEquipment.beamBombsActivation |= BBF_WAVE_BEAM;
+            ProjectileCallLoadGraphicsAndClearProjectiles();
+            break;
+        case ITEM_ACQUISITION_PLASMA_BEAM:
+            if (UNKNOWN_ITEMS_ARE_USABLE) {
+                gEquipment.beamBombsActivation |= BBF_PLASMA_BEAM;
+                ProjectileCallLoadGraphicsAndClearProjectiles();
+            }
+            break;
+        case ITEM_ACQUISITION_BOMBS:
+            if (gEquipment.suitMiscActivation & SMF_MORPH_BALL)
+                gEquipment.beamBombsActivation |= BBF_BOMBS;
+            break;
+        case ITEM_ACQUISITION_VARIA:
+            gEquipment.suitMiscActivation |= SMF_VARIA_SUIT;
+            if (UNKNOWN_ITEMS_ARE_USABLE)
+                gEquipment.suitType = SUIT_FULLY_POWERED;
+            break;
+        case ITEM_ACQUISITION_GRAVITY:
+            if (UNKNOWN_ITEMS_ARE_USABLE) {
+                gEquipment.suitMiscActivation |= SMF_GRAVITY_SUIT;
+                gEquipment.suitType = SUIT_FULLY_POWERED;
+            }
+            break;
+        case ITEM_ACQUISITION_MORPH_BALL:
+            gEquipment.suitMiscActivation |= SMF_MORPH_BALL;
+            if (gEquipment.beamBombs & BBF_BOMBS)
+                gEquipment.beamBombsActivation |= BBF_BOMBS;
+            break;
+        case ITEM_ACQUISITION_SPEEDBOOSTER:
+            gEquipment.suitMiscActivation |= SMF_SPEEDBOOSTER;
+            break;
+        case ITEM_ACQUISITION_HIGH_JUMP:
+            gEquipment.suitMiscActivation |= SMF_HIGH_JUMP;
+            break;
+        case ITEM_ACQUISITION_SCREW_ATTACK:
+            gEquipment.suitMiscActivation |= SMF_SCREW_ATTACK;
+            break;
+        case ITEM_ACQUISITION_SPACE_JUMP:
+            if (UNKNOWN_ITEMS_ARE_USABLE)
+                gEquipment.suitMiscActivation |= SMF_SPACE_JUMP;
+            break;
+        case ITEM_ACQUISITION_POWER_GRIP:
+            gEquipment.suitMiscActivation |= SMF_POWER_GRIP;
+            break;
+    }
+}
+
 void RandoGiveItemFromCheck(u32 location) {
     const struct PlacedItem* placement;
     s32 messageID;
@@ -222,6 +284,7 @@ void RandoGiveItemFromCheck(u32 location) {
     if (placement->playerName) {
         gPreventMovementTimer = SAMUS_ITEM_PMT;
         messageID = sItemMessages[placement->itemId];
+        gCurrentItemBeingAcquired = messageID;
 
         // Item name
         if (placement->itemName) {
@@ -362,10 +425,7 @@ void RandoHandleMultiworld() {
         case MESSAGE_MISSILE_TANK_ACQUIRED:
         case MESSAGE_SUPER_MISSILE_TANK_ACQUIRED:
         case MESSAGE_POWER_BOMB_TANK_ACQUIRED:
-            messageId = MESSAGE_DYNAMIC_ITEM;
-            break;
         case MESSAGE_DUMMY:
-            gCurrentItemBeingAcquired = ITEM_ACQUISITION_PLASMA_BEAM;
             messageId = MESSAGE_DYNAMIC_ITEM;
             break;
         default:
