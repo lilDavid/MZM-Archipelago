@@ -936,7 +936,6 @@ void CutsceneUpdateSpecialEffect(void)
 void CutsceneStartSpriteEffect(u16 bldcnt, u8 bldy, u32 interval, u8 intensity)
 {
     u8 _interval;
-    u8* ptr;
 
     CUTSCENE_DATA.specialEffect.status &= ~CUTSCENE_SPECIAL_EFFECT_STATUS_SPRITE_ENDED;
     CUTSCENE_DATA.specialEffect.status |= CUTSCENE_SPECIAL_EFFECT_STATUS_ON_SPRITE;
@@ -944,11 +943,12 @@ void CutsceneStartSpriteEffect(u16 bldcnt, u8 bldy, u32 interval, u8 intensity)
     CUTSCENE_DATA.specialEffect.s_WrittenToBLDY = bldy;
     CUTSCENE_DATA.specialEffect.s_Intensity = intensity;
 
-    // The following code is written like that to produce matching ASM:
-    ptr = &CUTSCENE_DATA.specialEffect.s_Interval;
-    _interval = interval;
-    *ptr = _interval;
+    if (CUTSCENE_DATA.specialEffect.s_Interval)
+    {
+    }
 
+    _interval = interval;
+    CUTSCENE_DATA.specialEffect.s_Interval = _interval;
     CUTSCENE_DATA.specialEffect.s_Timer = _interval;
 
     CUTSCENE_DATA.bldcnt = CUTSCENE_DATA.specialEffect.s_Bldcnt = bldcnt;
@@ -966,7 +966,6 @@ void CutsceneStartSpriteEffect(u16 bldcnt, u8 bldy, u32 interval, u8 intensity)
 void CutsceneStartBackgroundEffect(u16 bldcnt, u8 bldalphaL, u8 bldalphaH, u32 interval, u8 intensity)
 {
     u8 _interval;
-    u8* ptr;
 
     CUTSCENE_DATA.specialEffect.status &= ~CUTSCENE_SPECIAL_EFFECT_STATUS_BG_ENDED;
     CUTSCENE_DATA.specialEffect.status |= CUTSCENE_SPECIAL_EFFECT_STATUS_ON_BG;
@@ -975,11 +974,12 @@ void CutsceneStartBackgroundEffect(u16 bldcnt, u8 bldalphaL, u8 bldalphaH, u32 i
     CUTSCENE_DATA.specialEffect.bg_WrittenToBldalpha_H = bldalphaH;
     CUTSCENE_DATA.specialEffect.bg_Intensity = intensity;
 
-    // The following code is written like that to produce matching ASM:
-    ptr = &CUTSCENE_DATA.specialEffect.bg_Interval;
-    _interval = interval;
-    *ptr = _interval;
+    if (CUTSCENE_DATA.specialEffect.bg_Interval)
+    {
+    }
     
+    _interval = interval;
+    CUTSCENE_DATA.specialEffect.bg_Interval = _interval;
     CUTSCENE_DATA.specialEffect.bg_Timer = _interval;
 
     CUTSCENE_DATA.specialEffect.bg_WrittenToBLDCNT = bldcnt;
