@@ -13,6 +13,11 @@
 
 #include "rando_item.h"
 
+#define POWER_GRIP_POSE_IDLE 0x9
+#define POWER_GRIP_POSE_BEING_ACQUIRED 0x23
+
+#define POWER_GRIP_GLOW_POSE_IDLE 0x9
+
 /**
  * @brief 132d4 | 13c | Power grip AI
  * 
@@ -109,11 +114,11 @@ void PowerGripGlow(void)
             gCurrentSprite.currentAnimationFrame = 0;
 
             gCurrentSprite.samusCollision = SSC_NONE;
-            gCurrentSprite.pose = 9;
+            gCurrentSprite.pose = POWER_GRIP_GLOW_POSE_IDLE;
             gCurrentSprite.drawOrder = 5;
             break;
 
-        case 9:
+        case POWER_GRIP_GLOW_POSE_IDLE:
             if (gSpriteData[gCurrentSprite.primarySpriteRamSlot].pose >= POWER_GRIP_POSE_BEING_ACQUIRED)
                 gCurrentSprite.status = 0;
     }

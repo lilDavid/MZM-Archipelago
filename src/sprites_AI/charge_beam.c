@@ -13,6 +13,13 @@
 #include "structs/sprite.h"
 #include "structs/samus.h"
 
+#define CHARGE_BEAM_POSE_IDLE 0x9
+#define CHARGE_BEAM_POSE_SPAWN_GLOW 0xA
+#define CHARGE_BEAM_POSE_IDLE_INIT 0xB
+#define CHARGE_BEAM_POSE_FLASHING 0x23
+
+#define CHARGE_BEAM_GLOW_POSE_IDLE 0x9
+
 /**
  * @brief 13498 | a4 | Initializes the charge beam sprite
  * 
@@ -37,7 +44,7 @@ void ChargeBeamInit(void)
     gCurrentSprite.drawDistanceBottomOffset = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 2);
     gCurrentSprite.drawDistanceHorizontalOffset = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 2);
 
-    gCurrentSprite.pOam = sChargeBeamOAM_Spawning;
+    gCurrentSprite.pOam = sChargeBeamOam_Spawning;
     gCurrentSprite.animationDurationCounter = 0;
     gCurrentSprite.currentAnimationFrame = 0;
 
@@ -84,7 +91,7 @@ void ChargeBeamVisibleInit(void)
     gCurrentSprite.pose = CHARGE_BEAM_POSE_IDLE;
 
     if (sPlacedItems[RC_BRINSTAR_WORM_DROP].itemId == ITEM_CHARGE_BEAM)
-        gCurrentSprite.pOam = sChargeBeamOAM_Visible;
+        gCurrentSprite.pOam = sChargeBeamOam_Visible;
     else
         gCurrentSprite.pOam = sMorphBallOam_Idle;
     gCurrentSprite.animationDurationCounter = 0;
@@ -177,12 +184,12 @@ void ChargeBeamGlowInit(void)
     gCurrentSprite.hitboxLeftOffset = -HALF_BLOCK_SIZE;
     gCurrentSprite.hitboxRightOffset = HALF_BLOCK_SIZE;
 
-    gCurrentSprite.pOam = sChargeBeamGlowOAM_Idle;
+    gCurrentSprite.pOam = sChargeBeamGlowOam_Idle;
     gCurrentSprite.animationDurationCounter = 0;
     gCurrentSprite.currentAnimationFrame = 0;
 
     gCurrentSprite.samusCollision = SSC_NONE;
-    gCurrentSprite.pose = CHARGE_BEAM_POSE_IDLE;
+    gCurrentSprite.pose = CHARGE_BEAM_GLOW_POSE_IDLE;
 }
 
 /**
@@ -237,7 +244,7 @@ void ChargeBeamGlow(void)
         case SPRITE_POSE_UNINITIALIZED:
             ChargeBeamGlowInit();
 
-        case 0x9:
+        case CHARGE_BEAM_GLOW_POSE_IDLE:
             ChargeBeamGlowMovement();
     }
 }
