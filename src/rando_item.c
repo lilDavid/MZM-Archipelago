@@ -316,6 +316,8 @@ void RandoGiveItemFromCheck(u32 location) {
         messageID = MESSAGE_DYNAMIC_ITEM;
     } else {
         messageID = RandoGiveItem(placement->itemId);
+        if (sRandoSeed.options.remoteItems)
+            gMultiworldItemCount += 1;
     }
 
     SpriteSpawnPrimary(PSPRITE_ITEM_BANNER, messageID, 6, gSamusData.yPosition, gSamusData.xPosition, 0);
@@ -431,6 +433,10 @@ void RandoHandleMultiworld() {
         default:
             messageId = MESSAGE_DYNAMIC_ITEM_MAJOR;
             break;
+    }
+
+    if (gMultiworldItemSenderName[0] == CHAR_TERMINATOR) {
+        messageId = sourceItemMessage;
     }
 
     // (Hopefully) fix the bug where the item acquisition freezes Samus in place instead of showing the message

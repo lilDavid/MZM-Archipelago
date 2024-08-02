@@ -15,6 +15,7 @@ struct Seed {
 
     struct {
         u8 goal;
+        u8 remoteItems;
 
         u8 unknownItemsAlwaysUsable;
         u8 removeGravityHeatResistance;
