@@ -18,26 +18,41 @@
 
 const u8 sRandoLongBeamGfx[RANDO_GRAPHICS_SIZE] = {};
 const u8 sRandoChargeBeamGfx[RANDO_GRAPHICS_SIZE] = {};
-const u8 sRandoPlasmaBeamGfx[RANDO_GRAPHICS_SIZE] = INCBIN_U8("data/rando/plasmabeam.gfx");  // paperkoopa
+const u8 sRandoPlasmaBeamGfx[RANDO_GRAPHICS_SIZE] = INCBIN_U8("data/rando/plasmabeam.gfx");  // @Paperkoopa
 const u8 sRandoIceBeamGfx[RANDO_GRAPHICS_SIZE] = {};
 const u8 sRandoWaveBeamGfx[RANDO_GRAPHICS_SIZE] = {};
 const u8 sRandoMorphBallGfx[RANDO_GRAPHICS_SIZE] = {};
 const u8 sRandoBombGfx[RANDO_GRAPHICS_SIZE] = {};
 const u8 sRandoVariaSuitGfx[RANDO_GRAPHICS_SIZE] = {};
-const u8 sRandoGravitySuitGfx[RANDO_GRAPHICS_SIZE] = INCBIN_U8("data/rando/gravitysuit.gfx");  // paperkoopa
+const u8 sRandoGravitySuitGfx[RANDO_GRAPHICS_SIZE] = INCBIN_U8("data/rando/gravitysuit.gfx");  // @Paperkoopa
 const u8 sRandoSpeedBoosterGfx[RANDO_GRAPHICS_SIZE] = {};
 const u8 sRandoHiJumpGfx[RANDO_GRAPHICS_SIZE] = {};
 const u8 sRandoScrewAttackGfx[RANDO_GRAPHICS_SIZE] = {};
-const u8 sRandoSpaceJumpGfx[RANDO_GRAPHICS_SIZE] = INCBIN_U8("data/rando/spacejump.gfx");  // paperkoopa
+const u8 sRandoSpaceJumpGfx[RANDO_GRAPHICS_SIZE] = INCBIN_U8("data/rando/spacejump.gfx");  // @Paperkoopa
 const u8 sRandoPowerGripGfx[RANDO_GRAPHICS_SIZE] = {};
 const u8 sRandoNothingGfx[RANDO_GRAPHICS_SIZE] = INCBIN_U8("data/rando/itemsphere.gfx");  // @lilDavid
-const u8 sRandoAPLogoGfx[RANDO_GRAPHICS_SIZE * 3] = INCBIN_U8("data/rando/aplogo.gfx");  // @lilDavid + paperkoopa
+const u8 sRandoAPLogoGfx[RANDO_GRAPHICS_SIZE * 3] = INCBIN_U8("data/rando/aplogo.gfx");  // @lilDavid + @Paperkoopa
+const u8 sRandoSpazerBeamGfx[RANDO_GRAPHICS_SIZE] = INCBIN_U8("data/rando/spazerbeam.gfx");  // @lilDavid
+const u8 sRandoGrappleBeamGfx[RANDO_GRAPHICS_SIZE] = INCBIN_U8("data/rando/grapplebeam.gfx");  // @lilDavid
+const u8 sRandoSpringBallGfx[RANDO_GRAPHICS_SIZE] = INCBIN_U8("data/rando/springball.gfx");  // @lilDavid
+const u8 sRandoXRayScopeGfx[RANDO_GRAPHICS_SIZE] = INCBIN_U8("data/rando/xrayscope.gfx");  // @lilDavid
+const u8 sRandoReserveTankGfx[RANDO_GRAPHICS_SIZE] = INCBIN_U8("data/rando/reservetank.gfx");  // @lilDavid
+const u8 sRandoPowerBeamGfx[RANDO_GRAPHICS_SIZE] = INCBIN_U8("data/rando/powerbeam.gfx");  // @lilDavid
+const u8 sRandoSpiderBallGfx[RANDO_GRAPHICS_SIZE] = INCBIN_U8("data/rando/spiderball.gfx");  // @lilDavid
 
-const u16 sRandoPlasmaBeamPal[0x20] = INCBIN_U16("data/rando/plasmabeam.pal");
-const u16 sRandoGravitySuitPal[0x20] = INCBIN_U16("data/rando/gravitysuit.pal");
-const u16 sRandoSpaceJumpPal[0x20] = INCBIN_U16("data/rando/spacejump.pal");  // Colored similar to SM by popular vote at https://discord.com/channels/731205301247803413/1106280250528235620/1252962577429041204
-const u16 sRandoNothingPal[0x20] = INCBIN_U16("data/rando/itemsphere.pal");
-const u16 sRandoAPLogoPal[0x20] = INCBIN_U16("data/rando/aplogo.pal");
+const u16 sRandoPlasmaBeamPal[0x10] = INCBIN_U16("data/rando/plasmabeam.pal");
+const u16 sRandoGrappleBeamPal[0x10] = INCBIN_U16("data/rando/grapplebeam.pal");
+const u16 sRandoSpringBallPal[0x10] = INCBIN_U16("data/rando/springball.pal");
+const u16 sRandoGravitySuitPal[0x10] = INCBIN_U16("data/rando/gravitysuit.pal");
+const u16 sRandoSpaceJumpPal[0x10] = INCBIN_U16("data/rando/spacejump.pal");  // Colored similar to SM by popular vote at https://discord.com/channels/731205301247803413/1106280250528235620/1252962577429041204
+const u16 sRandoNothingPal[0x10] = INCBIN_U16("data/rando/itemsphere.pal");
+const u16 sRandoAPLogoPal[0x10] = INCBIN_U16("data/rando/aplogo.pal");
+const u16 sRandoSpazerBeamPal[0x10] = INCBIN_U16("data/rando/spazerbeam.pal");
+const u16 sRandoXRayScopePal[0x10] = INCBIN_U16("data/rando/xrayscope.pal");
+const u16 sRandoReserveTankPal[0x10] = INCBIN_U16("data/rando/reservetank.pal");
+const u16 sRandoWallJumpPal[0x10] = INCBIN_U16("assets/walljump.pal");
+const u16 sRandoPowerBeamPal[0x10] = INCBIN_U16("data/rando/powerbeam.pal");
+const u16 sRandoSpiderBallPal[0x10] = INCBIN_U16("data/rando/spiderball.pal");
 
 const struct ItemGraphicsInfo sItemGfxPointers[ITEM_MAX] = {
     [ITEM_ENERGY_TANK] = {sAnimatedTankGfx + RANDO_GRAPHICS_SIZE, sCommonTilesPal - 1},
@@ -62,6 +77,14 @@ const struct ItemGraphicsInfo sItemGfxPointers[ITEM_MAX] = {
     [ITEM_AP_FILLER] = {sRandoAPLogoGfx, sRandoAPLogoPal},
     [ITEM_AP_PROGRESSION] = {sRandoAPLogoGfx + RANDO_GRAPHICS_SIZE, sRandoAPLogoPal},
     [ITEM_AP_USEFUL] = {sRandoAPLogoGfx + RANDO_GRAPHICS_SIZE * 2, sRandoAPLogoPal},
+    [ITEM_SPAZER_BEAM] = {sRandoSpazerBeamGfx, sRandoSpazerBeamPal},
+    [ITEM_GRAPPLE_BEAM] = {sRandoGrappleBeamGfx, sRandoGrappleBeamPal},
+    [ITEM_SPRING_BALL] = {sRandoSpringBallGfx, sRandoSpringBallPal},
+    [ITEM_XRAY_SCOPE] = {sRandoXRayScopeGfx, sRandoXRayScopePal},
+    [ITEM_RESERVE_TANK] = {sRandoReserveTankGfx, sRandoReserveTankPal},
+    [ITEM_WALL_JUMP] = {sRandoHiJumpGfx, sRandoWallJumpPal},
+    [ITEM_POWER_BEAM] = {sRandoPowerBeamGfx, sRandoPowerBeamPal},
+    [ITEM_SPIDER_BALL] = {sRandoSpiderBallGfx, sRandoSpiderBallPal},
 };
 
 const struct Camera sStartingLocationCamera = {
@@ -160,6 +183,14 @@ const u8 sItemMessages[] = {
     [ITEM_AP_FILLER] = MESSAGE_DUMMY,
     [ITEM_AP_PROGRESSION] = MESSAGE_DUMMY,
     [ITEM_AP_USEFUL] = MESSAGE_DUMMY,
+    [ITEM_SPAZER_BEAM] = MESSAGE_SPAZER_BEAM,
+    [ITEM_GRAPPLE_BEAM] = MESSAGE_GRAPPLE_BEAM,
+    [ITEM_SPRING_BALL] = MESSAGE_SPRING_BALL,
+    [ITEM_XRAY_SCOPE] = MESSAGE_XRAY_SCOPE,
+    [ITEM_RESERVE_TANK] = MESSAGE_RESERVE_TANK,
+    [ITEM_WALL_JUMP] = MESSAGE_WALL_JUMP,
+    [ITEM_POWER_BEAM] = MESSAGE_POWER_BEAM,
+    [ITEM_SPIDER_BALL] = MESSAGE_SPIDER_BALL,
 };
 
 const u16 sRandoItemAcquisitionSfx[MESSAGE_DYNAMIC_ITEM] = {
@@ -189,6 +220,14 @@ const u16 sRandoItemAcquisitionSfx[MESSAGE_DYNAMIC_ITEM] = {
     [MESSAGE_GRAVITY_SUIT] = SOUND_GOING_OUT_OF_LIQUID,
     [MESSAGE_SPACE_JUMP] = SOUND_SPACE_JUMP,
     [MESSAGE_NOTHING_ACQUIRED] = SOUND_ARMING_WEAPON,
+    [MESSAGE_SPAZER_BEAM] = 0xC9,  // Firing pure Long Beam
+    [MESSAGE_GRAPPLE_BEAM] = 0x262, // Atomic projectile exploding
+    [MESSAGE_SPRING_BALL] = SOUND_MORPH_BALL_JUMP,
+    [MESSAGE_XRAY_SCOPE] = 0x21F,  // Gunship save
+    [MESSAGE_RESERVE_TANK] = 0x86,  // Small energy drop pickup
+    [MESSAGE_WALL_JUMP] = SOUND_WALL_JUMP,
+    [MESSAGE_POWER_BEAM] = 0xC8,  // Firing pure Power Beam
+    [MESSAGE_SPIDER_BALL] = SOUND_MORPHING,
 };
 
 const u8 sRegionLocationOffsets[] = {
