@@ -18,6 +18,8 @@ const struct Seed sRandoSeed = {
 
         .skipChozodiaStealth = FALSE,
         .startWithMaps = FALSE,
+
+        .fastItemAcquisitions = FALSE,
     }
 };
 

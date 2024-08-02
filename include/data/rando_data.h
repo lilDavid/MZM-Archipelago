@@ -5,6 +5,7 @@
 
 #include "constants/connection.h"
 #include "constants/rando.h"
+#include "constants/text.h"
 
 #include "structs/bg_clip.h"
 #include "structs/scroll.h"
@@ -27,6 +28,7 @@ extern const u8 sRandoChozodiaSaveAndMapRooms[8];
 extern const u8 sRandoDisallowedSamusPoses[4];
 
 extern const u8 sItemMessages[ITEM_MAX];
+extern const u16 sRandoItemAcquisitionSfx[MESSAGE_DYNAMIC_ITEM];
 extern const u8 sRegionLocationOffsets[AREA_CHOZODIA + 2];
 
 extern const u8* const sRandoAreaItemLists[AREA_NORMAL_END + 1];

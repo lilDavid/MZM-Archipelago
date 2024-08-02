@@ -4,6 +4,7 @@
 #include "macros.h"
 
 #include "data/sprites/item_banner.h"
+#include "data/rando_data.h"
 
 #include "constants/audio.h"
 #include "constants/game_state.h"
@@ -17,6 +18,7 @@
 #include "structs/sprite.h"
 #include "structs/samus.h"
 #include "structs/rando.h"
+#include "structs/text.h"
 
 /**
  * @brief 1b6b8 | 110 | Initializes an item banner sprite
@@ -138,6 +140,12 @@ void ItemBannerGfxInit(void)
     msg == MESSAGE_UNKNOWN_ITEM_SPACE_JUMP || msg == MESSAGE_DYNAMIC_ITEM_UNKNOWN\
 )
 
+// First tank upgrades.
+#define ITEM_MESSAGE_IS_FIRST_TANK(msg) (\
+    msg == MESSAGE_FIRST_MISSILE_TANK || msg == MESSAGE_FIRST_SUPER_MISSILE_TANK ||\
+    msg == MESSAGE_FIRST_POWER_BOMB_TANK\
+)
+
 // Minor or sent items play the tank sound from vanilla.
 // The first tank of each weapon should plays the acquisition fanfare
 #define ITEM_MESSAGE_IS_TANK(msg) (\
@@ -145,6 +153,12 @@ void ItemBannerGfxInit(void)
     msg == MESSAGE_SUPER_MISSILE_TANK_ACQUIRED || msg == MESSAGE_POWER_BOMB_TANK_ACQUIRED ||\
     msg == MESSAGE_NOTHING_ACQUIRED || msg == MESSAGE_DYNAMIC_ITEM\
 )
+
+#define ITEM_MESSAGE_IS_DYNAMIC(msg) (\
+    msg >= MESSAGE_DYNAMIC_ITEM && msg <= MESSAGE_DYNAMIC_ITEM_UNKNOWN\
+)
+
+#define FAST_ACQUISITION_MESSAGE_TIMER 30
 
 /**
  * @brief 1b824 | 184 | Handles the pop up animation and the custom behavior based on the current message
@@ -169,42 +183,76 @@ void ItemBannerPopUp(void)
             gCurrentSprite.timer = 0;
             gCurrentSprite.status &= ~SPRITE_STATUS_NOT_DRAWN;
 
-            if (ITEM_MESSAGE_IS_MAJOR(msg))
+            if (sRandoSeed.options.fastItemAcquisitions)
             {
-                // New item
-                gCurrentSprite.workVariable2 = TRUE;
-                BackupTrackData2SoundChannels();
-
-                // Play item jingle
-                if (ITEM_MESSAGE_IS_UNKNOWN(msg))
-                    InsertMusicAndQueueCurrent(MUSIC_GETTING_UNKNOWN_ITEM_JINGLE, 0); // Unknown item
-                else
-                    InsertMusicAndQueueCurrent(MUSIC_GETTING_ITEM_JINGLE, 0); // Normal item
-            }
-            else if (msg == MESSAGE_FIRST_MISSILE_TANK || msg == MESSAGE_FIRST_SUPER_MISSILE_TANK || msg == MESSAGE_FIRST_POWER_BOMB_TANK)
-            {
-                // New tank
-                gCurrentSprite.workVariable2 = TRUE;
-                BackupTrackData2SoundChannels();
-                InsertMusicAndQueueCurrent(MUSIC_GETTING_ITEM_JINGLE, 0);
-            }
-            else if (msg == MESSAGE_FULLY_POWERED_SUIT)
-            {
-                PlayMusic(MUSIC_BRINSTAR_REMIX, 0);
-                InsertMusicAndQueueCurrent(MUSIC_GETTING_FULLY_POWERED_SUIT_JINGLE, 0);
-            }
-            else if (msg != MESSAGE_SAVE_PROMPT)
-            {
-                if (ITEM_MESSAGE_IS_TANK(msg))
+                if (msg == MESSAGE_FULLY_POWERED_SUIT)
                 {
-                    BackupTrackData2SoundChannels();
+                    PlayMusic(MUSIC_BRINSTAR_REMIX, 0);
+                    InsertMusicAndQueueCurrent(MUSIC_GETTING_FULLY_POWERED_SUIT_JINGLE, 0);
                 }
+                else if (ITEM_MESSAGE_IS_DYNAMIC(msg))
+                {
+                    if (ITEM_MESSAGE_IS_MAJOR(msg) || ITEM_MESSAGE_IS_FIRST_TANK(msg))
+                        // New item or tank
+                        gCurrentSprite.workVariable2 = TRUE;
 
-                SoundPlay(MUSIC_GETTING_TANK_JINGLE);
+                    SoundPlay(sRandoItemAcquisitionSfx[gCurrentItemBeingAcquired]);
+                }
+                else if (ITEM_MESSAGE_IS_MAJOR(msg) || ITEM_MESSAGE_IS_FIRST_TANK(msg))
+                {
+                    // New item or tank
+                    gCurrentSprite.workVariable2 = TRUE;
+
+                    SoundPlay(sRandoItemAcquisitionSfx[msg]);
+                }
+                else if (ITEM_MESSAGE_IS_TANK(msg))
+                {
+                    SoundPlay(sRandoItemAcquisitionSfx[msg]);
+                }
+                else if (msg != MESSAGE_SAVE_PROMPT)
+                {
+                    SoundPlay(MUSIC_GETTING_TANK_JINGLE);
+                }
+            }
+            else
+            {
+                if (ITEM_MESSAGE_IS_MAJOR(msg))
+                {
+                    // New item
+                    gCurrentSprite.workVariable2 = TRUE;
+                    BackupTrackData2SoundChannels();
+
+                    // Play item jingle
+                    if (ITEM_MESSAGE_IS_UNKNOWN(msg))
+                        InsertMusicAndQueueCurrent(MUSIC_GETTING_UNKNOWN_ITEM_JINGLE, 0); // Unknown item
+                    else
+                        InsertMusicAndQueueCurrent(MUSIC_GETTING_ITEM_JINGLE, 0); // Normal item
+                }
+                else if (ITEM_MESSAGE_IS_FIRST_TANK(msg))
+                {
+                    // New tank
+                    gCurrentSprite.workVariable2 = TRUE;
+                    BackupTrackData2SoundChannels();
+                    InsertMusicAndQueueCurrent(MUSIC_GETTING_ITEM_JINGLE, 0);
+                }
+                else if (msg == MESSAGE_FULLY_POWERED_SUIT)
+                {
+                    PlayMusic(MUSIC_BRINSTAR_REMIX, 0);
+                    InsertMusicAndQueueCurrent(MUSIC_GETTING_FULLY_POWERED_SUIT_JINGLE, 0);
+                }
+                else if (msg != MESSAGE_SAVE_PROMPT)
+                {
+                    if (ITEM_MESSAGE_IS_TANK(msg))
+                    {
+                        BackupTrackData2SoundChannels();
+                    }
+
+                    SoundPlay(MUSIC_GETTING_TANK_JINGLE);
+                }
             }
             
             // Check is one line message (new item/ability, save complete, map text)
-            if (gCurrentSprite.workVariable2 && !(msg >= MESSAGE_DYNAMIC_ITEM && msg <= MESSAGE_DYNAMIC_ITEM_UNKNOWN) ||
+            if (gCurrentSprite.workVariable2 && !ITEM_MESSAGE_IS_DYNAMIC(msg) ||
                 msg == MESSAGE_NOTHING_ACQUIRED || msg == MESSAGE_SAVE_COMPLETE ||
                 (msg == MESSAGE_BRINSTAR_MAP_ACQUIRED || msg == MESSAGE_KRAID_MAP_ACQUIRED ||
                 msg == MESSAGE_NORFAIR_MAP_ACQUIRED || msg == MESSAGE_RIDLEY_MAP_ACQUIRED ||
@@ -234,13 +282,18 @@ void ItemBannerPopUp(void)
 
             if (msg == MESSAGE_FULLY_POWERED_SUIT)
                 gCurrentSprite.yPositionSpawn = 340; // Long because jingle is long
+            else if (sRandoSeed.options.fastItemAcquisitions)
+                gCurrentSprite.yPositionSpawn = FAST_ACQUISITION_MESSAGE_TIMER;
             else
                 gCurrentSprite.yPositionSpawn = 100;
         }
         else
         {
             gCurrentSprite.pOam = sItemBannerOAM_TwoLinesStatic;
-            gCurrentSprite.yPositionSpawn = 100;
+            if (sRandoSeed.options.fastItemAcquisitions && msg < MESSAGE_SAVE_PROMPT)
+                gCurrentSprite.yPositionSpawn = FAST_ACQUISITION_MESSAGE_TIMER;
+            else
+                gCurrentSprite.yPositionSpawn = 100;
 
             if (msg == MESSAGE_SAVE_PROMPT)
             {
@@ -330,7 +383,7 @@ void ItemBannerRemovalAnimation(void)
                 gBossWork.work2 + BLOCK_SIZE * 12, 0);
         }
         // Check replay sounds
-        else if (ITEM_MESSAGE_IS_TANK(msg))
+        else if (ITEM_MESSAGE_IS_TANK(msg) && !sRandoSeed.options.fastItemAcquisitions)
         {
             RetrieveTrackData2SoundChannels();
         }
@@ -338,7 +391,15 @@ void ItemBannerRemovalAnimation(void)
         gPreventMovementTimer = 0;
 
         if (gCurrentSprite.workVariable2)
-            gPauseScreenFlag = PAUSE_SCREEN_ITEM_ACQUISITION;
+        {
+            if (sRandoSeed.options.fastItemAcquisitions) {
+                RandoActivateAcquiredItem();
+            }
+            else
+            {
+                gPauseScreenFlag = PAUSE_SCREEN_ITEM_ACQUISITION;
+            }
+        }
     }
 }
 
