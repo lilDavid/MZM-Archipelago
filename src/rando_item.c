@@ -346,27 +346,48 @@ void RandoPlaceItemInSpriteGraphics(u32 location, u32 row, u32 column, u32 palet
     DMA_SET(3, sItemGfxPointers[item].palette, pal + (palette * 16 * sizeof(u16)), C_32_2_16(DMA_ENABLE, 16));
 }
 
-static u32 RandoIsInDangerousPose() {
-    u32 i;
-
-    for (i = 0; i < ARRAY_SIZE(sRandoDisallowedSamusPoses); i++) {
-        if (sRandoDisallowedSamusPoses[i] == gSamusData.pose)
-            return TRUE;
-    }
-    return FALSE;
-}
-
-static u32 RandoIsInDangerousRoom() {
-    u32 i;
+static u32 RandoCanReceiveMultiworld() {
+    int i;
     u32 dangerousSpriteset;
 
+    // Disallowed states
+    if (gGameModeSub1 != SUB_GAME_MODE_PLAYING ||
+        gIncomingItemId >= ITEM_MAX ||
+        gEquipment.suitType == SUIT_SUITLESS ||
+        gPreventMovementTimer || gDisablePause || gShipLandingFlag)
+        return FALSE;
+
+    // Certain samus actions can affect the message banner
+    for (i = 0; i < ARRAY_SIZE(sRandoDisallowedSamusPoses); i++) {
+        if (sRandoDisallowedSamusPoses[i] == gSamusData.pose)
+            return FALSE;
+    }
+
+    // Wait for area banner to disappear
+    for (i = 0; i < MAX_AMOUNT_OF_SPRITES; i++) {
+        if (gSpriteData[i].spriteId == PSPRITE_AREA_BANNER && gSpriteData[i].status & SPRITE_STATUS_EXISTS)
+            return FALSE;
+    }
+
+    // If the banner is already loaded, no need to worry about loading it
+    for (i = 0; i < MAX_AMOUNT_OF_SPRITE_TYPES; i++) {
+        if (gSpritesetSpritesID[i] == PSPRITE_ITEM_BANNER)
+            return TRUE;
+    }
+
+    // If banner isn't already loaded, gfx will overwrite the timer
+    if (gCurrentEscapeStatus != ESCAPE_STATUS_NONE)
+        return FALSE;
+
+    // If being chased, message will overwrite pirate graphics
     if (gAlarmTimer) {
         for (i = 0; i < ARRAY_SIZE(sRandoChozodiaSaveAndMapRooms); i++) {
             if (sRandoChozodiaSaveAndMapRooms[i] == gCurrentRoom)
-                return TRUE;
+                return FALSE;
         }
     }
 
+    // Message banner could overwrite graphics of certain sprites
     dangerousSpriteset = FALSE;
     for (i = 0; i < ARRAY_SIZE(sRandoMultiworldDangerousSpritesets); i++) {
         if (sRandoMultiworldDangerousSpritesets[i] == gSpriteset) {
@@ -375,14 +396,14 @@ static u32 RandoIsInDangerousRoom() {
         }
     }
     if (!dangerousSpriteset)
-        return FALSE;
-
+        return TRUE;
     for (i = 0; i < ARRAY_SIZE(sRandoMultiworldDangerousRooms); i++) {
         if (sRandoMultiworldDangerousRooms[i][0] == gCurrentArea &&
             sRandoMultiworldDangerousRooms[i][1] == gCurrentRoom)
-            return TRUE;
+            return FALSE;
     }
-    return FALSE;
+
+    return TRUE;
 }
 
 void RandoHandleMultiworld() {
@@ -393,12 +414,7 @@ void RandoHandleMultiworld() {
     u32 lineWidth;
     u16* pLine2;
 
-    if (gGameModeSub1 != SUB_GAME_MODE_PLAYING ||                                              // Wrong game state
-        gIncomingItemId >= ITEM_MAX ||                                                         // No item queued
-        gEquipment.suitType == SUIT_SUITLESS || gCurrentEscapeStatus != ESCAPE_STATUS_NONE ||  // Stealth or escape
-        gPreventMovementTimer || gDisablePause || gShipLandingFlag ||                          // Not controlling Samus
-        (gSpriteData[0].spriteId == PSPRITE_AREA_BANNER && gSpriteData[0].status != 0) ||      // Showing area name
-        RandoIsInDangerousPose() || RandoIsInDangerousRoom())                                  // Could cause weird visuals
+    if (!RandoCanReceiveMultiworld())
         return;
 
     sourceItemMessage = gCurrentItemBeingAcquired = RandoGetItemMessage(gIncomingItemId);
