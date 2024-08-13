@@ -316,8 +316,6 @@ void RandoGiveItemFromCheck(u32 location) {
         messageID = MESSAGE_DYNAMIC_ITEM;
     } else {
         messageID = RandoGiveItem(placement->itemId);
-        if (sRandoSeed.options.remoteItems)
-            gMultiworldItemCount += 1;
     }
 
     SpriteSpawnPrimary(PSPRITE_ITEM_BANNER, messageID, 6, gSamusData.yPosition, gSamusData.xPosition, 0);
