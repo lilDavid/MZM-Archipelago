@@ -385,7 +385,7 @@ static u32 RandoIsInDangerousRoom() {
     return FALSE;
 }
 
-void RandoHandleMultiworld() {
+u32 RandoHandleMultiworld() {
     u32 sourceItemMessage;
     u32 messageId;
     u32 messageLength;
@@ -399,7 +399,7 @@ void RandoHandleMultiworld() {
         gPreventMovementTimer || gDisablePause || gShipLandingFlag ||                          // Not controlling Samus
         (gSpriteData[0].spriteId == PSPRITE_AREA_BANNER && gSpriteData[0].status != 0) ||      // Showing area name
         RandoIsInDangerousPose() || RandoIsInDangerousRoom())                                  // Could cause weird visuals
-        return;
+        return FALSE;
 
     sourceItemMessage = gCurrentItemBeingAcquired = RandoGetItemMessage(gIncomingItemId);
     gReceivingFromMultiworld = TRUE;
@@ -440,7 +440,8 @@ void RandoHandleMultiworld() {
     // (Hopefully) fix the bug where the item acquisition freezes Samus in place instead of showing the message
     if (SpriteSpawnPrimary(PSPRITE_ITEM_BANNER, messageId, 6, gSamusData.yPosition, gSamusData.xPosition, 0) == UCHAR_MAX) {
         gPreventMovementTimer = 0;
-        return;
+        gReceivingFromMultiworld = FALSE;
+        return FALSE;
     }
     RandoItemApply(gIncomingItemId);
 
@@ -464,4 +465,6 @@ void RandoHandleMultiworld() {
     lineLength = TextFindCharacter(pLine2 + 2, CHAR_TERMINATOR);
     lineWidth = TextGetStringWidth(pLine2 + 2, lineLength);
     pLine2[0] = CHAR_WIDTH_MASK | (224 - lineWidth) / 2;
+
+    return TRUE;
 }
