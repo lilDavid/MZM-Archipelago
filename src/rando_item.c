@@ -137,23 +137,23 @@ static u32 RandoGetItemMessage(u32 itemId) {
     return messageID;
 }
 
-static void RandoItemApply(u32 itemId) {
+static void RandoItemApply(u32 itemId, u32 count) {
     switch (itemId) {
         case ITEM_ENERGY_TANK:
-            gEquipment.maxEnergy = MIN(1299, gEquipment.maxEnergy + sTankIncreaseAmount[gDifficulty].energy);
+            gEquipment.maxEnergy = MIN(1299, gEquipment.maxEnergy + sTankIncreaseAmount[gDifficulty].energy * count);
             gEquipment.currentEnergy = gEquipment.maxEnergy;
             break;
         case ITEM_MISSILE_TANK:
-            gEquipment.maxMissiles = MIN(999, gEquipment.maxMissiles + sTankIncreaseAmount[gDifficulty].missile);
-            gEquipment.currentMissiles = MIN(999, gEquipment.currentMissiles + sTankIncreaseAmount[gDifficulty].missile);
+            gEquipment.maxMissiles = MIN(999, gEquipment.maxMissiles + sTankIncreaseAmount[gDifficulty].missile * count);
+            gEquipment.currentMissiles = MIN(999, gEquipment.currentMissiles + sTankIncreaseAmount[gDifficulty].missile * count);
             break;
         case ITEM_SUPER_MISSILE_TANK:
-            gEquipment.maxSuperMissiles = MIN(99, gEquipment.maxSuperMissiles + sTankIncreaseAmount[gDifficulty].superMissile);
-            gEquipment.currentSuperMissiles = MIN(99, gEquipment.currentSuperMissiles + sTankIncreaseAmount[gDifficulty].superMissile);
+            gEquipment.maxSuperMissiles = MIN(99, gEquipment.maxSuperMissiles + sTankIncreaseAmount[gDifficulty].superMissile * count);
+            gEquipment.currentSuperMissiles = MIN(99, gEquipment.currentSuperMissiles + sTankIncreaseAmount[gDifficulty].superMissile * count);
             break;
         case ITEM_POWER_BOMB_TANK:
-            gEquipment.maxPowerBombs = MIN(99, gEquipment.maxPowerBombs + sTankIncreaseAmount[gDifficulty].powerBomb);
-            gEquipment.currentPowerBombs = MIN(99, gEquipment.currentPowerBombs + sTankIncreaseAmount[gDifficulty].powerBomb);
+            gEquipment.maxPowerBombs = MIN(99, gEquipment.maxPowerBombs + sTankIncreaseAmount[gDifficulty].powerBomb * count);
+            gEquipment.currentPowerBombs = MIN(99, gEquipment.currentPowerBombs + sTankIncreaseAmount[gDifficulty].powerBomb * count);
             break;
         case ITEM_LONG_BEAM:
             gEquipment.beamBombs |= BBF_LONG_BEAM;
@@ -204,7 +204,7 @@ u32 RandoGiveItem(u32 itemId) {
     u32 messageId;
 
     messageId = RandoGetItemMessage(itemId);
-    RandoItemApply(itemId);
+    RandoItemApply(itemId, 1);
     return messageId;
 }
 
@@ -392,6 +392,8 @@ u32 RandoHandleMultiworld() {
     u32 lineLength;
     u32 lineWidth;
     u16* pLine2;
+    s32 amount;
+    s32 i;
 
     if (gGameModeSub1 != SUB_GAME_MODE_PLAYING ||                                              // Wrong game state
         gIncomingItemId >= ITEM_MAX ||                                                         // No item queued
@@ -443,28 +445,61 @@ u32 RandoHandleMultiworld() {
         gReceivingFromMultiworld = FALSE;
         return FALSE;
     }
-    RandoItemApply(gIncomingItemId);
+    RandoItemApply(gIncomingItemId, gIncomingItemCount);
 
-    // Item name
-    messageLength = TextCopyUntilCharacter(sMessageTextPointers[gLanguage][sourceItemMessage],
-                                           gDynamicMessageBuffer,
-                                           CHAR_NEW_LINE);
-    gDynamicMessageBuffer[messageLength++] = CHAR_NEW_LINE;
+    switch (gIncomingItemId) {
+        case ITEM_ENERGY_TANK:        amount = gIncomingItemCount * sTankIncreaseAmount[gDifficulty].energy;       break;
+        case ITEM_MISSILE_TANK:       amount = gIncomingItemCount * sTankIncreaseAmount[gDifficulty].missile;      break;
+        case ITEM_SUPER_MISSILE_TANK: amount = gIncomingItemCount * sTankIncreaseAmount[gDifficulty].superMissile; break;
+        case ITEM_POWER_BOMB_TANK:    amount = gIncomingItemCount * sTankIncreaseAmount[gDifficulty].powerBomb;    break;
+        default: gIncomingItemCount = 1;
+    }
 
-    // "Received from <player name>."
-    pLine2 = gDynamicMessageBuffer + messageLength;
-    messageLength++;
-    messageLength += TextCopyUntilCharacter(sEnglishText_MessageFragment_Received,
-                                            gDynamicMessageBuffer + messageLength,
-                                            CHAR_TERMINATOR);
-    messageLength += TextCopyUntilCharacter(gMultiworldItemSenderName,
-                                            gDynamicMessageBuffer + messageLength,
-                                            CHAR_TERMINATOR);
-    gDynamicMessageBuffer[messageLength++] = CHAR_DOT;
-    gDynamicMessageBuffer[messageLength++] = CHAR_TERMINATOR;
-    lineLength = TextFindCharacter(pLine2 + 2, CHAR_TERMINATOR);
-    lineWidth = TextGetStringWidth(pLine2 + 2, lineLength);
-    pLine2[0] = CHAR_WIDTH_MASK | (224 - lineWidth) / 2;
+    if (gIncomingItemCount == 1) {
+        // Item name
+        messageLength = TextCopyUntilCharacter(sMessageTextPointers[gLanguage][sourceItemMessage],
+                gDynamicMessageBuffer,
+                CHAR_NEW_LINE);
+        gDynamicMessageBuffer[messageLength++] = CHAR_NEW_LINE;
+
+        // "Received from <player name>."
+        pLine2 = gDynamicMessageBuffer + messageLength;
+        messageLength++;
+        messageLength += TextCopyUntilCharacter(sEnglishText_MessageFragment_Received,
+                gDynamicMessageBuffer + messageLength,
+                CHAR_TERMINATOR);
+        messageLength += TextCopyUntilCharacter(gMultiworldItemSenderName,
+                gDynamicMessageBuffer + messageLength,
+                CHAR_TERMINATOR);
+        gDynamicMessageBuffer[messageLength++] = CHAR_DOT;
+        gDynamicMessageBuffer[messageLength++] = CHAR_TERMINATOR;
+        lineLength = TextFindCharacter(pLine2 + 2, CHAR_TERMINATOR);
+        lineWidth = TextGetStringWidth(pLine2 + 2, lineLength);
+        pLine2[0] = CHAR_WIDTH_MASK | (224 - lineWidth) / 2;
+    } else {
+        // Tanks received
+        messageLength = TextCopyUntilCharacter(sMultipleTankMessageFragments[gIncomingItemId],
+                gDynamicMessageBuffer,
+                CHAR_NEW_LINE);
+        gDynamicMessageBuffer[messageLength++] = CHAR_NEW_LINE;
+
+        // "<Ammo> capacity increased by <amount>."
+        pLine2 = gDynamicMessageBuffer + messageLength;
+        messageLength += TextCopyUntilCharacter(sMultipleTankMessageFragments[gIncomingItemId] + messageLength,
+                pLine2,
+                CHAR_TERMINATOR);
+        for (i = 1000; i > 1; i /= 10) {
+            if (amount < i)
+                continue;
+            gDynamicMessageBuffer[messageLength++] = CHAR_0 + (amount / i) % 10;
+        }
+        gDynamicMessageBuffer[messageLength++] = CHAR_0 + amount % 10;
+        gDynamicMessageBuffer[messageLength++] = CHAR_DOT;
+        gDynamicMessageBuffer[messageLength++] = CHAR_TERMINATOR;
+        lineLength = TextFindCharacter(pLine2 + 2, CHAR_TERMINATOR);
+        lineWidth = TextGetStringWidth(pLine2 + 2, lineLength);
+        pLine2[0] = CHAR_WIDTH_MASK | (224 - lineWidth) / 2;
+    }
 
     return TRUE;
 }

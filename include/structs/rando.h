@@ -49,6 +49,7 @@ extern const struct PlacedItem sPlacedItems[RC_MAX];
 extern const struct StartingInventory sRandoStartingInventory;
 
 extern u8 gIncomingItemId;
+extern u8 gIncomingItemCount;
 extern u8 gReceivingFromMultiworld;
 extern u8 gMultiworldItemCount;
 extern u16 gMultiworldItemSenderName[2 * 16 + sizeof(" ()")];

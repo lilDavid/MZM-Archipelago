@@ -387,10 +387,11 @@ SECTIONS {
 
         . = 0x00005d04; gRandoLocationBitfields = .;
         . = 0x00005d20; gIncomingItemId = .;
-        . = 0x00005d21; gReceivingFromMultiworld = .;
-        . = 0x00005d22; gMultiworldItemCount = .;
-        . = 0x00005d24; gMultiworldItemSenderName = .;
-        . = 0x00005d6c; gDynamicMessageBuffer = .;
+        . = 0x00005d21; gIncomingItemCount = .;
+        . = 0x00005d22; gReceivingFromMultiworld = .;
+        . = 0x00005d24; gMultiworldItemCount = .;
+        . = 0x00005d26; gMultiworldItemSenderName = .;
+        . = 0x00005d6e; gDynamicMessageBuffer = .;
 
 
         . = 0x00007e60; sp_sys = .;
