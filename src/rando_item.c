@@ -468,10 +468,10 @@ u32 RandoHandleMultiworld() {
         case ITEM_MISSILE_TANK:       amount = gIncomingItemCount * sTankIncreaseAmount[gDifficulty].missile;      break;
         case ITEM_SUPER_MISSILE_TANK: amount = gIncomingItemCount * sTankIncreaseAmount[gDifficulty].superMissile; break;
         case ITEM_POWER_BOMB_TANK:    amount = gIncomingItemCount * sTankIncreaseAmount[gDifficulty].powerBomb;    break;
-        default: gIncomingItemCount = 1;
+        default: amount = 1;
     }
 
-    if (gIncomingItemCount == 1) {
+    if (amount == 1) {
         // Item name
         messageLength = TextCopyUntilCharacter(sMessageTextPointers[gLanguage][sourceItemMessage],
                 gDynamicMessageBuffer,

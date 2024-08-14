@@ -165,7 +165,7 @@ u32 InGameMainLoop(void)
 
         if (RandoHandleMultiworld()) {
             gIncomingItemId = ITEM_NONE;
-            gMultiworldItemCount += 1;
+            gMultiworldItemCount += gIncomingItemCount;
         }
     
         if (gGameModeSub1 == SUB_GAME_MODE_PLAYING)
