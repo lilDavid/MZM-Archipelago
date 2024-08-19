@@ -261,7 +261,7 @@ u8 DeoremCheckLeaving(u8 ramSlot)
             gCurrentSprite.pOam = sDeoremOam_Closing;
             gCurrentSprite.animationDurationCounter = 0;
             gCurrentSprite.currentAnimationFrame = 0;
-            gCurrentSprite.hitboxBottomOffset = 0x40;
+            gCurrentSprite.hitboxBottom = 0x40;
             gSpriteData[ramSlot].status |= SPRITE_STATUS_IGNORE_PROJECTILES;
             SoundPlay(0x199);
         }
@@ -360,13 +360,13 @@ void DeoremInit(void)
     gBossWork.work1 = gCurrentSprite.yPosition - HALF_BLOCK_SIZE;
     gBossWork.work2 = gCurrentSprite.xPosition;
     gCurrentSprite.yPosition -= BLOCK_SIZE * 2 + HALF_BLOCK_SIZE;
-    gCurrentSprite.hitboxTopOffset = -0x60;
-    gCurrentSprite.hitboxBottomOffset = 0x40;
-    gCurrentSprite.hitboxLeftOffset = -0x60;
-    gCurrentSprite.hitboxRightOffset = 0x60;
-    gCurrentSprite.drawDistanceTopOffset = 0x20;
-    gCurrentSprite.drawDistanceBottomOffset = 0x20;
-    gCurrentSprite.drawDistanceHorizontalOffset = 0x30;
+    gCurrentSprite.hitboxTop = -0x60;
+    gCurrentSprite.hitboxBottom = 0x40;
+    gCurrentSprite.hitboxLeft = -0x60;
+    gCurrentSprite.hitboxRight = 0x60;
+    gCurrentSprite.drawDistanceTop = 0x20;
+    gCurrentSprite.drawDistanceBottom = 0x20;
+    gCurrentSprite.drawDistanceHorizontal = 0x30;
     gCurrentSprite.pOam = sDeoremOam_ClosedSlow;
     gCurrentSprite.animationDurationCounter = 0;
     gCurrentSprite.currentAnimationFrame = 0;
@@ -375,7 +375,7 @@ void DeoremInit(void)
     gCurrentSprite.health = GET_PSPRITE_HEALTH(gCurrentSprite.spriteId);
     gCurrentSprite.work0 = 0;
     gCurrentSprite.pose = DEOREM_POSE_SPAWN_GOING_DOWN;
-    gCurrentSprite.oamRotation = 0;
+    gCurrentSprite.rotation = 0;
 }
 
 /**
@@ -691,7 +691,7 @@ void DeoremAfterSpawn(void)
             gCurrentSprite.pOam = sDeoremOam_Opening;
             gCurrentSprite.animationDurationCounter = 0;
             gCurrentSprite.currentAnimationFrame = 0;
-            gCurrentSprite.hitboxBottomOffset = 0;
+            gCurrentSprite.hitboxBottom = 0;
             
             gSpriteData[ramSlot].status &= ~SPRITE_STATUS_IGNORE_PROJECTILES;
 
@@ -713,7 +713,7 @@ void DeoremMainLoop(void)
     u32 spriteOffset = gCurrentSprite.work3;
     u16 health = gSpriteData[spriteOffset].health;
 
-    if (gCurrentSprite.work0 != 0 && !(gCurrentSprite.status & SPRITE_STATUS_UNKNOWN_400))
+    if (gCurrentSprite.work0 != 0 && !(gCurrentSprite.status & SPRITE_STATUS_FACING_DOWN))
     {
         if (!DeoremCheckLeaving(gCurrentSprite.work3))
         {
@@ -742,24 +742,24 @@ void DeoremMainLoop(void)
                 gCurrentSprite.currentAnimationFrame = 0;
                 gCurrentSprite.status &= ~SPRITE_STATUS_MOSAIC;
                 SoundPlay(0x19D);
-                gCurrentSprite.oamRotation = 0;
+                gCurrentSprite.rotation = 0;
             
                 if (health == 60)
                 {
-                    gCurrentSprite.status |= SPRITE_STATUS_UNKNOWN_400;
+                    gCurrentSprite.status |= SPRITE_STATUS_FACING_DOWN;
                     gCurrentSprite.work0 = 8;
                 }
                 else if ((gCurrentSprite.xPosition - (BLOCK_SIZE + HALF_BLOCK_SIZE) < gSamusData.xPosition) &&
                     (gCurrentSprite.xPosition + BLOCK_SIZE + HALF_BLOCK_SIZE > gSamusData.xPosition))
                 {
-                    gCurrentSprite.status |= SPRITE_STATUS_UNKNOWN_400;
+                    gCurrentSprite.status |= SPRITE_STATUS_FACING_DOWN;
                     gCurrentSprite.work0 = 8;
                 }
                 else
                 {
                     gCurrentSprite.work1 = 0;
                     gCurrentSprite.work2 = 1;
-                    gCurrentSprite.oamScaling = gSamusData.xPosition;
+                    gCurrentSprite.scaling = gSamusData.xPosition;
         
                     ScreenShakeStartVertical(0x14, 0x81);
                 }
@@ -769,7 +769,7 @@ void DeoremMainLoop(void)
                 gCurrentSprite.pOam = sDeoremOam_Closing;
                 gCurrentSprite.animationDurationCounter = 0;
                 gCurrentSprite.currentAnimationFrame = 0;
-                gCurrentSprite.hitboxBottomOffset = BLOCK_SIZE;
+                gCurrentSprite.hitboxBottom = BLOCK_SIZE;
     
                 gSpriteData[spriteOffset].status |= SPRITE_STATUS_IGNORE_PROJECTILES;
                 SoundPlay(0x199);
@@ -796,7 +796,7 @@ void DeoremMainLoop(void)
         }
         else
         {
-            if (gCurrentSprite.status & SPRITE_STATUS_UNKNOWN_400)
+            if (gCurrentSprite.status & SPRITE_STATUS_FACING_DOWN)
             {
                 yRange = 0x1F4;
                 if (health == 0x3C)
@@ -815,7 +815,7 @@ void DeoremMainLoop(void)
             }
             else
             {
-                DeoremMoveDiagonally(0x14, gCurrentSprite.oamScaling);
+                DeoremMoveDiagonally(0x14, gCurrentSprite.scaling);
                 yRange = 0x1D0;
                 movement = 8;
             }
@@ -823,10 +823,10 @@ void DeoremMainLoop(void)
             if (gCurrentSprite.yPosition < gCurrentSprite.yPositionSpawn + yRange)
             {
                 gCurrentSprite.yPosition += movement;
-                if (gCurrentSprite.oamRotation != 0)
+                if (gCurrentSprite.rotation != 0)
                     return;
 
-                gCurrentSprite.oamRotation += 1;
+                gCurrentSprite.rotation += 1;
                 
                 if (8 < movement)
                     SoundPlay(0x194);
@@ -840,7 +840,7 @@ void DeoremMainLoop(void)
                 gCurrentSprite.pOam = sDeoremOam_Opening;
                 gCurrentSprite.animationDurationCounter = 0;
                 gCurrentSprite.currentAnimationFrame = 0;
-                gCurrentSprite.hitboxBottomOffset = 0;
+                gCurrentSprite.hitboxBottom = 0;
             
                 gSpriteData[spriteOffset].status &= ~SPRITE_STATUS_IGNORE_PROJECTILES;
                 SoundPlay(0x198);
@@ -866,19 +866,19 @@ void DeoremRetracting(void)
             gCurrentSprite.pOam = sDeoremOam_OpenedFast;
             gCurrentSprite.animationDurationCounter = 0;
             gCurrentSprite.currentAnimationFrame = 0;
-            gCurrentSprite.hitboxLeftOffset = -(BLOCK_SIZE * 2 + QUARTER_BLOCK_SIZE);
-            gCurrentSprite.hitboxRightOffset = BLOCK_SIZE * 2 + QUARTER_BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = -(BLOCK_SIZE * 2 + QUARTER_BLOCK_SIZE);
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 2 + QUARTER_BLOCK_SIZE;
         }
         
         gCurrentSprite.work0--;
         if (gCurrentSprite.work0 >= 0x19)
         {
-            if (!(gCurrentSprite.status & SPRITE_STATUS_UNKNOWN_400))
+            if (!(gCurrentSprite.status & SPRITE_STATUS_FACING_DOWN))
                 DeoremMoveDiagonally(0x10, gSamusData.xPosition);
         }
         else if (gCurrentSprite.work0 == 0)
         {
-            gCurrentSprite.status &= ~SPRITE_STATUS_UNKNOWN_400;
+            gCurrentSprite.status &= ~SPRITE_STATUS_FACING_DOWN;
             SoundPlay(0x195);
         }
     }
@@ -887,8 +887,8 @@ void DeoremRetracting(void)
         gCurrentSprite.yPosition -= 8;
         if (gCurrentSprite.yPosition < gCurrentSprite.yPositionSpawn + BLOCK_SIZE * 2 + HALF_BLOCK_SIZE)
         {
-            gCurrentSprite.hitboxLeftOffset = -(BLOCK_SIZE + HALF_BLOCK_SIZE);
-            gCurrentSprite.hitboxRightOffset = BLOCK_SIZE + HALF_BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = -(BLOCK_SIZE + HALF_BLOCK_SIZE);
+            gCurrentSprite.hitboxRight = BLOCK_SIZE + HALF_BLOCK_SIZE;
             gCurrentSprite.yPosition = gCurrentSprite.yPositionSpawn + BLOCK_SIZE * 2 + HALF_BLOCK_SIZE;
         
             if (!DeoremCheckLeaving(spriteOffset))
@@ -907,7 +907,7 @@ void DeoremRetracting(void)
                     else
                         gCurrentSprite.pose = DEOREM_POSE_THORNS_2;
                     gCurrentSprite.work0 = 0xFF;
-                    gCurrentSprite.oamRotation = 0;
+                    gCurrentSprite.rotation = 0;
                 }
                 else
                 {
@@ -940,10 +940,10 @@ void DeoremThrowingThorns(void)
             changeAnimTime = 30;
     }
 
-    if (!(gCurrentSprite.oamRotation & 15))
+    if (!(gCurrentSprite.rotation & 15))
         SoundPlay(0x196);
 
-    gCurrentSprite.oamRotation++;
+    gCurrentSprite.rotation++;
 
     if (gCurrentSprite.work0 < changeAnimTime)
     {
@@ -952,7 +952,7 @@ void DeoremThrowingThorns(void)
             gCurrentSprite.pOam = sDeoremOam_Closing;
             gCurrentSprite.animationDurationCounter = 0;
             gCurrentSprite.currentAnimationFrame = 0;
-            gCurrentSprite.hitboxBottomOffset = BLOCK_SIZE;
+            gCurrentSprite.hitboxBottom = BLOCK_SIZE;
             gSpriteData[spriteOffset].status |= SPRITE_STATUS_IGNORE_PROJECTILES;
             SoundPlay(0x199);
         }
@@ -1028,7 +1028,7 @@ void DeoremDying(void)
  */
 void DeoremDyingGoingDown(void)
 {
-    gCurrentSprite.ignoreSamusCollisionTimer = 1;
+    gCurrentSprite.ignoreSamusCollisionTimer = DELTA_TIME;
 
     if (gCurrentSprite.yPosition < gCurrentSprite.yPositionSpawn + BLOCK_SIZE * 7 + QUARTER_BLOCK_SIZE)
     {
@@ -1049,7 +1049,7 @@ void DeoremDyingGoingDown(void)
  */
 void DeoremDeath(void)
 {
-    gCurrentSprite.ignoreSamusCollisionTimer = 0x1;
+    gCurrentSprite.ignoreSamusCollisionTimer = DELTA_TIME;
     gCurrentSprite.work0--;
     if (gCurrentSprite.work0 == 0x0)
     {
@@ -1077,7 +1077,7 @@ void DeoremCheckLeavingCeilingAnimEnded(void)
     {
         gCurrentSprite.pose = DEOREM_POSE_LEAVING;
         gCurrentSprite.work0 = 0x3C;
-        gCurrentSprite.oamRotation = 0;
+        gCurrentSprite.rotation = 0;
     }
 }
 
@@ -1182,7 +1182,7 @@ void DeoremLeavingAnim(void)
  */
 void DeoremLeavingInGroundDebris(void)
 {
-    gCurrentSprite.ignoreSamusCollisionTimer = 1;
+    gCurrentSprite.ignoreSamusCollisionTimer = DELTA_TIME;
 
     if (!(gFrameCounter8Bit & 0xF))
     {
@@ -1250,36 +1250,36 @@ void DeoremSegmentInit(void)
 
     if (roomSlot == 18)
     {
-        gCurrentSprite.drawDistanceTopOffset = 0x30;
-        gCurrentSprite.drawDistanceBottomOffset = 0x30;
-        gCurrentSprite.drawDistanceHorizontalOffset = 0x1A;
-        gCurrentSprite.hitboxTopOffset = -3 * HALF_BLOCK_SIZE;
-        gCurrentSprite.hitboxBottomOffset = 3 * HALF_BLOCK_SIZE;
-        gCurrentSprite.hitboxLeftOffset = -3 * QUARTER_BLOCK_SIZE;
-        gCurrentSprite.hitboxRightOffset = 3 * QUARTER_BLOCK_SIZE;
+        gCurrentSprite.drawDistanceTop = 0x30;
+        gCurrentSprite.drawDistanceBottom = 0x30;
+        gCurrentSprite.drawDistanceHorizontal = 0x1A;
+        gCurrentSprite.hitboxTop = -3 * HALF_BLOCK_SIZE;
+        gCurrentSprite.hitboxBottom = 3 * HALF_BLOCK_SIZE;
+        gCurrentSprite.hitboxLeft = -3 * QUARTER_BLOCK_SIZE;
+        gCurrentSprite.hitboxRight = 3 * QUARTER_BLOCK_SIZE;
         gCurrentSprite.pOam = sDeoremSegmentOam_Tail;
     }
     else if ((roomSlot == 0) || (roomSlot == 6) || (roomSlot == 12))
     {
-        gCurrentSprite.drawDistanceTopOffset = 0x18;
-        gCurrentSprite.drawDistanceBottomOffset = 0x18;
-        gCurrentSprite.drawDistanceHorizontalOffset = 0x20;
-        gCurrentSprite.hitboxTopOffset = -BLOCK_SIZE;
-        gCurrentSprite.hitboxBottomOffset = BLOCK_SIZE;
-        gCurrentSprite.hitboxLeftOffset = -3 * HALF_BLOCK_SIZE;
-        gCurrentSprite.hitboxRightOffset = 3 * HALF_BLOCK_SIZE;
+        gCurrentSprite.drawDistanceTop = 0x18;
+        gCurrentSprite.drawDistanceBottom = 0x18;
+        gCurrentSprite.drawDistanceHorizontal = 0x20;
+        gCurrentSprite.hitboxTop = -BLOCK_SIZE;
+        gCurrentSprite.hitboxBottom = BLOCK_SIZE;
+        gCurrentSprite.hitboxLeft = -3 * HALF_BLOCK_SIZE;
+        gCurrentSprite.hitboxRight = 3 * HALF_BLOCK_SIZE;
         gCurrentSprite.pOam = sDeoremSegmentOam_Junction;
         gCurrentSprite.drawOrder = 11;
     }
     else
     {        
-        gCurrentSprite.drawDistanceTopOffset = 0x12;
-        gCurrentSprite.drawDistanceBottomOffset = 0x12;
-        gCurrentSprite.drawDistanceHorizontalOffset = 0x22;
-        gCurrentSprite.hitboxTopOffset = -BLOCK_SIZE;
-        gCurrentSprite.hitboxBottomOffset = BLOCK_SIZE;
-        gCurrentSprite.hitboxLeftOffset = -3 * HALF_BLOCK_SIZE;
-        gCurrentSprite.hitboxRightOffset = 3 * HALF_BLOCK_SIZE;
+        gCurrentSprite.drawDistanceTop = 0x12;
+        gCurrentSprite.drawDistanceBottom = 0x12;
+        gCurrentSprite.drawDistanceHorizontal = 0x22;
+        gCurrentSprite.hitboxTop = -BLOCK_SIZE;
+        gCurrentSprite.hitboxBottom = BLOCK_SIZE;
+        gCurrentSprite.hitboxLeft = -3 * HALF_BLOCK_SIZE;
+        gCurrentSprite.hitboxRight = 3 * HALF_BLOCK_SIZE;
         gCurrentSprite.pOam = sDeoremSegmentOam_Middle;   
     }
 
@@ -1782,14 +1782,14 @@ void DeoremSegmentLeftLeaving(void)
         {
             if (gCurrentSprite.roomSlot == 19)
             {
-                gCurrentSprite.drawDistanceTopOffset = 16;
-                gCurrentSprite.drawDistanceBottomOffset = 48;
-                gCurrentSprite.drawDistanceHorizontalOffset = 24;
+                gCurrentSprite.drawDistanceTop = 16;
+                gCurrentSprite.drawDistanceBottom = 48;
+                gCurrentSprite.drawDistanceHorizontal = 24;
                 
-                gCurrentSprite.hitboxTopOffset = -3 * BLOCK_SIZE / 4;
-                gCurrentSprite.hitboxBottomOffset = 5 * BLOCK_SIZE / 2;
-                gCurrentSprite.hitboxLeftOffset = -BLOCK_SIZE;
-                gCurrentSprite.hitboxRightOffset = BLOCK_SIZE;
+                gCurrentSprite.hitboxTop = -3 * BLOCK_SIZE / 4;
+                gCurrentSprite.hitboxBottom = 5 * BLOCK_SIZE / 2;
+                gCurrentSprite.hitboxLeft = -BLOCK_SIZE;
+                gCurrentSprite.hitboxRight = BLOCK_SIZE;
 
                 gCurrentSprite.pOam = sDeoremSegmentOam_Tail;
                 gCurrentSprite.animationDurationCounter = 0;
@@ -1877,14 +1877,14 @@ void DeoremSegmentRightLeaving(void)
         {
             if (gCurrentSprite.roomSlot == 17)
             {
-                gCurrentSprite.drawDistanceTopOffset = 0x10;
-                gCurrentSprite.drawDistanceBottomOffset = 0x30;
-                gCurrentSprite.drawDistanceHorizontalOffset = 0x18;
+                gCurrentSprite.drawDistanceTop = 0x10;
+                gCurrentSprite.drawDistanceBottom = 0x30;
+                gCurrentSprite.drawDistanceHorizontal = 0x18;
                 
-                gCurrentSprite.hitboxTopOffset = -3 * QUARTER_BLOCK_SIZE;
-                gCurrentSprite.hitboxBottomOffset = 5 * HALF_BLOCK_SIZE;
-                gCurrentSprite.hitboxLeftOffset = -BLOCK_SIZE;
-                gCurrentSprite.hitboxRightOffset = BLOCK_SIZE;
+                gCurrentSprite.hitboxTop = -3 * QUARTER_BLOCK_SIZE;
+                gCurrentSprite.hitboxBottom = 5 * HALF_BLOCK_SIZE;
+                gCurrentSprite.hitboxLeft = -BLOCK_SIZE;
+                gCurrentSprite.hitboxRight = BLOCK_SIZE;
 
                 gCurrentSprite.pOam = sDeoremSegmentOam_Tail;
                 gCurrentSprite.animationDurationCounter = 0;
@@ -2002,7 +2002,7 @@ void DeoremSegmentDying(void)
     u8 rng;
     u8 randomMovement;
 
-    gCurrentSprite.ignoreSamusCollisionTimer = 1;
+    gCurrentSprite.ignoreSamusCollisionTimer = DELTA_TIME;
     xPosition = gCurrentSprite.xPosition;
     roomSlot = gCurrentSprite.roomSlot;
     rng = gSpriteRng;
@@ -2035,19 +2035,19 @@ void DeoremSegmentDying(void)
 void DeoremEyeInit(void)
 {
     gCurrentSprite.status |= SPRITE_STATUS_ROTATION_SCALING;
-    gCurrentSprite.oamScaling = 256;
+    gCurrentSprite.scaling = 256;
     gCurrentSprite.status &= ~SPRITE_STATUS_NOT_DRAWN;
     gCurrentSprite.drawOrder = 11;
     gCurrentSprite.health = GET_SSPRITE_HEALTH(gCurrentSprite.spriteId);
 
-    gCurrentSprite.drawDistanceTopOffset = 16;
-    gCurrentSprite.drawDistanceBottomOffset = 16;
-    gCurrentSprite.drawDistanceHorizontalOffset = 16;
+    gCurrentSprite.drawDistanceTop = 16;
+    gCurrentSprite.drawDistanceBottom = 16;
+    gCurrentSprite.drawDistanceHorizontal = 16;
 
-    gCurrentSprite.hitboxTopOffset = -64;
-    gCurrentSprite.hitboxBottomOffset = 48;
-    gCurrentSprite.hitboxLeftOffset = -40;
-    gCurrentSprite.hitboxRightOffset = 40;
+    gCurrentSprite.hitboxTop = -64;
+    gCurrentSprite.hitboxBottom = 48;
+    gCurrentSprite.hitboxLeft = -40;
+    gCurrentSprite.hitboxRight = 40;
 
     gCurrentSprite.pOam = sDeoremEyeOam_Pulsing;
     gCurrentSprite.animationDurationCounter = 0;
@@ -2064,12 +2064,12 @@ void DeoremEyeInit(void)
 
     if (gCurrentSprite.xPosition > gSamusData.xPosition)
     {
-        gCurrentSprite.oamRotation = 128;
+        gCurrentSprite.rotation = 128;
         gCurrentSprite.work0 = 128;
     }
     else
     {
-        gCurrentSprite.oamRotation = 0;
+        gCurrentSprite.rotation = 0;
         gCurrentSprite.work0 = 0;
     }
     
@@ -2214,7 +2214,7 @@ void DeoremEyeMove(void)
     gCurrentSprite.yPosition = gSpriteData[ramSlot].yPosition - 28;
     gCurrentSprite.xPosition = gSpriteData[ramSlot].xPosition - 4;
     gCurrentSprite.work0 = rotation;
-    gCurrentSprite.oamRotation = rotation;
+    gCurrentSprite.rotation = rotation;
 }
 
 /**
@@ -2280,9 +2280,9 @@ void DeoremEyeDyingSpinningAnim(void)
     gCurrentSprite.xPosition = gSpriteData[ramSlot].xPosition - 4;
 
     if (gSpriteData[ramSlot].pose == DEOREM_POSE_DEATH && gSpriteData[ramSlot].work0 < 0x1F)
-        gCurrentSprite.oamRotation += 8;
+        gCurrentSprite.rotation += 8;
     else
-        gCurrentSprite.oamRotation += 4;
+        gCurrentSprite.rotation += 4;
     
     if (gSpriteData[ramSlot].pose == DEOREM_POSE_DEATH && gSpriteData[ramSlot].work0 < 2)
     {
@@ -2301,7 +2301,7 @@ void DeoremEyeDyingMovingAnim(void)
     u16 xPos;
     u8 timer;
 
-    gCurrentSprite.oamRotation += 0xC;
+    gCurrentSprite.rotation += 0xC;
     if (gCurrentSprite.work0 < 100)
         gCurrentSprite.yPosition--;
 
@@ -2339,20 +2339,20 @@ void DeoremThornInit(void)
 {
     gCurrentSprite.status |= SPRITE_STATUS_UNKNOWN_80;
     
-    gCurrentSprite.oamScaling = Q_8_8(1.f);
-    gCurrentSprite.oamRotation = 0;
+    gCurrentSprite.scaling = Q_8_8(1.f);
+    gCurrentSprite.rotation = 0;
     
     gCurrentSprite.status &= ~SPRITE_STATUS_NOT_DRAWN;
     gCurrentSprite.properties |= SP_KILL_OFF_SCREEN;
     
-    gCurrentSprite.drawDistanceTopOffset = 8;
-    gCurrentSprite.drawDistanceBottomOffset = 8;
-    gCurrentSprite.drawDistanceHorizontalOffset = 8;
+    gCurrentSprite.drawDistanceTop = 8;
+    gCurrentSprite.drawDistanceBottom = 8;
+    gCurrentSprite.drawDistanceHorizontal = 8;
     
-    gCurrentSprite.hitboxTopOffset = -0x1C;
-    gCurrentSprite.hitboxBottomOffset = 0x1C;
-    gCurrentSprite.hitboxLeftOffset = -0x18;
-    gCurrentSprite.hitboxRightOffset = 0x18;
+    gCurrentSprite.hitboxTop = -0x1C;
+    gCurrentSprite.hitboxBottom = 0x1C;
+    gCurrentSprite.hitboxLeft = -0x18;
+    gCurrentSprite.hitboxRight = 0x18;
     
     gCurrentSprite.pOam = sDeoremThornOam_Idle;
     gCurrentSprite.animationDurationCounter = 0;
@@ -2367,12 +2367,12 @@ void DeoremThornInit(void)
     if ((gCurrentSprite.status & SPRITE_STATUS_XFLIP) != 0)
     {
         gCurrentSprite.status |= SPRITE_STATUS_FACING_RIGHT;
-        gCurrentSprite.oamRotation = 0x80;
+        gCurrentSprite.rotation = 0x80;
     }
     else
     {
         gCurrentSprite.status &= ~SPRITE_STATUS_FACING_RIGHT;
-        gCurrentSprite.oamRotation = 0;
+        gCurrentSprite.rotation = 0;
     }
     gCurrentSprite.status &= ~SPRITE_STATUS_XFLIP;
     
@@ -2401,9 +2401,9 @@ void DeoremThornSpawning(void)
         gCurrentSprite.drawOrder = 3;
 
     if (gCurrentSprite.status & SPRITE_STATUS_FACING_RIGHT)
-        gCurrentSprite.oamRotation += 0x20;
+        gCurrentSprite.rotation += 0x20;
     else
-        gCurrentSprite.oamRotation -= 0x20;
+        gCurrentSprite.rotation -= 0x20;
 }
 
 /**
@@ -2434,16 +2434,16 @@ void DeoremThornMovement(void)
         s32 newXPos;
         
         if (arrayOffset >= 0x24)
-            gCurrentSprite.oamRotation = 0xB8;
+            gCurrentSprite.rotation = 0xB8;
         else if (arrayOffset >= 0x21)
-            gCurrentSprite.oamRotation = 0xB0;
+            gCurrentSprite.rotation = 0xB0;
         else if (arrayOffset >= 0x1D)
-            if (gCurrentSprite.oamRotation >= 0xA0)
-                gCurrentSprite.oamRotation = 0xA0;
+            if (gCurrentSprite.rotation >= 0xA0)
+                gCurrentSprite.rotation = 0xA0;
             else
-                gCurrentSprite.oamRotation += 8;
+                gCurrentSprite.rotation += 8;
         else
-            gCurrentSprite.oamRotation += 0x10;
+            gCurrentSprite.rotation += 0x10;
 
         newXPos = xMovement + gCurrentSprite.xPosition; // Why (needed to avoid reg swap)
         gCurrentSprite.xPosition = newXPos;
@@ -2451,16 +2451,16 @@ void DeoremThornMovement(void)
     else
     {
         if (arrayOffset >= 0x24)
-            gCurrentSprite.oamRotation = 200;
+            gCurrentSprite.rotation = 200;
         else if (arrayOffset >= 0x21)
-            gCurrentSprite.oamRotation = 0xD0;
+            gCurrentSprite.rotation = 0xD0;
         else if (arrayOffset >= 0x1D)
-            if (gCurrentSprite.oamRotation < 0xE1)
-                gCurrentSprite.oamRotation = 0xE0;
+            if (gCurrentSprite.rotation < 0xE1)
+                gCurrentSprite.rotation = 0xE0;
             else
-                gCurrentSprite.oamRotation -= 8;
+                gCurrentSprite.rotation -= 8;
         else
-            gCurrentSprite.oamRotation -= 0x10;
+            gCurrentSprite.rotation -= 0x10;
         
         gCurrentSprite.xPosition -= xMovement;
     }
@@ -2569,7 +2569,7 @@ void DeoremSegment(void)
 
     if (gSpriteData[ramSlot].pose > 0x61) // TODO: Pose names
     {
-        gCurrentSprite.ignoreSamusCollisionTimer = 1;
+        gCurrentSprite.ignoreSamusCollisionTimer = DELTA_TIME;
         if (gSpriteData[ramSlot].pose == 0x68 && gCurrentSprite.pose < 0x62)
             gCurrentSprite.pose = 0x62;
     }
@@ -2672,7 +2672,7 @@ void DeoremEye(void)
     u8 ramSlot;
     u8 isft;
 
-    gCurrentSprite.ignoreSamusCollisionTimer = 0x1;
+    gCurrentSprite.ignoreSamusCollisionTimer = DELTA_TIME;
     if (gCurrentSprite.pose < 0x68)
     {
         ramSlot = gCurrentSprite.primarySpriteRamSlot;
@@ -2685,7 +2685,7 @@ void DeoremEye(void)
                 gSpriteData[ramSlot].pOam = sDeoremOam_ClosedFast;
                 gSpriteData[ramSlot].animationDurationCounter = 0x0;
                 gSpriteData[ramSlot].currentAnimationFrame = 0x0;
-                gSpriteData[ramSlot].hitboxBottomOffset = 0x40;
+                gSpriteData[ramSlot].hitboxBottom = 0x40;
                 if (gCurrentSprite.health < 0x15)
                     gSpriteData[ramSlot].absolutePaletteRow = 0x2;
                 gCurrentSprite.status |= SPRITE_STATUS_IGNORE_PROJECTILES;
