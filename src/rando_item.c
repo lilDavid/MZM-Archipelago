@@ -354,7 +354,7 @@ static u32 RandoCanReceiveMultiworld() {
     if (gGameModeSub1 != SUB_GAME_MODE_PLAYING ||
         gIncomingItemId >= ITEM_MAX ||
         gEquipment.suitType == SUIT_SUITLESS ||
-        gPreventMovementTimer || gDisablePause || gShipLandingFlag)
+        gPreventMovementTimer || gDisablePause || gPauseScreenFlag || gShipLandingFlag)
         return FALSE;
 
     // Certain samus actions can affect the message banner
@@ -463,13 +463,8 @@ u32 RandoHandleMultiworld() {
     }
     RandoItemApply(gIncomingItemId, gIncomingItemCount);
 
-    switch (gIncomingItemId) {
-        case ITEM_ENERGY_TANK:        amount = gIncomingItemCount * sTankIncreaseAmount[gDifficulty].energy;       break;
-        case ITEM_MISSILE_TANK:       amount = gIncomingItemCount * sTankIncreaseAmount[gDifficulty].missile;      break;
-        case ITEM_SUPER_MISSILE_TANK: amount = gIncomingItemCount * sTankIncreaseAmount[gDifficulty].superMissile; break;
-        case ITEM_POWER_BOMB_TANK:    amount = gIncomingItemCount * sTankIncreaseAmount[gDifficulty].powerBomb;    break;
-        default: amount = 1;
-    }
+    if (gIncomingItemId > ITEM_POWER_BOMB_TANK)
+        amount = 1;
 
     if (gIncomingItemCount == 1) {
         // Item name
@@ -500,6 +495,13 @@ u32 RandoHandleMultiworld() {
         gDynamicMessageBuffer[messageLength++] = CHAR_NEW_LINE;
 
         // "<Ammo> capacity increased by <amount>."
+        switch (gIncomingItemId) {
+            case ITEM_ENERGY_TANK:        amount = gIncomingItemCount * sTankIncreaseAmount[gDifficulty].energy;       break;
+            case ITEM_MISSILE_TANK:       amount = gIncomingItemCount * sTankIncreaseAmount[gDifficulty].missile;      break;
+            case ITEM_SUPER_MISSILE_TANK: amount = gIncomingItemCount * sTankIncreaseAmount[gDifficulty].superMissile; break;
+            case ITEM_POWER_BOMB_TANK:    amount = gIncomingItemCount * sTankIncreaseAmount[gDifficulty].powerBomb;    break;
+        }
+
         pLine2 = gDynamicMessageBuffer + messageLength;
         messageLength += TextCopyUntilCharacter(sMultipleTankMessageFragments[gIncomingItemId] + messageLength,
                 pLine2,
