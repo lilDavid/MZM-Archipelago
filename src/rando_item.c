@@ -471,7 +471,7 @@ u32 RandoHandleMultiworld() {
         default: amount = 1;
     }
 
-    if (amount == 1) {
+    if (gIncomingItemCount == 1) {
         // Item name
         messageLength = TextCopyUntilCharacter(sMessageTextPointers[gLanguage][sourceItemMessage],
                 gDynamicMessageBuffer,
