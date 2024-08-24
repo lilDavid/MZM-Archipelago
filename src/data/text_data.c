@@ -217,8 +217,13 @@ const u16 sEnglishText_Message_ReserveTank[] = INCTEXT("{WIDTH(76)}{COLOR(5)}Res
 const u16 sEnglishText_Message_WallJump[] = INCTEXT("{WIDTH(86)}{COLOR(5)}Wall Jump\n{WIDTH(110)}");
 const u16 sEnglishText_Message_PowerBeam[] = INCTEXT("{WIDTH(81)}{COLOR(5)}Power Beam\n{WIDTH(110)}");
 const u16 sEnglishText_Message_SpiderBall[] = INCTEXT("{WIDTH(83)}{COLOR(5)}Spider Ball\n{WIDTH(110)}");
+
 const u16 sEnglishText_MessageFragment_Sent[] = INCTEXT("{COLOR(0)}Sent to ");
 const u16 sEnglishText_MessageFragment_Received[] = INCTEXT("{COLOR(0)}Received from ");
+const u16 sEnglishText_MessageFragment_EnergyTanksReceived[] = INCTEXT("{WIDTH(50)}{COLOR(5)}Energy Tanks received.\n{WIDTH(0)}{COLOR(0)}Energy capacity increased by ");
+const u16 sEnglishText_MessageFragment_MissileTanksReceived[] = INCTEXT("{WIDTH(51)}{COLOR(5)}Missile Tanks received.\n{WIDTH(0)}{COLOR(0)}Missile capacity increased by ");
+const u16 sEnglishText_MessageFragment_SuperMissileTanksReceived[] = INCTEXT("{WIDTH(33)}{COLOR(5)}Super Missile Tanks received.\n{WIDTH(0)}{COLOR(0)}Super Missile capacity increased by ");
+const u16 sEnglishText_MessageFragment_PowerBombTanksReceived[] = INCTEXT("{WIDTH(37)}{COLOR(5)}Power Bomb Tanks received.\n{WIDTH(0)}{COLOR(0)}Power Bomb capacity increased by ");
 
 const u16 sEnglishText_Location_Brinstar[] = INCTEXT("{WIDTH(83)}BRINSTAR");
 const u16 sEnglishText_Location_Kraid[] = INCTEXT("{WIDTH(93)}KRAID");

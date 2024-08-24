@@ -5,6 +5,7 @@
 #include "location_text.h"
 
 #include "constants/game_state.h"
+#include "constants/rando.h"
 #include "constants/text.h"
 
 extern const u16* const sJapaneseTextPointers_Message[MESSAGE_END];
@@ -31,5 +32,7 @@ extern const u16* const sHiraganaTextPointers_FileScreen[FILE_SCREEN_TEXT_END];
 extern const u16* const sEnglishTextPointers_Description[DESCRIPTION_TEXT_END];
 extern const u16* const sEnglishTextPointers_Story[STORY_TEXT_END];
 extern const u16* const sEnglishTextPointers_FileScreen[FILE_SCREEN_TEXT_END];
+
+extern const u16* const sMultipleTankMessageFragments[ITEM_POWER_BOMB_TANK + 1];
 
 #endif /* TEXT_POINTERS_DATA_H */

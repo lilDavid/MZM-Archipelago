@@ -163,7 +163,10 @@ u32 InGameMainLoop(void)
         ResetFreeOam();
         RoomUpdate();
 
-        RandoHandleMultiworld();
+        if (RandoHandleMultiworld()) {
+            gIncomingItemId = ITEM_NONE;
+            gMultiworldItemCount += gIncomingItemCount;
+        }
     
         if (gGameModeSub1 == SUB_GAME_MODE_PLAYING)
             SamusCallCheckLowHealth();

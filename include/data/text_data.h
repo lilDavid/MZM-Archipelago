@@ -219,8 +219,13 @@ extern const u16 sEnglishText_Message_ReserveTank[];
 extern const u16 sEnglishText_Message_WallJump[];
 extern const u16 sEnglishText_Message_PowerBeam[];
 extern const u16 sEnglishText_Message_SpiderBall[];
+
 extern const u16 sEnglishText_MessageFragment_Sent[];
 extern const u16 sEnglishText_MessageFragment_Received[];
+extern const u16 sEnglishText_MessageFragment_EnergyTanksReceived[];
+extern const u16 sEnglishText_MessageFragment_MissileTanksReceived[];
+extern const u16 sEnglishText_MessageFragment_SuperMissileTanksReceived[];
+extern const u16 sEnglishText_MessageFragment_PowerBombTanksReceived[];
 
 extern const u16 sEnglishText_Location_Brinstar[];
 extern const u16 sEnglishText_Location_Kraid[];

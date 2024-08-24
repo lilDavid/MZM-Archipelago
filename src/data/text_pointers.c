@@ -506,3 +506,10 @@ const u16* const sEnglishTextPointers_FileScreen[FILE_SCREEN_TEXT_END] = {
     [FILE_SCREEN_TEXT_SOUND_TEST_UNLOCK] = sEnglishText_FileScreen_SoundTestUnlock,
     [FILE_SCREEN_TEXT_NES_METROID_UNLOCK] = sEnglishText_FileScreen_NesMetroidUnlock,
 };
+
+const u16* const sMultipleTankMessageFragments[ITEM_POWER_BOMB_TANK + 1] = {
+    [ITEM_ENERGY_TANK] = sEnglishText_MessageFragment_EnergyTanksReceived,
+    [ITEM_MISSILE_TANK] = sEnglishText_MessageFragment_MissileTanksReceived,
+    [ITEM_SUPER_MISSILE_TANK] = sEnglishText_MessageFragment_SuperMissileTanksReceived,
+    [ITEM_POWER_BOMB_TANK] = sEnglishText_MessageFragment_PowerBombTanksReceived,
+};
