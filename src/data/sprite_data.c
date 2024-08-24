@@ -2475,7 +2475,7 @@ const u16 sSecondarySpriteStats[77][9] = {
         100,
         400,
         500,
-        0,
+        200,
         0
     },
     [SSPRITE_SKREE_EXPLOSION] = {
