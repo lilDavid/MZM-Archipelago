@@ -118,17 +118,17 @@ void ChozoStatueRegisterItem(u8 spriteId)
             break;
 
         case PSPRITE_CHOZO_STATUE_SPACE_JUMP:
-            RandoGiveItemFromCheck(RC_KRAID_SPACE_JUMP);
+            RandoGiveItemFromCheck(RC_KRAID_UNKNOWN_ITEM_STATUE);
             EventFunction(EVENT_ACTION_SETTING, EVENT_SPACE_JUMP_OBTAINED);
             break;
 
         case PSPRITE_CHOZO_STATUE_GRAVITY:
-            RandoGiveItemFromCheck(RC_RIDLEY_GRAVITY_SUIT);
+            RandoGiveItemFromCheck(RC_RIDLEY_UNKNOWN_ITEM_STATUE);
             EventFunction(EVENT_ACTION_SETTING, EVENT_GRAVITY_SUIT_OBTAINED);
             break;
 
         case PSPRITE_CHOZO_STATUE_PLASMA_BEAM:
-            RandoGiveItemFromCheck(RC_CRATERIA_PLASMA_BEAM);
+            RandoGiveItemFromCheck(RC_CRATERIA_UNKNOWN_ITEM_STATUE);
             EventFunction(EVENT_ACTION_SETTING, EVENT_PLASMA_BEAM_OBTAINED);
             break;
     }
@@ -254,7 +254,7 @@ u8 ChozoStatueGetBehavior(u8 spriteId)
             break;
 
         case PSPRITE_CHOZO_STATUE_PLASMA_BEAM:
-            if (RandoIsLocationChecked(RC_CRATERIA_PLASMA_BEAM))
+            if (RandoIsLocationChecked(RC_CRATERIA_UNKNOWN_ITEM_STATUE))
                 behavior++;
             break;
 
@@ -284,12 +284,12 @@ u8 ChozoStatueGetBehavior(u8 spriteId)
             break;
 
         case PSPRITE_CHOZO_STATUE_SPACE_JUMP:
-            if (RandoIsLocationChecked(RC_KRAID_SPACE_JUMP))
+            if (RandoIsLocationChecked(RC_KRAID_UNKNOWN_ITEM_STATUE))
                 behavior++;
             break;
 
         case PSPRITE_CHOZO_STATUE_GRAVITY:
-            if (RandoIsLocationChecked(RC_RIDLEY_GRAVITY_SUIT))
+            if (RandoIsLocationChecked(RC_RIDLEY_UNKNOWN_ITEM_STATUE))
                 behavior++;
             break;
     }

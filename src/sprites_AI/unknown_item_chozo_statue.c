@@ -163,9 +163,9 @@ void UnknownItemChozoStatueInit(void)
 
     randoCheck = RC_MAX;
     switch (gCurrentSprite.spriteId) {
-        case PSPRITE_CHOZO_STATUE_PLASMA_BEAM: randoCheck = RC_CRATERIA_PLASMA_BEAM; break;
-        case PSPRITE_CHOZO_STATUE_SPACE_JUMP: randoCheck = RC_KRAID_SPACE_JUMP; break;
-        case PSPRITE_CHOZO_STATUE_GRAVITY: randoCheck = RC_RIDLEY_GRAVITY_SUIT; break;
+        case PSPRITE_CHOZO_STATUE_PLASMA_BEAM: randoCheck = RC_CRATERIA_UNKNOWN_ITEM_STATUE; break;
+        case PSPRITE_CHOZO_STATUE_SPACE_JUMP: randoCheck = RC_KRAID_UNKNOWN_ITEM_STATUE; break;
+        case PSPRITE_CHOZO_STATUE_GRAVITY: randoCheck = RC_RIDLEY_UNKNOWN_ITEM_STATUE; break;
         default: break;
     }
     if (randoCheck < RC_MAX)
