@@ -451,7 +451,8 @@ u32 RandoHandleMultiworld() {
             break;
     }
 
-    if (gMultiworldItemSenderName[0] == CHAR_TERMINATOR) {
+    if (gMultiworldItemSenderName[0] == CHAR_TERMINATOR &&
+        (gIncomingItemId > ITEM_POWER_BOMB_TANK || gIncomingItemCount == 1)) {
         messageId = sourceItemMessage;
     }
 
@@ -463,10 +464,7 @@ u32 RandoHandleMultiworld() {
     }
     RandoItemApply(gIncomingItemId, gIncomingItemCount);
 
-    if (gIncomingItemId > ITEM_POWER_BOMB_TANK)
-        amount = 1;
-
-    if (gIncomingItemCount == 1) {
+    if (gIncomingItemId > ITEM_POWER_BOMB_TANK || gIncomingItemCount == 1) {
         // Item name
         messageLength = TextCopyUntilCharacter(sMessageTextPointers[gLanguage][sourceItemMessage],
                 gDynamicMessageBuffer,
