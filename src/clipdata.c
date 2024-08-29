@@ -23,7 +23,7 @@
 void ClipdataSetupCode(void)
 {
     // Copy code to RAM
-    DMA_SET(3, ClipdataConvertToCollision + 1, gNonGameplayRAM.inGame, (DMA_ENABLE << 0x10) | 0x140);
+    DMA_SET(3, ClipdataConvertToCollision + 1, gNonGameplayRAM.inGame, C_32_2_16(DMA_ENABLE, 0x140));
 
     // Set pointer
     gClipdataCodePointer = (ClipFunc_T)(gNonGameplayRAM.inGame + 1);
@@ -42,11 +42,13 @@ u32 ClipdataProcessForSamus(u16 yPosition, u16 xPosition)
     u32 result;
 
     // Get tile position
-    collision.tileY = yPosition / BLOCK_SIZE;
-    collision.tileX = xPosition / BLOCK_SIZE;
+    collision.tileY = SUB_PIXEL_TO_BLOCK(yPosition);
+    collision.tileX = SUB_PIXEL_TO_BLOCK(xPosition);
 
     if (collision.tileX >= gBgPointersAndDimensions.clipdataWidth)
+    {
         result = CLIPDATA_TYPE_SOLID_FLAG | CLIPDATA_TYPE_SOLID;
+    }
     else
     {        
         if (collision.tileY < gBgPointersAndDimensions.clipdataHeight)
@@ -64,7 +66,9 @@ u32 ClipdataProcessForSamus(u16 yPosition, u16 xPosition)
             result = gClipdataCodePointer(&collision);
         }
         else
+        {
             result = CLIPDATA_TYPE_AIR;
+        }
     }
 
     return result;
@@ -82,8 +86,9 @@ u32 ClipdataProcess(u16 yPosition, u16 xPosition)
     struct CollisionData collision;
     u32 clipdata;
 
-    collision.tileY = yPosition / BLOCK_SIZE;
-    collision.tileX = xPosition / BLOCK_SIZE;
+    // Get tile position
+    collision.tileY = SUB_PIXEL_TO_BLOCK(yPosition);
+    collision.tileX = SUB_PIXEL_TO_BLOCK(xPosition);
 
     // Check in bounds
     if (collision.tileX >= gBgPointersAndDimensions.clipdataWidth || collision.tileY >= gBgPointersAndDimensions.clipdataHeight)
@@ -94,41 +99,41 @@ u32 ClipdataProcess(u16 yPosition, u16 xPosition)
         gCurrentClipdataAffectingAction = CAA_NONE;
         return CLIPDATA_TYPE_AIR;
     }
+
+    if (gCurrentClipdataAffectingAction == CAA_NONE)
+    {
+        // No Ccaa, then update current affecting
+        collision.actorType = CLIPDATA_ACTOR_SPRITE;
+        gCurrentAffectingClipdata.movement = CLIPDATA_MOVEMENT_NONE;
+        gCurrentAffectingClipdata.hazard = HAZARD_TYPE_NONE;
+        ClipdataUpdateCurrentAffecting(yPosition, collision.tileY, collision.tileX, 0x2);
+    }
+    else if (gCurrentClipdataAffectingAction >= CAA_UNUSED)
+    {
+        // "Destructing" Ccaa (projectiles, samus, bomb chain), then it's a non sprite
+        collision.actorType = CLIPDATA_ACTOR_NON_SPRITE;
+        if (gCurrentClipdataAffectingAction == CAA_UNUSED)
+            gCurrentClipdataAffectingAction = CAA_NONE;
+    }
     else
     {
-        if (gCurrentClipdataAffectingAction == CAA_NONE)
-        {
-            // No Ccaa, then update current affecting
-            collision.actorType = CLIPDATA_ACTOR_SPRITE;
-            gCurrentAffectingClipdata.movement = CLIPDATA_MOVEMENT_NONE;
-            gCurrentAffectingClipdata.hazard = HAZARD_TYPE_NONE;
-            ClipdataUpdateCurrentAffecting(yPosition, collision.tileY, collision.tileX, 0x2);
-        }
-        else if (gCurrentClipdataAffectingAction >= CAA_UNUSED)
-        {
-            // "Destructing" Ccaa (projectiles, samus, bomb chain), then it's a non sprite
-            collision.actorType = CLIPDATA_ACTOR_NON_SPRITE;
-            if (gCurrentClipdataAffectingAction == CAA_UNUSED)
-                gCurrentClipdataAffectingAction = CAA_NONE;
-        }
-        else
-            collision.actorType = CLIPDATA_ACTOR_SPRITE;
-
-        // Get clip at position
-        clipdata = gBgPointersAndDimensions.pClipDecomp[collision.tileY * gBgPointersAndDimensions.clipdataWidth + collision.tileX];
-        if (gCurrentClipdataAffectingAction != CAA_NONE)
-        {
-            // Apply Ccaa if not none
-            BlockApplyCcaa(collision.tileY, collision.tileX, clipdata);
-            gCurrentClipdataAffectingAction = CAA_NONE;
-        }
-
-        // Get type and sub pixel, then call clipdata code
-        collision.clipdataType = gTilemapAndClipPointers.pClipCollisions[clipdata];
-        collision.subPixelY = yPosition % BLOCK_SIZE;
-        collision.subPixelX = xPosition % BLOCK_SIZE;
-        return clipdata = gClipdataCodePointer(&collision);
+        collision.actorType = CLIPDATA_ACTOR_SPRITE;
     }
+
+    // Get clip at position
+    clipdata = gBgPointersAndDimensions.pClipDecomp[collision.tileY * gBgPointersAndDimensions.clipdataWidth + collision.tileX];
+    if (gCurrentClipdataAffectingAction != CAA_NONE)
+    {
+        // Apply Ccaa if not none
+        BlockApplyCcaa(collision.tileY, collision.tileX, clipdata);
+        gCurrentClipdataAffectingAction = CAA_NONE;
+    }
+
+    // Get type and sub pixel, then call clipdata code
+    collision.clipdataType = gTilemapAndClipPointers.pClipCollisions[clipdata];
+    collision.subPixelY = yPosition % BLOCK_SIZE;
+    collision.subPixelX = xPosition % BLOCK_SIZE;
+    return clipdata = gClipdataCodePointer(&collision);
 }
 
 /**
@@ -284,11 +289,11 @@ s32 ClipdataCheckCurrentAffectingAtPosition(u16 yPosition, u16 xPosition)
     gCurrentAffectingClipdata.hazard = HAZARD_TYPE_NONE;
 
     // Get tile position
-    tileY = yPosition / BLOCK_SIZE;
-    tileX = xPosition / BLOCK_SIZE;
+    tileY = SUB_PIXEL_TO_BLOCK(yPosition);
+    tileX = SUB_PIXEL_TO_BLOCK(xPosition);
 
     if (tileY >= gBgPointersAndDimensions.clipdataHeight || tileX >= gBgPointersAndDimensions.clipdataWidth)
-        return 0;
+        return C_32_2_16(CLIPDATA_MOVEMENT_NONE, HAZARD_TYPE_NONE);
 
     return ClipdataUpdateCurrentAffecting(yPosition, tileY, tileX, FALSE);
 }
@@ -321,12 +326,16 @@ u32 ClipdataUpdateCurrentAffecting(u16 yPosition, u16 tileY, u16 tileX, u8 dontC
             specialClip = CLIPDATA_MOVEMENT_NONE;
     }
     else
+    {
         specialClip = CLIPDATA_MOVEMENT_NONE;
+    }
 
     // Check prevent use elevator
     if (!dontCheckForElevator && (specialClip == CLIPDATA_MOVEMENT_ELEVATOR_DOWN_BLOCK || specialClip == CLIPDATA_MOVEMENT_ELEVATOR_UP_BLOCK)
         && gSamusData.pose != SPOSE_USING_AN_ELEVATOR && ClipdataCheckCantUseElevator(specialClip))
+    {
         specialClip = CLIPDATA_MOVEMENT_NONE;
+    }
 
     gCurrentAffectingClipdata.movement = specialClip;
     specialClip = HAZARD_TYPE_NONE;
@@ -438,8 +447,8 @@ u32 ClipdataCheckGroundEffect(u16 yPosition, u16 xPosition)
     s32 tileX;
     u32 clipdata;
 
-    tileY = yPosition / BLOCK_SIZE;
-    tileX = xPosition / BLOCK_SIZE;
+    tileY = SUB_PIXEL_TO_BLOCK(yPosition);
+    tileX = SUB_PIXEL_TO_BLOCK(xPosition);
 
     if (tileY >= gBgPointersAndDimensions.clipdataHeight || tileX >= gBgPointersAndDimensions.clipdataWidth)
         return GROUND_EFFECT_NONE;
@@ -447,7 +456,7 @@ u32 ClipdataCheckGroundEffect(u16 yPosition, u16 xPosition)
     {
         clipdata = gBgPointersAndDimensions.pClipDecomp[tileY * gBgPointersAndDimensions.clipdataWidth + tileX];
         if (clipdata & CLIPDATA_TILEMAP_FLAG)
-            clipdata = 0;
+            clipdata = CLIP_BEHAVIOR_NONE;
         else
             clipdata = gTilemapAndClipPointers.pClipBehaviors[clipdata];
 
