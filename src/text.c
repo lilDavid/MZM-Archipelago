@@ -806,7 +806,8 @@ u8 TextProcessItemBanner(void)
             while (i != 0)
             {
                 switch (TextProcessCurrentMessage(&gCurrentMessage,
-                    sMessageTextPointers[gLanguage][gCurrentMessage.messageID],
+                    (gCurrentMessage.messageID >= MESSAGE_DYNAMIC_ITEM && gCurrentMessage.messageID <= MESSAGE_DYNAMIC_ITEM_UNKNOWN)
+                        ? gDynamicMessageBuffer : sMessageTextPointers[gLanguage][gCurrentMessage.messageID],
                     VRAM_BASE + 0x14000 + gCurrentMessage.gfxSlot * 0x800 + gCurrentMessage.line * 0x800))
                 {
                     case TEXT_STATE_ENDED:
@@ -1338,9 +1339,6 @@ u8 TextProcessCurrentMessage(struct Message* pMessage, const u16* pText, u32* ds
 
     state = TEXT_STATE_NONE;
     pMessage->timer++;
-
-    if (pMessage->messageID >= MESSAGE_DYNAMIC_ITEM && pMessage->messageID <= MESSAGE_DYNAMIC_ITEM_UNKNOWN)
-        pText = gDynamicMessageBuffer;
 
     // Check for message delay
     if (!(gButtonInput & KEY_A))
