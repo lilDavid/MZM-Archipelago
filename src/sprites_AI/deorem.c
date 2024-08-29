@@ -509,7 +509,7 @@ void DeoremSpawnGoingDownAnim(void)
     {
         gCurrentSprite.pose = 0x22;
         gCurrentSprite.work0 = 0xA;
-        gCurrentSprite.status |= SPRITE_STATUS_YFLIP;
+        gCurrentSprite.status |= SPRITE_STATUS_Y_FLIP;
 
         if (gBossWork.work3)
         {
@@ -594,7 +594,7 @@ void DeoremSpawnGoingUpAnim(void)
     --gCurrentSprite.work0;
     if (gCurrentSprite.work0 == 0)
     {
-        gCurrentSprite.status = (gCurrentSprite.status & ~SPRITE_STATUS_YFLIP) | SPRITE_STATUS_NOT_DRAWN;
+        gCurrentSprite.status = (gCurrentSprite.status & ~SPRITE_STATUS_Y_FLIP) | SPRITE_STATUS_NOT_DRAWN;
         gCurrentSprite.pose = 0x24;
         gCurrentSprite.work0 = 0x3C;
 
@@ -1288,7 +1288,7 @@ void DeoremSegmentInit(void)
     else if ((u8)(roomSlot - 6) < 6)
     {
         gCurrentSprite.pose = 0x22;
-        gCurrentSprite.status |= SPRITE_STATUS_YFLIP;
+        gCurrentSprite.status |= SPRITE_STATUS_Y_FLIP;
     }
     else if ((u8)(roomSlot - 12) < 3)
     {
@@ -1316,7 +1316,7 @@ void DeoremSegmentInit(void)
             {
                 gCurrentSprite.pose = 0x11;
                 gCurrentSprite.drawOrder = 3;
-                gCurrentSprite.status |= SPRITE_STATUS_YFLIP;
+                gCurrentSprite.status |= SPRITE_STATUS_Y_FLIP;
                 gCurrentSprite.work2 = 0x1C;
             }
             else
@@ -1493,7 +1493,7 @@ void DeoremSegmentRightIdleAnim(void)
             else
             {
                 xPosition = gCurrentSprite.xPosition + 3 * HALF_BLOCK_SIZE;
-                statusToAdd = SPRITE_STATUS_XFLIP;
+                statusToAdd = SPRITE_STATUS_X_FLIP;
             }
     
             if (gCurrentSprite.roomSlot == 1 && deoremTimer == 241)
@@ -1580,7 +1580,7 @@ void DeoremSegmentLeftIdleAnim(void)
             if (gBossWork.work3 != 0)
             {
                 xPosition = gCurrentSprite.xPosition + 3 * HALF_BLOCK_SIZE;
-                statusToAdd = SPRITE_STATUS_XFLIP;
+                statusToAdd = SPRITE_STATUS_X_FLIP;
             }
             else
             {
@@ -2364,7 +2364,7 @@ void DeoremThornInit(void)
     gCurrentSprite.drawOrder = 3;
     gCurrentSprite.health = GET_SSPRITE_HEALTH(gCurrentSprite.spriteId);
     
-    if ((gCurrentSprite.status & SPRITE_STATUS_XFLIP) != 0)
+    if ((gCurrentSprite.status & SPRITE_STATUS_X_FLIP) != 0)
     {
         gCurrentSprite.status |= SPRITE_STATUS_FACING_RIGHT;
         gCurrentSprite.rotation = 0x80;
@@ -2374,7 +2374,7 @@ void DeoremThornInit(void)
         gCurrentSprite.status &= ~SPRITE_STATUS_FACING_RIGHT;
         gCurrentSprite.rotation = 0;
     }
-    gCurrentSprite.status &= ~SPRITE_STATUS_XFLIP;
+    gCurrentSprite.status &= ~SPRITE_STATUS_X_FLIP;
     
     gCurrentSprite.yPosition -= 0xC;
 }
