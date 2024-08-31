@@ -53,21 +53,23 @@ void ConnectionUpdateHatches(void)
             if (gHatchData[i].currentAnimationFrame == 0x0)
             {
                 if (gHatchData[i].opening == TRUE)
-                    SoundPlay(0x10C);
+                {
+                    SoundPlay(SOUND_DOOR_OPENING);
+                }
                 else
                 {
                     switch (gHatchData[i].type)
                     {
                         case HATCH_LOCKED:
                         case HATCH_LOCKED_AND_LOCK_DESTINATION:
-                            SoundPlay(0x117);
+                            SoundPlay(SOUND_DOORS_LOCKING);
                             break;
                         
                         case HATCH_NONE:
                         case HATCH_SUPER_MISSILE:
                         case HATCH_POWER_BOMB:
                         default:
-                            SoundPlay(0x10D);
+                            SoundPlay(SOUND_DOOR_CLOSING);
                             break;
                     }
                 }
@@ -518,7 +520,7 @@ void ConnectionCheckUnlockDoors(void)
         if (gDoorUnlockTimer == 0x0 && (gHatchesState.hatchesLockedWithTimer || gHatchesState.unk2))
         {
             // Timer done and has hatches to unlock
-            SoundPlay(0x116);
+            SoundPlay(SOUND_DOORS_UNLOCKING);
             gHatchesState.unlocking = TRUE;
         }
     }
@@ -959,7 +961,7 @@ void ConnectionCheckPlayCutsceneDuringTransition(u8 area, u8 dstRoomPlusOne)
             else if (dstRoomPlusOne == 0xB && !EventFunction(EVENT_ACTION_CHECKING, EVENT_ENTER_MOTHERSHIP_DEMO_PLAYED))
             {
                 if (gRainSoundEffect & RAIN_SOUND_PLAYING)
-                    SoundFade(0x121, 0xA); // Rain sound
+                    SoundFade(SOUND_RAIN, CONVERT_SECONDS(1.f / 6));
                 gCurrentCutscene = CUTSCENE_MECHA_RIDLEY_SEES_SAMUS;
             }
             break;
@@ -988,8 +990,8 @@ void ConnectionCheckPlayCutsceneDuringElevator(void)
                 gCurrentCutscene = CUTSCENE_MOTHER_BRAIN_CLOSE_UP;
 
                 ColorFadingStart(COLOR_FADING_CANCEL);
-                SoundFade(0x10E, 0xA);
-                FadeMusic(0xA);
+                SoundFade(SOUND_ELEVATOR, CONVERT_SECONDS(1.f / 6));
+                FadeMusic(CONVERT_SECONDS(1.f / 6));
             }
             break;
 
@@ -999,8 +1001,8 @@ void ConnectionCheckPlayCutsceneDuringElevator(void)
                 gCurrentCutscene = CUTSCENE_RIDLEY_IN_SPACE;
 
                 ColorFadingStart(COLOR_FADING_CANCEL);
-                SoundFade(0x10E, 0xA);
-                FadeMusic(0xA);
+                SoundFade(SOUND_ELEVATOR, CONVERT_SECONDS(1.f / 6));
+                FadeMusic(CONVERT_SECONDS(1.f / 6));
             }
             break;
 
@@ -1011,8 +1013,8 @@ void ConnectionCheckPlayCutsceneDuringElevator(void)
                 gCurrentCutscene = CUTSCENE_RIDLEY_LANDING;
 
                 ColorFadingStart(COLOR_FADING_CANCEL);
-                SoundFade(0x10E, 0xA);
-                FadeMusic(0xA);
+                SoundFade(SOUND_ELEVATOR, CONVERT_SECONDS(1.f / 6));
+                FadeMusic(CONVERT_SECONDS(1.f / 6));
                 #endif // 0
                 EventFunction(EVENT_ACTION_SETTING, EVENT_ENTER_RIDLEY_DEMO_PLAYED);
             }
@@ -1024,8 +1026,8 @@ void ConnectionCheckPlayCutsceneDuringElevator(void)
                 gCurrentCutscene = CUTSCENE_ENTER_TOURIAN;
 
                 ColorFadingStart(COLOR_FADING_CANCEL);
-                SoundFade(0x10E, 0xA);
-                FadeMusic(0xA);
+                SoundFade(SOUND_ELEVATOR, CONVERT_SECONDS(1.f / 6));
+                FadeMusic(CONVERT_SECONDS(1.f / 6));
             }
             break;
 

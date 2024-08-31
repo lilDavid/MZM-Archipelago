@@ -5,6 +5,7 @@
 #include "data/sprites/space_pirate.h"
 #include "data/sprites/enemy_drop.h"
 
+#include "constants/audio.h"
 #include "constants/clipdata.h"
 #include "constants/event.h"
 #include "constants/sprite.h"
@@ -75,7 +76,7 @@ void SpacePirateCarryingPowerBomb(void)
                 gCurrentSprite.pose = SPACE_PIRATE_CARRYING_POWER_BOMB_POSE_MOVING;
 
                 if (gCurrentSprite.animationDurationCounter > 5 && MOD_AND(gCurrentSprite.currentAnimationFrame, 4) == 0)
-                    SoundPlayNotAlreadyPlaying(0x165);
+                    SoundPlayNotAlreadyPlaying(SOUND_SPACE_PIRATE_FOOTSTEPS);
             }
             break;
 
@@ -83,7 +84,7 @@ void SpacePirateCarryingPowerBomb(void)
             if (gCurrentSprite.animationDurationCounter > 5 && MOD_AND(gCurrentSprite.currentAnimationFrame, 4) == 0 &&
                 gCurrentSprite.status & SPRITE_STATUS_ONSCREEN)
             {
-                SoundPlayNotAlreadyPlaying(0x165);
+                SoundPlayNotAlreadyPlaying(SOUND_SPACE_PIRATE_FOOTSTEPS);
             }
 
             if (gCurrentSprite.status & SPRITE_STATUS_FACING_RIGHT)
