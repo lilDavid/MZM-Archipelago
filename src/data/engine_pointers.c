@@ -298,7 +298,7 @@ static const u8* const sChozodiaScrolls[] = {
     sScroll_Empty
 };
 
-const u8* const * const sAreaScrollPointers[AREA_END] = {
+const u8* const * const sAreaScrollPointers[AREA_COUNT] = {
     [AREA_BRINSTAR] = sBrinstarScrolls,
     [AREA_KRAID] = sKraidScrolls,
     [AREA_NORFAIR] = sNorfairScrolls,
