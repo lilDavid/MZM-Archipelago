@@ -11,6 +11,7 @@ const struct Seed sRandoSeed = {
 
     .options = {
         .goal = GOAL_MECHA_RIDLEY,
+        .difficulties = ALLOW_NORMAL | ALLOW_HARD,
 
         .unknownItemsAlwaysUsable = FALSE,
         .removeGravityHeatResistance = FALSE,

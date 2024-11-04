@@ -160,4 +160,9 @@ enum RandoGoal {
     GOAL_MAX,
 };
 
+enum RandoDifficulty {
+    ALLOW_NORMAL = 1,
+    ALLOW_HARD = 2,
+};
+
 #endif /* RANDO_CONSTANTS_H */

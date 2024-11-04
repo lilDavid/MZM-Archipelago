@@ -5007,7 +5007,7 @@ u32 FileSelectCheckInputtingTimeAttackCode(void)
     return FALSE;
 }
 
-#ifdef NON_MATCHING
+#if 1  // #ifdef NON_MATCHING
 u8 FileSelectProcessFileSelection(void)
 {
     // https://decomp.me/scratch/VYid8
@@ -5390,13 +5390,16 @@ u8 FileSelectProcessFileSelection(void)
             }
             else
             {
-                if (gSaveFilesInfo[FILE_SELECT_DATA.fileSelectCursorPosition].completedGame & 0x36)
+                if (sRandoSeed.options.difficulties & ALLOW_HARD)
                     FILE_SELECT_DATA.unk_38 = 0x13;
                 else
                     FILE_SELECT_DATA.unk_38 = 0x12;
 
                 unk_790cc(0, FILE_SELECT_DATA.unk_38);
             }
+
+            if (!(sRandoSeed.options.difficulties & ALLOW_NORMAL))
+                FILE_SELECT_DATA.fileSelectCursors.difficulty = 2;
             break;
 
         case 22:
@@ -5524,7 +5527,7 @@ u8 FileSelectProcessFileSelection(void)
                     FILE_SELECT_DATA.subroutineTimer = 0;
                     FILE_SELECT_DATA.subroutineStage = 31;
                 }
-                else if (gChangedInput & KEY_UP)
+                else if (gChangedInput & KEY_UP && sRandoSeed.options.difficulties & ALLOW_NORMAL)
                 {
                     if (FILE_SELECT_DATA.fileSelectCursors.difficulty != 0)
                     {
@@ -5532,7 +5535,7 @@ u8 FileSelectProcessFileSelection(void)
                         FileSelectPlayMenuSound(MENU_SOUND_REQUEST_SUB_MENU_CURSOR);
                     }
                 }
-                else if (gChangedInput & KEY_DOWN)
+                else if (gChangedInput & KEY_DOWN && sRandoSeed.options.difficulties & ALLOW_NORMAL)
                 {
                     if (FILE_SELECT_DATA.unk_38 == 0x13)
                     {
