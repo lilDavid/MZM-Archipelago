@@ -7942,7 +7942,7 @@ void SamusInit(void)
             }
 
             if (sRandoSeed.options.startWithMaps)
-                gEquipment.downloadedMapStatus = (1 << AREA_NORMAL_END + 1) - 1;
+                gEquipment.downloadedMapStatus = (1 << AREA_NORMAL_COUNT) - 1;
 
             // Starting events
             for (i = EVENT_ENTER_NORFAIR_DEMO_PLAYED; i <= EVENT_STATUE_SCREW_ATTACK_GRABBED; i++)

@@ -352,7 +352,7 @@ const u8 sRoomItemsChozodia[] = {
     95, RC_CHOZODIA_RIGHT_OF_GLASS_TUBE,
 };
 
-const u8* const sRandoAreaItemLists[AREA_NORMAL_END + 1] = {
+const u8* const sRandoAreaItemLists[AREA_NORMAL_COUNT] = {
     [AREA_BRINSTAR] = sRoomItemsBrinstar,
     [AREA_KRAID] = sRoomItemsKraid,
     [AREA_NORFAIR] = sRoomItemsNorfair,
@@ -362,7 +362,7 @@ const u8* const sRandoAreaItemLists[AREA_NORMAL_END + 1] = {
     [AREA_CHOZODIA] = sRoomItemsChozodia,
 };
 
-const u8 sRandoAreaItemListLengths[AREA_NORMAL_END + 1] = {
+const u8 sRandoAreaItemListLengths[AREA_NORMAL_COUNT] = {
     [AREA_BRINSTAR] = ARRAY_SIZE(sRoomItemsBrinstar),
     [AREA_KRAID] = ARRAY_SIZE(sRoomItemsKraid),
     [AREA_NORFAIR] = ARRAY_SIZE(sRoomItemsNorfair),

@@ -741,7 +741,7 @@ void SramWrite_ToEwram(void)
 
     StringCopy(pFile->SamusAran_Text, sSamusAran_Text, SRAM_TEXT_SIZE);
 
-    for (i = 0; i <= AREA_NORMAL_END; i++) {
+    for (i = 0; i < AREA_COUNT; i++) {
         pFile->randoChecks[i] = gRandoLocationBitfields[i];
     }
     pFile->multiworldItemCount = gMultiworldItemCount;
@@ -838,7 +838,7 @@ void SramRead_FromEwram(void)
     gMusicInfo.unk_20 = musicInfo.unk_4;
     gMusicInfo.priority = musicInfo.priority;
 
-    for (i = 0; i <= AREA_NORMAL_END; i++) {
+    for (i = 0; i < AREA_COUNT; i++) {
         gRandoLocationBitfields[i] = pFile->randoChecks[i];
     }
     gMultiworldItemCount = pFile->multiworldItemCount;
@@ -2113,7 +2113,7 @@ void Sram_CheckLoadSaveFile(void)
         gUseMotherShipDoors = FALSE;
         gShipLandingFlag = TRUE;
 
-        for (i = 0; i <= AREA_NORMAL_END; i++)
+        for (i = 0; i < AREA_NORMAL_COUNT; i++)
             gRandoLocationBitfields[i] = 0;
         gMultiworldItemCount = 0;
     }

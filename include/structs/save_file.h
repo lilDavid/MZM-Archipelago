@@ -117,10 +117,10 @@ struct SaveFile {
 
     u8 SamusAran_Text[SRAM_TEXT_SIZE];
 
-    u32 randoChecks[AREA_NORMAL_END + 1];
+    u32 randoChecks[AREA_NORMAL_COUNT];
     u8 multiworldItemCount;
 
-    u8 freespace[160 - sizeof(u32[AREA_NORMAL_END + 1]) - sizeof(u8)];
+    u8 freespace[160 - sizeof(u32[AREA_NORMAL_COUNT]) - sizeof(u8)];
 
     struct SaveWorldData worldData;
 };
@@ -151,11 +151,11 @@ struct SaveDemo {
 struct SaveFileScreenOptions {
     u32 checksum;
     u32 notChecksum;
-    
+
     u8 unk_8;
     u8 unk_9;
     u16 counter;
-    
+
     u16 galleryImages;
     u8 soundTestAndOriginalMetroid;
 

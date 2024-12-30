@@ -3744,7 +3744,7 @@ u32 SpriteUtilGetFinalCompletionPercentage(void)
     // Count completion percentage as number of checked location bits
     // If extra bits are set, the percentage will be higher, but they shouldn't be set
     percentage = 0;
-    for (i = AREA_BRINSTAR; i <= AREA_NORMAL_END; i++) {
+    for (i = AREA_BRINSTAR; i < AREA_NORMAL_COUNT; i++) {
         for (mask = 1; mask; mask <<= 1)
             if (gRandoLocationBitfields[i] & mask)
                 percentage++;

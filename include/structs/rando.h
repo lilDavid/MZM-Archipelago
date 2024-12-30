@@ -54,6 +54,6 @@ extern u8 gIncomingItemCount;
 extern u8 gReceivingFromMultiworld;
 extern u8 gMultiworldItemCount;
 extern u16 gMultiworldItemSenderName[2 * 16 + sizeof(" ()")];
-extern u32 gRandoLocationBitfields[AREA_NORMAL_END + 1];
+extern u32 gRandoLocationBitfields[AREA_NORMAL_COUNT];
 
 #endif /* RANDO_STRUCT_H */
