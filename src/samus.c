@@ -1871,7 +1871,7 @@ void SamusSetLandingPose(struct SamusData* pData, struct SamusData* pCopy, struc
             else
             {
                 // Horizontal screen shake
-                ScreenShakeStartHorizontal(30, 1);
+                ScreenShakeStartHorizontal(CONVERT_SECONDS(.5f), 1);
 
                 // Set collision behavior
                 if (pCopy->pose == SPOSE_SHINESPARKING)
@@ -5790,7 +5790,7 @@ u8 SamusShinesparking(struct SamusData* pData)
 
     if (stop)
     {
-        ScreenShakeStartVertical(30, 1);
+        ScreenShakeStartVertical(CONVERT_SECONDS(.5f), 1);
         return pData->pose + 1;
     }
 
@@ -5819,7 +5819,7 @@ u8 SamusShinesparking(struct SamusData* pData)
             }
         }
 
-        ScreenShakeStartHorizontal(30, 1);
+        ScreenShakeStartHorizontal(CONVERT_SECONDS(.5f), 1);
         return pData->pose + 1;
     }
 

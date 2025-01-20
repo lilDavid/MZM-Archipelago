@@ -979,7 +979,7 @@ void ChozoStatuePartArmRefill(void)
             if (!SpriteUtilRefillEnergy())
             {
                 APPLY_DELTA_TIME_DEC(gCurrentSprite.work0);
-                gEnergyRefillAnimation = 0xD;
+                gEnergyRefillAnimation = 13;
             }
         }
         else if (gCurrentSprite.work0 == 0x1D)
@@ -992,7 +992,7 @@ void ChozoStatuePartArmRefill(void)
             else if (!SpriteUtilRefillMissiles())
             {
                 APPLY_DELTA_TIME_DEC(gCurrentSprite.work0);
-                gMissileRefillAnimation = 0xD;
+                gMissileRefillAnimation = 13;
             }
         }
         else if (gCurrentSprite.work0 == 0x1C)
@@ -1005,7 +1005,7 @@ void ChozoStatuePartArmRefill(void)
             else if (!SpriteUtilRefillSuperMissiles())
             {
                 APPLY_DELTA_TIME_DEC(gCurrentSprite.work0);
-                gSuperMissileRefillAnimation = 0xD;
+                gSuperMissileRefillAnimation = 13;
             }
         }
         else if (gCurrentSprite.work0 == 0x1B)
@@ -1018,7 +1018,7 @@ void ChozoStatuePartArmRefill(void)
             else if (!SpriteUtilRefillPowerBombs())
             {
                 APPLY_DELTA_TIME_DEC(gCurrentSprite.work0);
-                gPowerBombRefillAnimation = 0xD;
+                gPowerBombRefillAnimation = 13;
             }
         }
         else
