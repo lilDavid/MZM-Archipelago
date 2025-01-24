@@ -61,17 +61,18 @@ u32 InGameCutsceneSamusCloseUp(u8 cutsceneNumber, u8 cutsceneNumberNoFlag)
 
         case 5:
         case 7:
-            if (gInGameCutscene.timer > 2)
+            if (gInGameCutscene.timer > 2 * DELTA_TIME)
                 result = TRUE;
             break;
 
         case 3:
         case 9:
-            if (gInGameCutscene.timer > 102)
+            if (gInGameCutscene.timer > CONVERT_SECONDS(5.f / 3) + 2 * DELTA_TIME)
                 result = TRUE;
             break;
 
         case 4:
+            // Warning: DMA is out of bounds
             DmaTransfer(3, &sSamusCloseUpEyesGfx_1[0], VRAM_BASE + 0xB940, 0x140, 16);
             DmaTransfer(3, EWRAM_BASE + 0x2B000, VRAM_BASE + 0x294, 0x14, 16);
 
@@ -178,7 +179,7 @@ u32 InGameCutsceneSamusCloseUp(u8 cutsceneNumber, u8 cutsceneNumberNoFlag)
 }
 
 /**
- * @brief 5fd58 | 74 | To document
+ * @brief 5fd58 | 74 | Constructs the Samus Close Up Eyes graphics?
  * 
  */
 void unk_5fd58(void)
@@ -191,7 +192,7 @@ void unk_5fd58(void)
     u16 value;
 
     src = EWRAM_BASE + 0x2AA94;
-    dst = EWRAM_BASE + 0x2B000;
+    dst = EWRAM_BASE + 0x2B000; // sSamusCloseUpEyesTiletable
 
     for (i = 0; i < 6; i++)
     {
@@ -229,8 +230,8 @@ u32 InGameCutsceneUpgradingSuit(u8 cutsceneNumber, u8 cutsceneNumberNoFlag)
     u32 result;
     u32 flag;
     
-    u32 res_1;
-    u32 res_2;
+    u32 newStart;
+    u32 newEnd;
 
     s32 increment;
 
@@ -263,7 +264,7 @@ u32 InGameCutsceneUpgradingSuit(u8 cutsceneNumber, u8 cutsceneNumberNoFlag)
     bottom = top + 2;
 
     if (gSuitFlashEffect.timer != UCHAR_MAX)
-        gSuitFlashEffect.timer++;
+        APPLY_DELTA_TIME_INC(gSuitFlashEffect.timer);
 
     switch (gInGameCutscene.stage)
     {
@@ -279,7 +280,7 @@ u32 InGameCutsceneUpgradingSuit(u8 cutsceneNumber, u8 cutsceneNumberNoFlag)
 
 #if 0
         case 1:
-            gDefaultTransparency.unk_0 = 1;
+            gDefaultTransparency.unk_0 = TRUE;
             gWrittenToBLDALPHA_H = gIoRegistersBackup.BLDALPHA_NonGameplay_EVB;
             gWrittenToBLDALPHA_L = gIoRegistersBackup.BLDALPHA_NonGameplay_EVA;
             changeStage = TRUE;
@@ -287,6 +288,7 @@ u32 InGameCutsceneUpgradingSuit(u8 cutsceneNumber, u8 cutsceneNumberNoFlag)
 #endif // 0
 
         case 2:
+            // 2 * DELTA_TIME
             if (MOD_AND(gInGameCutscene.timer, 2))
                 break;
 
@@ -339,8 +341,8 @@ u32 InGameCutsceneUpgradingSuit(u8 cutsceneNumber, u8 cutsceneNumberNoFlag)
 
         case 7:
             gWrittenToDISPCNT = gIoRegistersBackup.Dispcnt_NonGameplay;
-            gWrittenToWININ_H = 0x3F;
-            gWrittenToWINOUT_L = 0x1E;
+            gWrittenToWININ_H = HIGH_BYTE(WIN1_ALL);
+            gWrittenToWINOUT_L = (WIN0_BG1 | WIN0_BG2 | WIN0_BG3 | WIN0_OBJ);
             gWrittenToBLDALPHA = C_16_2_8(16, 13);
             gWrittenToBLDCNT = BLDCNT_BG0_FIRST_TARGET_PIXEL | BLDCNT_ALPHA_BLENDING_EFFECT | BLDCNT_SCREEN_SECOND_TARGET;
 
@@ -360,7 +362,7 @@ u32 InGameCutsceneUpgradingSuit(u8 cutsceneNumber, u8 cutsceneNumberNoFlag)
 
         case 8:
             // Handle suit flash growing vertically
-            increment = 4;
+            increment = SCREEN_SIZE_Y / 40;
             if (gSuitFlashEffect.top != 0)
             {
                 if (gSuitFlashEffect.top > increment)
@@ -371,12 +373,12 @@ u32 InGameCutsceneUpgradingSuit(u8 cutsceneNumber, u8 cutsceneNumberNoFlag)
             else
                 changeStage++;
 
-            if (gSuitFlashEffect.bottom < 0xA0)
+            if (gSuitFlashEffect.bottom < SCREEN_SIZE_Y)
             {
                 gSuitFlashEffect.bottom += increment; 
                 
-                if (gSuitFlashEffect.bottom > 0xA0)
-                    gSuitFlashEffect.bottom = 0xA0;
+                if (gSuitFlashEffect.bottom > SCREEN_SIZE_Y)
+                    gSuitFlashEffect.bottom = SCREEN_SIZE_Y;
             }
             else
                 changeStage++;
@@ -386,7 +388,7 @@ u32 InGameCutsceneUpgradingSuit(u8 cutsceneNumber, u8 cutsceneNumberNoFlag)
 
         case 9:
             // Handle suit flash growing horizontally
-            increment = 7;
+            increment = SCREEN_SIZE_X / 30 - 1;
             if (gSuitFlashEffect.left != 0)
             {
                 if (gSuitFlashEffect.left > increment)
@@ -397,12 +399,12 @@ u32 InGameCutsceneUpgradingSuit(u8 cutsceneNumber, u8 cutsceneNumberNoFlag)
             else
                 changeStage++;
 
-            if (gSuitFlashEffect.right < 0xF0)
+            if (gSuitFlashEffect.right < SCREEN_SIZE_X)
             {
                 gSuitFlashEffect.right += increment; 
                 
-                if (gSuitFlashEffect.right > 0xF0)
-                    gSuitFlashEffect.right = 0xF0;
+                if (gSuitFlashEffect.right > SCREEN_SIZE_X)
+                    gSuitFlashEffect.right = SCREEN_SIZE_X;
             }
             else
                 changeStage++;
@@ -411,7 +413,7 @@ u32 InGameCutsceneUpgradingSuit(u8 cutsceneNumber, u8 cutsceneNumberNoFlag)
             break;
 
         case 10:
-            if (gInGameCutscene.timer > 5)
+            if (gInGameCutscene.timer > CONVERT_SECONDS(1.f / 12))
                 changeStage = TRUE;
             break;
 
@@ -426,19 +428,19 @@ u32 InGameCutsceneUpgradingSuit(u8 cutsceneNumber, u8 cutsceneNumberNoFlag)
             break;
 
         case 12:
-            if (gInGameCutscene.timer > 5)
+            if (gInGameCutscene.timer > CONVERT_SECONDS(1.f / 12))
                 changeStage = TRUE;
             break;
 
         case 13:
             // Handle suit flash shrinking vertically
             result = InGameCutsceneCalculateSuitFlashOffset(3, top - gSuitFlashEffect.top, gSuitFlashEffect.bottom - bottom);
-            res_1 = LOW_BYTE(result);
-            res_2 = HIGH_BYTE(result);
+            newStart = LOW_BYTE(result);
+            newEnd = HIGH_BYTE(result);
                 
             if (gSuitFlashEffect.top < top)
             {
-                gSuitFlashEffect.top += res_2;
+                gSuitFlashEffect.top += newEnd;
                 if (gSuitFlashEffect.top > top)
                     gSuitFlashEffect.top = top;
             }
@@ -447,7 +449,7 @@ u32 InGameCutsceneUpgradingSuit(u8 cutsceneNumber, u8 cutsceneNumberNoFlag)
 
             if (gSuitFlashEffect.bottom > bottom)
             {
-                gSuitFlashEffect.bottom -= res_1;
+                gSuitFlashEffect.bottom -= newStart;
                 if (gSuitFlashEffect.bottom < bottom)
                     gSuitFlashEffect.bottom = bottom;
             }
@@ -460,12 +462,12 @@ u32 InGameCutsceneUpgradingSuit(u8 cutsceneNumber, u8 cutsceneNumberNoFlag)
         case 14:
             // Handle suit flash shrinking horizontally
             result = InGameCutsceneCalculateSuitFlashOffset(9, left - gSuitFlashEffect.left, gSuitFlashEffect.right - right);
-            res_1 = LOW_BYTE(result);
-            res_2 = HIGH_BYTE(result);
+            newStart = LOW_BYTE(result);
+            newEnd = HIGH_BYTE(result);
 
             if (gSuitFlashEffect.left < left)
             {
-                gSuitFlashEffect.left += res_2;
+                gSuitFlashEffect.left += newEnd;
                 if (gSuitFlashEffect.left > left)
                     gSuitFlashEffect.left = left;
             }
@@ -474,7 +476,7 @@ u32 InGameCutsceneUpgradingSuit(u8 cutsceneNumber, u8 cutsceneNumberNoFlag)
 
             if (gSuitFlashEffect.right > right)
             {
-                gSuitFlashEffect.right -= res_1;
+                gSuitFlashEffect.right -= newStart;
                 if (gSuitFlashEffect.right < right)
                     gSuitFlashEffect.right = right;
             }
@@ -492,9 +494,9 @@ u32 InGameCutsceneUpgradingSuit(u8 cutsceneNumber, u8 cutsceneNumberNoFlag)
             gWrittenToBLDCNT = gIoRegistersBackup.Bldcnt_NonGameplay;
 
             gSuitFlashEffect.left = 0;
-            gSuitFlashEffect.right = 0xF0;
+            gSuitFlashEffect.right = SCREEN_SIZE_X;
             gSuitFlashEffect.top = 0;
-            gSuitFlashEffect.bottom = 0xA0;
+            gSuitFlashEffect.bottom = SCREEN_SIZE_Y;
 
             changeStage = TRUE;
             break;
@@ -513,7 +515,8 @@ u32 InGameCutsceneUpgradingSuit(u8 cutsceneNumber, u8 cutsceneNumberNoFlag)
             break;
 
         case 18:
-            if (gInGameCutscene.timer & 1)
+            // 2 * DELTA_TIME
+            if (MOD_AND(gInGameCutscene.timer, 2))
                 break;
 
             if (gWrittenToBLDALPHA_H != gIoRegistersBackup.BLDALPHA_NonGameplay_EVB)
@@ -551,7 +554,7 @@ u32 InGameCutsceneUpgradingSuit(u8 cutsceneNumber, u8 cutsceneNumberNoFlag)
             // Give control back to player
             gSamusData.lastWallTouchedMidAir = FALSE;
             gDisablePause = FALSE;
-            gDefaultTransparency.unk_0 = 0;
+            gDefaultTransparency.unk_0 = FALSE;
 
             // Since this cutscene never returns 5, this function is still called even after it ended
             // it's on stage 20 so technically nothing happens, but it's a weird oversight
@@ -572,7 +575,7 @@ u32 InGameCutsceneUpgradingSuit(u8 cutsceneNumber, u8 cutsceneNumberNoFlag)
 }
 
 /**
- * @brief 60374 | 50 | Calcultes the position offsets for the suit flash effect
+ * @brief 60374 | 50 | Calculates the position offsets for the suit flash effect
  * 
  * @param intensity Intensity
  * @param start Start
@@ -660,7 +663,7 @@ void InGameCutsceneProcess(void)
     u32 ended;
     u8 cutsceneNumber;
 
-    gInGameCutscene.timer++;
+    APPLY_DELTA_TIME_INC(gInGameCutscene.timer);
 
     // Check has cutscene
     cutsceneNumber = gInGameCutscene.cutsceneNumber;
@@ -722,12 +725,12 @@ void InGameCutsceneInit(void)
     switch (gInGameCutscene.cutsceneNumber)
     {
         case IGC_CLOSE_UP:
-            gPreventMovementTimer = 60 * 6;
+            gPreventMovementTimer = CONVERT_SECONDS(6.f);
             exists = TRUE;
             break;
 
         case 6:
-            if (gInGameCutscene.timer > 60)
+            if (gInGameCutscene.timer > CONVERT_SECONDS(1.f))
                 exists = TRUE;
             break;
 
@@ -800,7 +803,7 @@ void InGameCutsceneCheckPlayOnTransition(void)
             CallLZ77UncompVram(sSamusCloseUpGfx, VRAM_BASE + 0x9000);
             CallLZ77UncompWram(sSamusCloseUpBackgroundMap, gDecompBg0Map);
             CallLZ77UncompWram(sSamusCloseUpEyesTiletable, EWRAM_BASE + 0x2B000);
-            DMA_SET(3, sSamusCloseUpPal, PALRAM_BASE + 0xE0, C_32_2_16(DMA_ENABLE, ARRAY_SIZE(sSamusCloseUpPal)));
+            DMA_SET(3, sSamusCloseUpPal, PALRAM_BASE + 7 * PAL_ROW_SIZE, C_32_2_16(DMA_ENABLE, ARRAY_SIZE(sSamusCloseUpPal)));
 
             unk_5fd58();
 

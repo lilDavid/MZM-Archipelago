@@ -5129,7 +5129,7 @@ u8 SamusHangingOnLedge(struct SamusData* pData)
     u32 blockAbove;
     u32 sideBlock;
 
-    if (gScreenShakeX.timer >= 30)
+    if (gScreenShakeX.timer >= CONVERT_SECONDS(.5f))
     {
         // Drop if horizontal screen shake active
         pData->forcedMovement = FORCED_MOVEMENT_MID_AIR_FALL;
@@ -5261,7 +5261,7 @@ u8 SamusTurningToAimWhileHanging(struct SamusData* pData)
     u32 blockAbove;
     u32 sideBlock;
 
-    if (gScreenShakeX.timer >= 30)
+    if (gScreenShakeX.timer >= CONVERT_SECONDS(.5f))
     {
         // Drop if horizontal screen shake active
         pData->forcedMovement = FORCED_MOVEMENT_MID_AIR_FALL;
@@ -5362,7 +5362,7 @@ u8 SamusAimingWhileHanging(struct SamusData* pData)
     u32 sideBlock;
     u32 aimingUp;
 
-    if (gScreenShakeX.timer >= 30)
+    if (gScreenShakeX.timer >= CONVERT_SECONDS(.5f))
     {
         // Drop if horizontal screen shake active
         pData->forcedMovement = FORCED_MOVEMENT_MID_AIR_FALL;

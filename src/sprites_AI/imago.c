@@ -291,7 +291,7 @@ void ImagoWaitForLastEgg(void)
     if (gSubSpriteData1.workVariable3)
     {
         gCurrentSprite.pose = IMAGO_POSE_SPAWN;
-        FadeMusic(0x24);
+        FadeMusic(CONVERT_SECONDS(3.f / 5));
     }
 }
 
@@ -976,7 +976,7 @@ void ImagoDestroyWall(void)
             gCurrentSprite.work0 = 0;
             ScreenShakeStartVertical(CONVERT_SECONDS(.5f), 0x80 | 1);
             ScreenShakeStartHorizontal(CONVERT_SECONDS(1.f), 0x80 | 1);
-            FadeMusic(0x38);
+            FadeMusic(CONVERT_SECONDS(14.f / 15));
             break;
     }
 
@@ -1044,7 +1044,7 @@ void ImagoSetEvent(void)
     if (RandoIsLocationChecked(RC_RIDLEY_IMAGO_SUPER_MISSILE))
     {
         // Unlock doors
-        gDoorUnlockTimer = -0x3C;
+        gDoorUnlockTimer = -CONVERT_SECONDS(1.f);
         gCurrentSprite.status = 0;
         // Set event
         EventFunction(EVENT_ACTION_SETTING, EVENT_IMAGO_KILLED);

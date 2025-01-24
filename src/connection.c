@@ -947,7 +947,7 @@ void ConnectionLockHatchesWithTimer(void)
     // Lock all doors
     gHatchesState.hatchesLockedWithTimer = USHORT_MAX;
     ConnectionLockHatches(FALSE);
-    gDoorUnlockTimer = 2;
+    gDoorUnlockTimer = 2 * DELTA_TIME;
 }
 
 /**

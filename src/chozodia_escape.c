@@ -35,12 +35,12 @@ void ChozodiaEscapeVBlank(void)
     write16(REG_BLDALPHA, gWrittenToBLDALPHA_H << 8 | gWrittenToBLDALPHA_L);
     write16(REG_BLDY, gWrittenToBLDY_NonGameplay);
 
-    write16(REG_BG0HOFS, gBg0XPosition & 0x1FF);
-    write16(REG_BG0VOFS, gBg0YPosition & 0xFF);
-    write16(REG_BG1HOFS, gBg1XPosition & 0x1FF);
-    write16(REG_BG1VOFS, gBg1YPosition & 0xFF);
-    write16(REG_BG2HOFS, gBg2XPosition & 0x1FF);
-    write16(REG_BG2VOFS, gBg2YPosition & 0xFF);
+    write16(REG_BG0HOFS, MOD_AND(gBg0XPosition, 0x200));
+    write16(REG_BG0VOFS, MOD_AND(gBg0YPosition, 0x100));
+    write16(REG_BG1HOFS, MOD_AND(gBg1XPosition, 0x200));
+    write16(REG_BG1VOFS, MOD_AND(gBg1YPosition, 0x100));
+    write16(REG_BG2HOFS, MOD_AND(gBg2XPosition, 0x200));
+    write16(REG_BG2VOFS, MOD_AND(gBg2YPosition, 0x100));
 
     CHOZODIA_ESCAPE_DATA.unk_36f = CHOZODIA_ESCAPE_DATA.unk_36e;
 }
@@ -176,16 +176,16 @@ void ChozodiaEscapeUpdateExplosionHaze(void)
  */
 u32 ChozodiaEscapeGetItemCountAndEndingNumber(void)
 {
+    u32 difficulty;
     u32 energyNbr;
     u32 missilesNbr;
     u8 superMissilesNbr;
     u8 powerBombNbr;
-    u8 i;
-    u32 mask;
     u32 abilityCount;
-    u32 ending;
-    u32 percentage;
-    u32 difficulty;
+    u32 mask;
+    u8 i;
+    u32 completionPercentage;
+    u32 endingNbr;
 
     difficulty = gDifficulty;
 
@@ -221,41 +221,50 @@ u32 ChozodiaEscapeGetItemCountAndEndingNumber(void)
     if (gEquipment.beamBombs & BBF_BOMBS)
         abilityCount++;
 
-    percentage = SpriteUtilGetFinalCompletionPercentage();
+    completionPercentage = SpriteUtilGetFinalCompletionPercentage();
 
     // Determine ending
-    ending = 0;
+    endingNbr = ENDING_IMAGE_ZERO;
     if (difficulty != DIFF_EASY)
     {
-        if (percentage < 16)
+        if (completionPercentage <= 15)
         {
             // Low% ending (6 and 7)
-            ending = difficulty + 5;
+            endingNbr = difficulty + ENDING_IMAGE_SIX - DIFF_NORMAL;
         }
-        else if (percentage >= 100)
+        else if (completionPercentage >= 100)
         {
             // 100% ending
             if (gInGameTimer.hours >= 2)
-                ending = 3; // Over 2 hours
+            {
+                 // Over 2 hours (3)
+                endingNbr = ENDING_IMAGE_THREE;
+            }
             else
             {
                 // Under 2 hours (4 and 5)
-                ending = difficulty + 3;
+                endingNbr = difficulty + ENDING_IMAGE_FOUR - DIFF_NORMAL;
             }
         }
         else
         {
             // Any% endings
             if (gInGameTimer.hours < 2)
-                ending = 2; // Under 2 hours
+            {
+                // Under 2 hours (2)
+                endingNbr = ENDING_IMAGE_TWO;
+            }
             else if (gInGameTimer.hours < 4)
-                ending = 1; // Under 4 hours
+            {
+                // Under 4 hours (1)
+                endingNbr = ENDING_IMAGE_ONE;
+            }
         }
     }
 
     // Final result, formatted on 32bits as follow :
     //      0 0 0 0 0 0 0 0     0 0 0 0 0 0 0 0       0 0 0 0                    0 0 0 0               0 0 0 0              0 0 0 0
-    return (energyNbr << 24) + (missilesNbr << 16) + (superMissilesNbr << 12) + (powerBombNbr << 8) + (abilityCount << 4) + ending;
+    return (energyNbr << 24) + (missilesNbr << 16) + (superMissilesNbr << 12) + (powerBombNbr << 8) + (abilityCount << 4) + endingNbr;
 }
 
 /**
@@ -483,7 +492,7 @@ void ChozodiaEscapeInit(void)
     CheckUnlockTimeAttack();
 
     // Flag new gallery image based on the ending
-    gFileScreenOptionsUnlocked.galleryImages |= 1 << (ChozodiaEscapeGetItemCountAndEndingNumber() & 0xF);
+    gFileScreenOptionsUnlocked.galleryImages |= 1 << PEN_GET_ENDING(ChozodiaEscapeGetItemCountAndEndingNumber());
 
     if (gTimeAttackFlag)
     {
@@ -503,13 +512,11 @@ void ChozodiaEscapeInit(void)
 
     CHOZODIA_ESCAPE_DATA.dispcnt = DCNT_BG0 | DCNT_BG1 | DCNT_BG2 | DCNT_OBJ;
 
-    CHOZODIA_ESCAPE_DATA.bldcnt = BLDCNT_BG0_FIRST_TARGET_PIXEL | BLDCNT_BG1_FIRST_TARGET_PIXEL |
-        BLDCNT_BG2_FIRST_TARGET_PIXEL | BLDCNT_BG3_FIRST_TARGET_PIXEL | BLDCNT_OBJ_FIRST_TARGET_PIXEL |
-        BLDCNT_BACKDROP_FIRST_TARGET_PIXEL | BLDCNT_ALPHA_BLENDING_EFFECT | BLDCNT_BRIGHTNESS_INCREASE_EFFECT;
+    CHOZODIA_ESCAPE_DATA.bldcnt = BLDCNT_SCREEN_FIRST_TARGET | BLDCNT_BRIGHTNESS_DECREASE_EFFECT;
 
     gWrittenToBLDALPHA_L = 16;
     gWrittenToBLDALPHA_H = 0;
-    gWrittenToBLDY_NonGameplay = 16;
+    gWrittenToBLDY_NonGameplay = BLDY_MAX_VALUE;
 
     ChozodiaEscapeVBlank();
 }
@@ -641,9 +648,7 @@ u8 ChozodiaEscapeShipHeatingUp(void)
             break;
 
         case 160:
-            CHOZODIA_ESCAPE_DATA.bldcnt = BLDCNT_BG0_FIRST_TARGET_PIXEL | BLDCNT_BG1_FIRST_TARGET_PIXEL |
-                BLDCNT_BG2_FIRST_TARGET_PIXEL | BLDCNT_BG3_FIRST_TARGET_PIXEL | BLDCNT_OBJ_FIRST_TARGET_PIXEL |
-                BLDCNT_BACKDROP_FIRST_TARGET_PIXEL | BLDCNT_BRIGHTNESS_INCREASE_EFFECT;
+            CHOZODIA_ESCAPE_DATA.bldcnt = BLDCNT_SCREEN_FIRST_TARGET | BLDCNT_BRIGHTNESS_INCREASE_EFFECT;
             CHOZODIA_ESCAPE_DATA.unk_1++;
             SoundPlay(SOUND_CHOZODIA_ESCAPE_MOTHER_SHIP_BLOWING_AURA);
             break;
@@ -664,7 +669,7 @@ u8 ChozodiaEscapeShipHeatingUp(void)
     {
         if (CHOZODIA_ESCAPE_DATA.unk_2++ > 5)
         {
-            if (gWrittenToBLDY_NonGameplay < 16)
+            if (gWrittenToBLDY_NonGameplay < BLDY_MAX_VALUE)
                 gWrittenToBLDY_NonGameplay++;
 
             CHOZODIA_ESCAPE_DATA.unk_2 = 0;
@@ -795,7 +800,7 @@ u8 ChozodiaEscapeShipBlowingUp(void)
 
         case 32:
             CHOZODIA_ESCAPE_DATA.unk_1++,
-            FadeMusic(0xF0);
+            FadeMusic(CONVERT_SECONDS(4.f));
             break;
 
         case 64:
@@ -812,9 +817,7 @@ u8 ChozodiaEscapeShipBlowingUp(void)
 
         case 176:
             CHOZODIA_ESCAPE_DATA.dispcnt = DCNT_BG1 | DCNT_OBJ;
-            CHOZODIA_ESCAPE_DATA.bldcnt = BLDCNT_BG0_FIRST_TARGET_PIXEL | BLDCNT_BG1_FIRST_TARGET_PIXEL |
-                BLDCNT_BG2_FIRST_TARGET_PIXEL | BLDCNT_BG3_FIRST_TARGET_PIXEL | BLDCNT_OBJ_FIRST_TARGET_PIXEL |
-                BLDCNT_BACKDROP_FIRST_TARGET_PIXEL | BLDCNT_ALPHA_BLENDING_EFFECT | BLDCNT_BRIGHTNESS_INCREASE_EFFECT;
+            CHOZODIA_ESCAPE_DATA.bldcnt = BLDCNT_SCREEN_FIRST_TARGET | BLDCNT_BRIGHTNESS_DECREASE_EFFECT;
 
             CHOZODIA_ESCAPE_DATA.unk_1++;
             gWrittenToBLDALPHA_L = 16;
@@ -841,7 +844,7 @@ u8 ChozodiaEscapeShipBlowingUp(void)
 
     if (CHOZODIA_ESCAPE_DATA.unk_1 == 2 && CHOZODIA_ESCAPE_DATA.unk_2++ > 5)
     {
-        if (gWrittenToBLDY_NonGameplay < 16)
+        if (gWrittenToBLDY_NonGameplay < BLDY_MAX_VALUE)
             gWrittenToBLDY_NonGameplay++;
 
         CHOZODIA_ESCAPE_DATA.unk_2 = 0;
@@ -1128,9 +1131,7 @@ u8 ChozodiaEscapeMissionAccomplished(void)
             break;
 
         case 472:
-            CHOZODIA_ESCAPE_DATA.bldcnt = BLDCNT_BG0_FIRST_TARGET_PIXEL | BLDCNT_BG1_FIRST_TARGET_PIXEL |
-                BLDCNT_BG2_FIRST_TARGET_PIXEL | BLDCNT_BG3_FIRST_TARGET_PIXEL | BLDCNT_OBJ_FIRST_TARGET_PIXEL |
-                BLDCNT_BACKDROP_FIRST_TARGET_PIXEL | BLDCNT_ALPHA_BLENDING_EFFECT | BLDCNT_BRIGHTNESS_INCREASE_EFFECT;
+            CHOZODIA_ESCAPE_DATA.bldcnt = BLDCNT_SCREEN_FIRST_TARGET | BLDCNT_BRIGHTNESS_DECREASE_EFFECT;
 
             gWrittenToBLDY_NonGameplay = 0;
             ended = TRUE + 1;
@@ -1238,7 +1239,7 @@ u32 ChozodiaEscapeSubroutine(void)
 
         case 3:
             // Fade
-            if (gWrittenToBLDY_NonGameplay < 16)
+            if (gWrittenToBLDY_NonGameplay < BLDY_MAX_VALUE)
             {
                 gWrittenToBLDY_NonGameplay++;
                 break;
