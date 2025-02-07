@@ -10,7 +10,6 @@
 #include "constants/game_state.h"
 #include "structs/audio.h"
 #include "structs/game_state.h"
-#include "structs/rando.h"
 
 void InitializeGame(void)
 {

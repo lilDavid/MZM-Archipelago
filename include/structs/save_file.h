@@ -151,11 +151,9 @@ struct SaveDemo {
 struct SaveFileScreenOptions {
     u32 checksum;
     u32 notChecksum;
-
     u8 unk_8;
     u8 unk_9;
     u16 counter;
-
     u16 galleryImages;
     u8 soundTestAndOriginalMetroid;
 

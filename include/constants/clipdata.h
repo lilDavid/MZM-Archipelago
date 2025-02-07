@@ -85,7 +85,6 @@ enum ClipdataType {
 
 #define CLIPDATA_TYPE_SOLID_FLAG 0x1000000
 
-
 enum ClipBehavior {
     CLIP_BEHAVIOR_NONE, // 0x0
     CLIP_BEHAVIOR_ELEVATOR_DOWN, // 0x1
