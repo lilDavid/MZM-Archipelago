@@ -1437,10 +1437,12 @@ SECTIONS {
         src/data/internal_tourian_escape_data.o(.rodata);
         src/data/internal_ending_and_gallery_data.o(.rodata);
         src/data/internal_chozodia_escape_data.o(.rodata);
+
+        . = 0x7d8000 - SIZEOF(rom);
         src/data/nes_metroid.o(.rodata);
 
         src/data/rando.o(.rodata);
         src/data/rando_data.o(.rodata);
         src/data/rando_names.o(.rodata);
-    } >rom
+    } >rom =0xFF
 }
