@@ -55,10 +55,10 @@ const u16 sRandoPowerBeamPal[0x10] = INCBIN_U16("data/rando/powerbeam.pal");
 const u16 sRandoSpiderBallPal[0x10] = INCBIN_U16("data/rando/spiderball.pal");
 
 const struct ItemGraphicsInfo sItemGfxPointers[ITEM_MAX] = {
-    [ITEM_ENERGY_TANK] = {sAnimatedTankGfx + RANDO_GRAPHICS_SIZE, sCommonTilesPal - 1},
-    [ITEM_MISSILE_TANK] = {sAnimatedTankGfx, sCommonTilesPal - 1},
-    [ITEM_SUPER_MISSILE_TANK] = {sAnimatedTankGfx + RANDO_GRAPHICS_SIZE * 3, sCommonTilesPal - 1},
-    [ITEM_POWER_BOMB_TANK] = {sAnimatedTankGfx + RANDO_GRAPHICS_SIZE * 2, sCommonTilesPal - 1},
+    [ITEM_ENERGY_TANK] = {sAnimatedTankGfx + RANDO_GRAPHICS_SIZE, sCommonTilesPal},
+    [ITEM_MISSILE_TANK] = {sAnimatedTankGfx, sCommonTilesPal},
+    [ITEM_SUPER_MISSILE_TANK] = {sAnimatedTankGfx + RANDO_GRAPHICS_SIZE * 3, sCommonTilesPal},
+    [ITEM_POWER_BOMB_TANK] = {sAnimatedTankGfx + RANDO_GRAPHICS_SIZE * 2, sCommonTilesPal},
     [ITEM_LONG_BEAM] = {sRandoLongBeamGfx, sChozoStatueLongBeamPal},
     [ITEM_CHARGE_BEAM] = {sRandoChargeBeamGfx, sChargeBeamPal},
     [ITEM_ICE_BEAM] = {sRandoIceBeamGfx, sChozoStatueIceBeamPal},
