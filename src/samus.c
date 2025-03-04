@@ -2257,10 +2257,10 @@ void SamusCheckCarryFromCopy(struct SamusData* pData, struct SamusData* pCopy, s
 
             // Set velocity
             if (pData->elevatorDirection & KEY_UP)
-                pData->yVelocity = SAMUS_ELEVATOR_SPEED;
+                pData->yVelocity = sRandoSeed.options.elevatorSpeed;
             else
-                pData->yVelocity = -SAMUS_ELEVATOR_SPEED;
-            
+                pData->yVelocity = -sRandoSeed.options.elevatorSpeed;
+
             SoundPlay(SOUND_ELEVATOR);
             break;
 
