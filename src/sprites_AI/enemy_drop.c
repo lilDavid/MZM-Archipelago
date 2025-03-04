@@ -7,6 +7,7 @@
 #include "constants/sprite.h"
 
 #include "structs/display.h"
+#include "structs/rando.h"
 #include "structs/sprite.h"
 #include "structs/samus.h"
 
@@ -138,7 +139,7 @@ void EnemyDropIdle(void)
                 break;
 
             case SSC_POWER_BOMB_DROP:
-                gEquipment.currentPowerBombs += POWER_BOMB_DROP_REFILL;
+                gEquipment.currentPowerBombs += POWER_BOMB_DROP_REFILL * (sRandoSeed.options.buffPowerBombDrops ? 1 : 2);
 
                 if (gEquipment.currentPowerBombs > gEquipment.maxPowerBombs)
                     gEquipment.currentPowerBombs = gEquipment.maxPowerBombs;
