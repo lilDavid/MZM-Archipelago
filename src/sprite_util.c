@@ -3143,6 +3143,10 @@ u8 SpriteUtilDetermineEnemyDrop(void)
         powerProb = sPrimarySpriteStats[spriteId][8];
     }
 
+    if (sRandoSeed.options.buffPowerBombDrops) {
+        powerProb *= 2;
+    }
+
     if (powerProb != 0)
     {
         powerProb = SPRITE_DROP_MAX_PROB - powerProb;
