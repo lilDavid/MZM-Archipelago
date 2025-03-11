@@ -69,7 +69,7 @@ extern const u8 sKraid_8_Bg1[1051];
 extern const u8 sKraid_8_Spriteset0[ENEMY_ROOM_DATA_ARRAY_SIZE(4)];
 extern const u8 sKraid_8_Bg0[183];
 
-extern const u8 sKraid_9_Clipdata[83];
+extern const u8 sKraid_9_Clipdata[88];
 extern const u8 sKraid_9_Bg2[143];
 extern const u8 sKraid_9_Bg1[334];
 extern const u8 sKraid_9_Spriteset0[ENEMY_ROOM_DATA_ARRAY_SIZE(8)];
