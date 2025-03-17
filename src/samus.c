@@ -7945,6 +7945,7 @@ void SamusInit(void)
                 gEquipment.downloadedMapStatus = (1 << AREA_NORMAL_COUNT) - 1;
 
             // Starting events
+            EventFunction(EVENT_ACTION_SETTING, EVENT_FULLY_POWERED_SUIT_OBTAINED);  // For less stupid Chozodia access
             for (i = EVENT_ENTER_NORFAIR_DEMO_PLAYED; i <= EVENT_STATUE_SCREW_ATTACK_GRABBED; i++)
                 EventFunction(EVENT_ACTION_SETTING, i);
             EventFunction(EVENT_ACTION_CLEARING, EVENT_ENTER_RIDLEY_DEMO_PLAYED);
