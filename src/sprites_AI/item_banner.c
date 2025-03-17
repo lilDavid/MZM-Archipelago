@@ -374,9 +374,9 @@ void ItemBannerRemovalAnimation(void)
             gSubSpriteData1.workVariable3 = RUINS_TEST_FIGHT_STAGE_STARTING_SUIT_ANIM;
 
             // Spawn chozo pillar
-            SpriteLoadGfx(PSPRITE_FALLING_CHOZO_PILLAR, 7);
-            SpriteLoadPal(PSPRITE_FALLING_CHOZO_PILLAR, 7, 1);
-            SpriteSpawnPrimary(PSPRITE_FALLING_CHOZO_PILLAR, 0, 7, gBossWork.work1 - BLOCK_SIZE * 4,
+            SpriteLoadGfx(PSPRITE_FALLING_CHOZO_PILLAR, 5);
+            SpriteLoadPal(PSPRITE_FALLING_CHOZO_PILLAR, 5, 1);
+            SpriteSpawnPrimary(PSPRITE_FALLING_CHOZO_PILLAR, 0, 5, gBossWork.work1 - BLOCK_SIZE * 4,
                 gBossWork.work2 + BLOCK_SIZE * 12, 0);
         }
         // Check replay sounds

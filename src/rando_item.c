@@ -347,7 +347,7 @@ void RandoPlaceItemInSpriteGraphics(u32 location, u32 row, u32 column, u32 palet
 }
 
 static u32 RandoCanReceiveMultiworld() {
-    int i;
+    int i, j;
     u32 dangerousSpriteset;
 
     // Disallowed states
@@ -363,9 +363,10 @@ static u32 RandoCanReceiveMultiworld() {
             return FALSE;
     }
 
-    // Wait for area banner to disappear
+    // Wait for area banner to disappear or boss to die
     for (i = 0; i < MAX_AMOUNT_OF_SPRITES; i++) {
-        if (gSpriteData[i].spriteId == PSPRITE_AREA_BANNER && gSpriteData[i].status & SPRITE_STATUS_EXISTS)
+        for (j = 0; j < ARRAY_SIZE(sRandoDisallowedExistingSprites); j++)
+        if (gSpriteData[i].spriteId == sRandoDisallowedExistingSprites[j] && gSpriteData[i].status & SPRITE_STATUS_EXISTS)
             return FALSE;
     }
 
