@@ -1143,8 +1143,20 @@ void ConnectionCheckPlayCutsceneDuringAreaConnection(void)
 }
 
 void ConnectionStartWarp(void) {
-    if (gEquipment.suitType == SUIT_SUITLESS)
-        return;
+    // Start back in Brinstar with your Power Suit and Mother Brain undone
+    if (gEquipment.suitType == SUIT_SUITLESS) {
+        EventFunction(EVENT_ACTION_CLEARING, EVENT_MOTHER_BRAIN_KILLED);
+        EventFunction(EVENT_ACTION_CLEARING, EVENT_ESCAPED_ZEBES);
+        if (!sRandoSeed.options.unknownItemsAlwaysUsable) {
+            gEquipment.beamBombsActivation = gEquipment.beamBombs & ~BBF_PLASMA_BEAM;
+            gEquipment.suitMiscActivation = gEquipment.suitMisc & ~(SMF_SPACE_JUMP | SMF_GRAVITY_SUIT);
+            gEquipment.suitType = SUIT_NORMAL;  // FIXME: Defeating ghost then MB then resetting takes away full suit
+        } else {
+            gEquipment.beamBombsActivation = gEquipment.beamBombs;
+            gEquipment.suitMiscActivation = gEquipment.suitMisc;
+            gEquipment.suitType = !!(gEquipment.suitMisc & SMF_ALL_SUITS);
+        }
+    }
 
     gWhichBGPositionIsWrittenToBG3OFS = 4;
     gUseMotherShipDoors = FALSE;
