@@ -1028,6 +1028,7 @@ void RuinsTestDespawn(void)
 
         // Set event and IGT
         EventFunction(EVENT_ACTION_SETTING, EVENT_FULLY_POWERED_SUIT_OBTAINED);
+        EventFunction(EVENT_ACTION_SETTING, EVENT_RUINS_TEST_PASSED);
         gInGameTimerAtBosses[2] = gInGameTimer;
 
         // Start getting fully powered cutscene
