@@ -1763,11 +1763,6 @@ void RidleyDying(void)
         {
             if (gSubSpriteData1.yPosition > (RIDLEY_GROUND_POSITION - BLOCK_SIZE * 5))
                 gCurrentSprite.work2--;
-
-            if (gCurrentSprite.work2 == 1)
-                StartEffectForCutscene(EFFECT_CUTSCENE_STATUE_OPENING);
-            else if (gCurrentSprite.work2 == 0)
-                FadeMusic(CONVERT_SECONDS(2.5f));
         }
     }
 

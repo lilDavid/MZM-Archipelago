@@ -1571,9 +1571,7 @@ void KraidDying(void)
         if (gCurrentSprite.work2 != 0)
         {
             gCurrentSprite.work2--;
-            if (gCurrentSprite.work2 == 0x1)
-                StartEffectForCutscene(EFFECT_CUTSCENE_STATUE_OPENING); // Statue opening
-            else if (gCurrentSprite.work2 == 0)
+            if (gCurrentSprite.work2 == 0)
                 SoundPlay(SOUND_KRAID_DYING_3);
         }
 
