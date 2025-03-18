@@ -22,6 +22,7 @@
 #include "structs/clipdata.h"
 #include "structs/game_state.h"
 #include "structs/in_game_timer.h"
+#include "structs/rando.h"
 #include "structs/sprite.h"
 #include "structs/samus.h"
 #include "structs/scroll.h"
@@ -1530,6 +1531,8 @@ void KraidDyingInit(void)
     gCurrentSprite.invincibilityStunFlashTimer = 0x8;
     gCurrentSprite.drawOrder = 0xC;
     EventFunction(EVENT_ACTION_SETTING, EVENT_KRAID_KILLED);
+    if (sRandoSeed.options.skipTourianOpening)
+        EventFunction(EVENT_ACTION_SETTING, EVENT_KRAID_STATUE_OPENED);
     MinimapUpdateChunk(EVENT_KRAID_KILLED);
     SoundPlay(SOUND_KRAID_DYING_1);
 }
@@ -1571,7 +1574,9 @@ void KraidDying(void)
         if (gCurrentSprite.work2 != 0)
         {
             gCurrentSprite.work2--;
-            if (gCurrentSprite.work2 == 0)
+            if (gCurrentSprite.work2 == 0x1 && !sRandoSeed.options.skipTourianOpening)
+                StartEffectForCutscene(EFFECT_CUTSCENE_STATUE_OPENING); // Statue opening
+            else if (gCurrentSprite.work2 == 0)
                 SoundPlay(SOUND_KRAID_DYING_3);
         }
 

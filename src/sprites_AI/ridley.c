@@ -20,6 +20,7 @@
 #include "structs/clipdata.h"
 #include "structs/display.h"
 #include "structs/game_state.h"
+#include "structs/rando.h"
 #include "structs/samus.h"
 #include "structs/scroll.h"
 #include "structs/sprite.h"
@@ -1763,6 +1764,13 @@ void RidleyDying(void)
         {
             if (gSubSpriteData1.yPosition > (RIDLEY_GROUND_POSITION - BLOCK_SIZE * 5))
                 gCurrentSprite.work2--;
+
+            if (!sRandoSeed.options.skipTourianOpening) {
+                if (gCurrentSprite.work2 == 1)
+                    StartEffectForCutscene(EFFECT_CUTSCENE_STATUE_OPENING);
+                else if (gCurrentSprite.work2 == 0)
+                    FadeMusic(CONVERT_SECONDS(2.5f));
+                }
         }
     }
 
@@ -1830,6 +1838,8 @@ void RidleyDying(void)
             gDoorUnlockTimer = -CONVERT_SECONDS(1.f);
             // Set event
             EventFunction(EVENT_ACTION_SETTING, EVENT_RIDLEY_KILLED);
+            if (sRandoSeed.options.skipTourianOpening)
+                EventFunction(EVENT_ACTION_SETTING, EVENT_RIDLEY_STATUE_OPENED);
             // Update minimap
             MinimapUpdateChunk(EVENT_RIDLEY_KILLED);
             PlayMusic(MUSIC_BOSS_KILLED, 0);

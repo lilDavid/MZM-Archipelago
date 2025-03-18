@@ -1,4 +1,5 @@
 #include "macros.h"
+#include "types.h"
 
 #include "structs/rando.h"
 
@@ -21,6 +22,8 @@ const struct Seed sRandoSeed = {
         .startWithMaps = FALSE,
 
         .fastItemAcquisitions = FALSE,
+        .skipTourianOpening = FALSE,
+        .elevatorSpeed = (PIXEL_SIZE * 2),
     }
 };
 

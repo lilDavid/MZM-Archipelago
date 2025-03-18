@@ -26,6 +26,7 @@ struct Seed {
         u8 startWithMaps;
 
         u8 fastItemAcquisitions;
+        u8 skipTourianOpening;
         u8 elevatorSpeed;
     } options;
 };
