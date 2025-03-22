@@ -23,6 +23,7 @@ void PauseScreenLoadAreaNamesAndIcons(void);
 void PauseScreenProcessOam(void);
 void ProcessMenuOam(u8 length, struct MenuOamData* pOam, const struct OamArray* pOamData);
 void ProcessComplexMenuOam(u8 length, struct MenuOamData* pOam, const struct OamArray* pOamData);
+void RandoProcessMapItemOam(void);
 void ProcessCutsceneOam(u8 length, struct CutsceneOamData* pOam, const struct OamArray* pOamData);
 u32 PauseScreenSubroutine(void);
 void PauseScreenVBlank(void);
