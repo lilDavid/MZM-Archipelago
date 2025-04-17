@@ -7946,6 +7946,7 @@ void SamusInit(void)
 
             // Starting events
             EventFunction(EVENT_ACTION_SETTING, EVENT_FULLY_POWERED_SUIT_OBTAINED);  // For less stupid Chozodia access
+			EventFunction(EVENT_ACTION_CLEARING, EVENT_RUINS_TEST_PASSED);  // Hopefully fixes unknowns off
             for (i = EVENT_ENTER_NORFAIR_DEMO_PLAYED; i <= EVENT_STATUE_SCREW_ATTACK_GRABBED; i++)
                 EventFunction(EVENT_ACTION_SETTING, i);
             EventFunction(EVENT_ACTION_CLEARING, EVENT_ENTER_RIDLEY_DEMO_PLAYED);
