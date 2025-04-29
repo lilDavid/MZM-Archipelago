@@ -289,7 +289,7 @@ void AnimatedGraphicsLoad(void)
     {
         if (itemRoom >= sRandoAreaItemListLengths[gCurrentArea] || sRandoAreaItemLists[gCurrentArea][itemRoom] != gCurrentRoom)
             return;
-        if (sPlacedItems[sRandoAreaItemLists[gCurrentArea][itemRoom + 1]].itemId <= ITEM_POWER_BOMB_TANK)
+        if (sPlacedItems[sRandoAreaItemLists[gCurrentArea][itemRoom + 1]].item.itemType <= RANDO_ITEM_POWER_BOMBS)
             continue;
 
         pGraphics->type = ANIMATED_GFX_TYPE_NORMAL;
@@ -298,7 +298,7 @@ void AnimatedGraphicsLoad(void)
 
         pGraphics->animationDurationCounter = 0;
         pGraphics->currentAnimationFrame = 0;
-        pGraphics->pGraphics = sItemGfxPointers[sPlacedItems[sRandoAreaItemLists[gCurrentArea][itemRoom + 1]].itemId].gfx;
+        pGraphics->pGraphics = sPlacedItems[sRandoAreaItemLists[gCurrentArea][itemRoom + 1]].sprite->gfx;
 
         src = pGraphics->pGraphics;
         dst = ANIMATED_GFX_VRAM_POS(i + sRandoAnimatedTileGaps[gAnimatedGraphicsEntry.tileset]);

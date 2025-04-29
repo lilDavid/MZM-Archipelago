@@ -21,7 +21,6 @@ const struct Seed sRandoSeed = {
         .skipChozodiaStealth = FALSE,
         .startWithMaps = FALSE,
 
-        .fastItemAcquisitions = FALSE,
         .skipTourianOpening = FALSE,
         .elevatorSpeed = (PIXEL_SIZE * 2),
     }

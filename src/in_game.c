@@ -14,6 +14,7 @@
 #include "display.h"
 
 #include "data/hud_data.h"
+#include "data/rando_data.h"
 
 #include "constants/demo.h"
 #include "constants/haze.h"
@@ -30,6 +31,7 @@
 #include "structs/sprite.h"
 #include "structs/connection.h"
 #include "structs/rando.h"
+#include "structs/text.h"
 
 /**
  * @brief c4b4 | 244 | Main loop in game
@@ -164,8 +166,10 @@ u32 InGameMainLoop(void)
         RoomUpdate();
 
         if (RandoHandleMultiworld()) {
-            gIncomingItemId = ITEM_NONE;
-            gMultiworldItemCount += gIncomingItemCount;
+            gIncomingItem = sEmptyIncomingItem;
+            gIncomingMessage = sEmptyRandoMessage;
+            // TODO
+            // gMultiworldItemCount += gIncomingItemCount;
         }
     
         if (gGameModeSub1 == SUB_GAME_MODE_PLAYING)
@@ -457,8 +461,9 @@ void InitAndLoadGenerics(void)
     gCurrentCutscene = 0;
     gTourianEscapeCutsceneStage = 0;
 
-    gIncomingItemId = ITEM_NONE;
-    gMultiworldItemSenderName[0] = CHAR_TERMINATOR;  // Prevent crashes if MW does something janky
+    gIncomingItem = sEmptyIncomingItem;
+    gIncomingMessage = sEmptyRandoMessage;
+    gCurrentRandoMessage = sEmptyRandoMessage;
 
     CallbackSetVBlank(VBlankCodeInGameLoad);
 }

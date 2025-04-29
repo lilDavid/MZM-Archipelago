@@ -3,6 +3,7 @@
 #include "rando_item.h"
 
 #include "data/sprites/morph_ball.h"
+#include "data/rando_graphics_data.h"
 
 #include "constants/sprite.h"
 #include "constants/samus.h"
@@ -43,7 +44,7 @@ void MorphBallInit(void)
     gCurrentSprite.pose = MORPH_BALL_POSE_IDLE;
     gCurrentSprite.drawOrder = 3;
 
-    if (sPlacedItems[RC_BRINSTAR_MORPH_BALL].itemId == ITEM_MORPH_BALL) {
+    if (sPlacedItems[RC_BRINSTAR_MORPH_BALL].sprite->gfx == sRandoMorphBallSprite.gfx) {
         // Spawn outside
         SpriteSpawnSecondary(SSPRITE_MORPH_BALL_OUTSIDE, gCurrentSprite.roomSlot, gCurrentSprite.spritesetGfxSlot,
             gCurrentSprite.primarySpriteRamSlot, gCurrentSprite.yPosition, gCurrentSprite.xPosition, 0);

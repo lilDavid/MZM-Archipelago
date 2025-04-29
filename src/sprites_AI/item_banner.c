@@ -121,43 +121,6 @@ void ItemBannerGfxInit(void)
     }
 }
 
-// Major items should play either acquisition fanfare or unknown sound
-// (Unknown items are included in this macro)
-#define ITEM_MESSAGE_IS_MAJOR(msg) (\
-    msg == MESSAGE_LONG_BEAM || msg == MESSAGE_CHARGE_BEAM || msg == MESSAGE_ICE_BEAM ||\
-    msg == MESSAGE_WAVE_BEAM || msg == MESSAGE_UKNOWN_ITEM_PLASMA || msg == MESSAGE_BOMB ||\
-    msg == MESSAGE_VARIA_SUIT || msg == MESSAGE_UNKNOWN_ITEM_GRAVITY || msg == MESSAGE_MORPH_BALL ||\
-    msg == MESSAGE_SPEED_BOOSTER || msg == MESSAGE_HIGH_JUMP || msg == MESSAGE_SCREW_ATTACK ||\
-    msg == MESSAGE_UNKNOWN_ITEM_SPACE_JUMP || msg == MESSAGE_POWER_GRIP ||\
-    msg == MESSAGE_PLASMA_BEAM || msg == MESSAGE_GRAVITY_SUIT || msg == MESSAGE_SPACE_JUMP ||\
-    msg == MESSAGE_DYNAMIC_ITEM_MAJOR || msg == MESSAGE_DYNAMIC_ITEM_UNKNOWN\
-)
-
-// Used to check the sound to play when collecting a major item.
-// Any other major should play the usual acquisition fanfare
-#define ITEM_MESSAGE_IS_UNKNOWN(msg) (\
-    msg == MESSAGE_UKNOWN_ITEM_PLASMA || msg == MESSAGE_UNKNOWN_ITEM_GRAVITY ||\
-    msg == MESSAGE_UNKNOWN_ITEM_SPACE_JUMP || msg == MESSAGE_DYNAMIC_ITEM_UNKNOWN\
-)
-
-// First tank upgrades.
-#define ITEM_MESSAGE_IS_FIRST_TANK(msg) (\
-    msg == MESSAGE_FIRST_MISSILE_TANK || msg == MESSAGE_FIRST_SUPER_MISSILE_TANK ||\
-    msg == MESSAGE_FIRST_POWER_BOMB_TANK\
-)
-
-// Minor or sent items play the tank sound from vanilla.
-// The first tank of each weapon should plays the acquisition fanfare
-#define ITEM_MESSAGE_IS_TANK(msg) (\
-    msg == MESSAGE_ENERGY_TANK_ACQUIRED || msg == MESSAGE_MISSILE_TANK_ACQUIRED ||\
-    msg == MESSAGE_SUPER_MISSILE_TANK_ACQUIRED || msg == MESSAGE_POWER_BOMB_TANK_ACQUIRED ||\
-    msg == MESSAGE_NOTHING_ACQUIRED || msg == MESSAGE_DYNAMIC_ITEM\
-)
-
-#define ITEM_MESSAGE_IS_DYNAMIC(msg) (\
-    msg >= MESSAGE_DYNAMIC_ITEM && msg <= MESSAGE_DYNAMIC_ITEM_UNKNOWN\
-)
-
 #define FAST_ACQUISITION_MESSAGE_TIMER 30
 
 /**
@@ -183,77 +146,63 @@ void ItemBannerPopUp(void)
             gCurrentSprite.work0 = 0;
             gCurrentSprite.status &= ~SPRITE_STATUS_NOT_DRAWN;
 
-            if (sRandoSeed.options.fastItemAcquisitions)
+            if (msg == MESSAGE_DUMMY)
             {
-                if (msg == MESSAGE_FULLY_POWERED_SUIT)
+                gCurrentSprite.work2 = gCurrentRandoMessage.oneLine;
+                music = gCurrentRandoMessage.soundEffect;
+                if (music == MUSIC_GETTING_ITEM_JINGLE || music == MUSIC_GETTING_UNKNOWN_ITEM_JINGLE)
                 {
-                    PlayMusic(MUSIC_BRINSTAR_REMIX, 0);
-                    InsertMusicAndQueueCurrent(MUSIC_GETTING_FULLY_POWERED_SUIT_JINGLE, 0);
-                }
-                else if (ITEM_MESSAGE_IS_DYNAMIC(msg))
-                {
-                    if (ITEM_MESSAGE_IS_MAJOR(msg) || ITEM_MESSAGE_IS_FIRST_TANK(msg))
-                        // New item or tank
-                        gCurrentSprite.work2 = TRUE;
-
-                    SoundPlay(sRandoItemAcquisitionSfx[gCurrentItemBeingAcquired]);
-                }
-                else if (ITEM_MESSAGE_IS_MAJOR(msg) || ITEM_MESSAGE_IS_FIRST_TANK(msg))
-                {
-                    // New item or tank
-                    gCurrentSprite.work2 = TRUE;
-
-                    SoundPlay(sRandoItemAcquisitionSfx[msg]);
-                }
-                else if (ITEM_MESSAGE_IS_TANK(msg))
-                {
-                    SoundPlay(sRandoItemAcquisitionSfx[msg]);
-                }
-                else if (msg != MESSAGE_SAVE_PROMPT)
-                {
-                    SoundPlay(MUSIC_GETTING_TANK_JINGLE);
-                }
-            }
-            else
-            {
-                if (ITEM_MESSAGE_IS_MAJOR(msg))
-                {
-                    // New item
-                    gCurrentSprite.work2 = TRUE;
                     BackupTrackData2SoundChannels();
-
-                    // Play item jingle
-                    if (ITEM_MESSAGE_IS_UNKNOWN(msg))
-                        InsertMusicAndQueueCurrent(MUSIC_GETTING_UNKNOWN_ITEM_JINGLE, FALSE);
-                    else
-                        InsertMusicAndQueueCurrent(MUSIC_GETTING_ITEM_JINGLE, FALSE);
+                    InsertMusicAndQueueCurrent(music, FALSE);
                 }
-                else if (ITEM_MESSAGE_IS_FIRST_TANK(msg))
+                else
                 {
-                    // New tank
-                    gCurrentSprite.work2 = TRUE;
-                    BackupTrackData2SoundChannels();
-                    InsertMusicAndQueueCurrent(MUSIC_GETTING_ITEM_JINGLE, FALSE);
-                }
-                else if (msg == MESSAGE_FULLY_POWERED_SUIT)
-                {
-                    PlayMusic(MUSIC_BRINSTAR_REMIX, 0);
-                    InsertMusicAndQueueCurrent(MUSIC_GETTING_FULLY_POWERED_SUIT_JINGLE, FALSE);
-                }
-                else if (msg != MESSAGE_SAVE_PROMPT)
-                {
-                    if (ITEM_MESSAGE_IS_TANK(msg))
-                    {
+                    if (music == MUSIC_GETTING_TANK_JINGLE)
                         BackupTrackData2SoundChannels();
-                    }
-
-                    SoundPlay(MUSIC_GETTING_TANK_JINGLE);
+                    SoundPlay(music);
                 }
             }
-            
+            else if (msg == MESSAGE_LONG_BEAM || msg == MESSAGE_CHARGE_BEAM || msg == MESSAGE_ICE_BEAM ||
+                msg == MESSAGE_WAVE_BEAM || msg == MESSAGE_UKNOWN_ITEM_PLASMA || msg == MESSAGE_BOMB ||
+                msg == MESSAGE_VARIA_SUIT || msg == MESSAGE_UNKNOWN_ITEM_GRAVITY || msg == MESSAGE_MORPH_BALL ||
+                msg == MESSAGE_SPEED_BOOSTER || msg == MESSAGE_HIGH_JUMP || msg == MESSAGE_SCREW_ATTACK ||
+                msg == MESSAGE_UNKNOWN_ITEM_SPACE_JUMP || msg == MESSAGE_POWER_GRIP)
+            {
+                // New item
+                gCurrentSprite.work2 = TRUE;
+                BackupTrackData2SoundChannels();
+
+                // Play item jingle
+                if (msg == MESSAGE_UKNOWN_ITEM_PLASMA || msg == MESSAGE_UNKNOWN_ITEM_GRAVITY || msg == MESSAGE_UNKNOWN_ITEM_SPACE_JUMP)
+                    InsertMusicAndQueueCurrent(MUSIC_GETTING_UNKNOWN_ITEM_JINGLE, FALSE);  // Unknown item
+                else
+                    InsertMusicAndQueueCurrent(MUSIC_GETTING_ITEM_JINGLE, FALSE);  // Normal item
+            }
+            else if (msg == MESSAGE_FIRST_MISSILE_TANK || msg == MESSAGE_FIRST_SUPER_MISSILE_TANK || msg == MESSAGE_FIRST_POWER_BOMB_TANK)
+            {
+                // New tank
+                gCurrentSprite.work2 = TRUE;
+                BackupTrackData2SoundChannels();
+                InsertMusicAndQueueCurrent(MUSIC_GETTING_ITEM_JINGLE, FALSE);
+            }
+            else if (msg == MESSAGE_FULLY_POWERED_SUIT)
+            {
+                PlayMusic(MUSIC_BRINSTAR_REMIX, 0);
+                InsertMusicAndQueueCurrent(MUSIC_GETTING_FULLY_POWERED_SUIT_JINGLE, FALSE);
+            }
+            else if (msg != MESSAGE_SAVE_PROMPT)
+            {
+                if (msg == MESSAGE_ENERGY_TANK_ACQUIRED || msg == MESSAGE_MISSILE_TANK_ACQUIRED ||
+                    msg == MESSAGE_SUPER_MISSILE_TANK_ACQUIRED || msg == MESSAGE_POWER_BOMB_TANK_ACQUIRED)
+                {
+                    BackupTrackData2SoundChannels();
+                }
+
+                SoundPlay(MUSIC_GETTING_TANK_JINGLE);
+            }
+
             // Check is one line message (new item/ability, save complete, map text)
-            if (gCurrentSprite.work2 && !ITEM_MESSAGE_IS_DYNAMIC(msg) ||
-                msg == MESSAGE_NOTHING_ACQUIRED || msg == MESSAGE_SAVE_COMPLETE ||
+            if (gCurrentSprite.work2 || msg == MESSAGE_SAVE_COMPLETE ||
                 (msg == MESSAGE_BRINSTAR_MAP_ACQUIRED || msg == MESSAGE_KRAID_MAP_ACQUIRED ||
                 msg == MESSAGE_NORFAIR_MAP_ACQUIRED || msg == MESSAGE_RIDLEY_MAP_ACQUIRED ||
                 msg == MESSAGE_MOTHER_SHIP_MAP_ACQUIRED || msg == MESSAGE_FULLY_POWERED_SUIT))
@@ -282,7 +231,7 @@ void ItemBannerPopUp(void)
 
             if (msg == MESSAGE_FULLY_POWERED_SUIT)
                 gCurrentSprite.yPositionSpawn = 340; // Long because jingle is long
-            else if (sRandoSeed.options.fastItemAcquisitions)
+            else if (msg == MESSAGE_DUMMY && gCurrentRandoMessage.data != NULL && gCurrentRandoMessage.soundEffect != MUSIC_GETTING_TANK_JINGLE)
                 gCurrentSprite.yPositionSpawn = FAST_ACQUISITION_MESSAGE_TIMER;
             else
                 gCurrentSprite.yPositionSpawn = 100;
@@ -290,7 +239,7 @@ void ItemBannerPopUp(void)
         else
         {
             gCurrentSprite.pOam = sItemBannerOAM_TwoLinesStatic;
-            if (sRandoSeed.options.fastItemAcquisitions && msg < MESSAGE_SAVE_PROMPT)
+            if (msg == MESSAGE_DUMMY && gCurrentRandoMessage.data != NULL && gCurrentRandoMessage.soundEffect != MUSIC_GETTING_TANK_JINGLE)
                 gCurrentSprite.yPositionSpawn = FAST_ACQUISITION_MESSAGE_TIMER;
             else
                 gCurrentSprite.yPositionSpawn = 100;
@@ -380,7 +329,9 @@ void ItemBannerRemovalAnimation(void)
                 gBossWork.work2 + BLOCK_SIZE * 12, 0);
         }
         // Check replay sounds
-        else if (ITEM_MESSAGE_IS_TANK(msg) && !sRandoSeed.options.fastItemAcquisitions)
+        else if (msg == MESSAGE_ENERGY_TANK_ACQUIRED || msg == MESSAGE_MISSILE_TANK_ACQUIRED ||
+                 msg == MESSAGE_SUPER_MISSILE_TANK_ACQUIRED || msg == MESSAGE_POWER_BOMB_TANK_ACQUIRED ||
+                 (msg == MESSAGE_DUMMY && gCurrentRandoMessage.soundEffect == MUSIC_GETTING_TANK_JINGLE))
         {
             RetrieveTrackData2SoundChannels();
         }
@@ -389,7 +340,7 @@ void ItemBannerRemovalAnimation(void)
 
         if (gCurrentSprite.work2)
         {
-            if (sRandoSeed.options.fastItemAcquisitions) {
+            if (msg == MESSAGE_DUMMY) {
                 RandoActivateAcquiredItem();
             } else {
                 gPauseScreenFlag = PAUSE_SCREEN_ITEM_ACQUISITION;

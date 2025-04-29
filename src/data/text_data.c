@@ -45,19 +45,6 @@ const u16 sJapaneseText_Message_ActivateEasySleep[] = INCTEXT("{WIDTH(53)}スリ
 const u16 sJapaneseText_Message_PressSelectLAndR[] = INCTEXT("{WIDTH(50)}{Select_button} と {L_button_left} と {R_button_left} を\n{WIDTH(67)}同時に押してください");
 const u16 sJapaneseText_Message_EasySleepPrompt[] = INCTEXT("{WIDTH(101)}Yes\n{WIDTH(104)}No");
 
-const u16 sJapaneseText_Message_PlasmaBeam[] = INCTEXT("{WIDTH(42)}{COLOR(5)}PLASMA BEAM プラズマビーム\n{WIDTH(110)}");
-const u16 sJapaneseText_Message_GravitySuit[] = INCTEXT("{WIDTH(45)}{COLOR(5)}GRAVITY SUIT グラビティスーツ\n{WIDTH(110)}");
-const u16 sJapaneseText_Message_SpaceJump[] = INCTEXT("{WIDTH(38)}{COLOR(5)}SPACE JUMP スペースジャンプ\n{WIDTH(110)}");
-const u16 sJapaneseText_Message_NothingAcquired[] = INCTEXT("WIDTH(80){COLOR(5)}NOTHING 無\n{WIDTH(110)}");
-const u16 sJapaneseText_Message_SpazerBeam[] = INCTEXT("{WIDTH(38)}{COLOR(5)}SPAZER BEAM スペイザービーム\n{WIDTH(110)}");
-const u16 sJapaneseText_Message_GrappleBeam[] = INCTEXT("{WIDTH(20)}{COLOR(5)}GRAPPLING BEAM グラップリングビーム\n{WIDTH(110)}");
-const u16 sJapaneseText_Message_SpringBall[] = INCTEXT("{WIDTH(39)}{COLOR(5)}SPRING BALL スプリングボール\n{WIDTH(110)}");
-const u16 sJapaneseText_Message_XRayScope[] = INCTEXT("{WIDTH(42)}{COLOR(5)}X-RAY SCOPE Xレイスコープ\n{WIDTH(110)}");
-const u16 sJapaneseText_Message_ReserveTank[] = INCTEXT("{WIDTH(39)}{COLOR(5)}RESERVE TANK リサーブタンク\n{WIDTH(110)}");
-const u16 sJapaneseText_Message_WallJump[] = INCTEXT("{WIDTH(47)}{COLOR(5)}KICK CLIMB キッククライム\n{WIDTH(110)}");
-const u16 sJapaneseText_Message_PowerBeam[] = INCTEXT("{WIDTH(49)}{COLOR(5)}POWER BEAM パワービーム\n{WIDTH(110)}");
-const u16 sJapaneseText_Message_SpiderBall[] = INCTEXT("{WIDTH(39)}{COLOR(5)}SPIDER BALL スパイダービーム\n{WIDTH(110)}");
-
 const u16 sJapaneseText_Location_Brinstar[] = INCTEXT("{WIDTH(43)}BRINSTAR  - ブリンスタ -");
 const u16 sJapaneseText_Location_Kraid[] = INCTEXT("{WIDTH(57)}KRAID  - クレイド -");
 const u16 sJapaneseText_Location_Norfair[] = INCTEXT("{WIDTH(46)}NORFAIR  - ノルフェア -");
@@ -125,19 +112,6 @@ const u16 sHiraganaText_Message_ActivateEasySleep[] = INCTEXT("{WIDTH(50)}スリ
 const u16 sHiraganaText_Message_PressSelectLAndR[] = INCTEXT("{WIDTH(50)}{Select_button} と {L_button_left} と {R_button_left} を\n{WIDTH(66)}どうじにおしてください");
 const u16 sHiraganaText_Message_EasySleepPrompt[] = INCTEXT("{WIDTH(102)}はい\n{WIDTH(98)}いいえ");
 
-const u16 sHiraganaText_Message_PlasmaBeam[] = INCTEXT("{WIDTH(84)}{COLOR(5)}プラズマビーム\n{WIDTH(110)}");
-const u16 sHiraganaText_Message_GravitySuit[] = INCTEXT("{WIDTH(88)}{COLOR(5)}グラビティスーツ\n{WIDTH(110)}");
-const u16 sHiraganaText_Message_SpaceJump[] = INCTEXT("{WIDTH(76)}{COLOR(5)}スペースジャンプ\n{WIDTH(110)}");
-const u16 sHiraganaText_Message_NothingAcquired[] = INCTEXT("{WIDTH(108)}{COLOR(5)}む\n{WIDTH(110)}");
-const u16 sHiraganaText_Message_SpazerBeam[] = INCTEXT("{WIDTH(80)}{COLOR(5)}スペイザービーム\n{WIDTH(110)}");
-const u16 sHiraganaText_Message_GrappleBeam[] = INCTEXT("{WIDTH(72)}{COLOR(5)}グラップリングビーム\n{WIDTH(110)}");
-const u16 sHiraganaText_Message_SpringBall[] = INCTEXT("{WIDTH(80)}{COLOR(5)}スプリングボール\n{WIDTH(110)}");
-const u16 sHiraganaText_Message_XRayScope[] = INCTEXT("{WIDTH(84)}{COLOR(5)}Xレイスコープ\n{WIDTH(110)}");
-const u16 sHiraganaText_Message_ReserveTank[] = INCTEXT("{WIDTH(84)}{COLOR(5)}リサーブタンク\n{WIDTH(110)}");
-const u16 sHiraganaText_Message_WallJump[] = INCTEXT("{WIDTH(84)}{COLOR(5)}キッククライム\n{WIDTH(110)}");
-const u16 sHiraganaText_Message_PowerBeam[] = INCTEXT("{WIDTH(88)}{COLOR(5)}パワービーム\n{WIDTH(110)}");
-const u16 sHiraganaText_Message_SpiderBall[] = INCTEXT("{WIDTH(80)}{COLOR(5)}スパイダービーム\n{WIDTH(110)}");
-
 const u16 sHiraganaText_Location_Brinstar[] = INCTEXT("{WIDTH(90)}ブリンスタ");
 const u16 sHiraganaText_Location_Kraid[] = INCTEXT("{WIDTH(94)}クレイド");
 const u16 sHiraganaText_Location_Norfair[] = INCTEXT("{WIDTH(90)}ノルフェア");
@@ -204,26 +178,6 @@ const u16 sEnglishText_Message_EnemyLocationAbnormal[] = INCTEXT("{WIDTH(44)}Ene
 const u16 sEnglishText_Message_ActivateEasySleep[] = INCTEXT("{WIDTH(52)}Activate Easy Sleep?\n{WIDTH(57)}To exit Easy Sleep,");
 const u16 sEnglishText_Message_PressSelectLAndR[] = INCTEXT("{WIDTH(37)}press {Select_button}, {L_button_left}, and {R_button_left}\n{WIDTH(72)}simultaneously.");
 const u16 sEnglishText_Message_EasySleepPrompt[] = INCTEXT("{WIDTH(101)}Yes\n{WIDTH(104)}No");
-
-const u16 sEnglishText_Message_PlasmaBeam[] = INCTEXT("{WIDTH(79)}{COLOR(5)}Plasma Beam\n{WIDTH(110)}");
-const u16 sEnglishText_Message_GravitySuit[] = INCTEXT("{WIDTH(80)}{COLOR(5)}Gravity Suit\n{WIDTH(110)}");
-const u16 sEnglishText_Message_SpaceJump[] = INCTEXT("{WIDTH(81)}{COLOR(5)}Space Jump\n{WIDTH(110)}");
-const u16 sEnglishText_Message_NothingAcquired[] = INCTEXT("{WIDTH(66)}{COLOR(5)}Nothing acquired.\n{WIDTH(110)}");
-const u16 sEnglishText_Message_SpazerBeam[] = INCTEXT("{WIDTH(78)}{COLOR(5)}Spazer Beam\n{WIDTH(110)}");
-const u16 sEnglishText_Message_GrappleBeam[] = INCTEXT("{WIDTH(77)}{COLOR(5)}Grapple Beam\n{WIDTH(110)}");
-const u16 sEnglishText_Message_SpringBall[] = INCTEXT("{WIDTH(83)}{COLOR(5)}Spring Ball\n{WIDTH(110)}");
-const u16 sEnglishText_Message_XRayScope[] = INCTEXT("{WIDTH(76)}{COLOR(5)}X-Ray Scope\n{WIDTH(110)}");
-const u16 sEnglishText_Message_ReserveTank[] = INCTEXT("{WIDTH(76)}{COLOR(5)}Reserve Tank\n{WIDTH(110)}");
-const u16 sEnglishText_Message_WallJump[] = INCTEXT("{WIDTH(86)}{COLOR(5)}Wall Jump\n{WIDTH(110)}");
-const u16 sEnglishText_Message_PowerBeam[] = INCTEXT("{WIDTH(81)}{COLOR(5)}Power Beam\n{WIDTH(110)}");
-const u16 sEnglishText_Message_SpiderBall[] = INCTEXT("{WIDTH(83)}{COLOR(5)}Spider Ball\n{WIDTH(110)}");
-
-const u16 sEnglishText_MessageFragment_Sent[] = INCTEXT("{COLOR(0)}Sent to ");
-const u16 sEnglishText_MessageFragment_Received[] = INCTEXT("{COLOR(0)}Received from ");
-const u16 sEnglishText_MessageFragment_EnergyTanksReceived[] = INCTEXT("{WIDTH(50)}{COLOR(5)}Energy Tanks received.\n{WIDTH(0)}{COLOR(0)}Energy capacity increased by ");
-const u16 sEnglishText_MessageFragment_MissileTanksReceived[] = INCTEXT("{WIDTH(51)}{COLOR(5)}Missile Tanks received.\n{WIDTH(0)}{COLOR(0)}Missile capacity increased by ");
-const u16 sEnglishText_MessageFragment_SuperMissileTanksReceived[] = INCTEXT("{WIDTH(33)}{COLOR(5)}Super Missile Tanks received.\n{WIDTH(0)}{COLOR(0)}Super Missile capacity increased by ");
-const u16 sEnglishText_MessageFragment_PowerBombTanksReceived[] = INCTEXT("{WIDTH(37)}{COLOR(5)}Power Bomb Tanks received.\n{WIDTH(0)}{COLOR(0)}Power Bomb capacity increased by ");
 
 const u16 sEnglishText_Location_Brinstar[] = INCTEXT("{WIDTH(83)}BRINSTAR");
 const u16 sEnglishText_Location_Kraid[] = INCTEXT("{WIDTH(93)}KRAID");

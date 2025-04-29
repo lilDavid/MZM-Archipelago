@@ -3,6 +3,8 @@
 
 #include "types.h"
 
+#include "structs/rando.h"
+
 struct Message {
     u16 textIndex;
     u16 indent;
@@ -24,6 +26,7 @@ extern struct Message gCurrentMessage;
 extern u32 gCurrentCharacterGfx[32];
 extern s8 gCurrentItemBeingAcquired;
 
-extern u16 gDynamicMessageBuffer[32 + 2 * 16 + sizeof("\n Received from  ().")];
+extern struct RandoMessage gCurrentRandoMessage;
+extern u16 gDynamicMessageBuffer[160];
 
 #endif /* TEXT_STRUCT_H */

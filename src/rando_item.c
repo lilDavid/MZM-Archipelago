@@ -102,110 +102,55 @@ static u32 RandoCheckLocation(u32 location) {
     gRandoLocationBitfields[region] |= flag;
 }
 
-static u32 RandoGetItemMessage(u32 itemId) {
-    s32 messageID;
-
-    if (itemId >= ITEM_MAX)
-        return MESSAGE_DUMMY;
-
-    gPreventMovementTimer = SAMUS_ITEM_PMT;
-
-    messageID = sItemMessages[itemId];
-    switch (itemId) {
-        case ITEM_MISSILE_TANK:
-            messageID = (gEquipment.maxMissiles == 0) ? MESSAGE_FIRST_MISSILE_TANK : MESSAGE_MISSILE_TANK_ACQUIRED;
+static u32 RandoCopyMessage(const struct RandoMessage* pMessage) {
+    gCurrentRandoMessage = *pMessage;
+    switch (pMessage->messageID) {
+        case ITEM_ACQUISITION_MISSILES:
+            if (gEquipment.maxMissiles == 0) {
+                gCurrentRandoMessage.messageID = MESSAGE_MISSILE_TANK_ACQUIRED;
+                gCurrentRandoMessage.oneLine = FALSE;
+            }
             break;
-        case ITEM_SUPER_MISSILE_TANK:
-            messageID = (gEquipment.maxSuperMissiles == 0) ? MESSAGE_FIRST_SUPER_MISSILE_TANK : MESSAGE_SUPER_MISSILE_TANK_ACQUIRED;
+        case ITEM_ACQUISITION_SUPER_MISSILES:
+            if (gEquipment.maxSuperMissiles == 0) {
+                gCurrentRandoMessage.messageID = MESSAGE_SUPER_MISSILE_TANK_ACQUIRED;
+                gCurrentRandoMessage.oneLine = FALSE;
+            }
             break;
-        case ITEM_POWER_BOMB_TANK:
-            messageID = (gEquipment.maxPowerBombs == 0) ? MESSAGE_FIRST_POWER_BOMB_TANK : MESSAGE_POWER_BOMB_TANK_ACQUIRED;
-            break;
-        case ITEM_PLASMA_BEAM:
-            if (!UNKNOWN_ITEMS_ARE_USABLE)
-                messageID = MESSAGE_UKNOWN_ITEM_PLASMA;
-            break;
-        case ITEM_GRAVITY_SUIT:
-            if (!UNKNOWN_ITEMS_ARE_USABLE)
-                messageID = MESSAGE_UNKNOWN_ITEM_GRAVITY;
-            break;
-        case ITEM_SPACE_JUMP:
-            if (!UNKNOWN_ITEMS_ARE_USABLE)
-                messageID = MESSAGE_UNKNOWN_ITEM_SPACE_JUMP;
+        case ITEM_ACQUISITION_POWER_BOMB:
+            if (gEquipment.maxPowerBombs == 0) {
+                gCurrentRandoMessage.messageID = MESSAGE_POWER_BOMB_TANK_ACQUIRED;
+                gCurrentRandoMessage.oneLine = FALSE;
+            }
             break;
     }
-    return messageID;
 }
 
-static void RandoItemApply(u32 itemId, u32 count) {
-    switch (itemId) {
-        case ITEM_ENERGY_TANK:
-            gEquipment.maxEnergy = MIN(1299, gEquipment.maxEnergy + sTankIncreaseAmount[gDifficulty].energy * count);
+void RandoGiveItem(const struct RandoItem* item) {
+    switch (item->itemType) {
+        case RANDO_ITEM_ENERGY_TANKS:
+            gEquipment.maxEnergy = MIN(1299, gEquipment.maxEnergy + sTankIncreaseAmount[gDifficulty].energy * item->value);
             gEquipment.currentEnergy = gEquipment.maxEnergy;
             break;
-        case ITEM_MISSILE_TANK:
-            gEquipment.maxMissiles = MIN(999, gEquipment.maxMissiles + sTankIncreaseAmount[gDifficulty].missile * count);
-            gEquipment.currentMissiles = MIN(999, gEquipment.currentMissiles + sTankIncreaseAmount[gDifficulty].missile * count);
+        case RANDO_ITEM_MISSILES:
+            gEquipment.maxMissiles = MIN(999, gEquipment.maxMissiles + sTankIncreaseAmount[gDifficulty].missile * item->value);
+            gEquipment.currentMissiles = MIN(999, gEquipment.currentMissiles + sTankIncreaseAmount[gDifficulty].missile * item->value);
             break;
-        case ITEM_SUPER_MISSILE_TANK:
-            gEquipment.maxSuperMissiles = MIN(99, gEquipment.maxSuperMissiles + sTankIncreaseAmount[gDifficulty].superMissile * count);
-            gEquipment.currentSuperMissiles = MIN(99, gEquipment.currentSuperMissiles + sTankIncreaseAmount[gDifficulty].superMissile * count);
+        case RANDO_ITEM_SUPER_MISSILES:
+            gEquipment.maxSuperMissiles = MIN(99, gEquipment.maxSuperMissiles + sTankIncreaseAmount[gDifficulty].superMissile * item->value);
+            gEquipment.currentSuperMissiles = MIN(99, gEquipment.currentSuperMissiles + sTankIncreaseAmount[gDifficulty].superMissile * item->value);
             break;
-        case ITEM_POWER_BOMB_TANK:
-            gEquipment.maxPowerBombs = MIN(99, gEquipment.maxPowerBombs + sTankIncreaseAmount[gDifficulty].powerBomb * count);
-            gEquipment.currentPowerBombs = MIN(99, gEquipment.currentPowerBombs + sTankIncreaseAmount[gDifficulty].powerBomb * count);
+        case RANDO_ITEM_POWER_BOMBS:
+            gEquipment.maxPowerBombs = MIN(99, gEquipment.maxPowerBombs + sTankIncreaseAmount[gDifficulty].powerBomb * item->value);
+            gEquipment.currentPowerBombs = MIN(99, gEquipment.currentPowerBombs + sTankIncreaseAmount[gDifficulty].powerBomb * item->value);
             break;
-        case ITEM_LONG_BEAM:
-            gEquipment.beamBombs |= BBF_LONG_BEAM;
+        case RANDO_ITEM_BEAM_BOMBS:
+            gEquipment.beamBombs |= item->value;
             break;
-        case ITEM_CHARGE_BEAM:
-            gEquipment.beamBombs |= BBF_CHARGE_BEAM;
-            break;
-        case ITEM_ICE_BEAM:
-            gEquipment.beamBombs |= BBF_ICE_BEAM;
-            break;
-        case ITEM_WAVE_BEAM:
-            gEquipment.beamBombs |= BBF_WAVE_BEAM;
-            break;
-        case ITEM_PLASMA_BEAM:
-            gEquipment.beamBombs |= BBF_PLASMA_BEAM;
-            break;
-        case ITEM_BOMB:
-            gEquipment.beamBombs |= BBF_BOMBS;
-            break;
-        case ITEM_VARIA_SUIT:
-            gEquipment.suitMisc |= SMF_VARIA_SUIT;
-            break;
-        case ITEM_GRAVITY_SUIT:
-            gEquipment.suitMisc |= SMF_GRAVITY_SUIT;
-            break;
-        case ITEM_MORPH_BALL:
-            gEquipment.suitMisc |= SMF_MORPH_BALL;
-            break;
-        case ITEM_SPEED_BOOSTER:
-            gEquipment.suitMisc |= SMF_SPEEDBOOSTER;
-            break;
-        case ITEM_HIJUMP_BOOTS:
-            gEquipment.suitMisc |= SMF_HIGH_JUMP;
-            break;
-        case ITEM_SCREW_ATTACK:
-            gEquipment.suitMisc |= SMF_SCREW_ATTACK;
-            break;
-        case ITEM_SPACE_JUMP:
-            gEquipment.suitMisc |= SMF_SPACE_JUMP;
-            break;
-        case ITEM_POWER_GRIP:
-            gEquipment.suitMisc |= SMF_POWER_GRIP;
+        case RANDO_ITEM_SUIT_MISC:
+            gEquipment.suitMisc |= item->value;
             break;
     }
-}
-
-u32 RandoGiveItem(u32 itemId) {
-    u32 messageId;
-
-    messageId = RandoGetItemMessage(itemId);
-    RandoItemApply(itemId, 1);
-    return messageId;
 }
 
 void RandoActivateAcquiredItem(void) {
@@ -281,61 +226,30 @@ void RandoGiveItemFromCheck(u32 location) {
     RandoCheckLocation(location);
     placement = &sPlacedItems[location];
 
-    if (placement->playerName) {
-        gPreventMovementTimer = SAMUS_ITEM_PMT;
-        messageID = sItemMessages[placement->itemId];
-        gCurrentItemBeingAcquired = messageID;
+    gPreventMovementTimer = SAMUS_ITEM_PMT;
+    messageID = MESSAGE_DUMMY;
+    RandoCopyMessage(&placement->message);
 
-        // Item name
-        if (placement->itemName) {
-            messageLength = TextCopyUntilCharacter(placement->itemName,
-                                                    gDynamicMessageBuffer,
-                                                    CHAR_TERMINATOR);
-        } else {
-            messageLength = TextCopyUntilCharacter(sMessageTextPointers[gLanguage][messageID],
-                                                   gDynamicMessageBuffer,
-                                                   CHAR_NEW_LINE);
-        }
-        gDynamicMessageBuffer[messageLength++] = CHAR_NEW_LINE;
-
-        // "Sent to <player name>."
-        pLine2 = gDynamicMessageBuffer + messageLength;
-        messageLength++;
-        messageLength += TextCopyUntilCharacter(sEnglishText_MessageFragment_Sent,
-                                                gDynamicMessageBuffer + messageLength,
-                                                CHAR_TERMINATOR);
-        messageLength += TextCopyUntilCharacter(placement->playerName,
-                                                gDynamicMessageBuffer + messageLength,
-                                                CHAR_TERMINATOR);
-        gDynamicMessageBuffer[messageLength++] = CHAR_DOT;
-        gDynamicMessageBuffer[messageLength++] = CHAR_TERMINATOR;
-        lineLength = TextFindCharacter(pLine2 + 2, CHAR_TERMINATOR);
-        lineWidth = TextGetStringWidth(pLine2 + 2, lineLength);
-        pLine2[0] = CHAR_WIDTH_MASK | (224 - lineWidth) / 2;
-
-        messageID = MESSAGE_DYNAMIC_ITEM;
-    } else {
-        messageID = RandoGiveItem(placement->itemId);
-    }
+    RandoGiveItem(&placement->item);
 
     SpriteSpawnPrimary(PSPRITE_ITEM_BANNER, messageID, 6, gSamusData.yPosition, gSamusData.xPosition, 0);
 }
 
 void RandoPlaceItemInSpriteGraphics(u32 location, u32 row, u32 column, u32 palette, u32 frames) {
     void* pal;
+    const struct PlacedItem* pItem;
     u32 i;
     u32 y;
     u32 start;
-    u32 item;
 
     start = 0;
     if (frames == 1)
         start = 1;
 
-    item = sPlacedItems[location].itemId;
+    pItem = &sPlacedItems[location];
     for (i = 0; i < frames; i++) {
         for (y = 0; y < 2; y++) {
-            DmaTransfer(3, sItemGfxPointers[item].gfx + (0x80 * (start + i)) + (0x40 * y), VRAM_BASE + 0x14000 + (row * 0x800) + (y * 0x400) + ((column + i) * 0x40), 32 * 2, 32);
+            DmaTransfer(3, pItem->sprite->gfx + (0x80 * (start + i)) + (0x40 * y), VRAM_BASE + 0x14000 + (row * 0x800) + (y * 0x400) + ((column + i) * 0x40), 32 * 2, 32);
         }
     }
 
@@ -343,7 +257,7 @@ void RandoPlaceItemInSpriteGraphics(u32 location, u32 row, u32 column, u32 palet
         pal = EWRAM_BASE + 0x35700;
     else
         pal = PALRAM_BASE + 0x300;
-    DMA_SET(3, sItemGfxPointers[item].palette, pal + (palette * 16 * sizeof(u16)), C_32_2_16(DMA_ENABLE, 16));
+    DMA_SET(3, pItem->sprite->pal, pal + (palette * 16 * sizeof(u16)), C_32_2_16(DMA_ENABLE, 16));
 }
 
 static u32 RandoCanReceiveMultiworld() {
@@ -352,7 +266,7 @@ static u32 RandoCanReceiveMultiworld() {
 
     // Disallowed states
     if (gGameModeSub1 != SUB_GAME_MODE_PLAYING ||
-        gIncomingItemId >= ITEM_MAX ||
+        gIncomingItem.itemType == RANDO_ITEM_NONE || gCurrentRandoMessage.data == NULL ||
         gEquipment.suitType == SUIT_SUITLESS ||
         gPreventMovementTimer || gDisablePause || gPauseScreenFlag || gShipLandingFlag)
         return FALSE;
@@ -408,115 +322,20 @@ static u32 RandoCanReceiveMultiworld() {
 }
 
 u32 RandoHandleMultiworld() {
-    u32 sourceItemMessage;
-    u32 messageId;
-    u32 messageLength;
-    u32 lineLength;
-    u32 lineWidth;
-    u16* pLine2;
-    s32 amount;
-    s32 i;
-
     if (!RandoCanReceiveMultiworld())
         return FALSE;
 
-    sourceItemMessage = gCurrentItemBeingAcquired = RandoGetItemMessage(gIncomingItemId);
+    gPreventMovementTimer = SAMUS_ITEM_PMT;
+    RandoCopyMessage(&gIncomingMessage);
     gReceivingFromMultiworld = TRUE;
-    switch (gCurrentItemBeingAcquired) {
-        case MESSAGE_PLASMA_BEAM:
-            gCurrentItemBeingAcquired = ITEM_ACQUISITION_PLASMA_BEAM;
-            messageId = MESSAGE_DYNAMIC_ITEM_MAJOR;
-            break;
-        case MESSAGE_GRAVITY_SUIT:
-            gCurrentItemBeingAcquired = ITEM_ACQUISITION_GRAVITY;
-            messageId = MESSAGE_DYNAMIC_ITEM_MAJOR;
-            break;
-        case MESSAGE_SPACE_JUMP:
-            gCurrentItemBeingAcquired = ITEM_ACQUISITION_SPACE_JUMP;
-            messageId = MESSAGE_DYNAMIC_ITEM_MAJOR;
-            break;
-        case MESSAGE_UKNOWN_ITEM_PLASMA:
-        case MESSAGE_UNKNOWN_ITEM_GRAVITY:
-        case MESSAGE_UNKNOWN_ITEM_SPACE_JUMP:
-            messageId = MESSAGE_DYNAMIC_ITEM_UNKNOWN;
-            break;
-        case MESSAGE_ENERGY_TANK_ACQUIRED:
-        case MESSAGE_MISSILE_TANK_ACQUIRED:
-        case MESSAGE_SUPER_MISSILE_TANK_ACQUIRED:
-        case MESSAGE_POWER_BOMB_TANK_ACQUIRED:
-        case MESSAGE_DUMMY:
-            messageId = MESSAGE_DYNAMIC_ITEM;
-            break;
-        default:
-            messageId = MESSAGE_DYNAMIC_ITEM_MAJOR;
-            break;
-    }
-
-    if (gMultiworldItemSenderName[0] == CHAR_TERMINATOR &&
-        (gIncomingItemId > ITEM_POWER_BOMB_TANK || gIncomingItemCount == 1)) {
-        messageId = sourceItemMessage;
-    }
 
     // (Hopefully) fix the bug where the item acquisition freezes Samus in place instead of showing the message
-    if (SpriteSpawnPrimary(PSPRITE_ITEM_BANNER, messageId, 6, gSamusData.yPosition, gSamusData.xPosition, 0) == UCHAR_MAX) {
+    if (SpriteSpawnPrimary(PSPRITE_ITEM_BANNER, MESSAGE_DUMMY, 6, gSamusData.yPosition, gSamusData.xPosition, 0) == UCHAR_MAX) {
         gPreventMovementTimer = 0;
         gReceivingFromMultiworld = FALSE;
         return FALSE;
     }
-    RandoItemApply(gIncomingItemId, gIncomingItemCount);
 
-    if (gIncomingItemId > ITEM_POWER_BOMB_TANK || gIncomingItemCount == 1) {
-        // Item name
-        messageLength = TextCopyUntilCharacter(sMessageTextPointers[gLanguage][sourceItemMessage],
-                gDynamicMessageBuffer,
-                CHAR_NEW_LINE);
-        gDynamicMessageBuffer[messageLength++] = CHAR_NEW_LINE;
-
-        // "Received from <player name>."
-        pLine2 = gDynamicMessageBuffer + messageLength;
-        messageLength++;
-        messageLength += TextCopyUntilCharacter(sEnglishText_MessageFragment_Received,
-                gDynamicMessageBuffer + messageLength,
-                CHAR_TERMINATOR);
-        messageLength += TextCopyUntilCharacter(gMultiworldItemSenderName,
-                gDynamicMessageBuffer + messageLength,
-                CHAR_TERMINATOR);
-        gDynamicMessageBuffer[messageLength++] = CHAR_DOT;
-        gDynamicMessageBuffer[messageLength++] = CHAR_TERMINATOR;
-        lineLength = TextFindCharacter(pLine2 + 2, CHAR_TERMINATOR);
-        lineWidth = TextGetStringWidth(pLine2 + 2, lineLength);
-        pLine2[0] = CHAR_WIDTH_MASK | (224 - lineWidth) / 2;
-    } else {
-        // Tanks received
-        messageLength = TextCopyUntilCharacter(sMultipleTankMessageFragments[gIncomingItemId],
-                gDynamicMessageBuffer,
-                CHAR_NEW_LINE);
-        gDynamicMessageBuffer[messageLength++] = CHAR_NEW_LINE;
-
-        // "<Ammo> capacity increased by <amount>."
-        switch (gIncomingItemId) {
-            case ITEM_ENERGY_TANK:        amount = gIncomingItemCount * sTankIncreaseAmount[gDifficulty].energy;       break;
-            case ITEM_MISSILE_TANK:       amount = gIncomingItemCount * sTankIncreaseAmount[gDifficulty].missile;      break;
-            case ITEM_SUPER_MISSILE_TANK: amount = gIncomingItemCount * sTankIncreaseAmount[gDifficulty].superMissile; break;
-            case ITEM_POWER_BOMB_TANK:    amount = gIncomingItemCount * sTankIncreaseAmount[gDifficulty].powerBomb;    break;
-        }
-
-        pLine2 = gDynamicMessageBuffer + messageLength;
-        messageLength += TextCopyUntilCharacter(sMultipleTankMessageFragments[gIncomingItemId] + messageLength,
-                pLine2,
-                CHAR_TERMINATOR);
-        for (i = 1000; i > 1; i /= 10) {
-            if (amount < i)
-                continue;
-            gDynamicMessageBuffer[messageLength++] = CHAR_0 + (amount / i) % 10;
-        }
-        gDynamicMessageBuffer[messageLength++] = CHAR_0 + amount % 10;
-        gDynamicMessageBuffer[messageLength++] = CHAR_DOT;
-        gDynamicMessageBuffer[messageLength++] = CHAR_TERMINATOR;
-        lineLength = TextFindCharacter(pLine2 + 2, CHAR_TERMINATOR);
-        lineWidth = TextGetStringWidth(pLine2 + 2, lineLength);
-        pLine2[0] = CHAR_WIDTH_MASK | (224 - lineWidth) / 2;
-    }
-
+    RandoGiveItem(&gIncomingItem);
     return TRUE;
 }

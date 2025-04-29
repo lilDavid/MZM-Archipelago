@@ -10,7 +10,7 @@
         "src/data/sprites/power_grip.o",
         "src/data/sprites/unknown_item_chozo_statue.o",
         "src/data/rando.o",
-        "src/data/rando_data.o",
+        "src/data/rando_graphics_data.o",
         "src/data/rando_names.o"
     ]
 }

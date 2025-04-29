@@ -1,3 +1,3 @@
 #include "types.h"
 
-const u16 sRandoItemAndPlayerNames = 0;
+const u16 sRandoExtraData = 0;
