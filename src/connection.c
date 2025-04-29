@@ -1147,10 +1147,11 @@ void ConnectionStartWarp(void) {
     if (gEquipment.suitType == SUIT_SUITLESS) {
         EventFunction(EVENT_ACTION_CLEARING, EVENT_MOTHER_BRAIN_KILLED);
         EventFunction(EVENT_ACTION_CLEARING, EVENT_ESCAPED_ZEBES);
+        EventFunction(EVENT_ACTION_SETTING, EVENT_FULLY_POWERED_SUIT_OBTAINED);
         if (!sRandoSeed.options.unknownItemsAlwaysUsable) {
             gEquipment.beamBombsActivation = gEquipment.beamBombs & ~BBF_PLASMA_BEAM;
             gEquipment.suitMiscActivation = gEquipment.suitMisc & ~(SMF_SPACE_JUMP | SMF_GRAVITY_SUIT);
-            gEquipment.suitType = SUIT_NORMAL;  // FIXME: Defeating ghost then MB then resetting takes away full suit
+            gEquipment.suitType = SUIT_NORMAL;
         } else {
             gEquipment.beamBombsActivation = gEquipment.beamBombs;
             gEquipment.suitMiscActivation = gEquipment.suitMisc;
