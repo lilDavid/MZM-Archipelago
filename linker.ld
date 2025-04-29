@@ -387,10 +387,10 @@ SECTIONS {
         . = 0x00005d04; gRandoLocationBitfields = .;
         . = 0x00005d20; gIncomingItem = .;
         . = 0x00005d24; gIncomingMessage = .;
-        . = 0x00005d28; gReceivingFromMultiworld = .;
-        . = 0x00005d29; gMultiworldItemCount = .;
-        . = 0x00005d2C; gCurrentRandoMessage = .;
-        . = 0x00005d30; gDynamicMessageBuffer = .;
+        . = 0x00005d2C; gReceivingFromMultiworld = .;
+        . = 0x00005d2D; gMultiworldItemCount = .;
+        . = 0x00005d30; gCurrentRandoMessage = .;
+        . = 0x00005d38; gDynamicMessageBuffer = .;
 
 
         . = 0x00007e60; sp_sys = .;

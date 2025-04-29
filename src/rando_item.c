@@ -108,18 +108,21 @@ static u32 RandoCopyMessage(const struct RandoMessage* pMessage) {
         case ITEM_ACQUISITION_MISSILES:
             if (gEquipment.maxMissiles == 0) {
                 gCurrentRandoMessage.messageID = MESSAGE_MISSILE_TANK_ACQUIRED;
+                gCurrentRandoMessage.data = sEnglishText_Message_MissileTankAcquired;
                 gCurrentRandoMessage.oneLine = FALSE;
             }
             break;
         case ITEM_ACQUISITION_SUPER_MISSILES:
             if (gEquipment.maxSuperMissiles == 0) {
                 gCurrentRandoMessage.messageID = MESSAGE_SUPER_MISSILE_TANK_ACQUIRED;
+                gCurrentRandoMessage.data = sEnglishText_Message_SuperMissileTankAcquired;
                 gCurrentRandoMessage.oneLine = FALSE;
             }
             break;
         case ITEM_ACQUISITION_POWER_BOMB:
             if (gEquipment.maxPowerBombs == 0) {
                 gCurrentRandoMessage.messageID = MESSAGE_POWER_BOMB_TANK_ACQUIRED;
+                gCurrentRandoMessage.data = sEnglishText_Message_PowerBombTankAqcuired;
                 gCurrentRandoMessage.oneLine = FALSE;
             }
             break;
@@ -153,66 +156,96 @@ void RandoGiveItem(const struct RandoItem* item) {
     }
 }
 
-void RandoActivateAcquiredItem(void) {
-    switch (gCurrentItemBeingAcquired) {
-        case ITEM_ACQUISITION_LONG_BEAM:
-            gEquipment.beamBombsActivation |= BBF_LONG_BEAM;
-            ProjectileCallLoadGraphicsAndClearProjectiles();
-            break;
-        case ITEM_ACQUISITION_CHARGE_BEAM:
-            gEquipment.beamBombsActivation |= BBF_CHARGE_BEAM;
-            break;
-        case ITEM_ACQUISITION_ICE_BEAM:
-            gEquipment.beamBombsActivation |= BBF_ICE_BEAM;
-            ProjectileCallLoadGraphicsAndClearProjectiles();
-            break;
-        case ITEM_ACQUISITION_WAVE_BEAM:
-            gEquipment.beamBombsActivation |= BBF_WAVE_BEAM;
-            ProjectileCallLoadGraphicsAndClearProjectiles();
-            break;
-        case ITEM_ACQUISITION_PLASMA_BEAM:
-            if (UNKNOWN_ITEMS_ARE_USABLE) {
-                gEquipment.beamBombsActivation |= BBF_PLASMA_BEAM;
+void RandoActivateItem(const struct RandoItem* item) {
+    switch (item->itemType) {
+        case RANDO_ITEM_BEAM_BOMBS:
+            gEquipment.beamBombsActivation |= item->value;
+            if (!UNKNOWN_ITEMS_ARE_USABLE)
+                gEquipment.beamBombsActivation &= ~BBF_PLASMA_BEAM;
+            if (!(gEquipment.suitMiscActivation & SMF_MORPH_BALL))
+                gEquipment.beamBombsActivation &= ~BBF_BOMBS;
+            if (item->value & (BBF_LONG_BEAM | BBF_ICE_BEAM | BBF_WAVE_BEAM | BBF_PLASMA_BEAM))
                 ProjectileCallLoadGraphicsAndClearProjectiles();
-            }
             break;
-        case ITEM_ACQUISITION_BOMBS:
-            if (gEquipment.suitMiscActivation & SMF_MORPH_BALL)
-                gEquipment.beamBombsActivation |= BBF_BOMBS;
-            break;
-        case ITEM_ACQUISITION_VARIA:
-            gEquipment.suitMiscActivation |= SMF_VARIA_SUIT;
-            if (UNKNOWN_ITEMS_ARE_USABLE)
+        case RANDO_ITEM_SUIT_MISC:
+            gEquipment.suitMiscActivation |= item->value;
+            if (!UNKNOWN_ITEMS_ARE_USABLE)
+                gEquipment.suitMiscActivation &= ~(SMF_GRAVITY_SUIT | SMF_SPACE_JUMP);
+            else if (gEquipment.suitMiscActivation & SMF_ALL_SUITS)
                 gEquipment.suitType = SUIT_FULLY_POWERED;
-            break;
-        case ITEM_ACQUISITION_GRAVITY:
-            if (UNKNOWN_ITEMS_ARE_USABLE) {
-                gEquipment.suitMiscActivation |= SMF_GRAVITY_SUIT;
-                gEquipment.suitType = SUIT_FULLY_POWERED;
-            }
-            break;
-        case ITEM_ACQUISITION_MORPH_BALL:
-            gEquipment.suitMiscActivation |= SMF_MORPH_BALL;
-            if (gEquipment.beamBombs & BBF_BOMBS)
+            if (item->value & SMF_MORPH_BALL && gEquipment.beamBombs & BBF_BOMBS)
                 gEquipment.beamBombsActivation |= BBF_BOMBS;
-            break;
-        case ITEM_ACQUISITION_SPEEDBOOSTER:
-            gEquipment.suitMiscActivation |= SMF_SPEEDBOOSTER;
-            break;
-        case ITEM_ACQUISITION_HIGH_JUMP:
-            gEquipment.suitMiscActivation |= SMF_HIGH_JUMP;
-            break;
-        case ITEM_ACQUISITION_SCREW_ATTACK:
-            gEquipment.suitMiscActivation |= SMF_SCREW_ATTACK;
-            break;
-        case ITEM_ACQUISITION_SPACE_JUMP:
-            if (UNKNOWN_ITEMS_ARE_USABLE)
-                gEquipment.suitMiscActivation |= SMF_SPACE_JUMP;
-            break;
-        case ITEM_ACQUISITION_POWER_GRIP:
-            gEquipment.suitMiscActivation |= SMF_POWER_GRIP;
             break;
     }
+}
+
+void RandoActivateAcquiredItem(void) {
+    struct RandoItem item;
+    switch (gCurrentItemBeingAcquired) {
+        case ITEM_ACQUISITION_LONG_BEAM:
+        case ITEM_ACQUISITION_CHARGE_BEAM:
+        case ITEM_ACQUISITION_ICE_BEAM:
+        case ITEM_ACQUISITION_WAVE_BEAM:
+        case ITEM_ACQUISITION_PLASMA_BEAM:
+        case ITEM_ACQUISITION_BOMBS:
+            item.itemType = RANDO_ITEM_BEAM_BOMBS;
+            break;
+        case ITEM_ACQUISITION_VARIA:
+        case ITEM_ACQUISITION_GRAVITY:
+        case ITEM_ACQUISITION_MORPH_BALL:
+        case ITEM_ACQUISITION_SPEEDBOOSTER:
+        case ITEM_ACQUISITION_HIGH_JUMP:
+        case ITEM_ACQUISITION_SCREW_ATTACK:
+        case ITEM_ACQUISITION_SPACE_JUMP:
+        case ITEM_ACQUISITION_POWER_GRIP:
+            item.itemType = RANDO_ITEM_SUIT_MISC;
+            break;
+    }
+    switch (gCurrentItemBeingAcquired) {
+        case ITEM_ACQUISITION_LONG_BEAM:
+            item.value = BBF_LONG_BEAM;
+            break;
+        case ITEM_ACQUISITION_CHARGE_BEAM:
+            item.value = BBF_CHARGE_BEAM;
+            break;
+        case ITEM_ACQUISITION_ICE_BEAM:
+            item.value = BBF_ICE_BEAM;
+            break;
+        case ITEM_ACQUISITION_WAVE_BEAM:
+            item.value = BBF_WAVE_BEAM;
+            break;
+        case ITEM_ACQUISITION_PLASMA_BEAM:
+            item.value = BBF_PLASMA_BEAM;
+            break;
+        case ITEM_ACQUISITION_BOMBS:
+            item.value = BBF_BOMBS;
+            break;
+        case ITEM_ACQUISITION_VARIA:
+            item.value = SMF_VARIA_SUIT;
+            break;
+        case ITEM_ACQUISITION_GRAVITY:
+            item.value = SMF_GRAVITY_SUIT;
+            break;
+        case ITEM_ACQUISITION_MORPH_BALL:
+            item.value = SMF_MORPH_BALL;
+            break;
+        case ITEM_ACQUISITION_SPEEDBOOSTER:
+            item.value = SMF_SPEEDBOOSTER;
+            break;
+        case ITEM_ACQUISITION_HIGH_JUMP:
+            item.value = SMF_HIGH_JUMP;
+            break;
+        case ITEM_ACQUISITION_SCREW_ATTACK:
+            item.value = SMF_SCREW_ATTACK;
+            break;
+        case ITEM_ACQUISITION_SPACE_JUMP:
+            item.value = SMF_SPACE_JUMP;
+            break;
+        case ITEM_ACQUISITION_POWER_GRIP:
+            item.value = SMF_POWER_GRIP;
+            break;
+    }
+    RandoActivateItem(&item);
 }
 
 void RandoGiveItemFromCheck(u32 location) {
@@ -260,15 +293,15 @@ void RandoPlaceItemInSpriteGraphics(u32 location, u32 row, u32 column, u32 palet
     DMA_SET(3, pItem->sprite->pal, pal + (palette * 16 * sizeof(u16)), C_32_2_16(DMA_ENABLE, 16));
 }
 
-static u32 RandoCanReceiveMultiworld() {
+static u32 RandoCanMultiworld() {
+    return gGameModeSub1 == SUB_GAME_MODE_PLAYING && !(gDisablePause || gPauseScreenFlag || gShipLandingFlag);
+}
+
+static u32 RandoCanDisplayMessage() {
     int i, j;
     u32 dangerousSpriteset;
 
-    // Disallowed states
-    if (gGameModeSub1 != SUB_GAME_MODE_PLAYING ||
-        gIncomingItem.itemType == RANDO_ITEM_NONE || gCurrentRandoMessage.data == NULL ||
-        gEquipment.suitType == SUIT_SUITLESS ||
-        gPreventMovementTimer || gDisablePause || gPauseScreenFlag || gShipLandingFlag)
+    if (gIncomingMessage.data == NULL || gPreventMovementTimer)
         return FALSE;
 
     // Certain samus actions can affect the message banner
@@ -321,9 +354,17 @@ static u32 RandoCanReceiveMultiworld() {
     return TRUE;
 }
 
-u32 RandoHandleMultiworld() {
-    if (!RandoCanReceiveMultiworld())
-        return FALSE;
+static void RandoGiveMultiworldItem(u32 activate) {
+    RandoGiveItem(&gIncomingItem);
+    if (activate)
+        RandoActivateItem(&gIncomingItem);
+    gIncomingItem = sEmptyIncomingItem;
+    gMultiworldItemCount += 1;
+}
+
+static void RandoAcceptMessage() {
+    if (!RandoCanDisplayMessage())
+        return;
 
     gPreventMovementTimer = SAMUS_ITEM_PMT;
     RandoCopyMessage(&gIncomingMessage);
@@ -333,9 +374,20 @@ u32 RandoHandleMultiworld() {
     if (SpriteSpawnPrimary(PSPRITE_ITEM_BANNER, MESSAGE_DUMMY, 6, gSamusData.yPosition, gSamusData.xPosition, 0) == UCHAR_MAX) {
         gPreventMovementTimer = 0;
         gReceivingFromMultiworld = FALSE;
-        return FALSE;
+        return;
     }
 
-    RandoGiveItem(&gIncomingItem);
-    return TRUE;
+    if (gIncomingItem.itemType != RANDO_ITEM_NONE) {
+        RandoGiveMultiworldItem(FALSE);
+    }
+}
+
+void RandoHandleMultiworld() {
+    if (!RandoCanMultiworld())
+        return;
+
+    RandoAcceptMessage();
+    if (gIncomingItem.itemType != RANDO_ITEM_NONE && !gIncomingItem.waitForMessage) {
+        RandoGiveMultiworldItem(gEquipment.suitType != SUIT_SUITLESS);
+    }
 }

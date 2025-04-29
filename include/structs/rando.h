@@ -32,6 +32,7 @@ struct Seed {
 
 struct RandoItem {
     u8 itemType;
+    u8 waitForMessage;
     u16 value;  // Count for capacity upgrades, bit flag for major items
 };
 
@@ -61,6 +62,10 @@ struct StartingInventory {
     u8 beamBombs;
     u8 suitMisc;
 };
+
+// Functions
+
+void RandoHandleMultiworld();
 
 // Globals
 
