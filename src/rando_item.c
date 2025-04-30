@@ -102,33 +102,6 @@ static u32 RandoCheckLocation(u32 location) {
     gRandoLocationBitfields[region] |= flag;
 }
 
-static u32 RandoCopyMessage(const struct RandoMessage* pMessage) {
-    gCurrentRandoMessage = *pMessage;
-    switch (pMessage->messageID) {
-        case ITEM_ACQUISITION_MISSILES:
-            if (gEquipment.maxMissiles == 0) {
-                gCurrentRandoMessage.messageID = MESSAGE_MISSILE_TANK_ACQUIRED;
-                gCurrentRandoMessage.data = sEnglishText_Message_MissileTankAcquired;
-                gCurrentRandoMessage.oneLine = FALSE;
-            }
-            break;
-        case ITEM_ACQUISITION_SUPER_MISSILES:
-            if (gEquipment.maxSuperMissiles == 0) {
-                gCurrentRandoMessage.messageID = MESSAGE_SUPER_MISSILE_TANK_ACQUIRED;
-                gCurrentRandoMessage.data = sEnglishText_Message_SuperMissileTankAcquired;
-                gCurrentRandoMessage.oneLine = FALSE;
-            }
-            break;
-        case ITEM_ACQUISITION_POWER_BOMB:
-            if (gEquipment.maxPowerBombs == 0) {
-                gCurrentRandoMessage.messageID = MESSAGE_POWER_BOMB_TANK_ACQUIRED;
-                gCurrentRandoMessage.data = sEnglishText_Message_PowerBombTankAqcuired;
-                gCurrentRandoMessage.oneLine = FALSE;
-            }
-            break;
-    }
-}
-
 void RandoGiveItem(const struct RandoItem* item) {
     switch (item->itemType) {
         case RANDO_ITEM_ENERGY_TANKS:
@@ -261,7 +234,7 @@ void RandoGiveItemFromCheck(u32 location) {
 
     gPreventMovementTimer = SAMUS_ITEM_PMT;
     messageID = MESSAGE_DUMMY;
-    RandoCopyMessage(&placement->message);
+    gCurrentRandoMessage = placement->message;
 
     RandoGiveItem(&placement->item);
 
@@ -367,7 +340,7 @@ static void RandoAcceptMessage() {
         return;
 
     gPreventMovementTimer = SAMUS_ITEM_PMT;
-    RandoCopyMessage(&gIncomingMessage);
+    gCurrentRandoMessage = gIncomingMessage;
     gReceivingFromMultiworld = TRUE;
 
     // (Hopefully) fix the bug where the item acquisition freezes Samus in place instead of showing the message
