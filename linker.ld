@@ -388,7 +388,8 @@ SECTIONS {
         . = 0x00005d20; gIncomingItem = .;
         . = 0x00005d24; gIncomingMessage = .;
         . = 0x00005d2C; gReceivingFromMultiworld = .;
-        . = 0x00005d2D; gMultiworldItemCount = .;
+        . = 0x00005d2D; gIgnoreLocalItems = .;
+        . = 0x00005d2E; gMultiworldItemCount = .;
         . = 0x00005d30; gCurrentRandoMessage = .;
         . = 0x00005d38; gDynamicMessageBuffer = .;
 

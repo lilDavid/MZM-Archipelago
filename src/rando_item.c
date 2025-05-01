@@ -236,7 +236,8 @@ void RandoGiveItemFromCheck(u32 location) {
     messageID = MESSAGE_DUMMY;
     gCurrentRandoMessage = placement->message;
 
-    RandoGiveItem(&placement->item);
+    if (!gIgnoreLocalItems)
+        RandoGiveItem(&placement->item);
 
     SpriteSpawnPrimary(PSPRITE_ITEM_BANNER, messageID, 6, gSamusData.yPosition, gSamusData.xPosition, 0);
 }

@@ -118,9 +118,9 @@ struct SaveFile {
     u8 SamusAran_Text[SRAM_TEXT_SIZE];
 
     u32 randoChecks[AREA_NORMAL_COUNT];
-    u8 multiworldItemCount;
+    u16 multiworldItemCount;
 
-    u8 freespace[160 - sizeof(u32[AREA_NORMAL_COUNT]) - sizeof(u8)];
+    u8 freespace[160 - sizeof(u32[AREA_NORMAL_COUNT]) - sizeof(u16)];
 
     struct SaveWorldData worldData;
 };
