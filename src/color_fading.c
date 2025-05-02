@@ -878,6 +878,12 @@ u8 ColorFadingProcess_GettingFullyPowered(void)
 
             gEquipment.suitMisc |= SMF_VARIA_SUIT;
 #endif // 0
+            gEquipment.currentEnergy = gEquipment.maxEnergy;
+            gEquipment.currentMissiles = gEquipment.maxMissiles;
+            gEquipment.currentSuperMissiles = gEquipment.maxSuperMissiles;
+            gEquipment.currentPowerBombs = gEquipment.currentPowerBombs;
+            gEquipment.beamBombsActivation = gEquipment.beamBombs;
+            gEquipment.suitMiscActivation = gEquipment.suitMisc;
             return TRUE;
     }
 
