@@ -30,16 +30,5 @@ extern const struct RandoSprite sRandoUnknownSpaceJumpSprite;
 extern const struct RandoSprite sRandoSpaceJumpSprite;
 extern const struct RandoSprite sRandoPowerGripSprite;
 extern const struct RandoSprite sRandoNothingSprite;
-extern const struct RandoSprite sRandoAPLogoSprite;
-extern const struct RandoSprite sRandoAPLogoProgressionSprite;
-extern const struct RandoSprite sRandoAPLogoUsefulSprite;
-extern const struct RandoSprite sRandoSpazerBeamSprite;
-extern const struct RandoSprite sRandoGrappleBeamSprite;
-extern const struct RandoSprite sRandoSpringBallSprite;
-extern const struct RandoSprite sRandoXRayScopeSprite;
-extern const struct RandoSprite sRandoReserveTankSprite;
-extern const struct RandoSprite sRandoWallJumpSprite;
-extern const struct RandoSprite sRandoPowerBeamSprite;
-extern const struct RandoSprite sRandoSpiderBallSprite;
 
 #endif // RANDO_GRAPHICS_DATA_H

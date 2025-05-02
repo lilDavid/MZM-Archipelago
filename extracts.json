@@ -1,6 +1,7 @@
 {
     "sections": [ "ewram", "iwram", "rom" ],
     "rom": [
+        "src/data/common_pals.o",
         "src/data/engine_pointers.o",
         "src/data/hatch_data.o",
         "src/data/text_data.o",
