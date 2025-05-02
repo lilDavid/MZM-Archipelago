@@ -4,6 +4,7 @@
 #include "structs/rando.h"
 
 #include "constants/rando.h"
+#include "constants/samus.h"
 
 const struct Seed sRandoSeed = {
     .playerNumber = 0,
@@ -14,7 +15,6 @@ const struct Seed sRandoSeed = {
         .goal = GOAL_MECHA_RIDLEY,
         .difficulties = ALLOW_NORMAL | ALLOW_HARD,
 
-        .unknownItemsAlwaysUsable = FALSE,
         .removeGravityHeatResistance = FALSE,
         .usePowerBombsWithoutBomb = FALSE,
 
@@ -31,8 +31,9 @@ const struct StartingInventory sRandoStartingInventory = {
     .missileTanks = 0,
     .superMissileTanks = 0,
     .powerBombTanks = 0,
-    .beamBombs = 0,
-    .suitMisc = 0,
+    .beamBombs = BBF_NONE,
+    .suitMisc = SMF_NONE,
+    .customItems = CIF_NONE,
 };
 
-const struct PlacedItem sPlacedItems[100] = {};
+const struct PlacedItem sPlacedItems[RC_COUNT] = {};

@@ -243,7 +243,7 @@ const u8 sRandoAreaItemListLengths[AREA_NORMAL_COUNT] = {
     [AREA_CHOZODIA] = ARRAY_SIZE(sRoomItemsChozodia),
 };
 
-const u8 sRandoItemMapLocations[RC_MAX][2] = {
+const u8 sRandoItemMapLocations[RC_COUNT][2] = {
     [RC_BRINSTAR_MORPH_BALL] = {0, 15},
     [RC_BRINSTAR_MORPH_BALL_CANNON] = {5, 14},
     [RC_BRINSTAR_LONG_BEAM] = {6, 6},
@@ -350,6 +350,7 @@ const u8 sRandoItemMapLocations[RC_MAX][2] = {
     [RC_CHOZODIA_CEILING_NEAR_MAP_STATION] = {21, 16},
     [RC_CHOZODIA_UNDER_MECHA_RIDLEY_HALLWAY] = {22, 3},
     [RC_CHOZODIA_SE_CORNER_IN_HULL] = {26, 15},
+    [RC_CHOZODIA_RUINS_TEST_REWARD] = {10, 6},
 };
 
 const u8 sRandoItemToTankTilemap[RANDO_ITEM_END] = {

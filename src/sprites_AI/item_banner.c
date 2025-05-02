@@ -121,7 +121,16 @@ void ItemBannerGfxInit(void)
     }
 }
 
-#define FAST_ACQUISITION_MESSAGE_TIMER 30
+static u32 RandoGetItemMessageTime(void) {
+    switch (gCurrentRandoMessage.soundEffect) {
+        case MUSIC_GETTING_FULLY_POWERED_SUIT_JINGLE:
+            return CONVERT_SECONDS(5.) + TWO_THIRD_SECOND;
+        case MUSIC_GETTING_TANK_JINGLE:
+            return CONVERT_SECONDS(1.) + TWO_THIRD_SECOND;
+        default:
+            return CONVERT_SECONDS(0.5);
+    }
+}
 
 /**
  * @brief 1b824 | 184 | Handles the pop up animation and the custom behavior based on the current message
@@ -150,7 +159,12 @@ void ItemBannerPopUp(void)
             {
                 gCurrentSprite.work2 = gCurrentRandoMessage.oneLine;
                 music = gCurrentRandoMessage.soundEffect;
-                if (music == MUSIC_GETTING_ITEM_JINGLE || music == MUSIC_GETTING_UNKNOWN_ITEM_JINGLE)
+                if (music == MUSIC_GETTING_FULLY_POWERED_SUIT_JINGLE)
+                {
+                    PlayMusic(MUSIC_BRINSTAR_REMIX, 0);
+                    InsertMusicAndQueueCurrent(MUSIC_GETTING_FULLY_POWERED_SUIT_JINGLE, FALSE);
+                }
+                else if (music == MUSIC_GETTING_ITEM_JINGLE || music == MUSIC_GETTING_UNKNOWN_ITEM_JINGLE)
                 {
                     BackupTrackData2SoundChannels();
                     InsertMusicAndQueueCurrent(music, FALSE);
@@ -229,18 +243,19 @@ void ItemBannerPopUp(void)
         {
             gCurrentSprite.pOam = sItemBannerOAM_OneLineStatic;
 
-            if (msg == MESSAGE_FULLY_POWERED_SUIT)
+            if (msg == MESSAGE_DUMMY && gCurrentRandoMessage.data != NULL)
+                gCurrentSprite.yPositionSpawn = RandoGetItemMessageTime();
+            else if (msg == MESSAGE_FULLY_POWERED_SUIT)
                 gCurrentSprite.yPositionSpawn = 340; // Long because jingle is long
-            else if (msg == MESSAGE_DUMMY && gCurrentRandoMessage.data != NULL && gCurrentRandoMessage.soundEffect != MUSIC_GETTING_TANK_JINGLE)
-                gCurrentSprite.yPositionSpawn = FAST_ACQUISITION_MESSAGE_TIMER;
             else
                 gCurrentSprite.yPositionSpawn = 100;
         }
         else
         {
             gCurrentSprite.pOam = sItemBannerOAM_TwoLinesStatic;
-            if (msg == MESSAGE_DUMMY && gCurrentRandoMessage.data != NULL && gCurrentRandoMessage.soundEffect != MUSIC_GETTING_TANK_JINGLE)
-                gCurrentSprite.yPositionSpawn = FAST_ACQUISITION_MESSAGE_TIMER;
+
+            if (msg == MESSAGE_DUMMY && gCurrentRandoMessage.data != NULL)
+                gCurrentSprite.yPositionSpawn = RandoGetItemMessageTime();
             else
                 gCurrentSprite.yPositionSpawn = 100;
 

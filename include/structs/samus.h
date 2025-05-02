@@ -30,6 +30,9 @@ struct Equipment {
     u8 grabbedByMetroid;
 };
 
+struct RandoEquipment {
+    u8 customItems;
+};
 
 struct WeaponInfo {
     u8 diagonalAim;
@@ -186,6 +189,7 @@ extern struct WeaponInfo gSamusWeaponInfo;
 extern struct SamusEcho gSamusEcho;
 extern struct ScrewSpeedAnimation gScrewSpeedAnimation;
 extern struct Equipment gEquipment;
+extern struct RandoEquipment gRandoEquipment;
 extern struct HazardDamage gSamusHazardDamage;
 extern struct EnvironmentalEffect gSamusEnvironmentalEffects[5];
 extern struct SamusPhysics gSamusPhysics;

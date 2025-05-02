@@ -17,7 +17,6 @@ struct Seed {
         u8 goal;
         u8 difficulties;
 
-        u8 unknownItemsAlwaysUsable;
         u8 removeGravityHeatResistance;
         u8 usePowerBombsWithoutBomb;
         u8 buffPowerBombDrops;
@@ -61,6 +60,7 @@ struct StartingInventory {
     u8 powerBombTanks;
     u8 beamBombs;
     u8 suitMisc;
+    u8 customItems;
 };
 
 // Functions
@@ -70,7 +70,7 @@ void RandoHandleMultiworld();
 // Globals
 
 extern const struct Seed sRandoSeed;
-extern const struct PlacedItem sPlacedItems[RC_MAX];
+extern const struct PlacedItem sPlacedItems[RC_COUNT];
 extern const struct StartingInventory sRandoStartingInventory;
 
 extern struct RandoItem gIncomingItem;

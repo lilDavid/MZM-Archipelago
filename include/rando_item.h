@@ -11,9 +11,6 @@
 #include "structs/room.h"
 
 
-#define UNKNOWN_ITEMS_ARE_USABLE (sRandoSeed.options.unknownItemsAlwaysUsable || EventFunction(EVENT_ACTION_CHECKING, EVENT_RUINS_TEST_PASSED))
-
-
 void RandoGiveItemFromCheck(u32 location);
 u32 RandoIsLocationChecked(u32 location);
 

@@ -26,7 +26,7 @@ extern const u8 sRegionLocationOffsets[AREA_CHOZODIA + 2];
 
 extern const u8* const sRandoAreaItemLists[AREA_NORMAL_COUNT];
 extern const u8 sRandoAreaItemListLengths[AREA_NORMAL_COUNT];
-extern const u8 sRandoItemMapLocations[RC_MAX][2];
+extern const u8 sRandoItemMapLocations[RC_COUNT][2];
 extern const u8 sRandoItemToTankTilemap[RANDO_ITEM_END];
 extern const u8 sRandoAnimatedTileGaps[8];
 extern const u8 sRandoPaletteSlots[79 * 2];

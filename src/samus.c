@@ -7934,11 +7934,12 @@ void SamusInit(void)
             gEquipment.currentPowerBombs = gEquipment.maxPowerBombs = MIN(99, sStartingHealthAmmo.powerBomb + sRandoStartingInventory.powerBombTanks * sTankIncreaseAmount[gDifficulty].powerBomb);
             gEquipment.beamBombsActivation = gEquipment.beamBombs = sRandoStartingInventory.beamBombs;
             gEquipment.suitMiscActivation = gEquipment.suitMisc = sRandoStartingInventory.suitMisc;
-            if (!sRandoSeed.options.unknownItemsAlwaysUsable) {
-                gEquipment.beamBombsActivation &= ~BBF_PLASMA_BEAM;
-                gEquipment.suitMiscActivation &= ~(SMF_GRAVITY_SUIT | SMF_SPACE_JUMP);
-            } else {
+            gRandoEquipment.customItems = sRandoStartingInventory.customItems;
+            if (gRandoEquipment.customItems & CIF_FULLY_POWERED_SUIT) {
                 gEquipment.suitType = !!(gEquipment.suitMisc & SMF_ALL_SUITS);
+            } else {
+                gEquipment.beamBombsActivation &= ~BBF_PLASMA_BEAM;
+                gEquipment.suitMiscActivation &= ~SMF_UNKNOWN_ITEMS;
             }
 
             if (sRandoSeed.options.startWithMaps)

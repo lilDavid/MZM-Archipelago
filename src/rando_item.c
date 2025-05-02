@@ -126,6 +126,15 @@ void RandoGiveItem(const struct RandoItem* item) {
         case RANDO_ITEM_SUIT_MISC:
             gEquipment.suitMisc |= item->value;
             break;
+        case RANDO_ITEM_CUSTOM:
+            gRandoEquipment.customItems |= item->value;
+            if (item->value == CIF_FULLY_POWERED_SUIT) {
+                gEquipment.beamBombsActivation |= gEquipment.beamBombs & BBF_PLASMA_BEAM;
+                ProjectileCallLoadGraphicsAndClearProjectiles();
+                gEquipment.suitMiscActivation |= gEquipment.suitMisc & SMF_UNKNOWN_ITEMS;
+                gEquipment.suitType = !!(gEquipment.suitMiscActivation & SMF_ALL_SUITS);
+            }
+            break;
     }
 }
 
@@ -133,7 +142,7 @@ void RandoActivateItem(const struct RandoItem* item) {
     switch (item->itemType) {
         case RANDO_ITEM_BEAM_BOMBS:
             gEquipment.beamBombsActivation |= item->value;
-            if (!UNKNOWN_ITEMS_ARE_USABLE)
+            if (!(gRandoEquipment.customItems & CIF_FULLY_POWERED_SUIT))
                 gEquipment.beamBombsActivation &= ~BBF_PLASMA_BEAM;
             if (!(gEquipment.suitMiscActivation & SMF_MORPH_BALL))
                 gEquipment.beamBombsActivation &= ~BBF_BOMBS;
@@ -142,8 +151,8 @@ void RandoActivateItem(const struct RandoItem* item) {
             break;
         case RANDO_ITEM_SUIT_MISC:
             gEquipment.suitMiscActivation |= item->value;
-            if (!UNKNOWN_ITEMS_ARE_USABLE)
-                gEquipment.suitMiscActivation &= ~(SMF_GRAVITY_SUIT | SMF_SPACE_JUMP);
+            if (!(gRandoEquipment.customItems & CIF_FULLY_POWERED_SUIT))
+                gEquipment.suitMiscActivation &= ~SMF_UNKNOWN_ITEMS;
             else if (gEquipment.suitMiscActivation & SMF_ALL_SUITS)
                 gEquipment.suitType = SUIT_FULLY_POWERED;
             if (item->value & SMF_MORPH_BALL && gEquipment.beamBombs & BBF_BOMBS)

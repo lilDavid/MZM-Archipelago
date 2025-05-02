@@ -384,14 +384,15 @@ SECTIONS {
         . = 0x00005b54; gUnk_3005b54 = .;
         . = 0x00005b60; gCableLinkInfo = .;
 
-        . = 0x00005d04; gRandoLocationBitfields = .;
-        . = 0x00005d20; gIncomingItem = .;
-        . = 0x00005d24; gIncomingMessage = .;
-        . = 0x00005d2C; gReceivingFromMultiworld = .;
-        . = 0x00005d2D; gIgnoreLocalItems = .;
-        . = 0x00005d2E; gMultiworldItemCount = .;
-        . = 0x00005d30; gCurrentRandoMessage = .;
-        . = 0x00005d38; gDynamicMessageBuffer = .;
+        . = 0x00005d04; gRandoEquipment = .;
+        . = 0x00005d08; gRandoLocationBitfields = .;
+        . = 0x00005d24; gIncomingItem = .;
+        . = 0x00005d28; gIncomingMessage = .;
+        . = 0x00005d30; gReceivingFromMultiworld = .;
+        . = 0x00005d31; gIgnoreLocalItems = .;
+        . = 0x00005d32; gMultiworldItemCount = .;
+        . = 0x00005d34; gCurrentRandoMessage = .;
+        . = 0x00005d3c; gDynamicMessageBuffer = .;
 
 
         . = 0x00007e60; sp_sys = .;

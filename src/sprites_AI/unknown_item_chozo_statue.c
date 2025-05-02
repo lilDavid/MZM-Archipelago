@@ -163,14 +163,14 @@ void UnknownItemChozoStatueInit(void)
         ramSlot, yPosition, xPosition, gCurrentSprite.status & SPRITE_STATUS_X_FLIP);
     gSpriteData[newRamSlot].work1 = behavior;
 
-    randoCheck = RC_MAX;
+    randoCheck = RC_COUNT;
     switch (gCurrentSprite.spriteId) {
         case PSPRITE_CHOZO_STATUE_PLASMA_BEAM: randoCheck = RC_CRATERIA_UNKNOWN_ITEM_STATUE; break;
         case PSPRITE_CHOZO_STATUE_SPACE_JUMP: randoCheck = RC_KRAID_UNKNOWN_ITEM_STATUE; break;
         case PSPRITE_CHOZO_STATUE_GRAVITY: randoCheck = RC_RIDLEY_UNKNOWN_ITEM_STATUE; break;
         default: break;
     }
-    if (randoCheck < RC_MAX)
+    if (randoCheck < RC_COUNT)
         RandoPlaceItemInSpriteGraphics(randoCheck, gfxSlot + 2, 2, gfxSlot, 1);
 }
 

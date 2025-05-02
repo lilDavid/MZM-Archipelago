@@ -424,7 +424,7 @@ void ChozoStatueInit(void)
 
     gSpriteData[newRamSlot].work1 = behavior;
 
-    randoCheck = RC_MAX;
+    randoCheck = RC_COUNT;
     switch (gCurrentSprite.spriteId) {
         case PSPRITE_CHOZO_STATUE_LONG: randoCheck = RC_BRINSTAR_LONG_BEAM; break;
         case PSPRITE_CHOZO_STATUE_ICE: randoCheck = RC_NORFAIR_ICE_BEAM; break;
@@ -436,7 +436,7 @@ void ChozoStatueInit(void)
         case PSPRITE_CHOZO_STATUE_VARIA: randoCheck = RC_BRINSTAR_VARIA_SUIT; break;
         default: break;
     }
-    if (randoCheck < RC_MAX)
+    if (randoCheck < RC_COUNT)
         RandoPlaceItemInSpriteGraphics(randoCheck, gfxSlot + 2, 2, gfxSlot, 3);
 }
 
