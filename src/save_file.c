@@ -742,9 +742,9 @@ void SramWrite_ToEwram(void)
     StringCopy(pFile->SamusAran_Text, sSamusAran_Text, SRAM_TEXT_SIZE);
 
     for (i = 0; i < AREA_COUNT; i++) {
-        pFile->randoChecks[i] = gRandoLocationBitfields[i];
+        pFile->randoSaveData.locationsChecked[i] = gRandoLocationBitfields[i];
     }
-    pFile->multiworldItemCount = gMultiworldItemCount;
+    pFile->randoSaveData.multiworldItemCount = gMultiworldItemCount;
 
     // Calculate checksum
     ptr = (u32*)&sSramEwramPointer->files[gMostRecentSaveFile];
@@ -839,9 +839,9 @@ void SramRead_FromEwram(void)
     gMusicInfo.priority = musicInfo.priority;
 
     for (i = 0; i < AREA_COUNT; i++) {
-        gRandoLocationBitfields[i] = pFile->randoChecks[i];
+        gRandoLocationBitfields[i] = pFile->randoSaveData.locationsChecked[i];
     }
-    gMultiworldItemCount = pFile->multiworldItemCount;
+    gMultiworldItemCount = pFile->randoSaveData.multiworldItemCount;
 }
 
 /**

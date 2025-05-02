@@ -64,6 +64,11 @@ struct SaveWorldData {
     u32 eventsTriggered[8];
 };
 
+struct RandoSaveData {
+    u32 locationsChecked[AREA_NORMAL_COUNT];
+    u16 multiworldItemCount;
+};
+
 struct SaveFile {
     u8 ZERO_MISSION_010_Text[SRAM_TEXT_SIZE];
     s32 checksum;
@@ -117,10 +122,9 @@ struct SaveFile {
 
     u8 SamusAran_Text[SRAM_TEXT_SIZE];
 
-    u32 randoChecks[AREA_NORMAL_COUNT];
-    u16 multiworldItemCount;
+    struct RandoSaveData randoSaveData;
 
-    u8 freespace[160 - sizeof(u32[AREA_NORMAL_COUNT]) - sizeof(u16)];
+    u8 freespace[160 - sizeof(struct RandoSaveData)];
 
     struct SaveWorldData worldData;
 };
