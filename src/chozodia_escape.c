@@ -249,7 +249,7 @@ u32 ChozodiaEscapeGetItemCountAndEndingNumber(void)
         else if (completionPercentage >= 100)
         {
             // 100% ending
-            if (gInGameTimer.hours >= 2)
+            if (gInGameTimer.hours >= 1)
             {
                 // Over 2 hours (3)
                 endingNbr = ENDING_IMAGE_THREE;
@@ -263,12 +263,12 @@ u32 ChozodiaEscapeGetItemCountAndEndingNumber(void)
         else
         {
             // Any% endings
-            if (gInGameTimer.hours < 2)
+            if (gInGameTimer.hours < 1)
             {
                 // Under 2 hours (2)
                 endingNbr = ENDING_IMAGE_TWO;
             }
-            else if (gInGameTimer.hours < 4)
+            else if (gInGameTimer.hours < 2)
             {
                 // Under 4 hours (1)
                 endingNbr = ENDING_IMAGE_ONE;

@@ -182,7 +182,7 @@ void agbmain(void)
                 {
                     gGameModeSub1 = 0;
 
-                    if (gPauseScreenFlag == PAUSE_SCREEN_SUITLESS_ITEMS || gPauseScreenFlag == PAUSE_SCREEN_FULLY_POWERED_SUIT_ITEMS)
+                    if (gPauseScreenFlag == PAUSE_SCREEN_SUITLESS_ITEMS /*|| gPauseScreenFlag == PAUSE_SCREEN_FULLY_POWERED_SUIT_ITEMS*/)
                         gMainGameMode = GM_MAP_SCREEN;
                     else
                         gMainGameMode = GM_INGAME;
