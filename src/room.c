@@ -86,9 +86,10 @@ void RoomLoad(void)
         //gEquipment.suitMiscActivation &= ~SMF_GRAVITY_SUIT;
         SamusSetPose(SPOSE_FACING_THE_FOREGROUND);
 
-        //gSamusData.xPosition = BLOCK_SIZE * 24 + HALF_BLOCK_SIZE;
-        //gSamusData.yPosition = BLOCK_SIZE * 31 - ONE_SUB_PIXEL;
+        gSamusData.xPosition = BLOCK_SIZE * 24 + HALF_BLOCK_SIZE;
+        gSamusData.yPosition = BLOCK_SIZE * 31 - ONE_SUB_PIXEL;
 
+#if 0
         gInGameCutscene.stage = 0;
         gInGameCutscene.queuedCutscene = IGC_GETTING_FULLY_POWERED;
         InGameCutsceneStart(IGC_GETTING_FULLY_POWERED);
@@ -96,6 +97,7 @@ void RoomLoad(void)
         gDisablePause = TRUE;
         gSamusData.lastWallTouchedMidAir = TRUE;
         gCurrentItemBeingAcquired = ITEM_ACQUISITION_GRAVITY;
+#endif // 0
         gSamusWeaponInfo.chargeCounter = 0;
 
         if (gEquipment.suitMisc & SMF_ALL_SUITS)
