@@ -143,7 +143,7 @@ src/libgcc/%.s: src/libgcc/%.c
 src/sprites_AI/%.s: CFLAGS = -O2 -mthumb-interwork -fhex-asm
 src/sprites_AI/%.s: src/sram/%.c
 
-src/data/rando_data.s: $(RANDO_GRAPHICS)
+src/data/rando_graphics_data.s: $(RANDO_GRAPHICS)
 
 data/rando/%.gfx data/rando/%.pal: assets/%.png
 	$Q$(MKDIR) data/rando
