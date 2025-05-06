@@ -384,13 +384,15 @@ SECTIONS {
         . = 0x00005b54; gUnk_3005b54 = .;
         . = 0x00005b60; gCableLinkInfo = .;
 
-        . = 0x00005d04; gRandoLocationBitfields = .;
-        . = 0x00005d20; gIncomingItemId = .;
-        . = 0x00005d21; gIncomingItemCount = .;
-        . = 0x00005d22; gReceivingFromMultiworld = .;
-        . = 0x00005d24; gMultiworldItemCount = .;
-        . = 0x00005d26; gMultiworldItemSenderName = .;
-        . = 0x00005d6e; gDynamicMessageBuffer = .;
+        . = 0x00005d04; gRandoEquipment = .;
+        . = 0x00005d08; gRandoLocationBitfields = .;
+        . = 0x00005d24; gIncomingItem = .;
+        . = 0x00005d28; gIncomingMessage = .;
+        . = 0x00005d30; gReceivingFromMultiworld = .;
+        . = 0x00005d31; gIgnoreLocalItems = .;
+        . = 0x00005d32; gMultiworldItemCount = .;
+        . = 0x00005d34; gCurrentRandoMessage = .;
+        . = 0x00005d3c; gDynamicMessageBuffer = .;
 
 
         . = 0x00007e60; sp_sys = .;
@@ -1443,6 +1445,7 @@ SECTIONS {
 
         src/data/rando.o(.rodata);
         src/data/rando_data.o(.rodata);
+        src/data/rando_graphics_data.o(.rodata);
         src/data/rando_names.o(.rodata);
     } >rom =0xFF
 }

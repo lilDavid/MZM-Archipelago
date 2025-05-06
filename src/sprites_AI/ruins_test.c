@@ -26,6 +26,8 @@
 #include "structs/sprite.h"
 #include "structs/projectile.h"
 
+#include "rando_item.h"
+
 /**
  * @brief 38988 | 24 | Calculates the new delay for the symbol
  * 
@@ -2100,8 +2102,7 @@ void RuinsTestSamusReflectionEnd(void)
                 gCurrentSprite.status = 0;
                 gSpriteData[gCurrentSprite.primarySpriteRamSlot].status = 0;
 
-                SpriteSpawnPrimary(PSPRITE_ITEM_BANNER, MESSAGE_FULLY_POWERED_SUIT, 6,
-                    gCurrentSprite.yPosition, gCurrentSprite.xPosition, 0);
+                RandoGiveItemFromCheck(RC_CHOZODIA_RUINS_TEST_REWARD);
         }
         
         return;

@@ -720,28 +720,10 @@ u8 unk_6f0a8(u8 textID, u8 gfxSlot, u8 param_3)
 
         case 3:
             gCurrentMessage.line++;
-            if (gCurrentMessage.messageID <= MESSAGE_DYNAMIC_ITEM_UNKNOWN)
+            if (gCurrentMessage.messageID <= MESSAGE_POWER_GRIP)
             {
-                switch (gCurrentMessage.messageID) {
-                    case MESSAGE_PLASMA_BEAM:
-                        gCurrentItemBeingAcquired = ITEM_ACQUISITION_PLASMA_BEAM;
-                        break;
-                    case MESSAGE_GRAVITY_SUIT:
-                        gCurrentItemBeingAcquired = ITEM_ACQUISITION_GRAVITY;
-                        break;
-                    case MESSAGE_SPACE_JUMP:
-                        gCurrentItemBeingAcquired = ITEM_ACQUISITION_SPACE_JUMP;
-                        break;
-                    case MESSAGE_DYNAMIC_ITEM:
-                    case MESSAGE_DYNAMIC_ITEM_MAJOR:
-                    case MESSAGE_DYNAMIC_ITEM_UNKNOWN:
-                        // Set previously
-                        break;
-                    default:
-                        gCurrentItemBeingAcquired = gCurrentMessage.messageID;
-                        break;
-                }
-                if (gCurrentMessage.messageID >= MESSAGE_ENERGY_TANK_ACQUIRED && !gCollectingTank && !gReceivingFromMultiworld)
+                gCurrentItemBeingAcquired = gCurrentMessage.messageID;
+                if (gCurrentMessage.messageID >= MESSAGE_LONG_BEAM)
                     BgClipFinishCollectingAbility();
             }
             gCurrentMessage.stage++;
@@ -807,10 +789,13 @@ u8 TextProcessItemBanner(void)
 
             while (i != 0)
             {
-                switch (TextProcessCurrentMessage(&gCurrentMessage,
-                    (gCurrentMessage.messageID >= MESSAGE_DYNAMIC_ITEM && gCurrentMessage.messageID <= MESSAGE_DYNAMIC_ITEM_UNKNOWN)
-                        ? gDynamicMessageBuffer : sMessageTextPointers[gLanguage][gCurrentMessage.messageID],
-                    VRAM_BASE + 0x14000 + gCurrentMessage.gfxSlot * 0x800 + gCurrentMessage.line * 0x800))
+                switch (TextProcessCurrentMessage(
+                    &gCurrentMessage,
+                    (gCurrentMessage.messageID == MESSAGE_DUMMY && gCurrentRandoMessage.data != NULL) ?
+                        gCurrentRandoMessage.data :
+                        sMessageTextPointers[gLanguage][gCurrentMessage.messageID],
+                    VRAM_BASE + 0x14000 + gCurrentMessage.gfxSlot * 0x800 + gCurrentMessage.line * 0x800
+                ))
                 {
                     case TEXT_STATE_ENDED:
                         gCurrentMessage.stage++;
@@ -837,28 +822,14 @@ u8 TextProcessItemBanner(void)
 
         case 3:
             gCurrentMessage.line++;
-            if (gCurrentMessage.messageID <= MESSAGE_DYNAMIC_ITEM_UNKNOWN)
+            if (gCurrentMessage.messageID <= MESSAGE_POWER_GRIP)
             {
-                switch (gCurrentMessage.messageID) {
-                    case MESSAGE_PLASMA_BEAM:
-                        gCurrentItemBeingAcquired = ITEM_ACQUISITION_PLASMA_BEAM;
-                        break;
-                    case MESSAGE_GRAVITY_SUIT:
-                        gCurrentItemBeingAcquired = ITEM_ACQUISITION_GRAVITY;
-                        break;
-                    case MESSAGE_SPACE_JUMP:
-                        gCurrentItemBeingAcquired = ITEM_ACQUISITION_SPACE_JUMP;
-                        break;
-                    case MESSAGE_DYNAMIC_ITEM:
-                    case MESSAGE_DYNAMIC_ITEM_MAJOR:
-                    case MESSAGE_DYNAMIC_ITEM_UNKNOWN:
-                        // Set previously
-                        break;
-                    default:
-                        gCurrentItemBeingAcquired = gCurrentMessage.messageID;
-                        break;
+                if (gCurrentMessage.messageID == MESSAGE_DUMMY && gCurrentRandoMessage.data != NULL) {
+                    gCurrentItemBeingAcquired = gCurrentRandoMessage.messageID;
+                } else {
+                    gCurrentItemBeingAcquired = gCurrentMessage.messageID;
                 }
-                if (gCurrentMessage.messageID >= MESSAGE_ENERGY_TANK_ACQUIRED && !gCollectingTank && !gReceivingFromMultiworld)
+                if (gCurrentItemBeingAcquired >= MESSAGE_ENERGY_TANK_ACQUIRED && !gCollectingTank && !gReceivingFromMultiworld)
                     BgClipFinishCollectingAbility();
             }
             gCurrentMessage.stage++;

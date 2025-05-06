@@ -65,8 +65,9 @@ struct SaveWorldData {
 };
 
 struct RandoSaveData {
+    struct RandoEquipment equipment;
     u32 locationsChecked[AREA_NORMAL_COUNT];
-    u8 multiworldItemCount;
+    u16 multiworldItemCount;
 };
 
 struct SaveFile {

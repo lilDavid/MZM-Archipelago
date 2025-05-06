@@ -741,6 +741,7 @@ void SramWrite_ToEwram(void)
 
     StringCopy(pFile->SamusAran_Text, sSamusAran_Text, SRAM_TEXT_SIZE);
 
+    pFile->randoSaveData.equipment = gRandoEquipment;
     for (i = 0; i < AREA_COUNT; i++) {
         pFile->randoSaveData.locationsChecked[i] = gRandoLocationBitfields[i];
     }
@@ -838,6 +839,7 @@ void SramRead_FromEwram(void)
     gMusicInfo.unk_20 = musicInfo.unk_4;
     gMusicInfo.priority = musicInfo.priority;
 
+    gRandoEquipment = pFile->randoSaveData.equipment;
     for (i = 0; i < AREA_COUNT; i++) {
         gRandoLocationBitfields[i] = pFile->randoSaveData.locationsChecked[i];
     }

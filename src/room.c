@@ -253,12 +253,13 @@ void RoomLoadRandomizerTiles(void) {
          itemRoom < sRandoAreaItemListLengths[gCurrentArea] && sRandoAreaItemLists[gCurrentArea][itemRoom] == gCurrentRoom;
          i++, itemRoom += 2)
     {
-        u32 item, baseTile, palette;
+        const struct PlacedItem* placement;
+        u32 baseTile, palette;
 
-        item = sPlacedItems[sRandoAreaItemLists[gCurrentArea][itemRoom + 1]].itemId;
-        if (item <= ITEM_POWER_BOMB_TANK) {
+        placement = &sPlacedItems[sRandoAreaItemLists[gCurrentArea][itemRoom + 1]];
+        if (sRandoItemToTankTilemap[placement->item.itemType] != 0) {
             palette = UCHAR_MAX;
-            baseTile = sRandoItemToTankTilemap[item];
+            baseTile = sRandoItemToTankTilemap[placement->item.itemType];
         } else {
             palette = sRandoPaletteSlots[gCurrentRoomEntry.tileset * 2 + i];
             baseTile = 4 * (sRandoAnimatedTileGaps[gAnimatedGraphicsEntry.tileset] + i) | ((palette == UCHAR_MAX ? 0 : palette) << 12);
@@ -269,7 +270,7 @@ void RoomLoadRandomizerTiles(void) {
         }
 
         if (palette != UCHAR_MAX)
-            DmaTransfer(3, sItemGfxPointers[item].palette, PALRAM_BASE + (palette * sizeof(u16[16])), sizeof(u16[16]), 16);
+            DmaTransfer(3, placement->sprite->pal, PALRAM_BASE + (palette * sizeof(u16[16])), sizeof(u16[16]), 16);
     }
     for (; i < 4; i++) {
         // Set the rest to the placeholder gem

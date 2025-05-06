@@ -4,6 +4,7 @@
 
 #include "data/sprites/charge_beam.h"
 #include "data/sprites/morph_ball.h"
+#include "data/rando_graphics_data.h"
 
 #include "constants/sprite.h"
 #include "constants/event.h"
@@ -71,7 +72,7 @@ void ChargeBeamSpawnGlow(void)
         gCurrentSprite.pose = CHARGE_BEAM_POSE_IDLE_INIT;
 
         gfxSlot = gCurrentSprite.spritesetGfxSlot;
-        if (sPlacedItems[RC_BRINSTAR_WORM_DROP].itemId == ITEM_CHARGE_BEAM) {
+        if (sPlacedItems[RC_BRINSTAR_WORM_DROP].sprite->gfx == sRandoChargeBeamSprite.gfx) {
             gCurrentSprite.work1 = SpriteSpawnSecondary(SSPRITE_CHARGE_BEAM_GLOW, 0, gfxSlot,
                 gCurrentSprite.primarySpriteRamSlot, gCurrentSprite.yPosition, gCurrentSprite.xPosition, 0);
         } else {
@@ -90,7 +91,7 @@ void ChargeBeamVisibleInit(void)
     gCurrentSprite.ignoreSamusCollisionTimer = DELTA_TIME;
     gCurrentSprite.pose = CHARGE_BEAM_POSE_IDLE;
 
-    if (sPlacedItems[RC_BRINSTAR_WORM_DROP].itemId == ITEM_CHARGE_BEAM)
+    if (sPlacedItems[RC_BRINSTAR_WORM_DROP].sprite->gfx == sRandoChargeBeamSprite.gfx)
         gCurrentSprite.pOam = sChargeBeamOam_Visible;
     else
         gCurrentSprite.pOam = sMorphBallOam_Idle;
@@ -124,8 +125,7 @@ void ChargeBeamIdle(void)
     gCurrentSprite.work3 = offset + 1;
     gCurrentSprite.yPosition += velocity;
 
-    if (gCurrentSprite.status & SPRITE_STATUS_SAMUS_COLLIDING)
-    {
+    if (gCurrentSprite.status & SPRITE_STATUS_SAMUS_COLLIDING) {
         offset = gCurrentSprite.work1;
         if (offset < MAX_AMOUNT_OF_SPRITES)
             gSpriteData[offset].status = 0; // Kill glow
