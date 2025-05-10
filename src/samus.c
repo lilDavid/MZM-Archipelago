@@ -4590,7 +4590,7 @@ u8 SamusSpinning(struct SamusData* pData)
     else
     {
         // Check can wall jump
-        if (pData->walljumpTimer != 0)
+        if (pData->walljumpTimer != 0 && gRandoEquipment.customItems & CIF_WALL_JUMP)
         {
             pData->walljumpTimer--;
 
