@@ -17,6 +17,7 @@ const struct Seed sRandoSeed = {
 
         .removeGravityHeatResistance = FALSE,
         .usePowerBombsWithoutBomb = FALSE,
+        .separateHiJumpSpringBall = FALSE,
 
         .skipChozodiaStealth = FALSE,
         .startWithMaps = FALSE,

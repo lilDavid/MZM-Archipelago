@@ -24,6 +24,7 @@
 
 #define CIF_NONE               0
 #define CIF_WALL_JUMP          (1 << 0)
+#define CIF_SPRING_BALL        (1 << 1)
 #define CIF_FULLY_POWERED_SUIT (1 << 7)
 
 enum SamusSuit {

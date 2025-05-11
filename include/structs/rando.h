@@ -20,6 +20,7 @@ struct Seed {
         u8 removeGravityHeatResistance;
         u8 usePowerBombsWithoutBomb;
         u8 buffPowerBombDrops;
+        u8 separateHiJumpSpringBall;
 
         u8 skipChozodiaStealth;
         u8 startWithMaps;
