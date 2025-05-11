@@ -7,12 +7,10 @@
 #include "constants/samus.h"
 
 const struct Seed sRandoSeed = {
-    .playerNumber = 0,
     .playerName = {},
     .seedName = {},
 
     .options = {
-        .goal = GOAL_MECHA_RIDLEY,
         .difficulties = ALLOW_NORMAL | ALLOW_HARD,
 
         .removeGravityHeatResistance = FALSE,

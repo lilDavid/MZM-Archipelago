@@ -135,12 +135,6 @@ enum RandoItemType {
     RANDO_ITEM_END
 };
 
-enum RandoGoal {
-    GOAL_MECHA_RIDLEY,
-    GOAL_MAJOR_BOSSES,
-    GOAL_MAX,
-};
-
 enum RandoDifficulty {
     ALLOW_NORMAL = 1,
     ALLOW_HARD = 2,

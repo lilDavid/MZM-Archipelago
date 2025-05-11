@@ -9,12 +9,10 @@
 // Structs
 
 struct Seed {
-    u16 playerNumber;
     u8 playerName[64];
     u8 seedName[64];
 
     struct {
-        u8 goal;
         u8 difficulties;
 
         u8 removeGravityHeatResistance;
