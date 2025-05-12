@@ -54,8 +54,6 @@ CSRC = $(wildcard src/**.c) $(wildcard src/**/**.c) $(wildcard src/**/**/**.c) $
 .PRECIOUS: $(CSRC:.c=.s)
 ASMSRC = $(CSRC:.c=.s) $(wildcard asm/*.s) $(wildcard audio/*.s) $(wildcard audio/**/*.s) $(wildcard audio/**/**/*.s)
 OBJ = $(ASMSRC:.s=.o) 
-RANDO_GRAPHICS_SRC = $(wildcard assets/**.png)
-RANDO_GRAPHICS = $(RANDO_GRAPHICS_SRC:assets/%.png=data/rando/%.gfx) $(RANDO_GRAPHICS_SRC:assets/%.png=data/rando/%.pal) $(wildcard assets/**.pal)
 
 # Enable verbose output
 ifeq ($(V),1)
@@ -142,13 +140,6 @@ src/libgcc/%.s: src/libgcc/%.c
 
 src/sprites_AI/%.s: CFLAGS = -O2 -mthumb-interwork -fhex-asm
 src/sprites_AI/%.s: src/sram/%.c
-
-src/data/rando_graphics_data.s: $(RANDO_GRAPHICS)
-
-data/rando/%.gfx data/rando/%.pal: assets/%.png
-	$Q$(MKDIR) data/rando
-	$(MSG) MAKE_CUSTOM_GRAPHICS $@
-	$Q$(PYTHON) $(MAKE_CUSTOM_GRAPHICS) $<
 
 tools/%: tools/%.c
 	$(MSG) HOSTCC $@

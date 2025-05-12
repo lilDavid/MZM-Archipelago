@@ -17,18 +17,14 @@ extern const struct RandoSprite sRandoChargeBeamSprite;
 extern const struct RandoSprite sRandoIceBeamSprite;
 extern const struct RandoSprite sRandoWaveBeamSprite;
 extern const struct RandoSprite sRandoUnknownPlasmaBeamSprite;
-extern const struct RandoSprite sRandoPlasmaBeamSprite;
 extern const struct RandoSprite sRandoBombSprite;
 extern const struct RandoSprite sRandoVariaSuitSprite;
 extern const struct RandoSprite sRandoUnknownGravitySuitSprite;
-extern const struct RandoSprite sRandoGravitySuitSprite;
 extern const struct RandoSprite sRandoMorphBallSprite;
 extern const struct RandoSprite sRandoSpeedBoosterSprite;
 extern const struct RandoSprite sRandoHiJumpSprite;
 extern const struct RandoSprite sRandoScrewAttackSprite;
 extern const struct RandoSprite sRandoUnknownSpaceJumpSprite;
-extern const struct RandoSprite sRandoSpaceJumpSprite;
 extern const struct RandoSprite sRandoPowerGripSprite;
-extern const struct RandoSprite sRandoNothingSprite;
 
 #endif // RANDO_GRAPHICS_DATA_H
