@@ -20,6 +20,7 @@
 #include "constants/haze.h"
 #include "constants/game_state.h"
 #include "constants/text.h"
+#include "constants/samus.h"
 
 #include "structs/bg_clip.h"
 #include "structs/haze.h"
@@ -83,6 +84,13 @@ u32 InGameMainLoop(void)
                     APPLY_DELTA_TIME_DEC(gPreventMovementTimer);
                 else
                 {
+                    if (!sRandoSeed.options.separateHiJumpSpringBall || gDemoState == DEMO_STATE_PLAYING)
+                    {
+                        if (gEquipment.suitMiscActivation & SMF_HIGH_JUMP)
+                            gRandoEquipment.customItems |= CIF_SPRING_BALL;
+                        else
+                            gRandoEquipment.customItems &= ~CIF_SPRING_BALL;
+                    }
                     SamusUpdate();
                     SamusUpdateHitboxMovingDirection();
                 }

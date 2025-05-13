@@ -1701,7 +1701,12 @@ void SamusSetMidAir(struct SamusData* pData, struct SamusData* pCopy, struct Wea
 
                 // Check jump
                 if (pCopy->forcedMovement == FORCED_MOVEMENT_MID_AIR_JUMP)
-                    pData->yVelocity = SAMUS_MORPH_BALL_JUMP_VELOCITY;
+                {
+                    if (gEquipment.suitMiscActivation & SMF_HIGH_JUMP)
+                        pData->yVelocity = SAMUS_MORPH_BALL_JUMP_VELOCITY;
+                    else
+                        pData->yVelocity = SAMUS_BOMB_BOUNCE_Y_VELOCITY;
+                }
             }
 
         case SPOSE_DELAY_BEFORE_BALLSPARKING:
@@ -1819,7 +1824,7 @@ void SamusSetLandingPose(struct SamusData* pData, struct SamusData* pCopy, struc
         case SPOSE_MORPH_BALL_MIDAIR:
             pCopy->lastWallTouchedMidAir++; // 1
 
-            if (gButtonInput & KEY_A && gEquipment.suitMiscActivation & SMF_HIGH_JUMP)
+            if (gButtonInput & KEY_A && gRandoEquipment.customItems & CIF_SPRING_BALL)
             {
                 // Check bounce from maintained A
                 collision = SamusCheckCollisionAbove(pData, sSamusHitboxData[SAMUS_HITBOX_TYPE_STANDING][SAMUS_HITBOX_TOP]);
@@ -4590,7 +4595,7 @@ u8 SamusSpinning(struct SamusData* pData)
     else
     {
         // Check can wall jump
-        if (pData->walljumpTimer != 0)
+        if (pData->walljumpTimer != 0 && gRandoEquipment.customItems & CIF_WALL_JUMP)
         {
             pData->walljumpTimer--;
 
@@ -4847,7 +4852,7 @@ u8 SamusMorphball(struct SamusData* pData)
     }
 
     // Check start ballsparking
-    if (gChangedInput & KEY_A && gEquipment.suitMiscActivation & SMF_HIGH_JUMP && pData->shinesparkTimer != 0)
+    if (gChangedInput & KEY_A && gRandoEquipment.customItems & CIF_SPRING_BALL && pData->shinesparkTimer != 0)
     {
         hitbox = sSamusHitboxData[SAMUS_HITBOX_TYPE_MORPHED][SAMUS_HITBOX_TOP] - BLOCK_SIZE;
         if (SamusCheckCollisionAbove(pData, hitbox) == SAMUS_COLLISION_DETECTION_NONE)
@@ -4862,7 +4867,7 @@ u8 SamusMorphball(struct SamusData* pData)
         if (pData->forcedMovement != FORCED_MOVEMENT_MID_AIR_JUMP)
             return SPOSE_MID_AIR_REQUEST;
 
-        if (gEquipment.suitMiscActivation & SMF_HIGH_JUMP)
+        if (gRandoEquipment.customItems & CIF_SPRING_BALL)
             return SPOSE_MID_AIR_REQUEST;
 
         pData->forcedMovement = 0;
@@ -4947,7 +4952,7 @@ u8 SamusRolling(struct SamusData* pData)
     s32 velocityCap;
 
     // Check jumping
-    if (gChangedInput & KEY_A && gEquipment.suitMiscActivation & SMF_HIGH_JUMP)
+    if (gChangedInput & KEY_A && gRandoEquipment.customItems & CIF_SPRING_BALL)
     {
         // Request jump
         pData->forcedMovement = FORCED_MOVEMENT_MID_AIR_JUMP;
