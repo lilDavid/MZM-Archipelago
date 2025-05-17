@@ -23,6 +23,8 @@
 #include "structs/screen_shake.h"
 #include "structs/sprite.h"
 
+#include "rando_item.h"
+
 
 /**
  * @brief e498 | 7c | Initialize the first sprite to be a location text if necessary
@@ -3753,6 +3755,10 @@ u32 SpriteUtilGetFinalCompletionPercentage(void)
             if (gRandoLocationBitfields[i] & mask)
                 percentage++;
     }
+
+    // TODO: Refactor location IDs so we can count items but ignore extra checks
+    if (RandoIsLocationChecked(RC_CHOZODIA_RUINS_TEST_REWARD))
+        percentage--;
 
     return percentage;
 }
