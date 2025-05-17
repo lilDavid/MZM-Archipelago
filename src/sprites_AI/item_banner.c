@@ -353,13 +353,12 @@ void ItemBannerRemovalAnimation(void)
 
         gPreventMovementTimer = 0;
 
-        if (gCurrentSprite.work2)
+        if (msg == MESSAGE_DUMMY && gCurrentRandoMessage.data) {
+            RandoActivateAcquiredItem();
+        }
+        else if (gCurrentSprite.work2)
         {
-            if (msg == MESSAGE_DUMMY) {
-                RandoActivateAcquiredItem();
-            } else {
-                gPauseScreenFlag = PAUSE_SCREEN_ITEM_ACQUISITION;
-            }
+            gPauseScreenFlag = PAUSE_SCREEN_ITEM_ACQUISITION;
         }
     }
 }
