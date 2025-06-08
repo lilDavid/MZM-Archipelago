@@ -84,13 +84,6 @@ u32 InGameMainLoop(void)
                     APPLY_DELTA_TIME_DEC(gPreventMovementTimer);
                 else
                 {
-                    if (!sRandoSeed.options.separateHiJumpSpringBall || gDemoState == DEMO_STATE_PLAYING)
-                    {
-                        if (gEquipment.suitMiscActivation & SMF_HIGH_JUMP)
-                            gRandoEquipment.customItems |= CIF_SPRING_BALL;
-                        else
-                            gRandoEquipment.customItems &= ~CIF_SPRING_BALL;
-                    }
                     SamusUpdate();
                     SamusUpdateHitboxMovingDirection();
                 }

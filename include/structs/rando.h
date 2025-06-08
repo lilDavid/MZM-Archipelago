@@ -64,7 +64,7 @@ struct StartingInventory {
 
 // Functions
 
-void RandoHandleMultiworld();
+void RandoHandleMultiworld(void);
 
 // Globals
 

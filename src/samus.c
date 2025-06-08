@@ -16,6 +16,7 @@
 #include "constants/audio.h"
 #include "constants/clipdata.h"
 #include "constants/color_fading.h"
+#include "constants/demo.h"
 #include "constants/event.h"
 #include "constants/in_game_cutscene.h"
 #include "constants/game_state.h"
@@ -24,12 +25,22 @@
 
 #include "structs/bg_clip.h"
 #include "structs/clipdata.h"
+#include "structs/demo.h"
 #include "structs/game_state.h"
 #include "structs/visual_effects.h"
 #include "structs/samus.h"
 #include "structs/screen_shake.h"
 #include "structs/scroll.h"
 #include "structs/rando.h"
+
+static s32 RandoCanSpringBall() {
+    if (gRandoEquipment.customItems & CIF_SPRING_BALL) {
+        return TRUE;
+    }
+
+    return !(sRandoSeed.options.separateHiJumpSpringBall || gDemoState == DEMO_STATE_PLAYING) &&
+        (gEquipment.suitMisc & SMF_HIGH_JUMP);
+}
 
 /**
  * @brief 5368 | 10c | Checks for screw attack and speedbooster damage to the environment
@@ -1824,7 +1835,7 @@ void SamusSetLandingPose(struct SamusData* pData, struct SamusData* pCopy, struc
         case SPOSE_MORPH_BALL_MIDAIR:
             pCopy->lastWallTouchedMidAir++; // 1
 
-            if (gButtonInput & KEY_A && gRandoEquipment.customItems & CIF_SPRING_BALL)
+            if (gButtonInput & KEY_A && RandoCanSpringBall())
             {
                 // Check bounce from maintained A
                 collision = SamusCheckCollisionAbove(pData, sSamusHitboxData[SAMUS_HITBOX_TYPE_STANDING][SAMUS_HITBOX_TOP]);
@@ -4852,7 +4863,7 @@ u8 SamusMorphball(struct SamusData* pData)
     }
 
     // Check start ballsparking
-    if (gChangedInput & KEY_A && gRandoEquipment.customItems & CIF_SPRING_BALL && pData->shinesparkTimer != 0)
+    if (gChangedInput & KEY_A && RandoCanSpringBall() && pData->shinesparkTimer != 0)
     {
         hitbox = sSamusHitboxData[SAMUS_HITBOX_TYPE_MORPHED][SAMUS_HITBOX_TOP] - BLOCK_SIZE;
         if (SamusCheckCollisionAbove(pData, hitbox) == SAMUS_COLLISION_DETECTION_NONE)
@@ -4867,7 +4878,7 @@ u8 SamusMorphball(struct SamusData* pData)
         if (pData->forcedMovement != FORCED_MOVEMENT_MID_AIR_JUMP)
             return SPOSE_MID_AIR_REQUEST;
 
-        if (gRandoEquipment.customItems & CIF_SPRING_BALL)
+        if (RandoCanSpringBall())
             return SPOSE_MID_AIR_REQUEST;
 
         pData->forcedMovement = 0;
@@ -4952,7 +4963,7 @@ u8 SamusRolling(struct SamusData* pData)
     s32 velocityCap;
 
     // Check jumping
-    if (gChangedInput & KEY_A && gRandoEquipment.customItems & CIF_SPRING_BALL)
+    if (gChangedInput & KEY_A && RandoCanSpringBall())
     {
         // Request jump
         pData->forcedMovement = FORCED_MOVEMENT_MID_AIR_JUMP;
