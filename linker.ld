@@ -9,6 +9,8 @@ gUnk_Audio0x64 = 0x64;
 gUnk_Audio0x194F700 = 0x194F700;
 gUnk_Audio0x50 = 0x50;
 
+__nes_metroid_load_address = 0x87D8000;
+
 SECTIONS {
     ewram (NOLOAD) : ALIGN(4) {
         . = 0x00002000; gClipdataCollisionTypes = .;
@@ -1256,7 +1258,7 @@ SECTIONS {
         src/data/rooms/ridley/Bg3.o(.rodata);
 
         src/data/tilesets/tilesets_set5.o(.rodata);
-        
+
         src/data/rooms/tourian/Tourian_0.o(.rodata);
         src/data/rooms/tourian/Tourian_1.o(.rodata);
         src/data/rooms/tourian/Tourian_2.o(.rodata);
@@ -1304,7 +1306,7 @@ SECTIONS {
         src/data/rooms/crateria/Crateria_20.o(.rodata);
         src/data/rooms/crateria/Crateria_21.o(.rodata);
         src/data/rooms/crateria/Bg3.o(.rodata);
-        
+
         src/data/tilesets/tilesets_set7.o(.rodata);
 
         src/data/rooms/chozodia/Chozodia_0.o(.rodata);
@@ -1411,7 +1413,7 @@ SECTIONS {
         src/data/animated_tiles_data.o(.rodata);
         src/data/shortcut_pointers.o(.rodata);
         src/data/cable_link_data.o(.rodata);
-        sTransferRom_After = .; 
+        sTransferRom_After = .;
         src/data/samus_sprites_pointers.o(.rodata);
         src/data/frame_data_pointers.o(.rodata);
         src/data/engine_pointers.o(.rodata);
@@ -1443,13 +1445,47 @@ SECTIONS {
         src/data/internal_tourian_escape_data.o(.rodata);
         src/data/internal_ending_and_gallery_data.o(.rodata);
         src/data/internal_chozodia_escape_data.o(.rodata);
+    } >rom
 
-        . = 0x7d8000 - SIZEOF(rom);
+    nes_metroid_data __nes_metroid_load_address : ALIGN(2) {
         src/data/nes_metroid.o(.rodata);
+    } >rom
 
+    rando_data : ALIGN(2) {
         src/data/rando.o(.rodata);
         src/data/rando_data.o(.rodata);
         src/data/rando_graphics_data.o(.rodata);
         src/data/rando_names.o(.rodata);
-    } >rom =0xFF
+    } >rom
+
+    /* DWARF debug sections.
+       Symbols in the DWARF debugging sections are relative to the beginning
+       of the section so we begin them at 0.  */
+
+    /* DWARF 1 */
+    .debug          0 : { *(.debug) }
+    .line           0 : { *(.line) }
+
+    /* GNU DWARF 1 extensions */
+    .debug_srcinfo  0 : { *(.debug_srcinfo) }
+    .debug_sfnames  0 : { *(.debug_sfnames) }
+
+    /* DWARF 1.1 and DWARF 2 */
+    .debug_aranges  0 : { *(.debug_aranges) }
+    .debug_pubnames 0 : { *(.debug_pubnames) }
+
+    /* DWARF 2 */
+    .debug_info     0 : { *(.debug_info .gnu.linkonce.wi.*) }
+    .debug_abbrev   0 : { *(.debug_abbrev) }
+    .debug_line     0 : { *(.debug_line) }
+    .debug_frame    0 : { *(.debug_frame) }
+    .debug_str      0 : { *(.debug_str) }
+    .debug_loc      0 : { *(.debug_loc) }
+    .debug_macinfo  0 : { *(.debug_macinfo) }
+
+    /* Discard everything not specifically mentioned above. */
+    /DISCARD/ :
+    {
+        *(*);
+    }
 }

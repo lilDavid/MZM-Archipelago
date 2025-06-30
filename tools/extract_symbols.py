@@ -64,9 +64,9 @@ def main():
 
             try:
                 address, symbol = line.split()
+                sections[section][symbol] = int(address, 0)
             except ValueError:
                 continue
-            sections[section][symbol] = int(address, 0)
 
     with open(output, 'w') as jsonfile:
         json.dump(sections, jsonfile)
