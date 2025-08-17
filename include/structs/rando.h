@@ -94,4 +94,6 @@ extern u8 gCollectingLocation;
 extern u16 gMultiworldItemCount;
 extern u32 gRandoLocationBitfields[AREA_NORMAL_COUNT];
 
+extern u8 gWarpToStart;
+
 #endif /* RANDO_STRUCT_H */

@@ -1143,7 +1143,13 @@ void ConnectionCheckPlayCutsceneDuringAreaConnection(void)
 }
 
 void ConnectionStartWarp(void) {
-    // Start back in Brinstar with your Power Suit and Mother Brain undone
+    gGameModeSub1 = SUB_GAME_MODE_LOADING_ROOM;
+    gWarpToStart = TRUE;
+    ColorFadingStart(COLOR_FADING_NO_TRANSITION);
+}
+
+void ConnectionStartWarpApply(void) {
+    // If in stealth, give power suit back and un-kill Mother Brain
     if (gEquipment.suitType == SUIT_SUITLESS) {
         EventFunction(EVENT_ACTION_CLEARING, EVENT_MOTHER_BRAIN_KILLED);
         EventFunction(EVENT_ACTION_CLEARING, EVENT_ESCAPED_ZEBES);
@@ -1159,30 +1165,25 @@ void ConnectionStartWarp(void) {
         }
     }
 
-    gWhichBGPositionIsWrittenToBG3OFS = 4;
-    gUseMotherShipDoors = sStartingLocation.useMotherShipDoors;
     gAreaBeforeTransition = gCurrentArea;
-    gCurrentArea = sStartingLocation.area;
-    gCurrentRoom = sStartingLocation.room;
-    gLastDoorUsed = sStartingLocation.lastDoorUsed;
-
-    gGameModeSub1 = SUB_GAME_MODE_START_WARP;
     gIsLoadingFile = TRUE;
 
-    CheckSetNewMusicTrack(sStartingLocation.music);
-    ColorFadingStart(COLOR_FADING_NO_TRANSITION);
-}
-
-void ConnectionStartWarpApply(void) {
     gSamusData.xPosition = gPreviousXPosition = sStartingLocation.xPosition;
     gSamusData.yPosition = gPreviousYPosition = sStartingLocation.yPosition;
     gSamusData.standingStatus = STANDING_GROUND;
     gSamusData.timer = FALSE;
+    gPreventMovementTimer = 0;
+    SamusSetPose(SPOSE_FACING_THE_FOREGROUND);
+
+    gCurrentArea = sStartingLocation.area;
+    gCurrentRoom = sStartingLocation.room;
+    gLastDoorUsed = sStartingLocation.lastDoorUsed;
+    gUseMotherShipDoors = sStartingLocation.useMotherShipDoors;
+    CheckSetNewMusicTrack(sStartingLocation.music);
+
     gCamera = sStartingLocation.camera;
     gBg1XPosition = gCamera.xPosition;
     gBg1YPosition = gCamera.yPosition;
     ScrollBg3Related();
     ScrollProcessGeneral();
-    gPreventMovementTimer = 0;
-    SamusSetPose(SPOSE_FACING_THE_FOREGROUND);
 }

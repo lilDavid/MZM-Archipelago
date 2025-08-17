@@ -392,7 +392,8 @@ SECTIONS {
         . = 0x00005d31; gIgnoreLocalItems = .;
         . = 0x00005d32; gMultiworldItemCount = .;
         . = 0x00005d34; gCurrentRandoMessage = .;
-        . = 0x00005d3c; gDynamicMessageBuffer = .;
+        . = 0x00005d3c; gWarpToStart = .;
+        . = 0x00005d40; gDynamicMessageBuffer = .;
 
 
         . = 0x00007e60; sp_sys = .;

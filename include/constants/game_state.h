@@ -62,7 +62,6 @@ enum SubGameMode {
 
     SUB_GAME_MODE_DYING = 5,
     SUB_GAME_MODE_FREE_MOVEMENT,
-    SUB_GAME_MODE_START_WARP,
 };
 
 #endif /* GAME_STATE_CONSTANTS_H */
