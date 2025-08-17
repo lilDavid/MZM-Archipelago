@@ -34,9 +34,6 @@
 #include "structs/game_state.h"
 #include "structs/text.h"
 
-#include "data/rando_data.h"
-#include "rando_item.h"
-
 /**
  * @brief 68168 | 60 | To document
  * 
@@ -1000,9 +997,6 @@ void PauseScreenProcessOam(void)
         // Process targets and boss icons
         ProcessMenuOam(ARRAY_SIZE(PAUSE_SCREEN_DATA.targetsOam), PAUSE_SCREEN_DATA.targetsOam, sPauseScreenTargetsOam);
         ProcessMenuOam(ARRAY_SIZE(PAUSE_SCREEN_DATA.bossIconOam), PAUSE_SCREEN_DATA.bossIconOam, sPauseScreenBossIconsOam);
-
-        // Process rando item oam
-        RandoProcessMapItemOam();
     }
 
     ResetFreeOam();
@@ -1584,77 +1578,6 @@ void ProcessComplexMenuOam(u8 length, struct MenuOamData* pOam, const struct Oam
     }
 
     // Update next oam slot
-    gNextOamSlot = nextSlot;
-}
-
-void RandoProcessMapItemOam(void) {
-    u32 i;
-    s16 xPosition;
-    s16 yPosition;
-    u32 offset;
-
-    s32 nextSlot = gNextOamSlot;
-    s32 currSlot = nextSlot;
-
-    if (gCurrentArea >= AREA_NORMAL_COUNT)
-        return;
-
-    for (
-        i = sRegionLocationOffsets[PAUSE_SCREEN_DATA.currentArea];
-        i < sRegionLocationOffsets[PAUSE_SCREEN_DATA.currentArea + 1];
-        i++
-    ) {
-        // Already acquired, don't process
-        if (RandoIsLocationChecked(i))
-            continue;
-
-        if (i == RC_BRINSTAR_WORM_DROP) {
-            if (EventFunction(EVENT_ACTION_CHECKING, EVENT_DEOREM_KILLED))
-                continue;
-
-            // FIXME: You can fight him at location 2 first
-            if (EventFunction(EVENT_ACTION_CHECKING, EVENT_DEOREM_ENCOUNTERED_AT_FIRST_LOCATION_OR_KILLED) &&
-                !EventFunction(EVENT_ACTION_CHECKING, EVENT_DEOREM_ENCOUNTERED_AT_SECOND_LOCATION_OR_KILLED)) {
-                // Deorem second location
-                xPosition = 23;
-                yPosition = 8;
-            } else {
-                xPosition = sRandoItemMapLocations[i][0];
-                yPosition = sRandoItemMapLocations[i][1];
-            }
-        } else {
-            xPosition = sRandoItemMapLocations[i][0];
-            yPosition = sRandoItemMapLocations[i][1];
-
-            offset = PAUSE_SCREEN_DATA.currentArea * MINIMAP_SIZE + yPosition;
-            if (sVisitedMinimapTilesPointer[offset] & sExploredMinimapBitFlags[xPosition]) {
-                continue;
-            }
-        }
-
-        // Offset position by background and global offset
-        yPosition = (s16)((yPosition * 8) - (((s16)gBg3VOFS_NonGameplay) >> 2));
-        xPosition = (s16)((xPosition * 8) - (((s16)gBg3HOFS_NonGameplay) >> 2));
-
-        // Check for buffer overflow
-        if (nextSlot >= OAM_BUFFER_DATA_SIZE)
-            break;
-
-        nextSlot += 1;
-
-        gOamData[currSlot].all.attr0 = 0;
-        gOamData[currSlot].all.attr1 = 0;
-        gOamData[currSlot].all.attr2 = 0;
-
-        gOamData[currSlot].split.y = yPosition;
-        gOamData[currSlot].split.x = xPosition;
-        gOamData[currSlot].split.tileNum = 759;
-        gOamData[currSlot].split.priority = 3;
-        gOamData[currSlot].split.paletteNum = 1;
-
-        currSlot += 1;
-    }
-
     gNextOamSlot = nextSlot;
 }
 
