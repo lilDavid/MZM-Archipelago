@@ -44,7 +44,7 @@
 
 /**
  * @brief 55f7c | 26c | Loads the current room
- * 
+ *
  */
 void RoomLoad(void)
 {
@@ -113,6 +113,8 @@ void RoomLoad(void)
     RoomLoadRandomizerTiles();
     RoomLoadBackgrounds();
     RoomRemoveNeverReformBlocksAndCollectedTanks();
+    if (sRandoSeed.options.revealHiddenBlocks)
+        RoomRevealBlocks();
     gPreviousXPosition = gSamusData.xPosition;
     gPreviousYPosition = gSamusData.yPosition;
     TransparencySetRoomEffectsTransparency();
@@ -178,7 +180,7 @@ void RoomLoad(void)
 
 /**
  * @brief 561e8 | 21c | Loads the tileset of the current room
- * 
+ *
  */
 void RoomLoadTileset(void)
 {
@@ -284,7 +286,7 @@ void RoomLoadRandomizerTiles(void) {
 
 /**
  * 56404 | 168 | Load the current room entry
- * 
+ *
  */
 void RoomLoadEntry(void)
 {
@@ -357,7 +359,7 @@ void RoomLoadEntry(void)
 
 /**
  * @brief 5656c | 158 | Loads the backgrounds of the current room
- * 
+ *
  */
 void RoomLoadBackgrounds(void)
 {
@@ -394,7 +396,7 @@ void RoomLoadBackgrounds(void)
             src += 4;
             CallLZ77UncompWram(src, gDecompBg0Map);
         }
-        
+
         // Load clipdata, assume RLE
         src = entry.pClipData;
         gBgPointersAndDimensions.pClipDecomp = gDecompClipdataMap;
@@ -428,9 +430,34 @@ void RoomRemoveNeverReformBlocksAndCollectedTanks(void)
 	BgClipRemoveCollectedTanks();
 }
 
+void RoomRevealBlocks(void)
+{
+    s32 i, j, position, clipBehavior, block, appearance;
+
+    for (i = 0; i < gBgPointersAndDimensions.clipdataHeight; i++)
+    {
+        for (j = 0; j < gBgPointersAndDimensions.clipdataWidth; j++)
+        {
+            position = i * gBgPointersAndDimensions.clipdataWidth + j;
+
+            clipBehavior = gTilemapAndClipPointers.pClipBehaviors[gBgPointersAndDimensions.pClipDecomp[position]];
+            if (clipBehavior == CLIP_BEHAVIOR_NONE)
+                continue;
+            block = BEHAVIOR_TO_BLOCK(clipBehavior);
+            if (block < 0 || block > ARRAY_SIZE(sRevealedBlockTilemapValues))
+                continue;
+            appearance = sRevealedBlockTilemapValues[block];
+            if (appearance == 0)
+                continue;
+
+            gBgPointersAndDimensions.backgrounds[1].pDecomp[position] = appearance;
+        }
+    }
+}
+
 /**
  * @brief 566d4 | 3f4 | Resets all the room related info during a transition
- * 
+ *
  */
 void RoomReset(void)
 {
@@ -441,7 +468,7 @@ void RoomReset(void)
     u16 count;
     u16* ptr;
     s32 temp;
-    
+
     gColorFading.unk_3 = 0;
     gColorFading.fadeTimer = 0;
     gColorFading.status = 0;
@@ -472,7 +499,7 @@ void RoomReset(void)
 
         if (!gIsLoadingFile && gCurrentDemo.loading)
             unk_60cbc(FALSE);
-    
+
         gDoorPositionStart.x = 0;
         gDoorPositionStart.y = 0;
         gCurrentItemBeingAcquired = 0;
@@ -492,7 +519,7 @@ void RoomReset(void)
     gScreenShakeRelated = 0;
     gDisablePause = FALSE;
     gDisableClipdataChangingTransparency = FALSE;
-    
+
     gBackdropColor = 0;
     gScreenYOffset = 0;
     gScreenXOffset = 0;
@@ -573,7 +600,7 @@ void RoomReset(void)
         gWaitingSpacePiratesPosition.x -= HALF_BLOCK_SIZE;
     else if (pDoor->xExit < 0)
         gWaitingSpacePiratesPosition.x += HALF_BLOCK_SIZE;
-    
+
     if (gSamusDoorPositionOffset != 0)
     {
         if (gSamusDoorPositionOffset < 0)
@@ -602,7 +629,7 @@ void RoomReset(void)
 
 /**
  * @brief 56ac8 | 60 | Sets the automatic background scrolling (BG0 and BG3)
- * 
+ *
  */
 void RoomSetBackgroundScrolling(void)
 {
@@ -628,7 +655,7 @@ void RoomSetBackgroundScrolling(void)
 
 /**
  * @brief 56b28 | 1f0 | Setups the initial tilemapfor the BG specified
- * 
+ *
  * @param bgNumber Background number
  */
 void RoomSetInitialTilemap(u8 bgNumber)
@@ -756,7 +783,7 @@ void RoomSetInitialTilemap(u8 bgNumber)
 
 /**
  * @brief 56d18 | 110 | RLE decompression algorithm
- * 
+ *
  * @param isBG Is background
  * @param src Source address
  * @param dst Destination address
@@ -784,13 +811,13 @@ u32 RoomRleDecompress(u8 isBG, const u8* src, u8* dst)
             if (sizeType == 3)
                 size = 0x2000;
         }
-        
+
         src++;
         length = 0x2000;
     }
 
     BitFill(3, 0, dst, length, 0x10);
-    
+
     // do 2 passes, one for low byte and one for high byte
     for (length = 0; length < 2; )
     {
@@ -823,7 +850,7 @@ u32 RoomRleDecompress(u8 isBG, const u8* src, u8* dst)
                     else
                         dest += value * 2;
 
-                    src++;  
+                    src++;
                 }
                 else
                 {
@@ -895,7 +922,7 @@ u32 RoomRleDecompress(u8 isBG, const u8* src, u8* dst)
 
 /**
  * @brief 56e28 | 4c | Updates the graphics information about a room
- * 
+ *
  */
 void RoomUpdateGfxInfo(void)
 {
@@ -915,7 +942,7 @@ void RoomUpdateGfxInfo(void)
 
 /**
  * @brief 56e74 | 80 | Checks if the animated graphics, palette and effects should be updated
- * 
+ *
  */
 void RoomUpdateAnimatedGraphicsAndPalettes(void)
 {
@@ -958,12 +985,12 @@ void RoomUpdateAnimatedGraphicsAndPalettes(void)
 
 /**
  * @brief 56ef4 | dc | Updates the hatches flashing animation
- * 
+ *
  */
 void RoomUpdateHatchFlashingAnimation(void)
 {
     const u16* pPalette;
-    
+
     if (gGameModeSub1 != SUB_GAME_MODE_PLAYING)
         return;
 
@@ -1008,7 +1035,7 @@ void RoomUpdateHatchFlashingAnimation(void)
 
 /**
  * @brief 56fd0 | dc | Updates the current room
- * 
+ *
  */
 void RoomUpdate(void)
 {
@@ -1060,7 +1087,7 @@ void RoomUpdate(void)
 
 /**
  * @brief 570ac | 128 | Updates the positions of the backgrounds
- * 
+ *
  */
 void RoomUpdateBackgroundsPosition(void)
 {
@@ -1111,7 +1138,7 @@ void RoomUpdateBackgroundsPosition(void)
 
 /**
  * @brief 571d4 | 124 | Updates the vertical tilemap of the room
- * 
+ *
  * @param offset Movement offset
  */
 void RoomUpdateVerticalTilemap(s32 offset)
@@ -1158,7 +1185,7 @@ void RoomUpdateVerticalTilemap(s32 offset)
 
         if (properties > gBgPointersAndDimensions.backgrounds[i].height)
             continue;
-            
+
         yPosition = properties;
 
         properties = xPosition - 2;
@@ -1172,7 +1199,7 @@ void RoomUpdateVerticalTilemap(s32 offset)
             size = gBgPointersAndDimensions.backgrounds[i].width;
 
         tilemapOffset = yPosition * gBgPointersAndDimensions.backgrounds[i].width + xPosition;
-        
+
         dst = VRAM_BASE + i * 4096;
         dst += (yPosition & 0xF) * 32;
 
@@ -1192,7 +1219,7 @@ void RoomUpdateVerticalTilemap(s32 offset)
 
 /**
  * @brief 572f8 | 144 | Updates the horizontal tilemap of the room
- * 
+ *
  * @param offset Movement offset
  */
 void RoomUpdateHorizontalTilemap(s32 offset)
@@ -1239,7 +1266,7 @@ void RoomUpdateHorizontalTilemap(s32 offset)
 
         if (properties > gBgPointersAndDimensions.backgrounds[i].width)
             continue;
-            
+
         xPosition = properties;
 
         properties = yPosition - 2;
@@ -1253,7 +1280,7 @@ void RoomUpdateHorizontalTilemap(s32 offset)
             size = gBgPointersAndDimensions.backgrounds[i].height;
 
         tilemapOffset = gBgPointersAndDimensions.backgrounds[i].width * yPosition + xPosition;
-        
+
         dst = VRAM_BASE + i * 4096;
         if (xPosition & 0x10)
             dst = VRAM_BASE + 0x800 + i * 4096;
@@ -1276,7 +1303,7 @@ void RoomUpdateHorizontalTilemap(s32 offset)
 
 /**
  * @brief 5743c | 20 | Checks if DMA 3 has ended
- * 
+ *
  */
 void RoomCheckDMA3Ended(void)
 {

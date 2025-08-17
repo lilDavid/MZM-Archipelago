@@ -8,6 +8,7 @@
 #include "constants/text.h"
 
 #include "structs/bg_clip.h"
+#include "structs/block.h"
 #include "structs/scroll.h"
 
 
@@ -29,5 +30,7 @@ extern const u8 sRandoAreaItemListLengths[AREA_NORMAL_COUNT];
 extern const u8 sRandoItemToTankTilemap[RANDO_ITEM_END];
 extern const u8 sRandoAnimatedTileGaps[8];
 extern const u8 sRandoPaletteSlots[79 * 2];
+
+extern const u16 sRevealedBlockTilemapValues[MAX_AMOUNT_OF_BLOCKS];
 
 #endif // RANDO_DATA_H

@@ -24,6 +24,7 @@ struct Seed {
         u8 startWithMaps;
 
         u8 revealMaps;
+        u8 revealHiddenBlocks;
         u8 skipTourianOpening;
         u8 elevatorSpeed;
     } options;

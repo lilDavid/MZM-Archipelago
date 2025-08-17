@@ -9,6 +9,7 @@ void RoomLoadRandomizerTiles(void);
 void RoomLoadEntry(void);
 void RoomLoadBackgrounds(void);
 void RoomRemoveNeverReformBlocksAndCollectedTanks(void);
+void RoomRevealBlocks(void);
 void RoomReset(void);
 void RoomSetBackgroundScrolling(void);
 void RoomSetInitialTilemap(u8 bgNumber);
