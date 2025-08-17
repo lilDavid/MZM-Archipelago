@@ -6,6 +6,8 @@
 #include "constants/connection.h"
 #include "constants/rando.h"
 
+#include "structs/scroll.h"
+
 // Structs
 
 struct Seed {
@@ -62,6 +64,17 @@ struct StartingInventory {
     u8 beamBombs;
     u8 suitMisc;
     u8 customItems;
+};
+
+struct StartingLocationData {
+    u16 xPosition;
+    u16 yPosition;
+    struct Camera camera;
+    u16 music;
+    u8 area;
+    u8 room;
+    u8 lastDoorUsed;
+    u8 useMotherShipDoors;
 };
 
 // Functions

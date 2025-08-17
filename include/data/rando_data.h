@@ -15,7 +15,7 @@
 extern const struct RandoItem sEmptyIncomingItem;
 extern const struct RandoMessage sEmptyRandoMessage;
 
-extern const struct Camera sStartingLocationCamera;
+extern const struct StartingLocationData sStartingLocation;
 
 extern const u8 sRandoMultiworldDangerousSpritesets[16];
 extern const u8 sRandoMultiworldDangerousRooms[15][2];

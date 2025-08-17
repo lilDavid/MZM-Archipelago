@@ -21,11 +21,20 @@ const struct RandoMessage sEmptyRandoMessage = {
     .soundEffect = MUSIC_NONE,
 };
 
-const struct Camera sStartingLocationCamera = {
-    .xPosition = 0x800,
-    .yPosition = 0x580,
-    .xVelocity = 0,
-    .yVelocity = 0,
+const struct StartingLocationData sStartingLocation = {
+    .xPosition = 39 * BLOCK_SIZE + HALF_BLOCK_SIZE,
+    .yPosition = 30 * BLOCK_SIZE - 1,
+    .camera = {
+        .xPosition = 32 * BLOCK_SIZE,
+        .yPosition = 22 * BLOCK_SIZE,
+        .xVelocity = 0,
+        .yVelocity = 0,
+    },
+    .music = MUSIC_BRINSTAR,
+    .area = AREA_BRINSTAR,
+    .room = 0,
+    .lastDoorUsed = 0,
+    .useMotherShipDoors = FALSE,
 };
 
 // Affected sprites capitalized or written in parens

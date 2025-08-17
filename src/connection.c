@@ -1160,25 +1160,25 @@ void ConnectionStartWarp(void) {
     }
 
     gWhichBGPositionIsWrittenToBG3OFS = 4;
-    gUseMotherShipDoors = FALSE;
+    gUseMotherShipDoors = sStartingLocation.useMotherShipDoors;
     gAreaBeforeTransition = gCurrentArea;
-    gCurrentArea = AREA_BRINSTAR;
-    gCurrentRoom = 0;
-    gLastDoorUsed = 0;
+    gCurrentArea = sStartingLocation.area;
+    gCurrentRoom = sStartingLocation.room;
+    gLastDoorUsed = sStartingLocation.lastDoorUsed;
 
     gGameModeSub1 = SUB_GAME_MODE_START_WARP;
     gIsLoadingFile = TRUE;
 
-    CheckSetNewMusicTrack(MUSIC_BRINSTAR);
+    CheckSetNewMusicTrack(sStartingLocation.music);
     ColorFadingStart(COLOR_FADING_NO_TRANSITION);
 }
 
 void ConnectionStartWarpApply(void) {
-    gSamusData.xPosition = gPreviousXPosition = BLOCK_SIZE * 39 + BLOCK_SIZE / 2;
-    gSamusData.yPosition = gPreviousYPosition = BLOCK_SIZE * 30 - 1;
+    gSamusData.xPosition = gPreviousXPosition = sStartingLocation.xPosition;
+    gSamusData.yPosition = gPreviousYPosition = sStartingLocation.yPosition;
     gSamusData.standingStatus = STANDING_GROUND;
     gSamusData.timer = FALSE;
-    gCamera = sStartingLocationCamera;
+    gCamera = sStartingLocation.camera;
     gBg1XPosition = gCamera.xPosition;
     gBg1YPosition = gCamera.yPosition;
     ScrollBg3Related();
