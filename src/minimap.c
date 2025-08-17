@@ -979,7 +979,26 @@ void MinimapSetDownloadedTiles(u8 area, u16* dst)
 
     pVisited = &sVisitedMinimapTilesPointer[area * MINIMAP_SIZE];
 
-    if ((gEquipment.downloadedMapStatus >> area) & 1 || (u8)(area - MAX_AMOUNT_OF_AREAS) <= 2)
+    if (sRandoSeed.options.revealMaps)
+    {
+        for (i = 0; i < MINIMAP_SIZE; i++, pVisited++)
+        {
+            for (j = 0; j < MINIMAP_SIZE; j++, dst++)
+            {
+                tmp2 = *pVisited;
+                if (sExploredMinimapBitFlags[j] & tmp2)
+                {
+                    if (!(*dst & 0xF000))
+                        *dst |= 0x1000;
+                }
+                else if (*dst & 0x7000)
+                {
+                    *dst &= 0xFFF;
+                }
+            }
+        }
+    }
+    else if ((gEquipment.downloadedMapStatus >> area) & 1 || (u8)(area - MAX_AMOUNT_OF_AREAS) <= 2)
     {
         for (i = 0; i < MINIMAP_SIZE; i++, pVisited++)
         {

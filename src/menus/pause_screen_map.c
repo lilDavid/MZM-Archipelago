@@ -927,7 +927,7 @@ void PauseScreenMapCheckExploredAreas(void)
         for (j = 0; j < MINIMAP_SIZE; j++)
         {
             // Check has visited bit
-            if (sVisitedMinimapTilesPointer[i * MINIMAP_SIZE + j])
+            if (sRandoSeed.options.revealMaps || sVisitedMinimapTilesPointer[i * MINIMAP_SIZE + j])
             {
                 // Mark area as visited, exit the loop
                 PAUSE_SCREEN_DATA.areasWithVisitedTiles |= (1 << i);

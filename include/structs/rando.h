@@ -23,6 +23,7 @@ struct Seed {
         u8 skipChozodiaStealth;
         u8 startWithMaps;
 
+        u8 revealMaps;
         u8 skipTourianOpening;
         u8 elevatorSpeed;
     } options;
