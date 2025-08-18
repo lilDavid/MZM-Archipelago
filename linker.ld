@@ -388,7 +388,7 @@ SECTIONS {
         . = 0x00005d08; gRandoLocationBitfields = .;
         . = 0x00005d24; gIncomingItem = .;
         . = 0x00005d28; gIncomingMessage = .;
-        . = 0x00005d30; gReceivingFromMultiworld = .;
+        . = 0x00005d30; gCollectingLocation = .;
         . = 0x00005d31; gIgnoreLocalItems = .;
         . = 0x00005d32; gMultiworldItemCount = .;
         . = 0x00005d34; gCurrentRandoMessage = .;

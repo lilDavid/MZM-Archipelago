@@ -829,7 +829,7 @@ u8 TextProcessItemBanner(void)
                 } else {
                     gCurrentItemBeingAcquired = gCurrentMessage.messageID;
                 }
-                if (gCurrentItemBeingAcquired >= MESSAGE_ENERGY_TANK_ACQUIRED && !gCollectingTank && !gReceivingFromMultiworld)
+                if (gCurrentItemBeingAcquired >= MESSAGE_ENERGY_TANK_ACQUIRED && !gCollectingTank && (gCollectingLocation < RC_CHOZODIA_RUINS_TEST_REWARD))
                     BgClipFinishCollectingAbility();
             }
             gCurrentMessage.stage++;

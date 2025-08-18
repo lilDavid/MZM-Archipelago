@@ -515,6 +515,7 @@ void RoomReset(void)
     gDisableScrolling = FALSE;
     gSlowScrollingTimer = 0;
     gCollectingTank = FALSE;
+    gCollectingLocation = RC_NONE;
 
     gScreenShakeRelated = 0;
     gDisablePause = FALSE;

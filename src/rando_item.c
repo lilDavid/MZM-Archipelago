@@ -100,6 +100,8 @@ static u32 RandoCheckLocation(u32 location) {
     flag = RandoGetRegionFlag(location, region);
 
     gRandoLocationBitfields[region] |= flag;
+
+    gCollectingLocation = location;
 }
 
 void RandoGiveItem(const struct RandoItem* item) {
@@ -351,12 +353,12 @@ static void RandoAcceptMessage() {
 
     gPreventMovementTimer = SAMUS_ITEM_PMT;
     gCurrentRandoMessage = gIncomingMessage;
-    gReceivingFromMultiworld = TRUE;
+    gCollectingLocation = RC_MULTIWORLD;
 
     // (Hopefully) fix the bug where the item acquisition freezes Samus in place instead of showing the message
     if (SpriteSpawnPrimary(PSPRITE_ITEM_BANNER, MESSAGE_DUMMY, 6, gSamusData.yPosition, gSamusData.xPosition, 0) == UCHAR_MAX) {
         gPreventMovementTimer = 0;
-        gReceivingFromMultiworld = FALSE;
+        gCollectingLocation = RC_NONE;
         return;
     }
 

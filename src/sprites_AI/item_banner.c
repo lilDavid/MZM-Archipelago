@@ -303,7 +303,7 @@ void ItemBannerRemovalInit(void)
     if (gCollectingTank)
         BgClipFinishCollectingTank();
 
-    gReceivingFromMultiworld = FALSE;
+    gCollectingLocation = RC_NONE;
     gIncomingMessage = sEmptyRandoMessage;
 
     if (gCurrentSprite.pOam == sItemBannerOAM_OneLineStatic)

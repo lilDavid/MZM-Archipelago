@@ -482,7 +482,7 @@ void BgClipCheckTouchingTransitionOrTank(void)
     }
 
     // Abort if already collecting a tank or receiving an item
-    if (gCollectingTank || gReceivingFromMultiworld)
+    if (gCollectingTank || (gCollectingLocation == RC_MULTIWORLD))
         return;
 
     for (j = ARRAY_SIZE(behaviors) - 1; j >= 0; j--)

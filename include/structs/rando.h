@@ -77,7 +77,7 @@ extern const struct StartingInventory sRandoStartingInventory;
 extern struct RandoItem gIncomingItem;
 extern struct RandoMessage gIncomingMessage;
 extern u8 gIgnoreLocalItems;
-extern u8 gReceivingFromMultiworld;
+extern u8 gCollectingLocation;
 extern u16 gMultiworldItemCount;
 extern u32 gRandoLocationBitfields[AREA_NORMAL_COUNT];
 

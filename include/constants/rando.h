@@ -117,7 +117,10 @@ enum RandoCheck {
     RC_CHOZODIA_RUINS_TEST_REWARD,
     RC_CHOZODIA_MAX,
 
-    RC_COUNT = RC_CHOZODIA_MAX
+    RC_COUNT = RC_CHOZODIA_MAX,
+
+    RC_MULTIWORLD = UCHAR_MAX - 1,
+    RC_NONE = UCHAR_MAX,
 };
 
 enum RandoItemType {
