@@ -399,8 +399,6 @@ void ItemBanner(void)
     }
 }
 
-#define STARTWARP_KEYS (KEY_L | KEY_R)
-
 /**
  * @brief 1bbfc | 190 | Save yes no cursor AI
  * 
@@ -485,9 +483,6 @@ void SaveYesNoCursor(void)
                     // On right, "no" option selected
                     SoundPlay(SOUND_REFUSE_MENU);
                     gSpriteData[ramSlot].work1 = FALSE;
-
-                    if ((gButtonInput & STARTWARP_KEYS) == STARTWARP_KEYS)
-                        ConnectionStartWarp();
                 }
 
                 gCurrentSprite.status = 0;

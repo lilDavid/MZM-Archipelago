@@ -16,6 +16,7 @@
 #include "data/hud_data.h"
 #include "data/rando_data.h"
 
+#include "constants/color_fading.h"
 #include "constants/demo.h"
 #include "constants/haze.h"
 #include "constants/game_state.h"
@@ -23,6 +24,7 @@
 #include "constants/samus.h"
 
 #include "structs/bg_clip.h"
+#include "structs/color_effects.h"
 #include "structs/haze.h"
 #include "structs/cutscene.h"
 #include "structs/demo.h"
@@ -55,6 +57,12 @@ u32 InGameMainLoop(void)
             if (gDemoState == DEMO_STATE_PLAYING)
                 CopyDemoInput();
 
+            if (gWarpToStart)
+            {
+                gPauseScreenFlag = PAUSE_SCREEN_NONE;
+                gCurrentCutscene = 99;
+                gColorFading.type = COLOR_FADING_NO_TRANSITION;
+            }
             InitAndLoadGenerics();
             gGameModeSub1++;
             break;
@@ -101,8 +109,6 @@ u32 InGameMainLoop(void)
                 gGameModeSub1 = 0;
                 if (gPauseScreenFlag != PAUSE_SCREEN_NONE || gCurrentCutscene != 0 || gTourianEscapeCutsceneStage != 0)
                     changing = TRUE;
-                if (gWarpToStart)
-                    ConnectionStartWarpApply();
                 gWarpToStart = FALSE;
             }
             break;

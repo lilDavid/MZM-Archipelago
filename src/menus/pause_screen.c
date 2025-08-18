@@ -2753,7 +2753,7 @@ u32 PauseScreenCallCurrentSubroutine(void)
         case PAUSE_SCREEN_SUBROUTINE_EASY_SLEEP:
             if (PauseScreenEasySleepSubroutine())
             {
-                PAUSE_SCREEN_DATA.subroutineInfo.currentSubroutine = PAUSE_SCREEN_SUBROUTINE_EASY_SLEEP_LEAVING;
+                leaving = TRUE;
             }
             break;
 

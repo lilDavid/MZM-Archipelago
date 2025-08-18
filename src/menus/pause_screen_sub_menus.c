@@ -74,6 +74,11 @@ u32 PauseScreenEasySleepSubroutine(void)
             break;
 
         case 2:
+#if 1
+            ConnectionStartWarpApply();
+            gWarpToStart = TRUE;
+            action = 1;
+#else
             if (PAUSE_SCREEN_DATA.subroutineInfo.timer > CONVERT_SECONDS(.5f))
             {
                 PAUSE_SCREEN_DATA.subroutineInfo.stage++;
@@ -120,6 +125,7 @@ u32 PauseScreenEasySleepSubroutine(void)
             if (gButtonInput == KEY_NONE)
                 PAUSE_SCREEN_DATA.subroutineInfo.stage = 0;
             break;
+#endif
     }
 
     if (action)
