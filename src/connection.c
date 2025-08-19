@@ -1179,7 +1179,7 @@ void ConnectionStartWarpApply(void) {
     gCurrentRoom = sStartingLocation.room;
     gLastDoorUsed = sStartingLocation.lastDoorUsed;
     gUseMotherShipDoors = sStartingLocation.useMotherShipDoors;
-    CheckSetNewMusicTrack(sStartingLocation.music);
+    CheckSetNewMusicTrack(sAreaRoomEntryPointers[gCurrentArea][gCurrentRoom].musicTrack);
 
     gCamera = sStartingLocation.camera;
     gBg1XPosition = gCamera.xPosition;

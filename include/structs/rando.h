@@ -70,7 +70,6 @@ struct StartingLocationData {
     u16 xPosition;
     u16 yPosition;
     struct Camera camera;
-    u16 music;
     u8 area;
     u8 room;
     u8 lastDoorUsed;

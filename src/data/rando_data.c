@@ -30,7 +30,6 @@ const struct StartingLocationData sStartingLocation = {
         .xVelocity = 0,
         .yVelocity = 0,
     },
-    .music = MUSIC_BRINSTAR,
     .area = AREA_BRINSTAR,
     .room = 0,
     .lastDoorUsed = 0,
