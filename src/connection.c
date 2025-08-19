@@ -1,5 +1,6 @@
 #include "gba.h"
 #include "connection.h"
+#include "audio.h"
 
 #include "data/rando_data.h"
 #include "data/engine_pointers.h"
@@ -13,6 +14,7 @@
 #include "constants/cutscene.h"
 #include "constants/event.h"
 #include "constants/game_state.h"
+#include "constants/in_game_cutscene.h"
 #include "constants/samus.h"
 #include "constants/room.h"
 
@@ -22,6 +24,7 @@
 #include "structs/cutscene.h"
 #include "structs/display.h"
 #include "structs/game_state.h"
+#include "structs/in_game_cutscene.h"
 #include "structs/room.h"
 #include "structs/samus.h"
 
@@ -1142,12 +1145,6 @@ void ConnectionCheckPlayCutsceneDuringAreaConnection(void)
     }
 }
 
-void ConnectionStartWarp(void) {
-    gGameModeSub1 = SUB_GAME_MODE_LOADING_ROOM;
-    gWarpToStart = TRUE;
-    ColorFadingStart(COLOR_FADING_NO_TRANSITION);
-}
-
 void ConnectionStartWarpApply(void) {
     // If in stealth, give power suit back and un-kill Mother Brain
     if (gEquipment.suitType == SUIT_SUITLESS) {
@@ -1165,9 +1162,6 @@ void ConnectionStartWarpApply(void) {
         }
     }
 
-    gAreaBeforeTransition = gCurrentArea;
-    gIsLoadingFile = TRUE;
-
     gSamusData.xPosition = gPreviousXPosition = sStartingLocation.xPosition;
     gSamusData.yPosition = gPreviousYPosition = sStartingLocation.yPosition;
     gSamusData.standingStatus = STANDING_GROUND;
@@ -1179,7 +1173,7 @@ void ConnectionStartWarpApply(void) {
     gCurrentRoom = sStartingLocation.room;
     gLastDoorUsed = sStartingLocation.lastDoorUsed;
     gUseMotherShipDoors = sStartingLocation.useMotherShipDoors;
-    CheckSetNewMusicTrack(sAreaRoomEntryPointers[gCurrentArea][gCurrentRoom].musicTrack);
+    gMusicInfo.musicTrack = sAreaRoomEntryPointers[gCurrentArea][gCurrentRoom].musicTrack;
 
     gCamera = sStartingLocation.camera;
     gBg1XPosition = gCamera.xPosition;

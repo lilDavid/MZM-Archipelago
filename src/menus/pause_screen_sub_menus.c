@@ -75,8 +75,8 @@ u32 PauseScreenEasySleepSubroutine(void)
 
         case 2:
 #if 1
-            ConnectionStartWarpApply();
             gWarpToStart = TRUE;
+            FadeMusic(CONVERT_SECONDS(0.1));
             action = 1;
 #else
             if (PAUSE_SCREEN_DATA.subroutineInfo.timer > CONVERT_SECONDS(.5f))

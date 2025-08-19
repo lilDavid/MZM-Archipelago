@@ -1,6 +1,7 @@
 #include "in_game.h"
 #include "gba.h"
 #include "callbacks.h"
+#include "connection.h"
 #include "oam.h"
 #include "projectile.h"
 #include "samus.h"
@@ -24,7 +25,6 @@
 #include "constants/samus.h"
 
 #include "structs/bg_clip.h"
-#include "structs/color_effects.h"
 #include "structs/haze.h"
 #include "structs/cutscene.h"
 #include "structs/demo.h"
@@ -57,12 +57,6 @@ u32 InGameMainLoop(void)
             if (gDemoState == DEMO_STATE_PLAYING)
                 CopyDemoInput();
 
-            if (gWarpToStart)
-            {
-                gPauseScreenFlag = PAUSE_SCREEN_NONE;
-                gCurrentCutscene = 99;
-                gColorFading.type = COLOR_FADING_NO_TRANSITION;
-            }
             InitAndLoadGenerics();
             gGameModeSub1++;
             break;

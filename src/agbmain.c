@@ -1,11 +1,14 @@
 #include "syscalls.h"
 #include "data/generic_data.h"
 
+#include "constants/color_fading.h"
 #include "constants/game_state.h"
 
+#include "structs/color_effects.h"
 #include "structs/cutscene.h"
 #include "structs/demo.h"
 #include "structs/game_state.h"
+#include "structs/rando.h"
 
 void agbmain(void)
 {
@@ -138,6 +141,17 @@ void agbmain(void)
                         case PAUSE_SCREEN_MAP_DOWNLOAD:
                         case PAUSE_SCREEN_FULLY_POWERED_SUIT_ITEMS:
                             break;
+                    }
+
+                    if (gWarpToStart)
+                    {
+                        StopAllMusicsAndSounds();
+                        ResetMusicVolume();
+                        unk_75c04(FALSE);
+                        if (gHasSaved) {
+                            ConnectionStartWarpApply();
+                            gColorFading.type = COLOR_FADING_NO_TRANSITION;
+                        }
                     }
 
                     gGameModeSub1 = 0;
