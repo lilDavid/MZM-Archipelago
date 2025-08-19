@@ -83,7 +83,11 @@ u32 InGameMainLoop(void)
                     gNotPressingUp = TRUE;
 
                 if (gPreventMovementTimer != 0)
+                {
                     APPLY_DELTA_TIME_DEC(gPreventMovementTimer);
+                    if (gWarpToStart)
+                        SamusUpdate();
+                }
                 else
                 {
                     SamusUpdate();
@@ -103,7 +107,6 @@ u32 InGameMainLoop(void)
                 gGameModeSub1 = 0;
                 if (gPauseScreenFlag != PAUSE_SCREEN_NONE || gCurrentCutscene != 0 || gTourianEscapeCutsceneStage != 0)
                     changing = TRUE;
-                gWarpToStart = FALSE;
             }
             break;
 
@@ -435,7 +438,8 @@ void InitAndLoadGenerics(void)
     {
         SpriteUpdate();
         gGameModeSub3 = 1;
-        gPreventMovementTimer = 0;
+        if (!gWarpToStart)
+            gPreventMovementTimer = 0;
     }
 
     gWrittenToBLDY_NonGameplay = BLDY_MAX_VALUE - 1;

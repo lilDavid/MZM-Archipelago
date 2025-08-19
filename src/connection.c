@@ -1164,10 +1164,7 @@ void ConnectionStartWarpApply(void) {
 
     gSamusData.xPosition = gPreviousXPosition = sStartingLocation.xPosition;
     gSamusData.yPosition = gPreviousYPosition = sStartingLocation.yPosition;
-    gSamusData.standingStatus = STANDING_GROUND;
-    gSamusData.timer = FALSE;
-    gPreventMovementTimer = 0;
-    SamusSetPose(SPOSE_FACING_THE_FOREGROUND);
+    gPreventMovementTimer = CONVERT_SECONDS(6);
 
     gCurrentArea = sStartingLocation.area;
     gCurrentRoom = sStartingLocation.room;

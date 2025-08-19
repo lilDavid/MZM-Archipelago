@@ -6095,6 +6095,13 @@ u8 SamusSavingLoadingGame(struct SamusData* pData)
         pData->animationDurationCounter = 0;
     }
 
+    if (gWarpToStart && gPreventMovementTimer == 0)
+    {
+        gDisablePause = FALSE;
+        gWarpToStart = FALSE;
+        return SPOSE_FACING_THE_FOREGROUND;
+    }
+
     return SPOSE_NONE;
 }
 
