@@ -66,9 +66,15 @@ struct StartingInventory {
     u8 customItems;
 };
 
-struct StartingLocationData {
+struct StartingSamusData {
     u16 xPosition;
     u16 yPosition;
+    u8 timer;
+    u8 standingStatus;
+};
+
+struct StartingLocationData {
+    struct StartingSamusData samus;
     struct Camera camera;
     u8 area;
     u8 room;

@@ -1162,11 +1162,13 @@ void ConnectionStartWarpApply(void) {
         }
     }
 
-    gSamusData.xPosition = gPreviousXPosition = sStartingLocation.xPosition;
-    gSamusData.yPosition = gPreviousYPosition = sStartingLocation.yPosition;
+    gSamusData.xPosition = gPreviousXPosition = sStartingLocation.samus.xPosition;
+    gSamusData.yPosition = gPreviousYPosition = sStartingLocation.samus.yPosition;
+    gSamusData.timer = 0;
+    gSamusData.standingStatus = STANDING_GROUND;
     gPreventMovementTimer = CONVERT_SECONDS(6);
 
-    gCurrentArea = sStartingLocation.area;
+    gCurrentArea = gAreaBeforeTransition = sStartingLocation.area;
     gCurrentRoom = sStartingLocation.room;
     gLastDoorUsed = sStartingLocation.lastDoorUsed;
     gUseMotherShipDoors = sStartingLocation.useMotherShipDoors;

@@ -22,8 +22,12 @@ const struct RandoMessage sEmptyRandoMessage = {
 };
 
 const struct StartingLocationData sStartingLocation = {
-    .xPosition = 39 * BLOCK_SIZE + HALF_BLOCK_SIZE,
-    .yPosition = 30 * BLOCK_SIZE - 1,
+    .samus = {
+        .xPosition = 39 * BLOCK_SIZE + HALF_BLOCK_SIZE,
+        .yPosition = 30 * BLOCK_SIZE - 1,
+        .timer = 0,
+        .standingStatus = STANDING_GROUND,
+    },
     .camera = {
         .xPosition = 32 * BLOCK_SIZE,
         .yPosition = 22 * BLOCK_SIZE,
