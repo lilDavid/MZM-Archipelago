@@ -23,6 +23,4 @@ void ConnectionCheckHatchLockEvents(void);
 void ConnectionCheckPlayCutsceneDuringTransition(u8 area, u8 dstRoomPlusOne);
 void ConnectionCheckPlayCutsceneDuringAreaConnection(void);
 
-void ConnectionStartWarpApply(void);
-
 #endif /* CONNECTION_H */

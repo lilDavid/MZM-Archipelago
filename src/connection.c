@@ -1141,39 +1141,3 @@ void ConnectionCheckPlayCutsceneDuringAreaConnection(void)
             return;
     }
 }
-
-void ConnectionStartWarpApply(void) {
-    // If in stealth, give power suit back and un-kill Mother Brain
-    if (gEquipment.suitType == SUIT_SUITLESS) {
-        EventFunction(EVENT_ACTION_CLEARING, EVENT_MOTHER_BRAIN_KILLED);
-        EventFunction(EVENT_ACTION_CLEARING, EVENT_ESCAPED_ZEBES);
-        EventFunction(EVENT_ACTION_SETTING, EVENT_FULLY_POWERED_SUIT_OBTAINED);
-        if (gRandoEquipment.customItems & CIF_FULLY_POWERED_SUIT) {
-            gEquipment.beamBombsActivation = gEquipment.beamBombs;
-            gEquipment.suitMiscActivation = gEquipment.suitMisc;
-            gEquipment.suitType = !!(gEquipment.suitMisc & SMF_ALL_SUITS);
-        } else {
-            gEquipment.beamBombsActivation = gEquipment.beamBombs & ~BBF_PLASMA_BEAM;
-            gEquipment.suitMiscActivation = gEquipment.suitMisc & ~SMF_UNKNOWN_ITEMS;
-            gEquipment.suitType = SUIT_NORMAL;
-        }
-    }
-
-    gSamusData.xPosition = gPreviousXPosition = sStartingLocation.samus.xPosition;
-    gSamusData.yPosition = gPreviousYPosition = sStartingLocation.samus.yPosition;
-    gSamusData.timer = 0;
-    gSamusData.standingStatus = STANDING_GROUND;
-    gPreventMovementTimer = CONVERT_SECONDS(6);
-
-    gCurrentArea = gAreaBeforeTransition = sStartingLocation.area;
-    gCurrentRoom = sStartingLocation.room;
-    gLastDoorUsed = sStartingLocation.lastDoorUsed;
-    gUseMotherShipDoors = sStartingLocation.useMotherShipDoors;
-    gMusicInfo.musicTrack = sAreaRoomEntryPointers[gCurrentArea][gCurrentRoom].musicTrack;
-
-    gCamera = sStartingLocation.camera;
-    gBg1XPosition = gCamera.xPosition;
-    gBg1YPosition = gCamera.yPosition;
-    ScrollBg3Related();
-    ScrollProcessGeneral();
-}

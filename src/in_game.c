@@ -1,7 +1,6 @@
 #include "in_game.h"
 #include "gba.h"
 #include "callbacks.h"
-#include "connection.h"
 #include "oam.h"
 #include "projectile.h"
 #include "samus.h"
@@ -17,12 +16,9 @@
 #include "data/hud_data.h"
 #include "data/rando_data.h"
 
-#include "constants/color_fading.h"
 #include "constants/demo.h"
 #include "constants/haze.h"
 #include "constants/game_state.h"
-#include "constants/text.h"
-#include "constants/samus.h"
 
 #include "structs/bg_clip.h"
 #include "structs/haze.h"
@@ -34,7 +30,6 @@
 #include "structs/sprite.h"
 #include "structs/connection.h"
 #include "structs/rando.h"
-#include "structs/text.h"
 
 /**
  * @brief c4b4 | 244 | Main loop in game

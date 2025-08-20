@@ -580,6 +580,7 @@ SECTIONS {
         src/menus/file_select.o(.text);
 
         src/rando/item.o(.text);
+        src/rando/warp_to_start.o(.text);
 
         src/softreset.o(.text);
         src/time_attack.o(.text);

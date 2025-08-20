@@ -1,14 +1,14 @@
 #include "syscalls.h"
 #include "data/generic_data.h"
 
-#include "constants/color_fading.h"
 #include "constants/game_state.h"
 
-#include "structs/color_effects.h"
 #include "structs/cutscene.h"
 #include "structs/demo.h"
 #include "structs/game_state.h"
 #include "structs/rando.h"
+
+#include "rando/warp_to_start.h"
 
 void agbmain(void)
 {
@@ -144,15 +144,7 @@ void agbmain(void)
                     }
 
                     if (gWarpToStart)
-                    {
-                        StopAllMusicsAndSounds();
-                        ResetMusicVolume();
-                        unk_75c04(FALSE);
-                        if (gHasSaved) {
-                            ConnectionStartWarpApply();
-                            gColorFading.type = COLOR_FADING_NO_TRANSITION;
-                        }
-                    }
+                        RandoWarpToStart();
 
                     gGameModeSub1 = 0;
                 }
