@@ -668,7 +668,12 @@ void StatusScreenSetMiscsVisibility(u16* pTilemap)
         if (sStatusScreenFlagsOrderPointers[ABILITY_GROUP_MISC][i] == SMF_SPACE_JUMP &&
             (!(gRandoEquipment.customItems & CIF_FULLY_POWERED_SUIT) || gPauseScreenFlag == PAUSE_SCREEN_FULLY_POWERED_SUIT_ITEMS))
         {
-            k = -1;
+#if 0
+            if (gEquipment.suitType != SUIT_FULLY_POWERED)
+                k = -1;
+            else if (gPauseScreenFlag == PAUSE_SCREEN_FULLY_POWERED_SUIT_ITEMS)
+#endif
+                k = -1;
         }
 
         srcPosition = (sStatusScreenUnknownItemsData[ABILITY_GROUP_MISC][0] + k) * HALF_BLOCK_SIZE +
@@ -753,6 +758,11 @@ void StatusScreenSetBombsVisibility(u16* pTilemap)
         nbrToProcess = 2;
         PAUSE_SCREEN_DATA.statusScreenData.bombActivation[0] |= 1;
     }
+
+#if 0
+    if (nbrToProcess == 0)
+        return;
+#endif
 
     if (gEquipment.maxPowerBombs != 0)
     {
@@ -1880,8 +1890,11 @@ u32 StatusScreenToggleItem(u8 statusSlot, u8 action)
             flag = PAUSE_SCREEN_DATA.statusScreenData.beamActivation[sStatusScreenItemsData[statusSlot].abilityOffset];
             pActivation = &gEquipment.beamBombsActivation;
 
-            if (flag == BBF_PLASMA_BEAM && !(gRandoEquipment.customItems & CIF_FULLY_POWERED_SUIT))
-                flag = 0;
+            if (flag == BBF_PLASMA_BEAM)
+            {
+                if (!(gRandoEquipment.customItems & CIF_FULLY_POWERED_SUIT))
+                    flag = 0;
+            }
             break;
 
         case ABILITY_GROUP_BOMBS:
@@ -1902,8 +1915,11 @@ u32 StatusScreenToggleItem(u8 statusSlot, u8 action)
             flag = PAUSE_SCREEN_DATA.statusScreenData.suitActivation[sStatusScreenItemsData[statusSlot].abilityOffset];
             pActivation = &gEquipment.suitMiscActivation;
 
-            if (flag == SMF_GRAVITY_SUIT && !(gRandoEquipment.customItems & CIF_FULLY_POWERED_SUIT))
-                flag = 0;
+            if (flag == SMF_GRAVITY_SUIT)
+            {
+                if (!(gRandoEquipment.customItems & CIF_FULLY_POWERED_SUIT))
+                    flag = 0;
+            }
 
             if (flag != 0 && (*pActivation & flag))
                 flag = 0;
@@ -1913,8 +1929,11 @@ u32 StatusScreenToggleItem(u8 statusSlot, u8 action)
             flag = PAUSE_SCREEN_DATA.statusScreenData.miscActivation[sStatusScreenItemsData[statusSlot].abilityOffset];
             pActivation = &gEquipment.suitMiscActivation;
 
-            if (flag == SMF_SPACE_JUMP && !(gRandoEquipment.customItems & CIF_FULLY_POWERED_SUIT))
-                flag = 0;
+            if (flag == SMF_SPACE_JUMP)
+            {
+                if (!(gRandoEquipment.customItems & CIF_FULLY_POWERED_SUIT))
+                    flag = 0;
+            }
             break;
 
         case ABILITY_GROUP_MISSILES:
