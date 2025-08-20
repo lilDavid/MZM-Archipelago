@@ -1,6 +1,5 @@
 #include "room.h"
 #include "gba.h"
-#include "rando_item.h"
 
 #include "data/engine_pointers.h"
 #include "data/empty_datatypes.h"
@@ -40,6 +39,8 @@
 #include "structs/text.h"
 #include "structs/screen_shake.h"
 #include "structs/visual_effects.h"
+
+#include "rando/item.h"
 
 
 /**

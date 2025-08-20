@@ -579,7 +579,7 @@ SECTIONS {
         src/menus/game_over.o(.text);
         src/menus/file_select.o(.text);
 
-        src/rando_item.o(.text);
+        src/rando/item.o(.text);
 
         src/softreset.o(.text);
         src/time_attack.o(.text);

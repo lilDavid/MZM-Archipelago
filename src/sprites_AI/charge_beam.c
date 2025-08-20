@@ -1,6 +1,5 @@
 #include "sprites_AI/charge_beam.h"
 #include "macros.h"
-#include "rando_item.h"
 
 #include "data/sprites/charge_beam.h"
 #include "data/sprites/morph_ball.h"
@@ -13,6 +12,8 @@
 
 #include "structs/sprite.h"
 #include "structs/samus.h"
+
+#include "rando/item.h"
 
 #define CHARGE_BEAM_POSE_IDLE 0x9
 #define CHARGE_BEAM_POSE_SPAWN_GLOW 0xA

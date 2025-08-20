@@ -1,7 +1,6 @@
 #include "gba.h"
 #include "sprites_AI/deorem.h"
 #include "macros.h"
-#include "rando_item.h"
 
 #include "data/sprites/deorem.h"
 #include "data/sprite_data.h"
@@ -20,6 +19,8 @@
 #include "structs/samus.h"
 #include "structs/scroll.h"
 #include "structs/sprite.h"
+
+#include "rando/item.h"
 
 /**
  * @brief 20c7c | 84 | Changes the current clipdata affecting action and calls ProcessClipdata

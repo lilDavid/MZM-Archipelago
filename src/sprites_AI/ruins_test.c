@@ -26,7 +26,7 @@
 #include "structs/sprite.h"
 #include "structs/projectile.h"
 
-#include "rando_item.h"
+#include "rando/item.h"
 
 /**
  * @brief 38988 | 24 | Calculates the new delay for the symbol

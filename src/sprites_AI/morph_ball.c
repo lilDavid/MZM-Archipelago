@@ -1,6 +1,5 @@
 #include "sprites_AI/morph_ball.h"
 #include "macros.h"
-#include "rando_item.h"
 
 #include "data/sprites/morph_ball.h"
 #include "data/rando_graphics_data.h"
@@ -11,6 +10,8 @@
 
 #include "structs/sprite.h"
 #include "structs/samus.h"
+
+#include "rando/item.h"
 
 /**
  * @brief 13080 | ac | Initializes a morph ball sprite

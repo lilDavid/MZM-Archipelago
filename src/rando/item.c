@@ -1,4 +1,5 @@
-#include "rando_item.h"
+#include "rando/item.h"
+
 #include "gba.h"
 #include "macros.h"
 #include "in_game_cutscene.h"

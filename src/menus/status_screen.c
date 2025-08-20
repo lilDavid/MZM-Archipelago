@@ -1,6 +1,5 @@
 #include "menus/status_screen.h"
 #include "menus/pause_screen.h"
-#include "rando_item.h"
 
 #include "data/shortcut_pointers.h"
 #include "data/menus/status_screen_data.h"
@@ -23,6 +22,8 @@
 #include "structs/text.h"
 #include "structs/menus/pause_screen.h"
 #include "structs/rando.h"
+
+#include "rando/item.h"
 
 /**
  * @brief 6fd00 | 118 | Updates the minimap animated palette

@@ -1,7 +1,6 @@
 #include "sprites_AI/unknown_item_chozo_statue.h"
 #define CHOZO_STATUE_IGNORE_FUNCTIONS
 #include "sprites_AI/chozo_statue.h"
-#include "rando_item.h"
 
 #include "data/frame_data_pointers.h"
 #include "data/sprites/unknown_item_chozo_statue.h"
@@ -21,6 +20,8 @@
 #include "structs/scroll.h"
 #include "structs/sprite.h"
 #include "structs/samus.h"
+
+#include "rando/item.h"
 
 /**
  * @brief 150a8 | 88 | Synchronize the sub sprites of an unknown item chozo statue

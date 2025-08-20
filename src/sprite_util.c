@@ -23,7 +23,7 @@
 #include "structs/screen_shake.h"
 #include "structs/sprite.h"
 
-#include "rando_item.h"
+#include "rando/item.h"
 
 
 /**

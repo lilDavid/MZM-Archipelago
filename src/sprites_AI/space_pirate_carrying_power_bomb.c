@@ -1,5 +1,4 @@
 #include "sprites_AI/space_pirate_carrying_power_bomb.h"
-#include "rando_item.h"
 
 #include "data/sprites/space_pirate_carrying_power_bomb.h"
 #include "data/sprites/space_pirate.h"
@@ -13,6 +12,8 @@
 #include "structs/connection.h"
 #include "structs/clipdata.h"
 #include "structs/sprite.h"
+
+#include "rando/item.h"
 
 /**
  * @brief 4b604 | 180 | Space pirate carrying power bomb AI

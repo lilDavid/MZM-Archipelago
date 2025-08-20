@@ -1,6 +1,5 @@
 #include "sprites_AI/imago.h"
 #include "macros.h"
-#include "rando_item.h"
 
 #include "data/frame_data_pointers.h"
 #include "data/sprites/imago.h"
@@ -18,6 +17,8 @@
 #include "structs/game_state.h"
 #include "structs/samus.h"
 #include "structs/sprite.h"
+
+#include "rando/item.h"
 
 /**
  * @brief 41e4c | 88 | Sync the sub sprites of Imago

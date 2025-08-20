@@ -4,7 +4,6 @@
 #include "minimap.h"
 #include "connection.h"
 #include "macros.h"
-#include "rando_item.h"
 
 #include "data/block_data.h"
 #include "data/rando_data.h"
@@ -24,6 +23,8 @@
 #include "structs/transparency.h"
 #include "structs/game_state.h"
 #include "structs/samus.h"
+
+#include "rando/item.h"
 
 /**
  * @brief 5a484 | d8 | Sets the value for a BG block

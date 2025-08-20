@@ -1,5 +1,3 @@
-#include "rando_item.h"
-
 #include "sprites_AI/chozo_statue.h"
 #include "sprites_AI/unknown_item_chozo_statue.h"
 
@@ -21,6 +19,8 @@
 #include "structs/sprite.h"
 #include "structs/samus.h"
 #include "structs/scroll.h"
+
+#include "rando/item.h"
 
 #define CHOZO_STATUE_HAND_X_OFFSET (BLOCK_SIZE - EIGHTH_BLOCK_SIZE)
 #define CHOZO_STATUE_HAND_Y_OFFSET (QUARTER_BLOCK_SIZE + ONE_SUB_PIXEL)

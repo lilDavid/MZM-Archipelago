@@ -11,7 +11,7 @@
 #include "structs/sprite.h"
 #include "structs/samus.h"
 
-#include "rando_item.h"
+#include "rando/item.h"
 
 #define POWER_GRIP_POSE_IDLE 0x9
 #define POWER_GRIP_POSE_BEING_ACQUIRED 0x23
