@@ -13,6 +13,7 @@
 
 void RandoGiveItemFromCheck(u32 location);
 u32 RandoIsLocationChecked(u32 location);
+u32 RandoGetFinalCompletionPercentage(void);
 
 u32 RandoGetItemMessageTime(void);
 void RandoActivateAcquiredItem(void);

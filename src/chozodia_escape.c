@@ -21,6 +21,8 @@
 #include "structs/display.h"
 #include "structs/rando.h"
 
+#include "rando/item.h"
+
 /**
  * @brief 8784c | ec | V-blank code for the chozodia escape
  * 
@@ -235,7 +237,7 @@ u32 ChozodiaEscapeGetItemCountAndEndingNumber(void)
     if (gEquipment.beamBombs & BBF_BOMBS)
         abilityCount++;
 
-    completionPercentage = SpriteUtilGetFinalCompletionPercentage();
+    completionPercentage = RandoGetFinalCompletionPercentage();
 
     // Determine ending
     endingNbr = ENDING_IMAGE_ZERO;

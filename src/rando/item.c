@@ -229,6 +229,27 @@ void RandoGiveItemFromCheck(u32 location) {
     SpriteSpawnPrimary(PSPRITE_ITEM_BANNER, messageID, 6, gSamusData.yPosition, gSamusData.xPosition, 0);
 }
 
+u32 RandoGetFinalCompletionPercentage(void) {
+    u32 percentage;
+    u32 mask;
+    u32 i;
+
+    // Count completion percentage as number of checked location bits
+    // If extra bits are set, the percentage will be higher, but they shouldn't be set
+    percentage = 0;
+    for (i = AREA_BRINSTAR; i < AREA_NORMAL_COUNT; i++) {
+        for (mask = 1; mask; mask <<= 1)
+            if (gRandoLocationBitfields[i] & mask)
+                percentage++;
+    }
+
+    // TODO: Refactor location IDs so we can count items but ignore extra checks
+    if (RandoIsLocationChecked(RC_CHOZODIA_RUINS_TEST_REWARD))
+        percentage--;
+
+    return percentage;
+}
+
 void RandoPlaceItemInSpriteGraphics(u32 location, u32 row, u32 column, u32 palette, u32 frames) {
     void* pal;
     const struct PlacedItem* pItem;

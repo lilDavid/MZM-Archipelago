@@ -1,6 +1,5 @@
 #include "ending_and_gallery.h"
 #include "callbacks.h"
-#include "sprite_util.h"
 
 #include "data/shortcut_pointers.h"
 #include "data/ending_and_gallery_data.h"
@@ -15,6 +14,8 @@
 #include "structs/display.h"
 #include "structs/ending_and_gallery.h"
 #include "structs/game_state.h"
+
+#include "rando/item.h"
 
 /**
  * @brief 84c34 | 48 | Checks if an ending letter should display
@@ -1532,7 +1533,7 @@ void EndingImageInit(void)
     BitFill(3, 0x4FF04FF, VRAM_BASE + 0xE800, 0x800, 0x20);
     DMA_SET(3, sEndingImagesPalPointers[endingNbr], PALRAM_BASE, DMA_ENABLE << 16 | 0x100);
 
-    ENDING_DATA.completionPercentage = SpriteUtilGetFinalCompletionPercentage();
+    ENDING_DATA.completionPercentage = RandoGetFinalCompletionPercentage();
 
     LZ77UncompVRAM(sEndingImageNumbersMiscGfx, VRAM_OBJ);
 
