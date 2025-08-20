@@ -82,10 +82,6 @@ struct StartingLocationData {
     u8 useMotherShipDoors;
 };
 
-// Functions
-
-void RandoHandleMultiworld(void);
-
 // Globals
 
 extern const struct Seed sRandoSeed;

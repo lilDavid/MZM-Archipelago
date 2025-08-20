@@ -31,6 +31,8 @@
 #include "structs/connection.h"
 #include "structs/rando.h"
 
+#include "rando/multiworld.h"
+
 /**
  * @brief c4b4 | 244 | Main loop in game
  * 
