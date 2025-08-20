@@ -580,6 +580,7 @@ SECTIONS {
         src/menus/file_select.o(.text);
 
         src/rando/item.o(.text);
+        src/rando/graphics.o(.text);
         src/rando/multiworld.o(.text);
         src/rando/warp_to_start.o(.text);
 

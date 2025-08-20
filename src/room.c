@@ -7,10 +7,8 @@
 #include "data/clipdata_types.h"
 #include "data/clipdata_types_tilemap.h"
 #include "data/rooms_data.h"
-#include "data/rando_data.h"
 
 #include "constants/audio.h"
-#include "constants/block.h"
 #include "constants/haze.h"
 #include "constants/connection.h"
 #include "constants/clipdata.h"
@@ -41,6 +39,7 @@
 #include "structs/visual_effects.h"
 
 #include "rando/item.h"
+#include "rando/graphics.h"
 
 
 /**
@@ -111,11 +110,11 @@ void RoomLoad(void)
 
     // Load graphics
     RoomLoadTileset();
-    RoomLoadRandomizerTiles();
+    RandoLoadItemTiles();
     RoomLoadBackgrounds();
     RoomRemoveNeverReformBlocksAndCollectedTanks();
     if (sRandoSeed.options.revealHiddenBlocks)
-        RoomRevealBlocks();
+        RandoRevealHiddenBlocks();
     gPreviousXPosition = gSamusData.xPosition;
     gPreviousYPosition = gSamusData.yPosition;
     TransparencySetRoomEffectsTransparency();
@@ -139,6 +138,7 @@ void RoomLoad(void)
     RoomSetInitialTilemap(1);
     RoomSetInitialTilemap(2);
     AnimatedGraphicsLoad();
+    RandoLoadAnimatedGraphics();
     AnimatedGraphicsTanksAnimationReset();
     HazeSetBackgroundEffect();
     HazeProcess();
@@ -243,46 +243,6 @@ void RoomLoadTileset(void)
 
     if (gCurrentRoomEntry.Bg2Prop == BG_PROP_MOVING)
         BitFill(3, 0x40, VRAM_BASE + 0x2000, 0x1000, 16);
-}
-
-void RoomLoadRandomizerTiles(void) {
-    u32 i, j;
-    u32 itemRoom;
-
-    for (itemRoom = 0;
-         itemRoom < sRandoAreaItemListLengths[gCurrentArea] && sRandoAreaItemLists[gCurrentArea][itemRoom] != gCurrentRoom;
-         itemRoom += 2);
-    for (i = 0;
-         itemRoom < sRandoAreaItemListLengths[gCurrentArea] && sRandoAreaItemLists[gCurrentArea][itemRoom] == gCurrentRoom;
-         i++, itemRoom += 2)
-    {
-        const struct PlacedItem* placement;
-        u32 baseTile, palette;
-
-        placement = &sPlacedItems[sRandoAreaItemLists[gCurrentArea][itemRoom + 1]];
-        if (sRandoItemToTankTilemap[placement->item.itemType] != 0) {
-            palette = UCHAR_MAX;
-            baseTile = sRandoItemToTankTilemap[placement->item.itemType];
-        } else {
-            palette = sRandoPaletteSlots[gCurrentRoomEntry.tileset * 2 + i];
-            baseTile = 4 * (sRandoAnimatedTileGaps[gAnimatedGraphicsEntry.tileset] + i) | ((palette == UCHAR_MAX ? 0 : palette) << 12);
-        }
-        for (j = 0; j < 4; j++) {
-            gCommonTilemap[4 * (CLIPDATA_TILEMAP_ENERGY_TANK + i) + j] = baseTile + j;
-            gTilemap[4 * (0x48 + (i ^ 1)) + j] = baseTile + j;
-        }
-
-        if (palette != UCHAR_MAX)
-            DmaTransfer(3, placement->sprite->pal, PALRAM_BASE + (palette * sizeof(u16[16])), sizeof(u16[16]), 16);
-    }
-    for (; i < 4; i++) {
-        // Set the rest to the placeholder gem
-        u32 baseTile = 4 * (sRandoAnimatedTileGaps[gAnimatedGraphicsEntry.tileset] + i);
-        for (j = 0; j < 4; j++) {
-            gCommonTilemap[4 * (CLIPDATA_TILEMAP_ENERGY_TANK + i) + j] = baseTile + j;
-            gTilemap[4 * (0x48 + (i ^ 1)) + j] = baseTile + j;
-        }
-    }
 }
 
 /**
@@ -429,31 +389,6 @@ void RoomRemoveNeverReformBlocksAndCollectedTanks(void)
 {
 	BlockRemoveNeverReformBlocks();
 	BgClipRemoveCollectedTanks();
-}
-
-void RoomRevealBlocks(void)
-{
-    s32 i, j, position, clipBehavior, block, appearance;
-
-    for (i = 0; i < gBgPointersAndDimensions.clipdataHeight; i++)
-    {
-        for (j = 0; j < gBgPointersAndDimensions.clipdataWidth; j++)
-        {
-            position = i * gBgPointersAndDimensions.clipdataWidth + j;
-
-            clipBehavior = gTilemapAndClipPointers.pClipBehaviors[gBgPointersAndDimensions.pClipDecomp[position]];
-            if (clipBehavior == CLIP_BEHAVIOR_NONE)
-                continue;
-            block = BEHAVIOR_TO_BLOCK(clipBehavior);
-            if (block < 0 || block > ARRAY_SIZE(sRevealedBlockTilemapValues))
-                continue;
-            appearance = sRevealedBlockTilemapValues[block];
-            if (appearance == 0)
-                continue;
-
-            gBgPointersAndDimensions.backgrounds[1].pDecomp[position] = appearance;
-        }
-    }
 }
 
 /**
