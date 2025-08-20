@@ -1,6 +1,5 @@
 #include "gba.h"
 #include "connection.h"
-#include "audio.h"
 
 #include "data/rando_data.h"
 #include "data/engine_pointers.h"
@@ -14,7 +13,6 @@
 #include "constants/cutscene.h"
 #include "constants/event.h"
 #include "constants/game_state.h"
-#include "constants/in_game_cutscene.h"
 #include "constants/samus.h"
 #include "constants/room.h"
 
@@ -24,7 +22,6 @@
 #include "structs/cutscene.h"
 #include "structs/display.h"
 #include "structs/game_state.h"
-#include "structs/in_game_cutscene.h"
 #include "structs/room.h"
 #include "structs/samus.h"
 

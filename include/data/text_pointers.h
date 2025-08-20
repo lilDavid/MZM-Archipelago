@@ -5,7 +5,6 @@
 #include "location_text.h"
 
 #include "constants/game_state.h"
-#include "constants/rando.h"
 #include "constants/text.h"
 
 extern const u16* const sJapaneseTextPointers_Message[MESSAGE_END];

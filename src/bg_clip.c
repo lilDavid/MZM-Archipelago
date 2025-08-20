@@ -19,12 +19,10 @@
 #include "constants/text.h"
 
 #include "structs/bg_clip.h"
-#include "structs/block.h"
 #include "structs/clipdata.h"
 #include "structs/connection.h"
 #include "structs/transparency.h"
 #include "structs/game_state.h"
-#include "structs/room.h"
 #include "structs/samus.h"
 
 /**

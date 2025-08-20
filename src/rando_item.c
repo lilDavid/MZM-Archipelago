@@ -28,32 +28,6 @@
 #include "structs/text.h"
 
 
-static u32 TextFindCharacter(const u16* str, u16 terminator) {
-    u32 i = 0;
-    while (str[i] != terminator)
-        i += 1;
-    return i;
-}
-
-static u32 TextCopyUntilCharacter(const u16* src, u16* dst, u16 terminator) {
-    const u16* start = src;
-    while (*src != terminator) {
-        *dst = *src;
-        dst++;
-        src++;
-    }
-    return src - start;
-}
-
-static u32 TextGetStringWidth(const u16* str, u32 length) {
-    u32 i;
-    u32 textWidth = 0;
-    for (i = 0; i < length; i++)
-        textWidth += TextGetCharacterWidth(str[i]);
-
-    return textWidth;
-}
-
 static u32 RandoGetRegion(u32 location) {
     if (location < RC_BRINSTAR_MAX)
         return AREA_BRINSTAR;
