@@ -101,4 +101,7 @@ extern u32 gRandoLocationBitfields[AREA_NORMAL_COUNT];
 
 extern u8 gWarpToStart;
 
+extern struct RandoMessage gCurrentRandoMessage;
+extern u16 gDynamicMessageBuffer[160];
+
 #endif /* RANDO_STRUCT_H */

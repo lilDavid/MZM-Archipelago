@@ -18,7 +18,8 @@
 #include "structs/sprite.h"
 #include "structs/samus.h"
 #include "structs/rando.h"
-#include "structs/text.h"
+
+#include "rando/item.h"
 
 /**
  * @brief 1b6b8 | 110 | Initializes an item banner sprite
@@ -118,17 +119,6 @@ void ItemBannerGfxInit(void)
         gCurrentSprite.pose = ITEM_BANNER_POSE_POP_UP;
         gCurrentSprite.animationDurationCounter = 0;
         gCurrentSprite.currentAnimationFrame = 0;
-    }
-}
-
-static u32 RandoGetItemMessageTime(void) {
-    switch (gCurrentRandoMessage.soundEffect) {
-        case MUSIC_GETTING_FULLY_POWERED_SUIT_JINGLE:
-            return CONVERT_SECONDS(5.) + TWO_THIRD_SECOND;
-        case MUSIC_GETTING_TANK_JINGLE:
-            return CONVERT_SECONDS(1.) + TWO_THIRD_SECOND;
-        default:
-            return CONVERT_SECONDS(0.5);
     }
 }
 

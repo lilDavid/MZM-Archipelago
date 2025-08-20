@@ -5,6 +5,7 @@
 #include "in_game_cutscene.h"
 
 #include "constants/animated_graphics.h"
+#include "constants/audio.h"
 #include "constants/clipdata.h"
 #include "constants/in_game_cutscene.h"
 #include "constants/menus/pause_screen.h"
@@ -339,6 +340,17 @@ static void RandoAcceptMessage() {
 
     if (gIncomingItem.itemType != RANDO_ITEM_NONE) {
         RandoGiveMultiworldItem(FALSE);
+    }
+}
+
+u32 RandoGetItemMessageTime(void) {
+    switch (gCurrentRandoMessage.soundEffect) {
+        case MUSIC_GETTING_FULLY_POWERED_SUIT_JINGLE:
+            return CONVERT_SECONDS(5.) + TWO_THIRD_SECOND;
+        case MUSIC_GETTING_TANK_JINGLE:
+            return CONVERT_SECONDS(1.) + TWO_THIRD_SECOND;
+        default:
+            return CONVERT_SECONDS(0.5);
     }
 }
 
