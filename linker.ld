@@ -581,12 +581,6 @@ SECTIONS {
         src/menus/game_over.o(.text);
         src/menus/file_select.o(.text);
 
-        src/rando/item.o(.text);
-        src/rando/game_start.o(.text);
-        src/rando/graphics.o(.text);
-        src/rando/multiworld.o(.text);
-        src/rando/warp_to_start.o(.text);
-
         src/softreset.o(.text);
         src/time_attack.o(.text);
         src/complex_oam.o(.text);
@@ -602,6 +596,14 @@ SECTIONS {
         src/libgcc/fp-bit-base.o(.text);
         src/libgcc/float.o(.text);
         src/libgcc/libgcc.o(.text);
+    } >rom
+
+    rando_text : ALIGN(2) {
+        src/rando/item.o(.text);
+        src/rando/game_start.o(.text);
+        src/rando/graphics.o(.text);
+        src/rando/multiworld.o(.text);
+        src/rando/warp_to_start.o(.text);
     } >rom
 
     .rodata : ALIGN(2) {
