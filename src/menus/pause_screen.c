@@ -2753,7 +2753,10 @@ u32 PauseScreenCallCurrentSubroutine(void)
         case PAUSE_SCREEN_SUBROUTINE_EASY_SLEEP:
             if (PauseScreenEasySleepSubroutine())
             {
-                leaving = TRUE;
+                if (gWarpToStart)
+                    leaving = TRUE;
+                else
+                    PAUSE_SCREEN_DATA.subroutineInfo.currentSubroutine = PAUSE_SCREEN_SUBROUTINE_EASY_SLEEP_LEAVING;
             }
             break;
 
