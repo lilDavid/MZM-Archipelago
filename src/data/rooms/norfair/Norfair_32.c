@@ -14,7 +14,6 @@ const u8 sNorfair_11_Scrolls[SCROLL_DATA_SIZE(1)] = {
 };
 
 const u8 sNorfair_32_Clipdata[193] = INCBIN_U8("data/rooms/norfair/Norfair_32_Clipdata.gfx");
-const u8 sNorfair_32_Clipdata_Expansion[195 - 193] = {0};
 
 const u8 sNorfair_32_Bg2[14] = INCBIN_U8("data/rooms/norfair/Norfair_32_Bg2.gfx");
 

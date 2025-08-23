@@ -21,7 +21,6 @@ const u8 sBrinstar_16_Scrolls[SCROLL_DATA_SIZE(2)] = {
 };
 
 const u8 sBrinstar_29_Clipdata[113] = INCBIN_U8("data/rooms/brinstar/Brinstar_29_Clipdata.gfx");
-const u8 sBrinstar_29_Clipdata_Expansion[117 - 113] = {0};
 
 const u8 sBrinstar_29_Bg2[14] = INCBIN_U8("data/rooms/brinstar/Brinstar_29_Bg2.gfx");
 

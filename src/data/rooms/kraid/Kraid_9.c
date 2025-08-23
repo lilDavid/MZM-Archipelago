@@ -2,7 +2,6 @@
 #include "macros.h"
 
 const u8 sKraid_9_Clipdata[83] = INCBIN_U8("data/rooms/kraid/Kraid_9_Clipdata.gfx");
-const u8 sKraid_9_Clipdata_Expansion[88 - 83] = {0};
 
 const u8 sKraid_9_Bg2[143] = INCBIN_U8("data/rooms/kraid/Kraid_9_Bg2.gfx");
 
