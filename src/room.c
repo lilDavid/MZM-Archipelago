@@ -99,11 +99,6 @@ void RoomLoad(void)
         gCurrentItemBeingAcquired = ITEM_ACQUISITION_GRAVITY;
 #endif // 0
         gSamusWeaponInfo.chargeCounter = 0;
-
-        if (gEquipment.suitMisc & SMF_ALL_SUITS)
-            gEquipment.suitType = SUIT_FULLY_POWERED;
-        else
-            gEquipment.suitType = SUIT_NORMAL;
     }
     else if (gPauseScreenFlag == PAUSE_SCREEN_SUITLESS_ITEMS)
         PlayMusic(MUSIC_CHOZO_RUINS, 0x10);

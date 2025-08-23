@@ -884,6 +884,13 @@ u8 ColorFadingProcess_GettingFullyPowered(void)
             gEquipment.currentPowerBombs = gEquipment.currentPowerBombs;
             gEquipment.beamBombsActivation = gEquipment.beamBombs;
             gEquipment.suitMiscActivation = gEquipment.suitMisc;
+            if (gRandoEquipment.customItems & CIF_FULLY_POWERED_SUIT) {
+                gEquipment.suitType = !!(gEquipment.suitMisc & SMF_ALL_SUITS);
+            } else {
+                gEquipment.suitType = SUIT_NORMAL;
+                gEquipment.beamBombsActivation &= ~BBF_PLASMA_BEAM;
+                gEquipment.suitMiscActivation &= ~SMF_UNKNOWN_ITEMS;
+            }
             return TRUE;
     }
 
