@@ -32,6 +32,7 @@ struct Equipment {
 
 struct RandoEquipment {
     u8 customItems;
+    u8 metroidDNA;
 };
 
 struct WeaponInfo {

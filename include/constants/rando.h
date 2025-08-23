@@ -135,6 +135,8 @@ enum RandoItemType {
     RANDO_ITEM_SUIT_MISC,
     RANDO_ITEM_CUSTOM,
 
+    RANDO_ITEM_METROID_DNA,
+
     RANDO_ITEM_END
 };
 

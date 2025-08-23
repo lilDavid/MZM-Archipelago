@@ -91,6 +91,11 @@ void RandoGiveItem(const struct RandoItem* item) {
             gEquipment.maxPowerBombs = MIN(99, gEquipment.maxPowerBombs + sTankIncreaseAmount[gDifficulty].powerBomb * item->value);
             gEquipment.currentPowerBombs = MIN(99, gEquipment.currentPowerBombs + sTankIncreaseAmount[gDifficulty].powerBomb * item->value);
             break;
+        case RANDO_ITEM_METROID_DNA:
+            gRandoEquipment.metroidDNA = MIN(99, gRandoEquipment.metroidDNA + item->value);
+            if (gRandoEquipment.metroidDNA >= sRandoSeed.options.metroidDnaRequired)
+                EventFunction(EVENT_ACTION_SETTING, EVENT_METROID_DNA_ACQUIRED);
+            break;
         case RANDO_ITEM_BEAM_BOMBS:
             gEquipment.beamBombs |= item->value;
             break;
