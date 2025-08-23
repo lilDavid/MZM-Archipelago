@@ -5,6 +5,7 @@
 
 #include "constants/audio.h"
 #include "constants/clipdata.h"
+#include "constants/demo.h"
 #include "constants/menus/pause_screen.h"
 #include "constants/samus.h"
 #include "constants/sprite.h"
@@ -13,6 +14,7 @@
 #include "data/text_pointers.h"
 #include "data/rando_data.h"
 
+#include "structs/demo.h"
 #include "structs/game_state.h"
 #include "structs/rando.h"
 #include "structs/room.h"
@@ -275,4 +277,34 @@ u32 RandoGetItemMessageTime(void) {
         default:
             return CONVERT_SECONDS(0.5);
     }
+}
+
+void RandoGiveStartingInventory(void) {
+    gEquipment.currentEnergy = gEquipment.maxEnergy = MIN(1299, sStartingHealthAmmo.energy + sRandoStartingInventory.energyTanks * sTankIncreaseAmount[gDifficulty].energy);
+    gEquipment.currentMissiles = gEquipment.maxMissiles = MIN(999, sStartingHealthAmmo.missile + sRandoStartingInventory.missileTanks * sTankIncreaseAmount[gDifficulty].missile);
+    gEquipment.currentSuperMissiles = gEquipment.maxSuperMissiles = MIN(99, sStartingHealthAmmo.superMissile + sRandoStartingInventory.superMissileTanks * sTankIncreaseAmount[gDifficulty].superMissile);
+    gEquipment.currentPowerBombs = gEquipment.maxPowerBombs = MIN(99, sStartingHealthAmmo.powerBomb + sRandoStartingInventory.powerBombTanks * sTankIncreaseAmount[gDifficulty].powerBomb);
+
+    gEquipment.beamBombsActivation = gEquipment.beamBombs = sRandoStartingInventory.beamBombs;
+    gEquipment.suitMiscActivation = gEquipment.suitMisc = sRandoStartingInventory.suitMisc;
+    gRandoEquipment.customItems = sRandoStartingInventory.customItems;
+
+    if (gRandoEquipment.customItems & CIF_FULLY_POWERED_SUIT) {
+        gEquipment.suitType = !!(gEquipment.suitMisc & SMF_ALL_SUITS);
+    } else {
+        gEquipment.beamBombsActivation &= ~BBF_PLASMA_BEAM;
+        gEquipment.suitMiscActivation &= ~SMF_UNKNOWN_ITEMS;
+    }
+
+    if (sRandoSeed.options.startWithMaps)
+        gEquipment.downloadedMapStatus = (1 << AREA_NORMAL_COUNT) - 1;
+}
+
+u32 RandoCanSpringBall(void) {
+    if (gRandoEquipment.customItems & CIF_SPRING_BALL) {
+        return TRUE;
+    }
+
+    return !(sRandoSeed.options.separateHiJumpSpringBall || gDemoState == DEMO_STATE_PLAYING) &&
+        (gEquipment.suitMisc & SMF_HIGH_JUMP);
 }

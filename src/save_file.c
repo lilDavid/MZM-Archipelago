@@ -1979,8 +1979,8 @@ void SramWrite_FileInfo(void)
             continue;
 
         gSaveFilesInfo[i].currentArea = AREA_CRATERIA;
-        gSaveFilesInfo[i].currentEnergy = 99;
-        gSaveFilesInfo[i].maxEnergy = 99;
+        gSaveFilesInfo[i].currentEnergy = MIN(1299, sStartingHealthAmmo.energy + sRandoStartingInventory.energyTanks * sTankIncreaseAmount[gDifficulty].energy);
+        gSaveFilesInfo[i].maxEnergy = MIN(1299, sStartingHealthAmmo.energy + sRandoStartingInventory.energyTanks * sTankIncreaseAmount[gDifficulty].energy);
         gSaveFilesInfo[i].difficulty = DIFF_EASY;
 
         if (pFile->difficulty > DIFF_HARD)

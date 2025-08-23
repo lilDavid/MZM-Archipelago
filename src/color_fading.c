@@ -31,6 +31,8 @@
 #include "structs/visual_effects.h"
 #include "structs/room.h"
 
+#include "rando/game_start.h"
+
 /**
  * @brief 5bcb0 | a8 | Processes the current color fading effect, visually
  * 
@@ -1027,6 +1029,8 @@ u8 ColorFadingProcess_BeforeIntroText(void)
                     break;
                 }
             }
+
+            RandoSetStartingEvents();
 
             return TRUE;
     }

@@ -4,28 +4,21 @@
 #include "clipdata.h" // Necessary
 #include "macros.h"
 #include "temp_globals.h"
-#include "event.h"
-#include "in_game_cutscene.h"
 
 #include "data/samus_sprites_pointers.h"
 #include "data/samus/samus_palette_data.h"
 #include "data/samus/samus_animation_pointers.h"
 #include "data/samus/samus_graphics.h"
-#include "data/block_data.h"
 
 #include "constants/audio.h"
 #include "constants/clipdata.h"
 #include "constants/color_fading.h"
-#include "constants/demo.h"
-#include "constants/event.h"
-#include "constants/in_game_cutscene.h"
 #include "constants/game_state.h"
 #include "constants/samus.h"
 #include "constants/projectile.h"
 
 #include "structs/bg_clip.h"
 #include "structs/clipdata.h"
-#include "structs/demo.h"
 #include "structs/game_state.h"
 #include "structs/visual_effects.h"
 #include "structs/samus.h"
@@ -33,14 +26,7 @@
 #include "structs/scroll.h"
 #include "structs/rando.h"
 
-static s32 RandoCanSpringBall() {
-    if (gRandoEquipment.customItems & CIF_SPRING_BALL) {
-        return TRUE;
-    }
-
-    return !(sRandoSeed.options.separateHiJumpSpringBall || gDemoState == DEMO_STATE_PLAYING) &&
-        (gEquipment.suitMisc & SMF_HIGH_JUMP);
-}
+#include "rando/item.h"
 
 /**
  * @brief 5368 | 10c | Checks for screw attack and speedbooster damage to the environment
@@ -7899,8 +7885,6 @@ void SamusUpdateArmCannonPositionOffset(u8 direction)
         pPhysics->armCannonXPositionOffset = offset;
 }
 
-#define DEBUG_SKIP_BOSSES 0
-
 /**
  * @brief bcb8 | 130 | Initializes samus data
  * 
@@ -7950,39 +7934,7 @@ void SamusInit(void)
             gSamusData.pose = SPOSE_FACING_THE_FOREGROUND;
             gSamusData.direction = KEY_LEFT;
 
-            // Starting inventory
-            gEquipment.currentEnergy = gEquipment.maxEnergy = MIN(1299, sStartingHealthAmmo.energy + sRandoStartingInventory.energyTanks * sTankIncreaseAmount[gDifficulty].energy);
-            gEquipment.currentMissiles = gEquipment.maxMissiles = MIN(999, sStartingHealthAmmo.missile + sRandoStartingInventory.missileTanks * sTankIncreaseAmount[gDifficulty].missile);
-            gEquipment.currentSuperMissiles = gEquipment.maxSuperMissiles = MIN(99, sStartingHealthAmmo.superMissile + sRandoStartingInventory.superMissileTanks * sTankIncreaseAmount[gDifficulty].superMissile);
-            gEquipment.currentPowerBombs = gEquipment.maxPowerBombs = MIN(99, sStartingHealthAmmo.powerBomb + sRandoStartingInventory.powerBombTanks * sTankIncreaseAmount[gDifficulty].powerBomb);
-            gEquipment.beamBombsActivation = gEquipment.beamBombs = sRandoStartingInventory.beamBombs;
-            gEquipment.suitMiscActivation = gEquipment.suitMisc = sRandoStartingInventory.suitMisc;
-            gRandoEquipment.customItems = sRandoStartingInventory.customItems;
-            if (gRandoEquipment.customItems & CIF_FULLY_POWERED_SUIT) {
-                gEquipment.suitType = !!(gEquipment.suitMisc & SMF_ALL_SUITS);
-            } else {
-                gEquipment.beamBombsActivation &= ~BBF_PLASMA_BEAM;
-                gEquipment.suitMiscActivation &= ~SMF_UNKNOWN_ITEMS;
-            }
-
-            if (sRandoSeed.options.startWithMaps)
-                gEquipment.downloadedMapStatus = (1 << AREA_NORMAL_COUNT) - 1;
-
-            // Starting events
-            EventFunction(EVENT_ACTION_SETTING, EVENT_FULLY_POWERED_SUIT_OBTAINED);  // For less stupid Chozodia access
-            for (i = EVENT_ENTER_NORFAIR_DEMO_PLAYED; i <= EVENT_STATUE_SCREW_ATTACK_GRABBED; i++)
-                EventFunction(EVENT_ACTION_SETTING, i);
-            EventFunction(EVENT_ACTION_CLEARING, EVENT_ENTER_RIDLEY_DEMO_PLAYED);
-            InGameCutsceneCheckFlag(TRUE, IGC_LONG_BEAM_HINT);
-
-#if DEBUG_SKIP_BOSSES
-            EventFunction(EVENT_ACTION_SETTING, EVENT_KRAID_KILLED);
-            EventFunction(EVENT_ACTION_SETTING, EVENT_RIDLEY_KILLED);
-            EventFunction(EVENT_ACTION_SETTING, EVENT_KRAID_STATUE_OPENED);
-            EventFunction(EVENT_ACTION_SETTING, EVENT_RIDLEY_STATUE_OPENED);
-            for (i = EVENT_FIRST_METROID_ROOM_CLEARED; i <= EVENT_ZEBETITE_FOUR_DESTROYED; i++)
-                EventFunction(EVENT_ACTION_SETTING, i);
-#endif // DEBUG_SKIP_BOSSES
+            RandoGiveStartingInventory();
         }
         else
         {
