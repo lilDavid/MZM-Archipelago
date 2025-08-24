@@ -210,6 +210,8 @@ void RandoGiveItemFromCheck(u32 location) {
     const struct PlacedItem* placement;
     s32 messageID;
     s32 isFirstTank;
+    s32 dnaRemaining;
+    s32 i;
 
     RandoCheckLocation(location);
     placement = &sPlacedItems[location];
@@ -222,29 +224,62 @@ void RandoGiveItemFromCheck(u32 location) {
         switch (placement->item.itemType) {
             case RANDO_ITEM_ENERGY_TANKS:
                 gCurrentRandoMessage.oneLine = FALSE;
+                gCurrentRandoMessage.data = sMessageTextPointers[gLanguage][gCurrentRandoMessage.messageID];
                 break;
             case RANDO_ITEM_MISSILES:
                 if (gEquipment.maxMissiles == 0)
                     isFirstTank = TRUE;
                 gCurrentRandoMessage.messageID += isFirstTank;
                 gCurrentRandoMessage.oneLine = isFirstTank;
+                gCurrentRandoMessage.data = sMessageTextPointers[gLanguage][gCurrentRandoMessage.messageID];
                 break;
             case RANDO_ITEM_SUPER_MISSILES:
                 if (gEquipment.maxSuperMissiles == 0)
                     isFirstTank = TRUE;
                 gCurrentRandoMessage.messageID += isFirstTank;
                 gCurrentRandoMessage.oneLine = isFirstTank;
+                gCurrentRandoMessage.data = sMessageTextPointers[gLanguage][gCurrentRandoMessage.messageID];
                 break;
             case RANDO_ITEM_POWER_BOMBS:
                 if (gEquipment.maxPowerBombs == 0)
                     isFirstTank = TRUE;
                 gCurrentRandoMessage.messageID += isFirstTank;
                 gCurrentRandoMessage.oneLine = isFirstTank;
+                gCurrentRandoMessage.data = sMessageTextPointers[gLanguage][gCurrentRandoMessage.messageID];
                 break;
             default:
                 gCurrentRandoMessage.oneLine = TRUE;
+                gCurrentRandoMessage.data = sMessageTextPointers[gLanguage][gCurrentRandoMessage.messageID];
+                break;
+            case RANDO_ITEM_METROID_DNA:
+                gCurrentRandoMessage.oneLine = FALSE;
+                dnaRemaining = sRandoSeed.options.metroidDnaRequired - gRandoEquipment.metroidDNA - placement->item.value;
+                if (dnaRemaining <= 0) {
+                    gCurrentRandoMessage.data = sRandoText_AllMetroidDNAAcquired;
+                } else if (dnaRemaining == 1) {
+                    gCurrentRandoMessage.data = sRandoText_MetroidDNAAcquired1Remaining;
+                } else {
+                    i = 0;
+                    while (sRandoText_MetroidDNAAcquired[i] != 0x041F) {
+                        gDynamicMessageBuffer[i] = sRandoText_MetroidDNAAcquired[i];
+                        i++;
+                    }
+                    if (dnaRemaining >= 10)
+                        gDynamicMessageBuffer[i] = CHAR_0 + dnaRemaining / 10;
+                    else
+                        gDynamicMessageBuffer[i] = CHAR_WIDTH_MASK | 0;
+                    i++;
+                    gDynamicMessageBuffer[i] = CHAR_0 + dnaRemaining % 10;
+                    i++;
+                    while (sRandoText_MetroidDNAAcquired[i] != CHAR_TERMINATOR) {
+                        gDynamicMessageBuffer[i] = sRandoText_MetroidDNAAcquired[i];
+                        i++;
+                    }
+                    gDynamicMessageBuffer[i] = CHAR_TERMINATOR;
+                    gCurrentRandoMessage.data = gDynamicMessageBuffer;
+                }
+                break;
         }
-        gCurrentRandoMessage.data = sMessageTextPointers[gLanguage][gCurrentRandoMessage.messageID];
     }
 
     if (!gIgnoreLocalItems)

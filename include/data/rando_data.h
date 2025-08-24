@@ -33,4 +33,8 @@ extern const u8 sRandoPaletteSlots[79 * 2];
 
 extern const u16 sRevealedBlockTilemapValues[MAX_AMOUNT_OF_BLOCKS];
 
+extern const u16 sRandoText_MetroidDNAAcquired[];
+extern const u16 sRandoText_MetroidDNAAcquired1Remaining[];
+extern const u16 sRandoText_AllMetroidDNAAcquired[];
+
 #endif // RANDO_DATA_H

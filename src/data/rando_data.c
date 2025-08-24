@@ -407,3 +407,7 @@ const u16 sRevealedBlockTilemapValues[MAX_AMOUNT_OF_BLOCKS] = {
     [BEHAVIOR_TO_BLOCK(CLIP_BEHAVIOR_UNDERWATER_SUPER_MISSILE_TANK)]        = 0,
     [BEHAVIOR_TO_BLOCK(CLIP_BEHAVIOR_UNDERWATER_POWER_BOMB_TANK)]           = 0,
 };
+
+const u16 sRandoText_MetroidDNAAcquired[] = INCTEXT("{WIDTH(53)}{COLOR(5)}Metroid DNA acquired.\n{WIDTH(47)}Collect ?? more samples.");
+const u16 sRandoText_MetroidDNAAcquired1Remaining[] = INCTEXT("{WIDTH(53)}{COLOR(5)}Metroid DNA acquired.\n{WIDTH(52)}Collect 1 more sample.");
+const u16 sRandoText_AllMetroidDNAAcquired[] = INCTEXT("{WIDTH(43)}{COLOR(5)}All Metroid DNA acquired.\n{WIDTH(31)}Mecha Ridley's door unlocked.");
