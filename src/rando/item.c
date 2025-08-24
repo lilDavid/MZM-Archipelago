@@ -209,10 +209,7 @@ void RandoActivateAcquiredItem(void) {
 void RandoGiveItemFromCheck(u32 location) {
     const struct PlacedItem* placement;
     s32 messageID;
-    u32 messageLength;
-    u32 lineLength;
-    u32 lineWidth;
-    u16* pLine2;
+    s32 isFirstTank;
 
     RandoCheckLocation(location);
     placement = &sPlacedItems[location];
@@ -220,6 +217,35 @@ void RandoGiveItemFromCheck(u32 location) {
     gPreventMovementTimer = SAMUS_ITEM_PMT;
     messageID = MESSAGE_DUMMY;
     gCurrentRandoMessage = placement->message;
+    if (placement->message.data == NULL) {
+        isFirstTank = FALSE;
+        switch (placement->item.itemType) {
+            case RANDO_ITEM_ENERGY_TANKS:
+                gCurrentRandoMessage.oneLine = FALSE;
+                break;
+            case RANDO_ITEM_MISSILES:
+                if (gEquipment.maxMissiles == 0)
+                    isFirstTank = TRUE;
+                gCurrentRandoMessage.messageID += isFirstTank;
+                gCurrentRandoMessage.oneLine = isFirstTank;
+                break;
+            case RANDO_ITEM_SUPER_MISSILES:
+                if (gEquipment.maxSuperMissiles == 0)
+                    isFirstTank = TRUE;
+                gCurrentRandoMessage.messageID += isFirstTank;
+                gCurrentRandoMessage.oneLine = isFirstTank;
+                break;
+            case RANDO_ITEM_POWER_BOMBS:
+                if (gEquipment.maxPowerBombs == 0)
+                    isFirstTank = TRUE;
+                gCurrentRandoMessage.messageID += isFirstTank;
+                gCurrentRandoMessage.oneLine = isFirstTank;
+                break;
+            default:
+                gCurrentRandoMessage.oneLine = TRUE;
+        }
+        gCurrentRandoMessage.data = sMessageTextPointers[gLanguage][gCurrentRandoMessage.messageID];
+    }
 
     if (!gIgnoreLocalItems)
         RandoGiveItem(&placement->item);
