@@ -5807,14 +5807,15 @@ const struct Door sCrateriaDoors[53] = {
 		.yExit = 0
 	},
 	{
+		// Unused in vanilla - move to power grip tower
 		.type = DOOR_TYPE_CLOSED_HATCH | DOOR_TYPE_EXISTS,
-		.sourceRoom = 1,
-		.xStart = 46,
-		.xEnd = 46,
-		.yStart = 36,
-		.yEnd = 39,
-		.destinationDoor = 8,
-		.xExit = -32,
+		.sourceRoom = 8,
+		.xStart = 2,
+		.xEnd = 2,
+		.yStart = 7,
+		.yEnd = 10,
+		.destinationDoor = 38,
+		.xExit = 32,
 		.yExit = 0
 	},
 	{
@@ -6159,13 +6160,13 @@ const struct Door sCrateriaDoors[53] = {
 		.yExit = 0
 	},
 	{
-		.type = DOOR_TYPE_CLOSED_HATCH | DOOR_TYPE_EXISTS,
+		.type = DOOR_TYPE_CLOSED_HATCH | DOOR_TYPE_EXISTS | DOOR_TYPE_LOAD_EVENT_BASED_ROOM,
 		.sourceRoom = 15,
 		.xStart = 31,
 		.xEnd = 31,
 		.yStart = 7,
 		.yEnd = 10,
-		.destinationDoor = 45,
+		.destinationDoor = 6,
 		.xExit = -32,
 		.yExit = 0
 	},
