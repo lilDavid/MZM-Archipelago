@@ -8,6 +8,7 @@
         "src/data/text_pointers.o",
         "src/data/menus/pause_screen_data.o",
         "src/data/menus/pause_screen_map_data.o",
+        "src/data/menus/status_screen_data.o",
         "src/data/sprites/charge_beam.o",
         "src/data/sprites/chozo_statue.o",
         "src/data/sprites/morph_ball.o",

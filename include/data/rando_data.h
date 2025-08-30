@@ -37,4 +37,6 @@ extern const u16 sRandoText_MetroidDNAAcquired[];
 extern const u16 sRandoText_MetroidDNAAcquired1Remaining[];
 extern const u16 sRandoText_AllMetroidDNAAcquired[];
 
+extern const u8 sRandoStatusScreenData[RANDO_ABILITY_GROUP_COUNT][3];
+
 #endif // RANDO_DATA_H

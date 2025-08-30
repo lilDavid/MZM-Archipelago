@@ -603,6 +603,7 @@ SECTIONS {
         src/rando/game_start.o(.text);
         src/rando/graphics.o(.text);
         src/rando/multiworld.o(.text);
+        src/rando/status_screen.o(.text);
         src/rando/warp_to_start.o(.text);
     } >rom
 

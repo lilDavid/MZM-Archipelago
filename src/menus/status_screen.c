@@ -24,6 +24,7 @@
 #include "structs/rando.h"
 
 #include "rando/item.h"
+#include "rando/status_screen.h"
 
 /**
  * @brief 6fd00 | 118 | Updates the minimap animated palette
@@ -190,6 +191,9 @@ u32 StatusScreenDrawItems(u8 row)
             dst[position] = PAUSE_SCREEN_EWRAM.statusScreenTilemap[position];
         }
     }
+
+    if (sStatusScreenRowsData[row][0] == ABILITY_GROUP_CURRENT_ENERGY)
+        RandoDrawStatusScreenDNA();
     
     if (row >= 7)
         j = TRUE;
@@ -296,6 +300,7 @@ void StatusScreenDraw(void)
         StatusScreenSetPistolVisibility(PAUSE_SCREEN_EWRAM.statusScreenTilemap);
         StatusScreenDrawSingleTankAmount(ABILITY_GROUP_CURRENT_ENERGY, gEquipment.currentEnergy, 11, FALSE);
         StatusScreenDrawSingleTankAmount(ABILITY_GROUP_MAX_ENERGY, gEquipment.maxEnergy, 11, TRUE);
+        RandoDrawDNACount();
         return;
     }
 
@@ -332,6 +337,10 @@ void StatusScreenDraw(void)
     {
         StatusScreenDrawSingleTankAmount(ABILITY_GROUP_CURRENT_POWER_BOMBS, gEquipment.currentPowerBombs, 11, FALSE);
         StatusScreenDrawSingleTankAmount(ABILITY_GROUP_MAX_POWER_BOMBS, gEquipment.maxPowerBombs, 11, TRUE);
+    }
+
+    if (sRandoSeed.options.metroidDnaRequired) {
+        RandoDrawDNACount();
     }
 
     if (StatusScreenIsStatusSlotEnabled(previousSlots[0]))

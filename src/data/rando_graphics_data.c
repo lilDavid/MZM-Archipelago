@@ -44,3 +44,17 @@ const struct RandoSprite sRandoHiJumpSprite = {sRandoHiJumpGfx, sChozoStatueHigh
 const struct RandoSprite sRandoScrewAttackSprite = {sRandoScrewAttackGfx, sChozoStatueScrewAttackPal};
 const struct RandoSprite sRandoUnknownSpaceJumpSprite = {sRandoUnknownSpaceJumpGfx, sChozoStatueSpaceJumpPal};
 const struct RandoSprite sRandoPowerGripSprite = {sRandoPowerGripGfx, sPowerGripPal};
+
+const u16 sRandoOam_EnergyDNAHeader[] = {
+    8,
+    // vanilla energy
+    0xfe, OBJ_SIZE_16x16 | 0x1f0, OBJ_SPRITE_OAM | 0x3000 | 684,
+    OBJ_SHAPE_HORIZONTAL | 0x8, OBJ_SIZE_32x8 | 0x0, OBJ_SPRITE_OAM | 0x3000 | 724,
+    OBJ_SHAPE_HORIZONTAL | 0x8, OBJ_SIZE_32x8 | 0x20, OBJ_SPRITE_OAM | 0x3000 | 724,
+    0x8, 0x40, OBJ_SPRITE_OAM | 0x3000 | 728,
+    // rando DNA
+    OBJ_SHAPE_HORIZONTAL | 0xfd, 0x48, OBJ_SPRITE_OAM | 0x3000 | 720,
+    OBJ_SHAPE_HORIZONTAL | 0x5, 0x48, OBJ_SPRITE_OAM | 0x3000 | 722,
+    OBJ_SHAPE_HORIZONTAL | 0x8, OBJ_SIZE_32x8 | 0x58, OBJ_SPRITE_OAM | 0x3000 | 724,
+    0x8, 0x78, OBJ_SPRITE_OAM | 0x3000 | 728,
+};
