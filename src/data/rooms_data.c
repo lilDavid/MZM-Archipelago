@@ -5785,13 +5785,13 @@ const struct Door sCrateriaDoors[53] = {
 		.yExit = 0
 	},
 	{
-		.type = DOOR_TYPE_CLOSED_HATCH | DOOR_TYPE_LOAD_EVENT_BASED_ROOM | DOOR_TYPE_DISPLAYS_ROOM_LOCATION,
+		.type = DOOR_TYPE_CLOSED_HATCH | DOOR_TYPE_DISPLAYS_ROOM_LOCATION,
 		.sourceRoom = 15,
 		.xStart = 2,
 		.xEnd = 2,
 		.yStart = 15,
 		.yEnd = 18,
-		.destinationDoor = 1,
+		.destinationDoor = 0x2E,
 		.xExit = 32,
 		.yExit = 0
 	},
@@ -6038,13 +6038,13 @@ const struct Door sCrateriaDoors[53] = {
 		.yExit = 0
 	},
 	{
-		.type = DOOR_TYPE_CLOSED_HATCH | DOOR_TYPE_LOAD_EVENT_BASED_ROOM,
+		.type = DOOR_TYPE_CLOSED_HATCH,
 		.sourceRoom = 11,
 		.xStart = 2,
 		.xEnd = 2,
 		.yStart = 5,
 		.yEnd = 8,
-		.destinationDoor = 26,
+		.destinationDoor = 0xE,
 		.xExit = 32,
 		.yExit = 0
 	},
@@ -14725,7 +14725,7 @@ const struct RoomEntryROM sCrateriaRoomEntries[22] = {
 		.pBg3Data = sCrateria_Bg3_0,
 		.Bg3Scrolling = 3,
 		.transparency = 45,
-		.pDefaultSpriteData = sCrateria_5_Spriteset0,
+		.pDefaultSpriteData = sCrateria_0_Spriteset0,
 		.defaultSpriteset = 31,
 		.firstSpritesetEvent = EVENT_NONE,
 		.pFirstSpriteData = sEnemyRoomData_Empty,
