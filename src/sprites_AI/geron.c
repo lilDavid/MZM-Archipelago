@@ -45,6 +45,10 @@ void Geron(void)
             }
             else if (gCurrentSprite.spriteId == PSPRITE_GERON_BRINSTAR_ROOM_1C)
             {
+#if 1
+                    gCurrentSprite.status = 0;
+                    break;
+#else
                 if (!EventFunction(EVENT_ACTION_CHECKING, EVENT_HIGH_JUMP_OBTAINED))
                 {
                     gCurrentSprite.status = 0;
@@ -53,6 +57,7 @@ void Geron(void)
 
                 if (EventFunction(EVENT_ACTION_CHECKING, EVENT_PLANT_DESTROYED_POST_VARIA))
                     destroyed = TRUE;
+#endif
             }
             else if (gCurrentSprite.spriteId == PSPRITE_GERON_VARIA1)
             {
