@@ -2759,6 +2759,7 @@ static const struct FrameData sMiscOam_DebugSamusHeadAndArrows[2] = {
 
 
 const u32 sMotifBehindWireframeSamusGfx[278] = INCBIN_U32("data/menus/PauseScreen/MotifBehindWireframeSamus.gfx.lz");
+static const u32 sMotifBehindWireframeSamusGfxExpansion[7] = {};
 const u32 sPauseScreenHudGfx[1404] = INCBIN_U32("data/menus/PauseScreen/PauseScreenHud.gfx.lz");
 const u32 sMinimapLettersGfx[60] = INCBIN_U32("data/menus/PauseScreen/MinimapLetters.gfx.lz");
 
@@ -2766,6 +2767,7 @@ const u32 sMenuNamesJapaneseGfx[92] = INCBIN_U32("data/menus/PauseScreen/MenuNam
 const u32 sEquipmentNamesJapaneseGfx[384] = INCBIN_U32("data/menus/PauseScreen/EquipmentNamesJapanese.gfx.lz");
 
 const u32 sTankIconsGfx[1786] = INCBIN_U32("data/menus/PauseScreen/TankIcons.gfx.lz");
+static const u32 sTankIconsGfxExpansion[11] = {};
 
 const u32 sMapScreenAreaNamesEnglishGfx[216] = INCBIN_U32("data/menus/PauseScreen/MapScreenAreaNamesEnglish.gfx.lz");
 const u32 sMapScreenUnknownItemsNamesJapaneseGfx[65] = INCBIN_U32("data/menus/PauseScreen/MapScreenUnknownItemsNamesJapanese.gfx.lz");

@@ -29,6 +29,8 @@ struct Seed {
         u8 revealHiddenBlocks;
         u8 skipTourianOpening;
         u8 elevatorSpeed;
+
+        u8 metroidDnaRequired;
     } options;
 };
 

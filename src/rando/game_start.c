@@ -7,6 +7,9 @@
 #include "constants/event.h"
 #include "constants/in_game_cutscene.h"
 
+#include "structs/rando.h"
+#include "structs/samus.h"
+
 
 #define DEBUG_SKIP_BOSSES 0
 
@@ -17,6 +20,9 @@ void RandoSetStartingEvents(void) {
     for (i = EVENT_ENTER_NORFAIR_DEMO_PLAYED; i <= EVENT_STATUE_SCREW_ATTACK_GRABBED; i++)
         EventFunction(EVENT_ACTION_SETTING, i);
     EventFunction(EVENT_ACTION_CLEARING, EVENT_ENTER_RIDLEY_DEMO_PLAYED);
+
+    if (gRandoEquipment.metroidDNA >= sRandoSeed.options.metroidDnaRequired)
+        EventFunction(EVENT_ACTION_SETTING, EVENT_METROID_DNA_ACQUIRED);
 
     InGameCutsceneCheckFlag(TRUE, IGC_LONG_BEAM_HINT);
 

@@ -91,6 +91,11 @@ void RandoGiveItem(const struct RandoItem* item) {
             gEquipment.maxPowerBombs = MIN(99, gEquipment.maxPowerBombs + sTankIncreaseAmount[gDifficulty].powerBomb * item->value);
             gEquipment.currentPowerBombs = MIN(99, gEquipment.currentPowerBombs + sTankIncreaseAmount[gDifficulty].powerBomb * item->value);
             break;
+        case RANDO_ITEM_METROID_DNA:
+            gRandoEquipment.metroidDNA = MIN(99, gRandoEquipment.metroidDNA + item->value);
+            if (gRandoEquipment.metroidDNA >= sRandoSeed.options.metroidDnaRequired)
+                EventFunction(EVENT_ACTION_SETTING, EVENT_METROID_DNA_ACQUIRED);
+            break;
         case RANDO_ITEM_BEAM_BOMBS:
             gEquipment.beamBombs |= item->value;
             break;
@@ -204,10 +209,9 @@ void RandoActivateAcquiredItem(void) {
 void RandoGiveItemFromCheck(u32 location) {
     const struct PlacedItem* placement;
     s32 messageID;
-    u32 messageLength;
-    u32 lineLength;
-    u32 lineWidth;
-    u16* pLine2;
+    s32 isFirstTank;
+    s32 dnaRemaining;
+    s32 i;
 
     RandoCheckLocation(location);
     placement = &sPlacedItems[location];
@@ -215,6 +219,68 @@ void RandoGiveItemFromCheck(u32 location) {
     gPreventMovementTimer = SAMUS_ITEM_PMT;
     messageID = MESSAGE_DUMMY;
     gCurrentRandoMessage = placement->message;
+    if (placement->message.data == NULL) {
+        isFirstTank = FALSE;
+        switch (placement->item.itemType) {
+            case RANDO_ITEM_ENERGY_TANKS:
+                gCurrentRandoMessage.oneLine = FALSE;
+                gCurrentRandoMessage.data = sMessageTextPointers[gLanguage][gCurrentRandoMessage.messageID];
+                break;
+            case RANDO_ITEM_MISSILES:
+                if (gEquipment.maxMissiles == 0)
+                    isFirstTank = TRUE;
+                gCurrentRandoMessage.messageID += isFirstTank;
+                gCurrentRandoMessage.oneLine = isFirstTank;
+                gCurrentRandoMessage.data = sMessageTextPointers[gLanguage][gCurrentRandoMessage.messageID];
+                break;
+            case RANDO_ITEM_SUPER_MISSILES:
+                if (gEquipment.maxSuperMissiles == 0)
+                    isFirstTank = TRUE;
+                gCurrentRandoMessage.messageID += isFirstTank;
+                gCurrentRandoMessage.oneLine = isFirstTank;
+                gCurrentRandoMessage.data = sMessageTextPointers[gLanguage][gCurrentRandoMessage.messageID];
+                break;
+            case RANDO_ITEM_POWER_BOMBS:
+                if (gEquipment.maxPowerBombs == 0)
+                    isFirstTank = TRUE;
+                gCurrentRandoMessage.messageID += isFirstTank;
+                gCurrentRandoMessage.oneLine = isFirstTank;
+                gCurrentRandoMessage.data = sMessageTextPointers[gLanguage][gCurrentRandoMessage.messageID];
+                break;
+            default:
+                gCurrentRandoMessage.oneLine = TRUE;
+                gCurrentRandoMessage.data = sMessageTextPointers[gLanguage][gCurrentRandoMessage.messageID];
+                break;
+            case RANDO_ITEM_METROID_DNA:
+                gCurrentRandoMessage.oneLine = FALSE;
+                dnaRemaining = sRandoSeed.options.metroidDnaRequired - gRandoEquipment.metroidDNA - placement->item.value;
+                if (dnaRemaining <= 0) {
+                    gCurrentRandoMessage.data = sRandoText_AllMetroidDNAAcquired;
+                } else if (dnaRemaining == 1) {
+                    gCurrentRandoMessage.data = sRandoText_MetroidDNAAcquired1Remaining;
+                } else {
+                    i = 0;
+                    while (sRandoText_MetroidDNAAcquired[i] != 0x041F) {
+                        gDynamicMessageBuffer[i] = sRandoText_MetroidDNAAcquired[i];
+                        i++;
+                    }
+                    if (dnaRemaining >= 10)
+                        gDynamicMessageBuffer[i] = CHAR_0 + dnaRemaining / 10;
+                    else
+                        gDynamicMessageBuffer[i] = CHAR_WIDTH_MASK | 0;
+                    i++;
+                    gDynamicMessageBuffer[i] = CHAR_0 + dnaRemaining % 10;
+                    i++;
+                    while (sRandoText_MetroidDNAAcquired[i] != CHAR_TERMINATOR) {
+                        gDynamicMessageBuffer[i] = sRandoText_MetroidDNAAcquired[i];
+                        i++;
+                    }
+                    gDynamicMessageBuffer[i] = CHAR_TERMINATOR;
+                    gCurrentRandoMessage.data = gDynamicMessageBuffer;
+                }
+                break;
+        }
+    }
 
     if (!gIgnoreLocalItems)
         RandoGiveItem(&placement->item);
