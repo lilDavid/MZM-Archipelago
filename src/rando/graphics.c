@@ -103,7 +103,7 @@ void RandoRevealHiddenBlocks(void) {
             if (clipBehavior == CLIP_BEHAVIOR_NONE)
                 continue;
             block = BEHAVIOR_TO_BLOCK(clipBehavior);
-            if (block < 0 || block > ARRAY_SIZE(sRevealedBlockTilemapValues))
+            if (block < 0 || block >= ARRAY_SIZE(sRevealedBlockTilemapValues))
                 continue;
             appearance = sRevealedBlockTilemapValues[block];
             if (appearance == 0)
