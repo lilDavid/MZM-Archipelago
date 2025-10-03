@@ -24,6 +24,8 @@ const struct Seed sRandoSeed = {
         .revealHiddenBlocks = FALSE,
         .skipTourianOpening = FALSE,
         .elevatorSpeed = (PIXEL_SIZE * 2),
+
+        .metroidDnaRequired = 0,
     }
 };
 

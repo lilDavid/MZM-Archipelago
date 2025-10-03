@@ -192,7 +192,7 @@ u32 StatusScreenDrawItems(u8 row)
         }
     }
 
-    if (sStatusScreenRowsData[row][0] == ABILITY_GROUP_CURRENT_ENERGY)
+    if (sRandoSeed.options.metroidDnaRequired && (sStatusScreenRowsData[row][0] == ABILITY_GROUP_CURRENT_ENERGY))
         RandoDrawStatusScreenDNA();
     
     if (row >= 7)
@@ -300,7 +300,8 @@ void StatusScreenDraw(void)
         StatusScreenSetPistolVisibility(PAUSE_SCREEN_EWRAM.statusScreenTilemap);
         StatusScreenDrawSingleTankAmount(ABILITY_GROUP_CURRENT_ENERGY, gEquipment.currentEnergy, 11, FALSE);
         StatusScreenDrawSingleTankAmount(ABILITY_GROUP_MAX_ENERGY, gEquipment.maxEnergy, 11, TRUE);
-        RandoDrawDNACount();
+        if (sRandoSeed.options.metroidDnaRequired)
+            RandoDrawDNACount();
         return;
     }
 
@@ -339,9 +340,8 @@ void StatusScreenDraw(void)
         StatusScreenDrawSingleTankAmount(ABILITY_GROUP_MAX_POWER_BOMBS, gEquipment.maxPowerBombs, 11, TRUE);
     }
 
-    if (sRandoSeed.options.metroidDnaRequired) {
+    if (sRandoSeed.options.metroidDnaRequired)
         RandoDrawDNACount();
-    }
 
     if (StatusScreenIsStatusSlotEnabled(previousSlots[0]))
         PAUSE_SCREEN_DATA.statusScreenData.currentStatusSlot = previousSlots[0];
