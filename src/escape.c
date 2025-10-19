@@ -4,7 +4,6 @@
 #include "data/visual_effects_data.h"
 
 #include "constants/event.h"
-#include "constants/escape.h"
 #include "constants/game_state.h"
 #include "constants/particle.h"
 
@@ -18,7 +17,7 @@
  * 
  * @return u8 Escape ID
  */
-u8 EscapeDetermineTimer(void)
+Escape EscapeDetermineTimer(void)
 {
     if (!EventFunction(EVENT_ACTION_CHECKING, EVENT_ESCAPED_ZEBES))
     {
@@ -45,7 +44,7 @@ u8 EscapeDetermineTimer(void)
  * 
  * @return u8 TRUE if escaped, FALSE otherwise
  */
-u8 EscapeCheckHasEscaped(void)
+boolu8 EscapeCheckHasEscaped(void)
 {
 
     if (EventFunction(EVENT_ACTION_CHECKING, EVENT_MECHA_RIDLEY_KILLED))
@@ -105,12 +104,12 @@ void EscapeStart(void)
     DMA_SET(3, sEscapeTimerDigitsGfx + 1024, VRAM_OBJ + 0x7C00, C_32_2_16(DMA_ENABLE, 0xB0));
 
     // Setup oam
-    DMA_SET(3, sParticleEscapeOam, gParticleEscapeOamFrames, C_32_2_16(DMA_ENABLE, ARRAY_SIZE(gParticleEscapeOamFrames)));
+    DMA_SET(3, sParticleEscapeOam_Frame0, gParticleEscapeOamFrames, C_32_2_16(DMA_ENABLE, ARRAY_SIZE(gParticleEscapeOamFrames)));
 
     // Escape timer uses absolute position, which isn't converted to pixel coordinates when drawing,
     // hence pixel coordinates are used when creating it
-    ParticleSet(SUB_PIXEL_TO_PIXEL(PIXEL_SIZE * 2),
-        SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 9 - QUARTER_BLOCK_SIZE + PIXEL_SIZE), PE_ESCAPE);
+    ParticleSet(SUB_PIXEL_TO_PIXEL(EIGHTH_BLOCK_SIZE),
+        SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 8 + THREE_QUARTER_BLOCK_SIZE + PIXEL_SIZE), PE_ESCAPE);
 }
 
 /**
@@ -161,7 +160,7 @@ void EscapeSetTimer(void)
  * @brief 53b64 | 104 | Updates the escape timer
  * 
  */
-void EscaepUpdateTimer(void)
+void EscapeUpdateTimer(void)
 {
     u32 counter;
 
@@ -171,7 +170,7 @@ void EscaepUpdateTimer(void)
         return;
     }
 
-    if (gGameModeSub1 != SUB_GAME_MODE_PLAYING)
+    if (gSubGameMode1 != SUB_GAME_MODE_PLAYING)
         return;
 
     if (gPreventMovementTimer != 0)

@@ -4,12 +4,11 @@
 #include "types.h"
 #include "oam.h"
 
-struct OamArray {
-    const struct FrameData* const pOam;
-    u8 preAction;
-};
+#include "constants/cutscene.h"
+#include "constants/event.h"
+#include "constants/text.h"
 
-enum OamArrayPreAction {
+MAKE_ENUM(u8, OamArrayPreAction) {
     OAM_ARRAY_PRE_ACTION_NONE,
     OAM_ARRAY_PRE_ACTION_CHANGE_FRAME,
     OAM_ARRAY_PRE_ACTION_RESET_FRAME,
@@ -20,6 +19,11 @@ enum OamArrayPreAction {
     OAM_ARRAY_PRE_ACTION_DECREMENT_ID_AFTER_END = 7,
     OAM_ARRAY_PRE_ACTION_SWITCH_TO_PREVIOUS_FRAME,
     OAM_ARRAY_PRE_ACTION_DECREMENT_ID_AT_BEGINNING,
+};
+
+struct OamArray {
+    const struct FrameData* const pOam;
+    OamArrayPreAction preAction;
 };
 
 // For some reason, 0x800 (0x200 * 4) is used as a 0 value for the backgrounds position during most of the non gameplay moments
@@ -58,16 +62,16 @@ struct CutsceneScrollingInfo {
 };
 
 struct CutsceneInfo {
-    u8 gameplayType;
-    u8 playRoomMusic:4;
-    u8 isElevator:2;
-    u8 skippable:2;
-    u8 storyText;
+    CutsceneType gameplayType;
+    boolu8 playRoomMusic:4;
+    boolu8 isElevator:2;
+    boolu8 skippable:2;
+    StoryTextId storyText;
     CutsceneFunc_T pFunction;
     u8 preBgFading;
     u16 fadingTimer;
     u8 bgFading;
-    u8 event;
+    Event event;
 };
 
 struct CutsceneSubroutineData {
@@ -195,9 +199,9 @@ struct CutsceneData {
 };
 
 extern u8 gCutsceneToSkip;
-extern s8 gCurrentCutscene;
+extern Cutscene gCurrentCutscene;
 
 extern s8 gOamXOffset_NonGameplay;
 extern s8 gOamYOffset_NonGameplay;
 
-#endif
+#endif /* CUTSCENE_STRUCT_H */

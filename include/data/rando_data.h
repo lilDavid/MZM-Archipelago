@@ -3,11 +3,11 @@
 
 #include "types.h"
 
+#include "constants/clipdata.h"
 #include "constants/connection.h"
 #include "constants/rando.h"
 #include "constants/text.h"
 
-#include "structs/bg_clip.h"
 #include "structs/block.h"
 #include "structs/scroll.h"
 
@@ -31,7 +31,7 @@ extern const u8 sRandoItemToTankTilemap[RANDO_ITEM_END];
 extern const u8 sRandoAnimatedTileGaps[8];
 extern const u8 sRandoPaletteSlots[79 * 2];
 
-extern const u16 sRevealedBlockTilemapValues[MAX_AMOUNT_OF_BLOCKS];
+extern const u16 sRevealedBlockTilemapValues[BEHAVIOR_BLOCK_AMOUNT];
 
 extern const u16 sRandoText_MetroidDNAAcquired[];
 extern const u16 sRandoText_MetroidDNAAcquired1Remaining[];

@@ -12,7 +12,6 @@ void AnimatedPaletteUpdate(void);
 void AnimatedPaletteCheckDisableOnTransition(void);
 void AnimatedGraphicsCheckPlayLightningEffect(void);
 void BackgroundEffectUpdate(void);
-u16 BackgroundEffectProcess(void);
 u32 BackgroundEffectStart(u8 effect);
 
 #endif /* ANIMATED_GRAPHICS_H */

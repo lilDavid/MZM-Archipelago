@@ -1,6 +1,8 @@
 #ifndef GBA_WAITSTATE_H
 #define GBA_WAITSTATE_H
 
+#include "gba/memory.h"
+
 #define REG_WAITCNT (REG_BASE + 0x204)
 
 #define WAIT_SRAM_4CYCLES 0

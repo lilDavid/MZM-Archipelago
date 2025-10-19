@@ -43,14 +43,14 @@ void BgClipSetBgBlockValue(u8 bg, u16 value, u16 yPosition, u16 xPosition)
     gBgPointersAndDimensions.backgrounds[bg].pDecomp[yPosition * gBgPointersAndDimensions.backgrounds[bg].width + xPosition] = value;
 
     // Check is on screen, no need to update the tilemap if off screen, that can be delegated to the room tilemap update functions
-    offset = gBg1YPosition / BLOCK_SIZE;
+    offset = SUB_PIXEL_TO_BLOCK(gBg1YPosition);
     if (offset - 4 > yPosition)
         return;
     
     if (yPosition > offset + 13)
         return;
 
-    offset = gBg1XPosition / BLOCK_SIZE;
+    offset = SUB_PIXEL_TO_BLOCK(gBg1XPosition);
     if (offset - 4 > xPosition)
         return;
 
@@ -88,14 +88,14 @@ void BgClipSetBg1BlockValue(u16 value, u16 yPosition, u16 xPosition)
     gBgPointersAndDimensions.backgrounds[1].pDecomp[yPosition * gBgPointersAndDimensions.backgrounds[1].width + xPosition] = value;
 
     // Check is on screen, no need to update the tilemap if off screen, that can be delegated to the room tilemap update functions
-    offset = gBg1YPosition / BLOCK_SIZE;
+    offset = SUB_PIXEL_TO_BLOCK(gBg1YPosition);
     if (offset - 4 > yPosition)
         return;
     
     if (yPosition > offset + 13)
         return;
 
-    offset = gBg1XPosition / BLOCK_SIZE;
+    offset = SUB_PIXEL_TO_BLOCK(gBg1XPosition);
     if (offset - 4 > xPosition)
         return;
 
@@ -124,7 +124,7 @@ void BgClipSetBg1BlockValue(u16 value, u16 yPosition, u16 xPosition)
  * @param yPosition Y Position
  * @param xPosition X Position
  */
-void BgClipSetRawBG1BlockValue(u32 value, u16 yPosition, u16 xPosition)
+void BgClipSetRawBg1BlockValue(u32 value, u16 yPosition, u16 xPosition)
 {
     gBgPointersAndDimensions.backgrounds[1].pDecomp[gBgPointersAndDimensions.backgrounds[1].width * yPosition + xPosition] = value;
 }
@@ -188,13 +188,13 @@ void BgClipApplyClipdataChangingTransparency(void)
 
     // Get X position
     position = gSamusData.xPosition;
-    CLAMP2(position, 0, gBgPointersAndDimensions.clipdataWidth * BLOCK_SIZE);
-    xPosition = DIV_SHIFT(position, BLOCK_SIZE);
+    CLAMP2(position, 0, BLOCK_TO_SUB_PIXEL(gBgPointersAndDimensions.clipdataWidth));
+    xPosition = SUB_PIXEL_TO_BLOCK_(position);
 
     // Get Y position
-    position = gSamusData.yPosition + (gSamusPhysics.drawDistanceTop >> 1);
-    CLAMP2(position, 0, gBgPointersAndDimensions.clipdataHeight * BLOCK_SIZE);
-    yPosition = DIV_SHIFT(position, BLOCK_SIZE);
+    position = gSamusData.yPosition + (gSamusPhysics.hitboxTop >> 1);
+    CLAMP2(position, 0, BLOCK_TO_SUB_PIXEL(gBgPointersAndDimensions.clipdataHeight));
+    yPosition = SUB_PIXEL_TO_BLOCK_(position);
 
     // Get clipdata
     clipdata = gTilemapAndClipPointers.pClipBehaviors[gBgPointersAndDimensions.pClipDecomp[yPosition * gBgPointersAndDimensions.clipdataWidth + xPosition]];
@@ -208,9 +208,9 @@ void BgClipApplyClipdataChangingTransparency(void)
     
     // Apply bldalpha
     if (bldalpha == USHORT_MAX)
-        TransparencyUpdateBLDALPHA(gDefaultTransparency.evaCoef, gDefaultTransparency.evbCoef, 1, 1);
+        TransparencyUpdateBldalpha(gDefaultTransparency.evaCoef, gDefaultTransparency.evbCoef, 1, 1);
     else
-        TransparencyUpdateBLDALPHA(LOW_BYTE(bldalpha), HIGH_BYTE(bldalpha), 1, 1);
+        TransparencyUpdateBldalpha(LOW_BYTE(bldalpha), HIGH_BYTE(bldalpha), 1, 1);
 }
 
 /**
@@ -223,9 +223,12 @@ void BgClipApplyClipdataChangingTransparency(void)
 u16 BgClipGetNewBldalphaValue(u16 clip, u16 unused)
 {
     u16 bldalpha;
+    u16 clipdata;
+
+    clipdata = BEHAVIOR_TO_BLDALPHA(clip);
 
     // Check is a bldapha change behavior (trigger transparent, opaque, brighter)
-    if ((u16)BEHAVIOR_TO_BLDALPHA(clip) < BEHAVIOR_TO_BLDALPHA(CLIP_BEHAVIOR_BG0_TRIGGER_DEFAULT_TRANSPARENCY))
+    if (clipdata < BEHAVIOR_TO_BLDALPHA(CLIP_BEHAVIOR_BG0_TRIGGER_DEFAULT_TRANSPARENCY))
     {
         // Fetch the correct value
         bldalpha = sBldalphaValuesForClipdata[BEHAVIOR_TO_BLDALPHA(clip)];
@@ -272,20 +275,20 @@ void BgClipCheckWalkingOnCrumbleBlock(void)
         return;
 
     // Get max position to check for crumble blocks
-    behavior = gSamusData.xPosition + gSamusPhysics.drawDistanceRightOffset;
+    behavior = gSamusData.xPosition + gSamusPhysics.hitboxRight;
 
     checkPos = (u32)behavior / BLOCK_SIZE;
     if (checkPos > gBgPointersAndDimensions.clipdataWidth)
         checkPos = gBgPointersAndDimensions.clipdataWidth;
 
     // Get positions
-    behavior = gSamusData.xPosition + gSamusPhysics.drawDistanceLeftOffset;
+    behavior = gSamusData.xPosition + gSamusPhysics.hitboxLeft;
     if (behavior < 0)
         behavior = 0;
 
     xPosition = (u32)behavior / BLOCK_SIZE;
 
-    behavior = gSamusData.yPosition + gSamusPhysics.drawDistanceBottom;
+    behavior = gSamusData.yPosition + gSamusPhysics.hitboxBottom;
     yPosition = (u32)(behavior + 2) / BLOCK_SIZE;
 
     if (yPosition > gBgPointersAndDimensions.clipdataHeight)
@@ -342,25 +345,25 @@ void BgClipCheckTouchingTransitionOnElevator(void)
 
     // Get X position
     position = gSamusData.xPosition;
-    CLAMP2(position, 0, gBgPointersAndDimensions.clipdataWidth * BLOCK_SIZE);
+    CLAMP2(position, 0, BLOCK_TO_SUB_PIXEL(gBgPointersAndDimensions.clipdataWidth));
 
     xPosition = (u32)position / BLOCK_SIZE;
 
     // Get Y position
     if (!goingDown)
     {
-        position = gSamusData.yPosition + gSamusPhysics.drawDistanceBottom + BLOCK_SIZE * 2;
+        position = gSamusData.yPosition + gSamusPhysics.hitboxBottom + BLOCK_SIZE * 2;
     }
     else
     {
-        position = gSamusData.yPosition + gSamusPhysics.drawDistanceTop - BLOCK_SIZE * 2;
+        position = gSamusData.yPosition + gSamusPhysics.hitboxTop - BLOCK_SIZE * 2;
     }
 
     behavior = position;
     if (position < 0)
         behavior = 0;
-    else if (behavior > gBgPointersAndDimensions.clipdataHeight * BLOCK_SIZE)
-        behavior = gBgPointersAndDimensions.clipdataHeight * BLOCK_SIZE;
+    else if (behavior > BLOCK_TO_SUB_PIXEL(gBgPointersAndDimensions.clipdataHeight))
+        behavior = BLOCK_TO_SUB_PIXEL(gBgPointersAndDimensions.clipdataHeight);
 
     yPosition = behavior / BLOCK_SIZE;
 
@@ -406,35 +409,35 @@ void BgClipCheckTouchingTransitionOrTank(void)
 
     // Get X positions
     // On the right
-    j = DIV_SHIFT(gSamusPhysics.drawDistanceRightOffset, 2) + gSamusData.xPosition;
-    CLAMP2(j, 0, gBgPointersAndDimensions.clipdataWidth * BLOCK_SIZE);
-    xPositions[0] = DIV_SHIFT(j, BLOCK_SIZE);
+    j = DIV_SHIFT(gSamusPhysics.hitboxRight, 2) + gSamusData.xPosition;
+    CLAMP2(j, 0, BLOCK_TO_SUB_PIXEL(gBgPointersAndDimensions.clipdataWidth));
+    xPositions[0] = SUB_PIXEL_TO_BLOCK_(j);
 
     // On the left
-    j = DIV_SHIFT(gSamusPhysics.drawDistanceLeftOffset, 2) + gSamusData.xPosition;
-    CLAMP2(j, 0, gBgPointersAndDimensions.clipdataWidth * BLOCK_SIZE);
-    xPositions[1] = DIV_SHIFT(j, BLOCK_SIZE);
+    j = DIV_SHIFT(gSamusPhysics.hitboxLeft, 2) + gSamusData.xPosition;
+    CLAMP2(j, 0, BLOCK_TO_SUB_PIXEL(gBgPointersAndDimensions.clipdataWidth));
+    xPositions[1] = SUB_PIXEL_TO_BLOCK_(j);
 
     // Center
     j = gSamusData.xPosition;
-    CLAMP2(j, 0, gBgPointersAndDimensions.clipdataWidth * BLOCK_SIZE);
-    xPositions[2] = DIV_SHIFT(j, BLOCK_SIZE);
+    CLAMP2(j, 0, BLOCK_TO_SUB_PIXEL(gBgPointersAndDimensions.clipdataWidth));
+    xPositions[2] = SUB_PIXEL_TO_BLOCK_(j);
 
     // Get Y positions
     // Center
-    j = DIV_SHIFT(gSamusPhysics.drawDistanceTop, 2) + gSamusData.yPosition;
-    CLAMP2(j, 0, gBgPointersAndDimensions.clipdataHeight * BLOCK_SIZE);
-    yPositions[0] = DIV_SHIFT(j, BLOCK_SIZE);
+    j = DIV_SHIFT(gSamusPhysics.hitboxTop, 2) + gSamusData.yPosition;
+    CLAMP2(j, 0, BLOCK_TO_SUB_PIXEL(gBgPointersAndDimensions.clipdataHeight));
+    yPositions[0] = SUB_PIXEL_TO_BLOCK_(j);
 
     // Bottom
-    j = DIV_SHIFT(gSamusPhysics.drawDistanceTop, 4) + gSamusData.yPosition;
-    CLAMP2(j, 0, gBgPointersAndDimensions.clipdataHeight * BLOCK_SIZE);
-    yPositions[1] = DIV_SHIFT(j, BLOCK_SIZE);
+    j = DIV_SHIFT(gSamusPhysics.hitboxTop, 4) + gSamusData.yPosition;
+    CLAMP2(j, 0, BLOCK_TO_SUB_PIXEL(gBgPointersAndDimensions.clipdataHeight));
+    yPositions[1] = SUB_PIXEL_TO_BLOCK_(j);
 
     // Top
-    j = DIV_SHIFT(gSamusPhysics.drawDistanceTop, 4) + DIV_SHIFT(gSamusPhysics.drawDistanceTop, 2) + gSamusData.yPosition;
-    CLAMP2(j, 0, gBgPointersAndDimensions.clipdataHeight * BLOCK_SIZE);
-    yPositions[2] = DIV_SHIFT(j, BLOCK_SIZE);
+    j = DIV_SHIFT(gSamusPhysics.hitboxTop, 4) + DIV_SHIFT(gSamusPhysics.hitboxTop, 2) + gSamusData.yPosition;
+    CLAMP2(j, 0, BLOCK_TO_SUB_PIXEL(gBgPointersAndDimensions.clipdataHeight));
+    yPositions[2] = SUB_PIXEL_TO_BLOCK_(j);
 
     // Get clipdata behaviors on the X axis
     for (i = 0; i < ARRAY_SIZE(xPositions) - 1; i++)
@@ -546,7 +549,7 @@ void BgClipFinishCollectingTank(void)
     if (sTankBehaviors[tank].underwater)
         clipdata = CLIPDATA_TILEMAP_FLAG | CLIPDATA_TILEMAP_WATER;
     else
-        clipdata = 0;
+        clipdata = CLIPDATA_TILEMAP_AIR;
 
     // Set bg1 and clipdata
     BgClipSetBg1BlockValue(0, gLastTankCollected.yPosition, gLastTankCollected.xPosition);
@@ -566,10 +569,10 @@ void BgClipFinishCollectingTank(void)
 void BgClipFinishCollectingAbility(void)
 {
     // Register item
-    BgClipSetItemAsCollected(gSamusData.xPosition / BLOCK_SIZE, gSamusData.yPosition / BLOCK_SIZE, ITEM_TYPE_ABILITY);
+    BgClipSetItemAsCollected(SUB_PIXEL_TO_BLOCK(gSamusData.xPosition), SUB_PIXEL_TO_BLOCK(gSamusData.yPosition), ITEM_TYPE_ABILITY);
 
     // Update minimap
-    MinimapUpdateForCollectedItem(gSamusData.xPosition / BLOCK_SIZE, gSamusData.yPosition / BLOCK_SIZE);
+    MinimapUpdateForCollectedItem(SUB_PIXEL_TO_BLOCK(gSamusData.xPosition), SUB_PIXEL_TO_BLOCK(gSamusData.yPosition));
 }
 
 /**
@@ -594,7 +597,7 @@ void BgClipCheckGrabbingCrumbleBlock(u8 dontDestroy)
     if (gSamusData.direction & KEY_RIGHT)
         xOffset = HALF_BLOCK_SIZE;
     else
-        xOffset = -(HALF_BLOCK_SIZE);
+        xOffset = -HALF_BLOCK_SIZE;
 
     if (gSamusData.pose != SPOSE_HANGING_ON_LEDGE && gSamusData.pose != SPOSE_GRABBING_A_LEDGE_SUITLESS)
         xOffset = -xOffset;
@@ -602,8 +605,8 @@ void BgClipCheckGrabbingCrumbleBlock(u8 dontDestroy)
     if (!dontDestroy)
     {
         // Get position
-        xPosition = (u32)(gSamusData.xPosition + xOffset) / BLOCK_SIZE;
-        yPosition = (u32)(gSamusData.yPosition + yOffset) / BLOCK_SIZE;
+        xPosition = SUB_PIXEL_TO_BLOCK((u32)(gSamusData.xPosition + xOffset));
+        yPosition = SUB_PIXEL_TO_BLOCK((u32)(gSamusData.yPosition + yOffset));
 
         // Get behavior
         behavior = gTilemapAndClipPointers.pClipBehaviors[gBgPointersAndDimensions.
@@ -644,12 +647,16 @@ void BgClipCheckGrabbingCrumbleBlock(u8 dontDestroy)
  * 
  * @param xPosition X Position
  * @param yPosition Y Position
- * @return u8 Hatch opening action
+ * @return u32 Hatch opening action
  */
-u8 BgClipCheckOpeningHatch(u16 xPosition, u16 yPosition)
+u32 BgClipCheckOpeningHatch(u16 xPosition, u16 yPosition)
 {
     s32 i;
-    u8 action;
+    u32 action;
+
+    #ifdef BUGFIX
+    action = HATCH_OPENING_ACTION_NOT_OPENING;
+    #endif // BUGFIX
 
     for (i = 0; i < MAX_AMOUNT_OF_HATCHES; i++)
     {
@@ -706,7 +713,10 @@ u8 BgClipCheckOpeningHatch(u16 xPosition, u16 yPosition)
                         ConnectionSetHatchAsOpened(HATCH_ACTION_SETTING_SOURCE, gHatchData[i].sourceDoor);
                 }
                 else
-                    gHatchData[i].flashingTimer = 1; // Set flashing
+                {
+                    // Set flashing
+                    gHatchData[i].flashingTimer = 1;
+                }
             }
             else
             {
@@ -722,7 +732,7 @@ u8 BgClipCheckOpeningHatch(u16 xPosition, u16 yPosition)
 }
 
 /**
- * @brief 5b0a0 | 74 | Regsiters a collected item in the save
+ * @brief 5b0a0 | 74 | Registers a collected item in the save
  * 
  * @param xPosition X position
  * @param yPosition Y position
@@ -741,8 +751,7 @@ void BgClipSetItemAsCollected(u16 xPosition, u16 yPosition, u8 type)
     i = gCurrentArea;
     limit = MAX_AMOUNT_OF_ITEMS_PER_AREA;
     overLimit = TRUE;
-    // FIXME use symbol
-    pItem = (u8*)0x2036c00 + i * MAX_AMOUNT_OF_ITEMS_PER_AREA * sizeof(struct ItemInfo); // gItemsCollected
+    pItem = (u8*)gItemsCollected[i];
 
     // Find empty slot
     for (i = 0; i < limit; i++, pItem += 4)
@@ -788,8 +797,7 @@ void BgClipRemoveCollectedTanks(void)
     
     i = gCurrentArea;
     limit = MAX_AMOUNT_OF_ITEMS_PER_AREA;
-    // FIXME use symbol
-    pItem = (struct ItemInfo*)0x2036c00 + i * MAX_AMOUNT_OF_ITEMS_PER_AREA; // gItemsCollected
+    pItem = gItemsCollected[i];
 
     for (i = 0; i < limit; i++, pItem++)
     {
@@ -797,18 +805,20 @@ void BgClipRemoveCollectedTanks(void)
             return;
 
         // Check is in the room and exists
-        if (pItem->room == gCurrentRoom && pItem->type >= 0)
+        if (pItem->room == gCurrentRoom && pItem->type >= ITEM_TYPE_NONE)
         {
             // Get offset
             position = gBgPointersAndDimensions.clipdataWidth * pItem->yPosition + pItem->xPosition;
 
             // Get behavior
-            behavior = gTilemapAndClipPointers.pClipBehaviors[gBgPointersAndDimensions.pClipDecomp[position]] -
-                CLIP_BEHAVIOR_UNDERWATER_ENERGY_TANK;
+            behavior = gTilemapAndClipPointers.pClipBehaviors[gBgPointersAndDimensions.pClipDecomp[position]];
 
-            if (behavior <= BEHAVIOR_TO_TANK(CLIP_BEHAVIOR_HIDDEN_POWER_BOMB_TANK))
+            if (behavior == CLIP_BEHAVIOR_UNDERWATER_ENERGY_TANK ||
+                behavior == CLIP_BEHAVIOR_UNDERWATER_MISSILE_TANK ||
+                behavior == CLIP_BEHAVIOR_UNDERWATER_SUPER_MISSILE_TANK ||
+                behavior == CLIP_BEHAVIOR_UNDERWATER_POWER_BOMB_TANK)
             {
-                // Undderwater
+                // Underwater
                 gBgPointersAndDimensions.pClipDecomp[position] = CLIPDATA_TILEMAP_FLAG | CLIPDATA_TILEMAP_WATER;
                 gBgPointersAndDimensions.backgrounds[1].pDecomp[position] = 0;
             }

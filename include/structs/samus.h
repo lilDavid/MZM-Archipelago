@@ -4,6 +4,8 @@
 #include "types.h"
 #include "macros.h"
 
+#include "constants/samus.h"
+
 #define SAMUS_CARRY_ELEVATOR_DIR()\
 do {\
     pData->elevatorDirection = pCopy->elevatorDirection;\
@@ -20,14 +22,14 @@ struct Equipment {
     u16 currentMissiles;
     u8 currentSuperMissiles;
     u8 currentPowerBombs;
-    u8 beamBombs;
-    u8 beamBombsActivation;
-    u8 suitMisc;
-    u8 suitMiscActivation;
+    BeamBombFlags beamBombs;
+    BeamBombFlags beamBombsActivation;
+    SuitMiscFlags suitMisc;
+    SuitMiscFlags suitMiscActivation;
     u8 downloadedMapStatus;
-    u8 lowHealth;
-    u8 suitType;
-    u8 grabbedByMetroid;
+    boolu8 lowHealth;
+    SuitType suitType;
+    boolu8 grabbedByMetroid;
 };
 
 struct RandoEquipment {
@@ -36,21 +38,21 @@ struct RandoEquipment {
 };
 
 struct WeaponInfo {
-    u8 diagonalAim;
+    DiagonalAim diagonalAim;
     u8 newProjectile;
-    u8 weaponHighlighted;
-    u8 missilesSelected;
+    WeaponHightlighted weaponHighlighted;
+    boolu8 missilesSelected;
     u8 cooldown;
     u8 chargeCounter;
     u8 beamReleasePaletteTimer;
 };
 
 struct SamusData {
-    u8 pose;
-    u8 standingStatus;
-    u8 armCannonDirection;
-    u8 turning;
-    u8 forcedMovement;
+    SamusPose pose;
+    SamusStandingStatus standingStatus;
+    ArmCannonDirection armCannonDirection;
+    boolu8 turning;
+    ForcedMovement forcedMovement;
     u8 speedboostingShinesparking;
     u8 invincibilityTimer;
     u8 walljumpTimer;
@@ -91,20 +93,20 @@ struct SamusPhysics {
     u16 screwSpeedGfxSize;
     const u8* pScrewShinesparkGfx;
     u16 screwShinesparkGfxSize;
-    u16 armCannonXPositionOffset;
-    u16 armCannonYPositionOffset;
-    u8 horizontalMovingDirection;
-    u8 verticalMovingDirection;
-    s16 hitboxLeft;
-    s16 hitboxRight;
-    s16 hitboxTop;
-    u8 standingStatus;
-    u8 hitboxType;
-    u8 touchingSideBlock;
-    u8 touchingTopBlock;
+    u16 armCannonXOffset;
+    u16 armCannonYOffset;
+    HorizontalMovingDir horizontalMovingDirection;
+    VerticalMovingDir verticalMovingDirection;
+    s16 blockHitboxLeft;
+    s16 blockHitboxRight;
+    s16 blockHitboxTop;
+    SamusStandingStatus standingStatus;
+    SamusHitboxType hitboxType;
+    boolu8 touchingSideBlock;
+    boolu8 touchingTopBlock;
     u8 unk_5A;
-    u8 slowedByLiquid;
-    u8 hasNewProjectile;
+    boolu8 slowedByLiquid;
+    boolu8 hasNewProjectile;
     s16 xAcceleration;
     s16 xVelocityCap;
     s16 yAcceleration;
@@ -113,14 +115,14 @@ struct SamusPhysics {
     s16 midairXAcceleration;
     s16 midairXVelocityCap;
     s16 midairMorphedXVelocityCap;
-    s16 drawDistanceLeftOffset;
-    s16 drawDistanceTop;
-    s16 drawDistanceRightOffset;
-    s16 drawDistanceBottom;
+    s16 hitboxLeft;
+    s16 hitboxTop;
+    s16 hitboxRight;
+    s16 hitboxBottom;
 };
 
 struct ScrewSpeedAnimation {
-    u8 flag;
+    ScrewSpeedFlag flag;
     u8 animationDurationCounter;
     u8 currentAnimationFrame;
     u32 unknown;
@@ -133,7 +135,7 @@ struct HazardDamage {
 };
 
 struct EnvironmentalEffect {
-    u8 type;
+    EnvEffect type;
     u8 animationDurationCounter;
     u8 currentAnimationFrame;
     u8 breathingTimer;
@@ -179,7 +181,7 @@ struct SamusEffectAnimationData {
 
 // Typedefs
 
-typedef u8 (*SamusFunc_T)(struct SamusData*);
+typedef SamusPose (*SamusFunc_T)(struct SamusData*);
 
 // Globals
 
@@ -199,8 +201,10 @@ extern u16 gPreviousYPosition;
 extern u16 gPreventMovementTimer;
 extern u8 gDisableDrawingSamusAndScrolling;
 
-extern u16 gSamusPalette[16 * 2];
+extern u16 gSamusPalette[16 * 3];
 extern u16 gSamusPaletteSize;
 extern s16 gSamusDoorPositionOffset;
+
+#define HAS_AREA_MAP(area) ((gEquipment.downloadedMapStatus >> (area)) & 1)
 
 #endif /* SAMUS_STRUCT_H */

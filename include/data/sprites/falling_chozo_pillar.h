@@ -7,8 +7,6 @@
 extern const u32 sFallingChozoPillarGfx[219];
 extern const u16 sFallingChozoPillarPal[16];
 
-extern const u16 sFallingChozoPillarOAM_Falling_Frame0[25];
+extern const struct FrameData sFallingChozoPillarOam_Falling[2];
 
-extern const struct FrameData sFallingChozoPillarOAM_Falling[2];
-
-#endif
+#endif /* FALLING_CHOZO_PILLAR_DATA_H */

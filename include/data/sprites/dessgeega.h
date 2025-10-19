@@ -11,40 +11,10 @@ extern const s16 sDessgeegaLowJumpYVelocity[10];
 extern const u32 sDessgeegaGfx[270];
 extern const u16 sDessgeegaPal[16];
 
-extern const u16 sDessgeegaOAM_Idle_Frame0[31];
+extern const struct FrameData sDessGeegaOam_Idle[5];
+extern const struct FrameData sDessGeegaOam_Screaming[12];
+extern const struct FrameData sDessGeegaOam_JumpWarning[4];
+extern const struct FrameData sDessGeegaOam_Jumping[3];
+extern const struct FrameData sDessGeegaOam_Landing[5];
 
-extern const u16 sDessgeegaOAM_Idle_Frame1[31];
-
-extern const u16 sDessgeegaOAM_Idle_Frame2[31];
-
-extern const u16 sDessgeegaOAM_JumpWarning_Frame1[31];
-
-extern const u16 sDessgeegaOAM_JumpWarning_Frame2[31];
-
-extern const u16 sDessgeegaOAM_Landing_Frame0[37];
-
-extern const u16 sDessgeegaOAM_Jumping_Frame0[37];
-
-extern const u16 sDessgeegaOAM_Jumping_Frame1[37];
-
-extern const u16 sDessgeegaOAM_Screaming_Frame1[37];
-
-extern const u16 sDessgeegaOAM_Screaming_Frame2[37];
-
-extern const u16 sDessgeegaOAM_Screaming_Frame3[37];
-
-extern const u16 sDessgeegaOAM_Screaming_Frame4[37];
-
-extern const u16 sDessgeegaOAM_Screaming_Frame5[37];
-
-extern const struct FrameData sDessgeegaOAM_Idle[5];
-
-extern const struct FrameData sDessgeegaOAM_Screaming[12];
-
-extern const struct FrameData sDessgeegaOAM_JumpWarning[4];
-
-extern const struct FrameData sDessgeegaOAM_Jumping[3];
-
-extern const struct FrameData sDessgeegaOAM_Landing[5];
-
-#endif
+#endif /* DESSGEEGA_DATA_H */

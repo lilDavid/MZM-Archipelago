@@ -12,16 +12,24 @@
 
 #include "structs/sprite.h"
 
+#define RIPPER2_POSE_MOVING_INIT 0x8
+#define RIPPER2_POSE_MOVING 0x9
+#define RIPPER2_POSE_TURNING_AROUND_INIT 0xA
+#define RIPPER2_POSE_TURNING_AROUND_FIRST_PART 0xB
+#define RIPPER2_POSE_TURNING_AROUND_SECOND_PART 0xC
+
+#define X_COLLISION_CHECK_OFFSET (THREE_QUARTER_BLOCK_SIZE - PIXEL_SIZE)
+
 /**
  * @brief 1bfd8 | 7c | Initializes a ripper 2 sprite
  * 
  */
-void Ripper2Init(void)
+static void Ripper2Init(void)
 {
     gCurrentSprite.hitboxTop = -(HALF_BLOCK_SIZE + PIXEL_SIZE);
-    gCurrentSprite.hitboxBottom = PIXEL_SIZE * 2;
-    gCurrentSprite.hitboxLeft = -(HALF_BLOCK_SIZE + PIXEL_SIZE * 2);
-    gCurrentSprite.hitboxRight = (HALF_BLOCK_SIZE + PIXEL_SIZE * 2);
+    gCurrentSprite.hitboxBottom = EIGHTH_BLOCK_SIZE;
+    gCurrentSprite.hitboxLeft = -(HALF_BLOCK_SIZE + EIGHTH_BLOCK_SIZE);
+    gCurrentSprite.hitboxRight = HALF_BLOCK_SIZE + EIGHTH_BLOCK_SIZE;
 
     gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE);
     gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(HALF_BLOCK_SIZE);
@@ -33,7 +41,7 @@ void Ripper2Init(void)
     
     gCurrentSprite.samusCollision = SSC_HURTS_SAMUS;
     gCurrentSprite.health = GET_PSPRITE_HEALTH(gCurrentSprite.spriteId);
-    gCurrentSprite.yPosition -= PIXEL_SIZE * 2;
+    gCurrentSprite.yPosition -= EIGHTH_BLOCK_SIZE;
 
     SpriteUtilChooseRandomXFlip();
     gCurrentSprite.pose = RIPPER2_POSE_MOVING_INIT;
@@ -43,7 +51,7 @@ void Ripper2Init(void)
  * @brief 1c054 | 20 | Initializes a ripper 2 to be moving
  * 
  */
-void Ripper2MovingInit(void)
+static void Ripper2MovingInit(void)
 {
     gCurrentSprite.pose = RIPPER2_POSE_MOVING;
 
@@ -56,27 +64,27 @@ void Ripper2MovingInit(void)
  * @brief 1c074 | 60 | Handles a ripper 2 moving
  * 
  */
-void Ripper2Move(void)
+static void Ripper2Move(void)
 {
     if (gCurrentSprite.status & SPRITE_STATUS_X_FLIP)
     {
         SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition - QUARTER_BLOCK_SIZE,
-            gCurrentSprite.xPosition + (HALF_BLOCK_SIZE + PIXEL_SIZE * 3));
+            gCurrentSprite.xPosition + X_COLLISION_CHECK_OFFSET);
 
         if (gPreviousCollisionCheck != COLLISION_SOLID)
-            gCurrentSprite.xPosition += PIXEL_SIZE * 2;
+            gCurrentSprite.xPosition += EIGHTH_BLOCK_SIZE;
         else
             gCurrentSprite.pose = RIPPER2_POSE_TURNING_AROUND_INIT;
     }
     else
     {
         SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition - QUARTER_BLOCK_SIZE,
-            gCurrentSprite.xPosition - (HALF_BLOCK_SIZE + PIXEL_SIZE * 3));
+            gCurrentSprite.xPosition - X_COLLISION_CHECK_OFFSET);
 
         if (gPreviousCollisionCheck == COLLISION_SOLID)
             gCurrentSprite.pose = RIPPER2_POSE_TURNING_AROUND_INIT;
         else
-            gCurrentSprite.xPosition -= PIXEL_SIZE * 2;
+            gCurrentSprite.xPosition -= EIGHTH_BLOCK_SIZE;
     }
 }
 
@@ -84,7 +92,7 @@ void Ripper2Move(void)
  * @brief 1c0d4 | 38 | Initializes a ripper 2 to be turning around
  * 
  */
-void Ripper2TurnAroundInit(void)
+static void Ripper2TurnAroundInit(void)
 {
     gCurrentSprite.pose = RIPPER2_POSE_TURNING_AROUND_FIRST_PART;
 
@@ -100,9 +108,9 @@ void Ripper2TurnAroundInit(void)
  * @brief 1c10c | 38 | Handles the first part of a ripper 2 turning around
  * 
  */
-void Ripper2TurnAroundPart1(void)
+static void Ripper2TurnAroundPart1(void)
 {
-    if (SpriteUtilCheckEndCurrentSpriteAnim())
+    if (SpriteUtilHasCurrentAnimationEnded())
     {
         gCurrentSprite.status ^= SPRITE_STATUS_X_FLIP;
         gCurrentSprite.pose = RIPPER2_POSE_TURNING_AROUND_SECOND_PART;
@@ -117,9 +125,9 @@ void Ripper2TurnAroundPart1(void)
  * @brief 1c144 | 1c | Handles the second part of a ripper 2 turning around
  * 
  */
-void Ripper2TurnAroundPart2(void)
+static void Ripper2TurnAroundPart2(void)
 {
-    if (SpriteUtilCheckNearEndCurrentSpriteAnim())
+    if (SpriteUtilHasCurrentAnimationNearlyEnded())
         gCurrentSprite.pose = RIPPER2_POSE_MOVING_INIT;
 }
 
@@ -170,7 +178,7 @@ void Ripper2(void)
             break;
 
         default:
-            SpriteUtilSpriteDeath(DEATH_NORMAL, gCurrentSprite.yPosition - (QUARTER_BLOCK_SIZE + PIXEL_SIZE * 2),
+            SpriteUtilSpriteDeath(DEATH_NORMAL, gCurrentSprite.yPosition - (QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE),
                 gCurrentSprite.xPosition, TRUE, PE_SPRITE_EXPLOSION_MEDIUM);
     }
 }

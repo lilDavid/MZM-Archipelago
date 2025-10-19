@@ -1,5 +1,6 @@
 #include "sprites_AI/morph_ball_launcher.h"
 #include "macros.h"
+#include "gba/display.h"
 
 #include "data/sprites/morph_ball_launcher.h"
 
@@ -14,12 +15,24 @@
 #include "structs/samus.h"
 #include "structs/projectile.h"
 
+#define MORPH_BALL_LAUNCHER_POSE_IDLE 0x9
+#define MORPH_BALL_LAUNCHER_POSE_DELAY_BEFORE_LAUNCHING 0xB
+#define MORPH_BALL_LAUNCHER_POSE_LAUNCHING 0xC
+
+#define MORPH_BALL_LAUNCHER_PART_POSE_ENERGY 0xB
+#define MORPH_BALL_LAUNCHER_PART_POSE_IDLE 0x61
+
+enum MorphBallLauncherPart {
+    MORPH_BALL_LAUNCHER_PART_BACK,
+    MORPH_BALL_LAUNCHER_PART_ENERGY
+};
+
 /**
  * @brief 268bc | 74 | Updates the clipdata of a morph ball launcher
  * 
  * @param caa Clipdata Affecting Action
  */
-void MorphBallLauncherChangeCcaa(u8 caa)
+static void MorphBallLauncherChangeCcaa(u8 caa)
 {
     u16 yPosition;
     u16 xPosition;
@@ -52,7 +65,7 @@ void MorphBallLauncherChangeCcaa(u8 caa)
  * @brief 26930 | 94 | Initializes a morph ball launcher sprite 
  * 
  */
-void MorphBallLauncherInit(void)
+static void MorphBallLauncherInit(void)
 {
     gCurrentSprite.yPosition -= HALF_BLOCK_SIZE;
 
@@ -72,7 +85,7 @@ void MorphBallLauncherInit(void)
     gCurrentSprite.currentAnimationFrame = 0;
 
     gCurrentSprite.pose = MORPH_BALL_LAUNCHER_POSE_IDLE;
-    gCurrentSprite.bgPriority = ((gIoRegistersBackup.BG1CNT & 3) + 1) & 3;
+    gCurrentSprite.bgPriority = BGCNT_GET_PRIORITY(BGCNT_GET_PRIORITY(gIoRegistersBackup.BG1CNT) + 1);
     gCurrentSprite.drawOrder = 2;
 
     // Spawn back
@@ -87,7 +100,7 @@ void MorphBallLauncherInit(void)
  * @brief 269c4 | 94 | Checks if there's a bomb on the launcher
  * 
  */
-void MorphBallLauncherDetectBomb(void)
+static void MorphBallLauncherDetectBomb(void)
 {
     struct ProjectileData* pProj;
     u8 hasBomb;
@@ -110,7 +123,7 @@ void MorphBallLauncherDetectBomb(void)
             projY = pProj->yPosition;
             projX = pProj->xPosition;
 
-            if (projY < spriteY && projY > spriteY - PIXEL_SIZE * 2 && projX < spriteX + PIXEL_SIZE * 2 && projX > spriteX - PIXEL_SIZE * 2)
+            if (projY < spriteY && projY > spriteY - EIGHTH_BLOCK_SIZE && projX < spriteX + EIGHTH_BLOCK_SIZE && projX > spriteX - EIGHTH_BLOCK_SIZE)
             {
                 pProj->movementStage = BOMB_STAGE_PLACED_ON_LAUNCHER;
                 hasBomb++;
@@ -130,9 +143,9 @@ void MorphBallLauncherDetectBomb(void)
  * @brief 26a58 | 40 | Delay before samus is launched
  * 
  */
-void MorphBallLauncherDelayBeforeLaunching(void)
+static void MorphBallLauncherDelayBeforeLaunching(void)
 {
-    gCurrentSprite.work0--;
+    APPLY_DELTA_TIME_DEC(gCurrentSprite.work0);
     if (gCurrentSprite.work0 == 0)
     {
         gCurrentSprite.pOam = sMorphBallLauncherOam_Launching;
@@ -151,7 +164,7 @@ void MorphBallLauncherDelayBeforeLaunching(void)
  * @brief 26a98 | 40 | Handles the launcher launching Samus
  * 
  */
-void MorphBallLauncherLaunchSamus(void)
+static void MorphBallLauncherLaunchSamus(void)
 {
     // Check hasn't launched and samus is ready
     if (!gCurrentSprite.work1 && gSamusData.pose == SPOSE_DELAY_BEFORE_BALLSPARKING)
@@ -163,7 +176,7 @@ void MorphBallLauncherLaunchSamus(void)
         gCurrentSprite.work1 = TRUE;
     }
 
-    gCurrentSprite.work0--;
+    APPLY_DELTA_TIME_DEC(gCurrentSprite.work0);
     if (gCurrentSprite.work0 == 0)
     {
         gCurrentSprite.pOam = sMorphBallLauncherOam_Idle;
@@ -225,11 +238,11 @@ void MorphBallLauncherPart(void)
             if (gCurrentSprite.roomSlot == MORPH_BALL_LAUNCHER_PART_BACK)
             {
                 gCurrentSprite.pOam = sMorphBallLauncherPartOam_Back;
-                gCurrentSprite.drawDistanceTop = PIXEL_SIZE * 2;
+                gCurrentSprite.drawDistanceTop = EIGHTH_BLOCK_SIZE;
                 gCurrentSprite.drawDistanceBottom = 0;
                 gCurrentSprite.drawDistanceHorizontal = QUARTER_BLOCK_SIZE;
 
-                gCurrentSprite.bgPriority = MOD_AND(MOD_AND(gIoRegistersBackup.BG1CNT, 4) + 1, 4);
+                gCurrentSprite.bgPriority = BGCNT_GET_PRIORITY(BGCNT_GET_PRIORITY(gIoRegistersBackup.BG1CNT) + 1);
                 gCurrentSprite.drawOrder = 12;
                 gCurrentSprite.pose = MORPH_BALL_LAUNCHER_PART_POSE_IDLE;
             }
@@ -240,7 +253,7 @@ void MorphBallLauncherPart(void)
                 gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE + HALF_BLOCK_SIZE);
                 gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE + HALF_BLOCK_SIZE);
 
-                gCurrentSprite.bgPriority = MOD_AND(gIoRegistersBackup.BG1CNT, 4);
+                gCurrentSprite.bgPriority = BGCNT_GET_PRIORITY(gIoRegistersBackup.BG1CNT);
                 gCurrentSprite.drawOrder = 1;
                 gCurrentSprite.pose = MORPH_BALL_LAUNCHER_PART_POSE_ENERGY;
 
@@ -252,7 +265,7 @@ void MorphBallLauncherPart(void)
             break;
 
         case MORPH_BALL_LAUNCHER_PART_POSE_ENERGY:
-            gCurrentSprite.work0--;
+            APPLY_DELTA_TIME_DEC(gCurrentSprite.work0);
             if (gCurrentSprite.work0 == 0)
                 gCurrentSprite.status = 0;
     }

@@ -1,7 +1,7 @@
 #include "data/cutscenes/cutscenes_data.h"
 
 #include "gba.h"
-#include "cutscenes/before_charlie.h"
+#include "cutscenes/before_ruins_test.h"
 #include "cutscenes/enter_tourian.h"
 #include "cutscenes/getting_fully_powered_suit.h"
 #include "cutscenes/kraid_rising.h"
@@ -152,13 +152,13 @@ const struct CutsceneInfo sCutsceneData[CUTSCENE_END] = {
         .bgFading = COLOR_FADING_CANCEL,
         .event = EVENT_ENTER_TOURIAN_DEMO_PLAYED 
     },
-    [CUTSCENE_BEFORE_CHARLIE] = {
+    [CUTSCENE_BEFORE_RUINS_TEST] = {
         .gameplayType = CUTSCENE_TYPE_BETWEEN_GAMEPLAY,
         .playRoomMusic = FALSE,
         .isElevator = FALSE,
         .skippable = TRUE,
         .storyText = 0,
-        .pFunction = BeforeCharlieSubroutine,
+        .pFunction = BeforeRuinsTestSubroutine,
         .preBgFading = COLOR_FADING_FLASH2,
         .fadingTimer = 0,
         .bgFading = COLOR_FADING_SLOW_WHITE,
@@ -171,7 +171,11 @@ const struct CutsceneInfo sCutsceneData[CUTSCENE_END] = {
         .skippable = FALSE,
         .storyText = 0,
         .pFunction = GettingFullyPoweredSuitSubroutine,
+        #ifdef REGION_EU
+        .preBgFading = COLOR_FADING_SLOW_WHITE,
+        #else // !REGION_EU
         .preBgFading = COLOR_FADING_DOOR_TRANSITION,
+        #endif // REGION_EU
         .fadingTimer = 0,
         .bgFading = COLOR_FADING_CANCEL,
         .event = EVENT_NONE

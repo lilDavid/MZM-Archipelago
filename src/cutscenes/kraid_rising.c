@@ -1,11 +1,11 @@
 #include "cutscenes/kraid_rising.h"
 #include "cutscenes/cutscene_utils.h"
+#include "dma.h"
 #include "oam.h"
 #include "oam_id.h"
 #include "syscall_wrappers.h"
 
 #include "data/cutscenes/cutscenes_data.h"
-#include "data/cutscenes/internal_kraid_rising_data.h"
 #include "data/cutscenes/kraid_rising_data.h"
 #include "data/generic_data.h"
 #include "data/shortcut_pointers.h"
@@ -18,12 +18,95 @@
 #include "structs/display.h"
 #include "structs/samus.h"
 
+static struct CutsceneOamData* KraidRisingUpdatePuff(struct CutsceneOamData* pOam, u8 puffID);
+static struct CutsceneOamData* KraidRisingUpdateDebris(struct CutsceneOamData* pOam, u8 debrisID);
+static void KraidRisingProcessOam(void);
+
+// 0: x position
+// 1: y position
+// 2: oam id
+// 3: timer
+static u16 sKraidRisingPuffData[KRAID_RISING_PUFF_AMOUNT][4] = {
+    [0] = {
+        BLOCK_SIZE,
+        BLOCK_SIZE * 7,
+        KRAID_RISING_OAM_ID_SMALL_PUFF,
+        1
+    },
+    [1] = {
+        HALF_BLOCK_SIZE,
+        BLOCK_SIZE * 9 + HALF_BLOCK_SIZE,
+        KRAID_RISING_OAM_ID_SMALL_PUFF,
+        3
+    },
+    [2] = {
+        BLOCK_SIZE * 2 + HALF_BLOCK_SIZE,
+        BLOCK_SIZE * 9,
+        KRAID_RISING_OAM_ID_BIG_PUFF,
+        8
+    },
+    [3] = {
+        BLOCK_SIZE * 3 + HALF_BLOCK_SIZE,
+        BLOCK_SIZE * 7 + HALF_BLOCK_SIZE,
+        KRAID_RISING_OAM_ID_SMALL_PUFF,
+        5
+    },
+    [4] = {
+        BLOCK_SIZE * 5,
+        BLOCK_SIZE * 8 + HALF_BLOCK_SIZE,
+        KRAID_RISING_OAM_ID_BIG_PUFF,
+        7
+    },
+    [5] = {
+        BLOCK_SIZE * 9,
+        BLOCK_SIZE * 7 + HALF_BLOCK_SIZE,
+        KRAID_RISING_OAM_ID_SMALL_PUFF,
+        7
+    },
+    [6] = {
+        BLOCK_SIZE * 10 + HALF_BLOCK_SIZE,
+        BLOCK_SIZE * 9,
+        KRAID_RISING_OAM_ID_BIG_PUFF,
+        10
+    },
+    [7] = {
+        BLOCK_SIZE * 11 + HALF_BLOCK_SIZE,
+        BLOCK_SIZE * 7,
+        KRAID_RISING_OAM_ID_SMALL_PUFF,
+        6
+    },
+    [8] = {
+        BLOCK_SIZE * 13,
+        BLOCK_SIZE * 8 + HALF_BLOCK_SIZE,
+        KRAID_RISING_OAM_ID_BIG_PUFF,
+        12
+    },
+    [9] = {
+        BLOCK_SIZE * 14 + HALF_BLOCK_SIZE,
+        BLOCK_SIZE * 7 + HALF_BLOCK_SIZE,
+        KRAID_RISING_OAM_ID_SMALL_PUFF,
+        4
+    },
+    [10] = {
+        BLOCK_SIZE * 14 + HALF_BLOCK_SIZE,
+        BLOCK_SIZE * 9 + HALF_BLOCK_SIZE,
+        KRAID_RISING_OAM_ID_SMALL_PUFF,
+        2
+    }
+};
+
+static u16 sKraidRisingDebrisSpawnXPosition[KRAID_RISING_DEBRIS_AMOUNT] = {
+    BLOCK_SIZE + HALF_BLOCK_SIZE, BLOCK_SIZE * 3 + HALF_BLOCK_SIZE,
+    BLOCK_SIZE * 5 + HALF_BLOCK_SIZE, BLOCK_SIZE * 9, BLOCK_SIZE * 11,
+    BLOCK_SIZE * 13 + HALF_BLOCK_SIZE
+};
+
 /**
  * @brief 6240c | 2ec | Handles the kraid rising part
  * 
  * @return u8 FALSE
  */
-u8 KraidRisingRising(void)
+static u8 KraidRisingRising(void)
 {
     u32 i;
 
@@ -32,7 +115,7 @@ u8 KraidRisingRising(void)
         case 0:
             // Load kraid rising palette
             DMA_SET(3, sKraidRisingRisingPal, PALRAM_BASE, C_32_2_16(DMA_ENABLE, ARRAY_SIZE(sKraidRisingRisingPal)));
-            write16(PALRAM_BASE, COLOR_BLACK);
+            WRITE_16(PALRAM_BASE, COLOR_BLACK);
 
             // Load kraid rising graphics
             CallLZ77UncompVram(sKraidRisingKraidRisingGfx, BGCNT_TO_VRAM_CHAR_BASE(sKraidRisingPagesData[2].graphicsPage));
@@ -69,7 +152,7 @@ u8 KraidRisingRising(void)
 
         case 1:
             // Load cave background graphics
-            CallLZ77UncompVram(sKraidRisingCaveBackroundGfx, BGCNT_TO_VRAM_CHAR_BASE(sKraidRisingPagesData[3].graphicsPage));
+            CallLZ77UncompVram(sKraidRisingCaveBackgroundGfx, BGCNT_TO_VRAM_CHAR_BASE(sKraidRisingPagesData[3].graphicsPage));
 
             // Load cave background tile table
             DmaTransfer(3, KRAID_RISING_EWRAM.caveBackgroundTileTable, BGCNT_TO_VRAM_TILE_BASE(sKraidRisingPagesData[3].tiletablePage),
@@ -140,6 +223,10 @@ u8 KraidRisingRising(void)
     for (i = 0; i < KRAID_RISING_DEBRIS_AMOUNT; i++)
         KraidRisingUpdateDebris(&CUTSCENE_DATA.oam[i], i);
 
+    #if DEBUG
+    CutsceneCheckSkipStage(1);
+    #endif // DEBUG
+
     return FALSE;
 }
 
@@ -150,7 +237,7 @@ u8 KraidRisingRising(void)
  * @param puffID Puff ID
  * @return struct CutsceneOamData* First param
  */
-struct CutsceneOamData* KraidRisingUpdatePuff(struct CutsceneOamData* pOam, u8 puffID)
+static struct CutsceneOamData* KraidRisingUpdatePuff(struct CutsceneOamData* pOam, u8 puffID)
 {
     s32 offset;
 
@@ -184,7 +271,7 @@ struct CutsceneOamData* KraidRisingUpdatePuff(struct CutsceneOamData* pOam, u8 p
  * @param puffID Debris ID
  * @return struct CutsceneOamData* First param
  */
-struct CutsceneOamData* KraidRisingUpdateDebris(struct CutsceneOamData* pOam, u8 debrisID)
+static struct CutsceneOamData* KraidRisingUpdateDebris(struct CutsceneOamData* pOam, u8 debrisID)
 {
     if (pOam->timer != 0)
     {
@@ -235,7 +322,7 @@ struct CutsceneOamData* KraidRisingUpdateDebris(struct CutsceneOamData* pOam, u8
  * 
  * @return u8 FALSE
  */
-u8 KraidRisingOpeningEyes(void)
+static u8 KraidRisingOpeningEyes(void)
 {
     switch (CUTSCENE_DATA.timeInfo.subStage)
     {
@@ -307,6 +394,10 @@ u8 KraidRisingOpeningEyes(void)
             break;
     }
 
+    #ifdef DEBUG
+    CutsceneCheckSkipStage(1);
+    #endif // DEBUG
+
     return FALSE;
 }
 
@@ -315,7 +406,7 @@ u8 KraidRisingOpeningEyes(void)
  * 
  * @return u8 
  */
-u8 KraidRisingInit(void)
+static u8 KraidRisingInit(void)
 {
     CutsceneFadeScreenToBlack();
 
@@ -357,7 +448,7 @@ u8 KraidRisingInit(void)
     CutsceneSetBackgroundPosition(CUTSCENE_BG_EDIT_HOFS | CUTSCENE_BG_EDIT_VOFS, sKraidRisingPagesData[0].bg, NON_GAMEPLAY_START_BG_POS);
     CutsceneReset();
 
-    gWrittenToBLDY_NonGameplay = BLDY_MAX_VALUE;
+    gWrittenToBldy_NonGameplay = BLDY_MAX_VALUE;
     CUTSCENE_DATA.bldcnt = BLDCNT_SCREEN_FIRST_TARGET | BLDCNT_BRIGHTNESS_DECREASE_EFFECT;
 
     CutsceneSetBackgroundPosition(CUTSCENE_BG_EDIT_VOFS, sKraidRisingPagesData[2].bg, NON_GAMEPLAY_START_BG_POS - HALF_BLOCK_SIZE);
@@ -370,6 +461,25 @@ u8 KraidRisingInit(void)
 
     return FALSE;
 }
+
+static struct CutsceneSubroutineData sKraidRisingSubroutineData[4] = {
+    [0] = {
+        .pFunction = KraidRisingInit,
+        .oamLength = 18
+    },
+    [1] = {
+        .pFunction = KraidRisingOpeningEyes,
+        .oamLength = 18
+    },
+    [2] = {
+        .pFunction = KraidRisingRising,
+        .oamLength = 18
+    },
+    [3] = {
+        .pFunction = CutsceneEndFunction,
+        .oamLength = 18
+    }
+};
 
 /**
  * @brief 62b24 | 37 | Kraid rising cutscene subroutine
@@ -392,7 +502,7 @@ u8 KraidRisingSubroutine(void)
  * @brief 62b58 | 38 | Processes the OAM for the cutscene
  * 
  */
-void KraidRisingProcessOam(void)
+static void KraidRisingProcessOam(void)
 {
     gNextOamSlot = 0;
 

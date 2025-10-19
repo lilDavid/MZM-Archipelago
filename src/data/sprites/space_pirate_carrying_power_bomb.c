@@ -1,44 +1,44 @@
 #include "data/sprites/space_pirate_carrying_power_bomb.h"
 #include "macros.h"
 
-const u32 sFakePowerBombGfx[115] = INCBIN_U32("data/sprites/FakePowerBomb.gfx.lz");
-const u16 sFakePowerBombPal[16] = INCBIN_U16("data/sprites/FakePowerBomb.pal");
+const u32 sFakePowerBombGfx[115] = INCBIN_U32("data/sprites/fake_power_bomb.gfx.lz");
+const u16 sFakePowerBombPal[16] = INCBIN_U16("data/sprites/fake_power_bomb.pal");
 
-const u16 sFakePowerBombOAM_Idle_Frame0[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xf0, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x200
+static const u16 sFakePowerBombOam_Idle_Frame0[OAM_DATA_SIZE(1)] = {
+    1,
+    OAM_ENTRY(-8, -16, OAM_DIMS_16x16, OAM_NO_FLIP, 0x200, 8, 0),
 };
 
-const u16 sFakePowerBombOAM_Idle_Frame1[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xf0, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x202
+static const u16 sFakePowerBombOam_Idle_Frame1[OAM_DATA_SIZE(1)] = {
+    1,
+    OAM_ENTRY(-8, -16, OAM_DIMS_16x16, OAM_NO_FLIP, 0x202, 8, 0),
 };
 
-const u16 sFakePowerBombOAM_Idle_Frame2[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xf0, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x204
+static const u16 sFakePowerBombOam_Idle_Frame2[OAM_DATA_SIZE(1)] = {
+    1,
+    OAM_ENTRY(-8, -16, OAM_DIMS_16x16, OAM_NO_FLIP, 0x204, 8, 0),
 };
 
-const u16 sFakePowerBombOAM_Idle_Frame3[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xf0, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x206
+static const u16 sFakePowerBombOam_Idle_Frame3[OAM_DATA_SIZE(1)] = {
+    1,
+    OAM_ENTRY(-8, -16, OAM_DIMS_16x16, OAM_NO_FLIP, 0x206, 8, 0),
 };
 
-const struct FrameData sFakePowerBombOAM_Idle[5] = {
+const struct FrameData sFakePowerBombOam_Idle[5] = {
     [0] = {
-        .pFrame = sFakePowerBombOAM_Idle_Frame0,
+        .pFrame = sFakePowerBombOam_Idle_Frame0,
         .timer = CONVERT_SECONDS(0.1f)
     },
     [1] = {
-        .pFrame = sFakePowerBombOAM_Idle_Frame1,
+        .pFrame = sFakePowerBombOam_Idle_Frame1,
         .timer = CONVERT_SECONDS(0.1f)
     },
     [2] = {
-        .pFrame = sFakePowerBombOAM_Idle_Frame2,
+        .pFrame = sFakePowerBombOam_Idle_Frame2,
         .timer = CONVERT_SECONDS(0.1f)
     },
     [3] = {
-        .pFrame = sFakePowerBombOAM_Idle_Frame3,
+        .pFrame = sFakePowerBombOam_Idle_Frame3,
         .timer = CONVERT_SECONDS(0.1f)
     },
     [4] = FRAME_DATA_TERMINATOR

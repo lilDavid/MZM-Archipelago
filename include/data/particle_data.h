@@ -336,21 +336,21 @@ extern const u16 sParticleShinesparkDestroyedOam_Frame8[10];
 
 extern const u16 sParticleShinesparkDestroyedOam_Frame9[10];
 
-extern const u16 sParticleSudoScrewDestroyedOam_Frame0[7];
+extern const u16 sParticlePseudoScrewDestroyedOam_Frame0[7];
 
-extern const u16 sParticleSudoScrewDestroyedOam_Frame1[22];
+extern const u16 sParticlePseudoScrewDestroyedOam_Frame1[22];
 
-extern const u16 sParticleSudoScrewDestroyedOam_Frame2[28];
+extern const u16 sParticlePseudoScrewDestroyedOam_Frame2[28];
 
-extern const u16 sParticleSudoScrewDestroyedOam_Frame3[25];
+extern const u16 sParticlePseudoScrewDestroyedOam_Frame3[25];
 
-extern const u16 sParticleSudoScrewDestroyedOam_Frame4[25];
+extern const u16 sParticlePseudoScrewDestroyedOam_Frame4[25];
 
-extern const u16 sParticleSudoScrewDestroyedOam_Frame5[10];
+extern const u16 sParticlePseudoScrewDestroyedOam_Frame5[10];
 
-extern const u16 sParticleSudoScrewDestroyedOam_Frame6[10];
+extern const u16 sParticlePseudoScrewDestroyedOam_Frame6[10];
 
-extern const u16 sParticleSudoScrewDestroyedOam_Frame7[16];
+extern const u16 sParticlePseudoScrewDestroyedOam_Frame7[16];
 
 extern const u16 sParticleSpeedboosterDestroyedOam_Frame0[13];
 
@@ -400,35 +400,35 @@ extern const u16 sParticleFreezingSpriteWithIceOam_Frame14[4];
 
 extern const u16 sParticleFreezingSpriteWithIceOam_Frame15[4];
 
-extern const u16 sParticleFreezingSpritewithChargedIceBeamOam_Frame0[13];
+extern const u16 sParticleFreezingSpriteWithChargedIceBeamOam_Frame0[13];
 
-extern const u16 sParticleFreezingSpritewithChargedIceBeamOam_Frame1[13];
+extern const u16 sParticleFreezingSpriteWithChargedIceBeamOam_Frame1[13];
 
-extern const u16 sParticleFreezingSpritewithChargedIceBeamOam_Frame2[13];
+extern const u16 sParticleFreezingSpriteWithChargedIceBeamOam_Frame2[13];
 
-extern const u16 sParticleFreezingSpritewithChargedIceBeamOam_Frame3[28];
+extern const u16 sParticleFreezingSpriteWithChargedIceBeamOam_Frame3[28];
 
-extern const u16 sParticleFreezingSpritewithChargedIceBeamOam_Frame4[13];
+extern const u16 sParticleFreezingSpriteWithChargedIceBeamOam_Frame4[13];
 
-extern const u16 sParticleFreezingSpritewithChargedIceBeamOam_Frame5[13];
+extern const u16 sParticleFreezingSpriteWithChargedIceBeamOam_Frame5[13];
 
-extern const u16 sParticleFreezingSpritewithChargedIceBeamOam_Frame6[13];
+extern const u16 sParticleFreezingSpriteWithChargedIceBeamOam_Frame6[13];
 
-extern const u16 sParticleFreezingSpritewithChargedIceBeamOam_Frame7[13];
+extern const u16 sParticleFreezingSpriteWithChargedIceBeamOam_Frame7[13];
 
-extern const u16 sParticleFreezingSpritewithChargedIceBeamOam_Frame8[13];
+extern const u16 sParticleFreezingSpriteWithChargedIceBeamOam_Frame8[13];
 
-extern const u16 sParticleFreezingSpritewithChargedIceBeamOam_Frame9[10];
+extern const u16 sParticleFreezingSpriteWithChargedIceBeamOam_Frame9[10];
 
-extern const u16 sParticleFreezingSpritewithChargedIceBeamOam_Frame10[10];
+extern const u16 sParticleFreezingSpriteWithChargedIceBeamOam_Frame10[10];
 
-extern const u16 sParticleFreezingSpritewithChargedIceBeamOam_Frame11[7];
+extern const u16 sParticleFreezingSpriteWithChargedIceBeamOam_Frame11[7];
 
-extern const u16 sParticleFreezingSpritewithChargedIceBeamOam_Frame12[4];
+extern const u16 sParticleFreezingSpriteWithChargedIceBeamOam_Frame12[4];
 
-extern const u16 sParticleFreezingSpritewithChargedIceBeamOam_Frame13[7];
+extern const u16 sParticleFreezingSpriteWithChargedIceBeamOam_Frame13[7];
 
-extern const u16 sParticleFreezingSpritewithChargedIceBeamOam_Frame14[4];
+extern const u16 sParticleFreezingSpriteWithChargedIceBeamOam_Frame14[4];
 
 extern const u16 sParticleMainBossDeathOam_Frame2[19];
 
@@ -459,26 +459,6 @@ extern const u16 sParticleMainBossDeathOam_Frame14[31];
 extern const u16 sParticleMainBossDeathOam_Frame15[19];
 
 extern const u16 sParticleMainBossDeathOam_Frame16[10];
-
-extern const u16 sWaterDropOam_Spawning_Frame0[4];
-
-extern const u16 sWaterDropOam_Spawning_Frame1[4];
-
-extern const u16 sWaterDropOam_Spawning_Frame2[4];
-
-extern const u16 sWaterDropOam_Spawning_Frame3[4];
-
-extern const u16 sWaterDropOam_Falling_Frame0[4];
-
-extern const u16 sWaterDropOam_Splashing_Frame0[7];
-
-extern const u16 sWaterDropOam_Splashing_Frame1[7];
-
-extern const u16 sWaterDropOam_Splashing_Frame2[7];
-
-extern const u16 sWaterDropOam_Splashing_Frame3[7];
-
-extern const u16 sWaterDropOam_Splashing_Frame4[7];
 
 extern const u16 sSpriteDebrisOAM_Frame0[4];
 
@@ -530,20 +510,18 @@ extern const struct FrameData sParticleScrewAttackDestroyedOam[9];
 
 extern const struct FrameData sParticleShinesparkDestroyedOam[11];
 
-extern const struct FrameData sParticleSudoScrewDestroyedOam[9];
+extern const struct FrameData sParticlePseudoScrewDestroyedOam[9];
 
 extern const struct FrameData sParticleSpeedboosterDestroyedOam[9];
 
 extern const struct FrameData sParticleFreezingSpriteWithIceOam[17];
 
-extern const struct FrameData sParticleFreezingSpritewithChargedIceBeamOam[16];
+extern const struct FrameData sParticleFreezingSpriteWithChargedIceBeamOam[16];
 
 extern const struct FrameData sParticleMainBossDeathOam[18];
 
 extern const struct FrameData sWaterDropOam_Spawning[8];
-
 extern const struct FrameData sWaterDropOam_Falling[2];
-
 extern const struct FrameData sWaterDropOam_Splashing[6];
 
 extern const struct FrameData sSpriteDebrisOAM[5];

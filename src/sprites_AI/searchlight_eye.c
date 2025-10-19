@@ -16,11 +16,23 @@
 #include "structs/sprite.h"
 #include "structs/samus.h"
 
+#define SEARCHLIGHT_EYE_POSE_IDLE 0x9
+#define SEARCHLIGHT_EYE_POSE_GETTING_ALERTED 0x23
+#define SEARCHLIGHT_EYE_POSE_ALERTED 0x25
+#define SEARCHLIGHT_EYE_POSE_SHOOTING 0x27
+
+#define SEARCHLIGHT_EYE_BEAM_POSE_IDLE 0x9
+#define SEARCHLIGHT_EYE_BEAM_POSE_GETTING_ALERTED 0x23
+
+#define SEARCHLIGHT_EYE_BEAM_SIZE (BLOCK_SIZE * 7)
+
+#define SEARCHLIGHT_EYE_PROJECTILE_POSE_MOVING 0x9
+
 /**
  * @brief 44148 | 13c | Initializes a searchlight eye sprite
  * 
  */
-void SearchlightEyeInit(void)
+static void SearchlightEyeInit(void)
 {
     u16 yPosition;
     u16 xPosition;
@@ -31,17 +43,17 @@ void SearchlightEyeInit(void)
     if (!EventFunction(EVENT_ACTION_CHECKING, EVENT_FULLY_POWERED_SUIT_OBTAINED))
         gCurrentSprite.properties |= SP_IMMUNE_TO_PROJECTILES;
     
-    gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(QUARTER_BLOCK_SIZE * 3 + EIGHTH_BLOCK_SIZE);
-    gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(QUARTER_BLOCK_SIZE * 3 + EIGHTH_BLOCK_SIZE);
-    gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(QUARTER_BLOCK_SIZE * 3);
+    gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(THREE_QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE);
+    gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(THREE_QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE);
+    gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(THREE_QUARTER_BLOCK_SIZE);
 
     gCurrentSprite.hitboxTop = -HALF_BLOCK_SIZE;
     gCurrentSprite.hitboxBottom = HALF_BLOCK_SIZE;
-    gCurrentSprite.hitboxLeft = -(PIXEL_SIZE * 3);
-    gCurrentSprite.hitboxRight = (PIXEL_SIZE * 3);
+    gCurrentSprite.hitboxLeft = -(QUARTER_BLOCK_SIZE - PIXEL_SIZE);
+    gCurrentSprite.hitboxRight = QUARTER_BLOCK_SIZE - PIXEL_SIZE;
 
     gCurrentSprite.bgPriority = 1;
-    gCurrentSprite.pOam = sSearchlightEyeOAM_Idle;
+    gCurrentSprite.pOam = sSearchlightEyeOam_Idle;
     gCurrentSprite.currentAnimationFrame = 0;
     gCurrentSprite.animationDurationCounter = 0;
 
@@ -66,7 +78,7 @@ void SearchlightEyeInit(void)
     {
         // Set alerted
         gCurrentSprite.pose = SEARCHLIGHT_EYE_POSE_GETTING_ALERTED;
-        gCurrentSprite.work0 = 40;
+        gCurrentSprite.work0 = TWO_THIRD_SECOND;
     }
     else
     {
@@ -96,7 +108,7 @@ void SearchlightEyeInit(void)
  * @brief 44284 | 90 | Handles the movement of a searchlight eye
  * 
  */
-void SearchlightEyeMove(void)
+static void SearchlightEyeMove(void)
 {
     u16 yPosition;
     u16 xPosition;
@@ -135,13 +147,13 @@ void SearchlightEyeMove(void)
  * @brief 44314 | 2c | Checks if the alarm has been triggered, also calls the movement code
  * 
  */
-void SearchlightEyeCheckAlarm(void)
+static void SearchlightEyeCheckAlarm(void)
 {
     if (gAlarmTimer != 0)
     {
         // Set alerted
         gCurrentSprite.pose = SEARCHLIGHT_EYE_POSE_GETTING_ALERTED;
-        gCurrentSprite.work0 = 40; // Shooting interval
+        gCurrentSprite.work0 = TWO_THIRD_SECOND; // Shooting interval
     }
     else
     {
@@ -153,10 +165,10 @@ void SearchlightEyeCheckAlarm(void)
  * @brief 44340 | 24 | Checks if the alerted animation has ended
  * 
  */
-void SearchlightEyeCheckAlertedAnimEnded(void)
+static void SearchlightEyeCheckAlertedAnimEnded(void)
 {
-    gCurrentSprite.work0--;
-    if (gCurrentSprite.work0 == 0x0)
+    APPLY_DELTA_TIME_DEC(gCurrentSprite.work0);
+    if (gCurrentSprite.work0 == 0)
         gCurrentSprite.pose = SEARCHLIGHT_EYE_POSE_ALERTED;
 }
 
@@ -164,22 +176,24 @@ void SearchlightEyeCheckAlertedAnimEnded(void)
  * @brief 44364 | 38 | Checks if the shooting interval is done
  * 
  */
-void SearchlightEyeCheckShouldShot(void)
+static void SearchlightEyeCheckShouldShoot(void)
 {
     SearchlightEyeMove();
 
     if (gCurrentSprite.work0 == 0)
     {
         // Set shooting
-        gCurrentSprite.pOam = sSearchlightEyeOAM_Shooting;
+        gCurrentSprite.pOam = sSearchlightEyeOam_Shooting;
         gCurrentSprite.currentAnimationFrame = 0;
         gCurrentSprite.animationDurationCounter = 0;
 
         gCurrentSprite.pose = SEARCHLIGHT_EYE_POSE_SHOOTING;
-        gCurrentSprite.work0 = 30;
+        gCurrentSprite.work0 = CONVERT_SECONDS(.5f);
     }
     else
-        gCurrentSprite.work0--;
+    {
+        APPLY_DELTA_TIME_DEC(gCurrentSprite.work0);
+    }
 }
 
 
@@ -187,19 +201,19 @@ void SearchlightEyeCheckShouldShot(void)
  * @brief 4439c | 8c | Handles a searchlight eye shooting
  * 
  */
-void SearchlightEyeShoot(void)
+static void SearchlightEyeShoot(void)
 {
     s32 status;
     
     SearchlightEyeMove();
-    if (gCurrentSprite.work0 == 0x0)
+    if (gCurrentSprite.work0 == 0)
     {
-        gCurrentSprite.pOam = sSearchlightEyeOAM_Idle;
+        gCurrentSprite.pOam = sSearchlightEyeOam_Idle;
         gCurrentSprite.currentAnimationFrame = 0;
         gCurrentSprite.animationDurationCounter = 0;
 
         gCurrentSprite.pose = SEARCHLIGHT_EYE_POSE_ALERTED;
-        gCurrentSprite.work0 = 90; // Shooting interval
+        gCurrentSprite.work0 = CONVERT_SECONDS(1.5f); // Shooting interval
 
         if (gCurrentSprite.status & SPRITE_STATUS_ONSCREEN)
         {
@@ -217,14 +231,16 @@ void SearchlightEyeShoot(void)
         gAlarmTimer = ALARM_TIMER_ACTIVE_TIMER;
     }
     else
-        gCurrentSprite.work0--;
+    {
+        APPLY_DELTA_TIME_DEC(gCurrentSprite.work0);
+    }
 }
 
 /**
  * @brief 44428 | 78 | Initializes a searchlight eye beam sprite
  * 
  */
-void SearchlightEyeBeamInit(void)
+static void SearchlightEyeBeamInit(void)
 {
     gCurrentSprite.status &= ~SPRITE_STATUS_NOT_DRAWN;
 
@@ -252,12 +268,12 @@ void SearchlightEyeBeamInit(void)
  * @brief 444a0 | 17c | Handles the detection of samus for a searchlight eye beam
  * 
  */
-void SearchlightEyeBeamDetectSamus(void)
+static void SearchlightEyeBeamDetectSamus(void)
 {
     u16 yPosition;
     u16 xPosition;
     u8 foundBlock;
-    u8 loopCounter;
+    u8 i;
     struct SpriteData* pSprite;
 
     // Sync Y
@@ -282,7 +298,7 @@ void SearchlightEyeBeamDetectSamus(void)
         {
             // X start
             xPosition = gCurrentSprite.xPosition + -(BLOCK_SIZE * 6 + HALF_BLOCK_SIZE - PIXEL_SIZE);
-            for (loopCounter = 0; loopCounter <= SUB_PIXEL_TO_BLOCK(SEARCHLIGHT_EYE_BEAM_SIZE); loopCounter++)
+            for (i = 0; i <= SUB_PIXEL_TO_BLOCK(SEARCHLIGHT_EYE_BEAM_SIZE); i++)
             {
                 // Check block
                 if (SpriteUtilGetCollisionAtPosition(yPosition, xPosition) != COLLISION_AIR)
@@ -290,6 +306,7 @@ void SearchlightEyeBeamDetectSamus(void)
                     foundBlock++;
                     break;
                 }
+
                 // Next block
                 xPosition += BLOCK_SIZE;
             }
@@ -305,7 +322,7 @@ void SearchlightEyeBeamDetectSamus(void)
         {
             // X start
             xPosition = gCurrentSprite.xPosition + (BLOCK_SIZE * 6 + HALF_BLOCK_SIZE - PIXEL_SIZE);
-            for (loopCounter = 0; loopCounter <= SUB_PIXEL_TO_BLOCK(SEARCHLIGHT_EYE_BEAM_SIZE); loopCounter++)
+            for (i = 0; i <= SUB_PIXEL_TO_BLOCK(SEARCHLIGHT_EYE_BEAM_SIZE); i++)
             {
                 // Check block
                 if (SpriteUtilGetCollisionAtPosition(yPosition, xPosition) != COLLISION_AIR)
@@ -313,6 +330,7 @@ void SearchlightEyeBeamDetectSamus(void)
                     foundBlock++;
                     break;
                 }
+
                 // Next block
                 xPosition -= BLOCK_SIZE;
             }
@@ -329,7 +347,7 @@ void SearchlightEyeBeamDetectSamus(void)
         {
             // Set alerted
             gCurrentSprite.pose = SEARCHLIGHT_EYE_BEAM_POSE_GETTING_ALERTED;
-            gCurrentSprite.work0 = 40;
+            gCurrentSprite.work0 = TWO_THIRD_SECOND;
             gCurrentSprite.samusCollision = SSC_NONE;
             gAlarmTimer = ALARM_TIMER_ACTIVE_TIMER;
 
@@ -346,15 +364,15 @@ void SearchlightEyeBeamDetectSamus(void)
  * @brief 4461c | 3c | Handles a searchlight eye beam disappearing
  * 
  */
-void SearchlightEyeBeamDisappear(void)
+static void SearchlightEyeBeamDisappear(void)
 {
     gCurrentSprite.ignoreSamusCollisionTimer = DELTA_TIME;
 
     // Flicker
-    if (MOD_AND(gCurrentSprite.work0, 4) == 0)
+    if (MOD_AND(gCurrentSprite.work0, DELTA_TIME * 4) == 0)
         gCurrentSprite.status ^= SPRITE_STATUS_NOT_DRAWN;
 
-    gCurrentSprite.work0--;
+    APPLY_DELTA_TIME_DEC(gCurrentSprite.work0);
     if (gCurrentSprite.work0 == 0)
         gCurrentSprite.status = 0;
 }
@@ -382,7 +400,7 @@ void SearchlightEye(void)
             break;
 
         case SEARCHLIGHT_EYE_POSE_ALERTED:
-            SearchlightEyeCheckShouldShot();
+            SearchlightEyeCheckShouldShoot();
             break;
 
         case SEARCHLIGHT_EYE_POSE_SHOOTING:
@@ -448,7 +466,7 @@ void SearchlightEyeProjectile(void)
             gCurrentSprite.animationDurationCounter = 0;
             gCurrentSprite.currentAnimationFrame = 0;
 
-            gCurrentSprite.pose = 9;
+            gCurrentSprite.pose = SEARCHLIGHT_EYE_PROJECTILE_POSE_MOVING;
             gCurrentSprite.samusCollision = SSC_HURTS_SAMUS_STOP_DIES_WHEN_HIT;
             gCurrentSprite.drawOrder = 3;
             gCurrentSprite.bgPriority = MOD_AND(gIoRegistersBackup.BG1CNT, 4);
@@ -456,7 +474,7 @@ void SearchlightEyeProjectile(void)
             if (gCurrentSprite.status & SPRITE_STATUS_X_FLIP)
             {
                 gCurrentSprite.hitboxLeft = 0;
-                gCurrentSprite.hitboxRight = (QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE);
+                gCurrentSprite.hitboxRight = QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE;
             }
             else
             {
@@ -467,11 +485,11 @@ void SearchlightEyeProjectile(void)
             if (gCurrentSprite.status & SPRITE_STATUS_ONSCREEN)
                 SoundPlay(SOUND_SEARCHLIGHT_EYE_PROJECTILE_EMERGING);
 
-        case 9:
+        case SEARCHLIGHT_EYE_PROJECTILE_POSE_MOVING:
             if (gCurrentSprite.status & SPRITE_STATUS_X_FLIP)
-                gCurrentSprite.xPosition += PIXEL_SIZE * 3;
+                gCurrentSprite.xPosition += QUARTER_BLOCK_SIZE - PIXEL_SIZE;
             else
-                gCurrentSprite.xPosition -= PIXEL_SIZE * 3;
+                gCurrentSprite.xPosition -= QUARTER_BLOCK_SIZE - PIXEL_SIZE;
 
             SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition, gCurrentSprite.xPosition);
             if (gPreviousCollisionCheck != COLLISION_AIR)

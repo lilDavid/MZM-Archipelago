@@ -14,6 +14,19 @@
 #include "structs/samus.h"
 #include "structs/sprite.h"
 
+#define DRAGON_POSE_IDLE_INIT 0x8
+#define DRAGON_POSE_IDLE 0x9
+#define DRAGON_POSE_TURN_AROUND_INIT 0xA
+#define DRAGON_POSE_TURN_AROUND_FIRST_HALF 0xB
+#define DRAGON_POSE_TURN_AROUND_SECOND_HALF 0xC
+#define DRAGON_POSE_WARNING_INIT 0x34
+#define DRAGON_POSE_WARNING 0x35
+#define DRAGON_POSE_SPIT 0x37
+
+#define DRAGON_FIREBALL_POSE_MOVE 0x9
+#define DRAGON_FIREBALL_POSE_EXPLODING 0x43
+
+
 #define DRAGON_Y_VELOCITY (PIXEL_SIZE / 2)
 #define DRAGON_SPIT_Y_OFFSET (BLOCK_SIZE + EIGHTH_BLOCK_SIZE)
 #define DRAGON_SPIT_X_OFFSET (HALF_BLOCK_SIZE + EIGHTH_BLOCK_SIZE)
@@ -27,7 +40,7 @@
  * @brief 20564 | 50 | Handles the Y movement of a dragon
  * 
  */
-void DragonYMovement(void)
+static void DragonYMovement(void)
 {
     u16 oldY;
     u16 ySpawn;
@@ -57,7 +70,7 @@ void DragonYMovement(void)
  * @brief 205b4 | 60 | Initializes a dragon sprite
  * 
  */
-void DragonInit(void)
+static void DragonInit(void)
 {
     gCurrentSprite.hitboxTop = -BLOCK_SIZE;
     gCurrentSprite.hitboxBottom = BLOCK_SIZE + QUARTER_BLOCK_SIZE;
@@ -85,7 +98,7 @@ void DragonInit(void)
  * @brief 20628 | 28 | Initializes a dragon to be idle
  * 
  */
-void DragonIdleInit(void)
+static void DragonIdleInit(void)
 {
     gCurrentSprite.pose = DRAGON_POSE_IDLE;
 
@@ -101,7 +114,7 @@ void DragonIdleInit(void)
  * @brief 20650 | d0 | Handles the dragon going up
  * 
  */
-void DragonIdle(void)
+static void DragonIdle(void)
 {
     u8 nslr;
     u16 xPosition;
@@ -176,7 +189,7 @@ void DragonIdle(void)
  * @brief 20720 | 20 | Initializes a dragon to be turning around
  * 
  */
-void DragonTurningAroundInit(void)
+static void DragonTurningAroundInit(void)
 {
     gCurrentSprite.pose = DRAGON_POSE_TURN_AROUND_FIRST_HALF;
 
@@ -189,11 +202,11 @@ void DragonTurningAroundInit(void)
  * @brief 20740 | 30 | Checks if the first part of the turning around animation ended
  * 
  */
-void DragonTurningAroundFirstHalf(void)
+static void DragonTurningAroundFirstHalf(void)
 {
     DragonYMovement();
 
-    if (SpriteUtilCheckEndCurrentSpriteAnim())
+    if (SpriteUtilHasCurrentAnimationEnded())
     {
         gCurrentSprite.pose = DRAGON_POSE_TURN_AROUND_SECOND_HALF;
 
@@ -209,11 +222,11 @@ void DragonTurningAroundFirstHalf(void)
  * @brief 20778 | 20 | Checks if the second part of the turning around animation ended
  * 
  */
-void DragonTurningAroundSecondHalf(void)
+static void DragonTurningAroundSecondHalf(void)
 {
     DragonYMovement();
 
-    if (SpriteUtilCheckNearEndCurrentSpriteAnim())
+    if (SpriteUtilHasCurrentAnimationNearlyEnded())
     {
         // Immediatly spit after turning around
         gCurrentSprite.pose = DRAGON_POSE_WARNING_INIT;
@@ -224,7 +237,7 @@ void DragonTurningAroundSecondHalf(void)
  * @brief 20798 | 28 | Initializes a dragon to do the warning before spitting
  * 
  */
-void DragonWarningInit(void)
+static void DragonWarningInit(void)
 {
     gCurrentSprite.pose = DRAGON_POSE_WARNING;
 
@@ -239,7 +252,7 @@ void DragonWarningInit(void)
  * @brief 207c0 | 40 | Handles the warning (delay before spitting)
  * 
  */
-void DragonWarning(void)
+static void DragonWarning(void)
 {
     DragonYMovement();
 
@@ -261,7 +274,7 @@ void DragonWarning(void)
  * @brief 20800 | 70 | Handles the dragon spitting
  * 
  */
-void DragonSpit(void)
+static void DragonSpit(void)
 {
     u16 yPosition;
     u16 xPosition;
@@ -287,7 +300,7 @@ void DragonSpit(void)
  * @brief 20870 | e4 | Initializes a dragon fireball sprite
  * 
  */
-void DragonFireballInit(void)
+static void DragonFireballInit(void)
 {
     gCurrentSprite.status &= ~SPRITE_STATUS_NOT_DRAWN;
     gCurrentSprite.properties |= SP_KILL_OFF_SCREEN;
@@ -314,7 +327,7 @@ void DragonFireballInit(void)
     if (gCurrentSprite.status & SPRITE_STATUS_X_FLIP)
     {
         gCurrentSprite.status |= SPRITE_STATUS_FACING_RIGHT;
-        gCurrentSprite.rotation = PI / 2;
+        gCurrentSprite.rotation = PI_2;
         gCurrentSprite.status &= ~SPRITE_STATUS_X_FLIP;
     }
     else
@@ -322,7 +335,7 @@ void DragonFireballInit(void)
         gCurrentSprite.rotation = 0;
     }
 
-    gCurrentSprite.status |= SPRITE_STATUS_UNKNOWN_80;
+    gCurrentSprite.status |= SPRITE_STATUS_ROTATION_SCALING_SINGLE;
     gCurrentSprite.scaling = Q_8_8(1.f);
     gCurrentSprite.work3 = 0;
 
@@ -333,7 +346,7 @@ void DragonFireballInit(void)
  * @brief 20954 | d8 | Handles the movement of a dragon fireball
  * 
  */
-void DragonFireballMove(void)
+static void DragonFireballMove(void)
 {
     u16 oldY;
     u8 offset;
@@ -364,7 +377,7 @@ void DragonFireballMove(void)
     if (gCurrentSprite.status & SPRITE_STATUS_FACING_RIGHT)
     {
         gCurrentSprite.xPosition += xMovement;
-        gCurrentSprite.rotation = rotation + PI / 2;
+        gCurrentSprite.rotation = rotation + PI_2;
     }
     else
     {
@@ -387,7 +400,7 @@ void DragonFireballMove(void)
  * @brief 20a28 | 3c | Initializes a dragon fireball to be exploding
  * 
  */
-void DragonFireballExplodingInit(void)
+static void DragonFireballExplodingInit(void)
 {
     gCurrentSprite.ignoreSamusCollisionTimer = DELTA_TIME;
 
@@ -396,7 +409,7 @@ void DragonFireballExplodingInit(void)
     gCurrentSprite.currentAnimationFrame = 0;
 
     gCurrentSprite.pose = DRAGON_FIREBALL_POSE_EXPLODING;
-    gCurrentSprite.status &= ~SPRITE_STATUS_UNKNOWN_80;
+    gCurrentSprite.status &= ~SPRITE_STATUS_ROTATION_SCALING_SINGLE;
     gCurrentSprite.status |= SPRITE_STATUS_IGNORE_PROJECTILES;
 }
 
@@ -404,11 +417,11 @@ void DragonFireballExplodingInit(void)
  * @brief 20a64 | 24 | Checks if the exploding animation ended
  * 
  */
-void DragonFireballCheckExplodingAnimEnded(void)
+static void DragonFireballCheckExplodingAnimEnded(void)
 {
     gCurrentSprite.ignoreSamusCollisionTimer = DELTA_TIME;
 
-    if (SpriteUtilCheckEndCurrentSpriteAnim())
+    if (SpriteUtilHasCurrentAnimationEnded())
         gCurrentSprite.status = 0;
 }
 

@@ -5,9 +5,7 @@
 #include "constants/event.h"
 #include "constants/clipdata.h"
 
-// 360130
-
-const u8 sHatchTypeTable[HATCH_COUNT] = {
+const HatchType sHatchTypeTable[HATCH_COUNT] = {
     [BEHAVIOR_TO_DOOR(CLIP_BEHAVIOR_NO_DOOR)] = HATCH_NONE,
     [BEHAVIOR_TO_DOOR(CLIP_BEHAVIOR_GRAY_DOOR)] = HATCH_LOCKED,
     [BEHAVIOR_TO_DOOR(CLIP_BEHAVIOR_REGULAR_DOOR)] = HATCH_NORMAL,
@@ -902,5 +900,5 @@ const u16 sNumberOfHatchLockEventsPerArea[MAX_AMOUNT_OF_AREAS] = {
     [AREA_TOURIAN] = 0,
     [AREA_CRATERIA] = ARRAY_SIZE(sHatchLockEventsCrateria) - 2,
     [AREA_CHOZODIA] = ARRAY_SIZE(sHatchLockEventsChozodia) - 1,
-    [AREA_DEBUG_1] = 0
+    [AREA_TEST] = 0
 };

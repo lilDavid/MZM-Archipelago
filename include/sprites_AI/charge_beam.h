@@ -3,13 +3,6 @@
 
 #include "types.h"
 
-void ChargeBeamInit(void);
-void ChargeBeamSpawnGlow(void);
-void ChargeBeamVisibleInit(void);
-void ChargeBeamIdle(void);
-void ChargeBeamFlashingAnim(void);
-void ChargeBeamGlowInit(void);
-void ChargeBeamGlowMovement(void);
 void ChargeBeam(void);
 void ChargeBeamGlow(void);
 

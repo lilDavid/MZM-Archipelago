@@ -1,13 +1,15 @@
 #include "cutscenes/cutscene_utils.h"
+#include "dma.h"
 #include "event.h"
 #include "gba.h"
 #include "oam.h"
 #include "color_effects.h"
+#include "tourian_escape.h"
 
 #include "data/cutscenes/cutscenes_data.h"
 #include "data/menus/pause_screen_data.h"
 #include "data/shortcut_pointers.h"
-#include "data/engine_pointers.h"
+#include "data/block_data.h"
 
 #include "constants/audio.h"
 #include "constants/connection.h"
@@ -24,6 +26,29 @@
 
 #define PAL_TO_FADE ((void*)(sEwramPointer))
 #define PAL_WITH_FADE ((void*)sEwramPointer + PALRAM_SIZE)
+
+static TourianEscapeFunc_T sTourianEscapeFunctionPointers[2] = {
+    CutsceneDefaultRoutine,
+    TourianEscapeCallSubroutines,
+};
+
+static s8 sCutsceneScreenShakeOffsets_Set0[2] = {
+    -1, 1
+};
+
+static s8* sCutsceneScreenShakeOffsetSetPointers[4] = {
+    sCutsceneScreenShakeOffsets_Set0,
+    sCutsceneScreenShakeOffsets_Set0,
+    sCutsceneScreenShakeOffsets_Set0,
+    sCutsceneScreenShakeOffsets_Set0
+};
+
+static u8 sCutsceneScreenShakeOffsetSetSizes[4] = {
+    ARRAY_SIZE(sCutsceneScreenShakeOffsets_Set0),
+    ARRAY_SIZE(sCutsceneScreenShakeOffsets_Set0),
+    ARRAY_SIZE(sCutsceneScreenShakeOffsets_Set0),
+    ARRAY_SIZE(sCutsceneScreenShakeOffsets_Set0)
+};
 
 /**
  * @brief 60e28 | 4 | Default subroutine for cutscenes that don't have any
@@ -49,10 +74,30 @@ u8 TourianEscapeSubroutine(void)
     {
         SET_BACKDROP_COLOR(COLOR_BLACK);
         gSubGameModeStage = 0;
-        gGameModeSub1 = 0;
-        gGameModeSub2 = 4;
+        gSubGameMode1 = 0;
+        gSubGameMode2 = 4;
+
+        #ifdef DEBUG
+        if (gBootDebugActive)
+        {
+            SET_BACKDROP_COLOR(COLOR_BLACK);
+            WRITE_16(REG_DISPCNT, 0);
+            StopAllMusicAndSounds();
+            return FALSE;
+        }
+        #endif // DEBUG
+
         ended = TRUE;
     }
+    #ifdef DEBUG
+    else if (gChangedInput & KEY_B)
+    {
+        if (gBootDebugActive)
+            return TRUE;
+        if (gDebugMode)
+            ended = TRUE;
+    }
+    #endif // DEBUG
 
     if (ended)
     {
@@ -68,7 +113,7 @@ u8 TourianEscapeSubroutine(void)
                 gLastDoorUsed = 0;
             }
             gCurrentCutscene = CUTSCENE_COULD_I_SURVIVE;
-            gGameModeSub2 = 10;
+            gSubGameMode2 = 10;
             EventFunction(EVENT_ACTION_CLEARING, EVENT_FULLY_POWERED_SUIT_OBTAINED);
         }
 
@@ -108,22 +153,52 @@ void CutsceneEnd(void)
     switch (gCurrentCutscene)
     {
         case CUTSCENE_RIDLEY_LANDING:
-            // Set the event for the ridley in space cutscene, in case it was skipped
-            EventFunction(EVENT_ACTION_SETTING, sCutsceneData[CUTSCENE_RIDLEY_IN_SPACE].event);
+            #ifdef DEBUG
+            if (gBootDebugActive == 0)
+            #endif // DEBUG
+            {
+                // Set the event for the ridley in space cutscene, in case it was skipped
+                EventFunction(EVENT_ACTION_SETTING, sCutsceneData[CUTSCENE_RIDLEY_IN_SPACE].event);
+            }
             break;
 
         case CUTSCENE_INTRO_TEXT:
-            // Set spawn location
-            gCurrentArea = AREA_BRINSTAR;
-            gCurrentRoom = 0;
-            gLastDoorUsed = 0;
-            gGameModeSub3 = 0;
-            gShipLandingFlag = FALSE;
+            #ifdef DEBUG
+            if (gBootDebugActive == 0)
+            #endif // DEBUG
+            {
+                // Set spawn location
+                gCurrentArea = AREA_BRINSTAR;
+                gCurrentRoom = 0;
+                gLastDoorUsed = 0;
+                gSubGameMode3 = 0;
+                gShipLandingFlag = FALSE;
+            }
             break;
 
         case CUTSCENE_GETTING_FULLY_POWERED:
             // Start fully powered items
             gPauseScreenFlag = PAUSE_SCREEN_FULLY_POWERED_SUIT_ITEMS;
+            #ifdef DEBUG
+            if (gBootDebugActive != 0)
+            {
+                gEquipment.maxEnergy = sNumberOfTanksPerArea[MAX_AMOUNT_OF_AREAS - 1].energy *
+                    sTankIncreaseAmount[gDifficulty].energy + sStartingHealthAmmo.energy;
+                gEquipment.maxMissiles = sNumberOfTanksPerArea[MAX_AMOUNT_OF_AREAS - 1].missile *
+                    sTankIncreaseAmount[gDifficulty].missile + sStartingHealthAmmo.missile;
+                gEquipment.maxSuperMissiles = sNumberOfTanksPerArea[MAX_AMOUNT_OF_AREAS - 1].superMissile *
+                    sTankIncreaseAmount[gDifficulty].superMissile + sStartingHealthAmmo.superMissile;
+                gEquipment.maxPowerBombs = sNumberOfTanksPerArea[MAX_AMOUNT_OF_AREAS - 1].powerBomb *
+                    sTankIncreaseAmount[gDifficulty].powerBomb + sStartingHealthAmmo.powerBomb;
+                gEquipment.currentMissiles = gEquipment.maxMissiles;
+                gEquipment.currentSuperMissiles = gEquipment.maxSuperMissiles;
+                gEquipment.currentPowerBombs = gEquipment.maxPowerBombs;
+                gEquipment.suitMisc = SMF_HIGH_JUMP | SMF_SPEEDBOOSTER | SMF_SPACE_JUMP | SMF_SCREW_ATTACK |
+                    SMF_VARIA_SUIT | SMF_GRAVITY_SUIT | SMF_MORPH_BALL | SMF_POWER_GRIP;
+                gEquipment.beamBombs = BBF_LONG_BEAM | BBF_ICE_BEAM | BBF_WAVE_BEAM | BBF_PLASMA_BEAM |
+                    BBF_CHARGE_BEAM | BBF_BOMBS;
+            }
+            #endif // DEBUG
             break;
 
         case CUTSCENE_COULD_I_SURVIVE:
@@ -133,17 +208,23 @@ void CutsceneEnd(void)
             break;
 
         case CUTSCENE_STATUE_OPENING:
-            // Play fight music
-            if (gCurrentArea == AREA_KRAID)
+            #ifdef DEBUG
+            if (gBootDebugActive == 0)
+            #endif // DEBUG
             {
-                SoundStop(MUSIC_STATUE_ROOM_OPENED);
-                unk_3bd0(MUSIC_KRAID_BATTLE_WITH_INTRO, CONVERT_SECONDS(1.f));
+                // Play fight music
+                if (gCurrentArea == AREA_KRAID)
+                {
+                    SoundStop(MUSIC_STATUE_ROOM_OPENED);
+                    unk_3bd0(MUSIC_KRAID_BATTLE_WITH_INTRO, CONVERT_SECONDS(1.f));
+                }
+                else if (gCurrentArea == AREA_RIDLEY)
+                {
+                    SoundStop(MUSIC_STATUE_ROOM_OPENED);
+                    unk_3bd0(MUSIC_RIDLEY_BATTLE, CONVERT_SECONDS(1.f));
+                }
             }
-            else if (gCurrentArea == AREA_RIDLEY)
-            {
-                SoundStop(MUSIC_STATUE_ROOM_OPENED);
-                unk_3bd0(MUSIC_RIDLEY_BATTLE, CONVERT_SECONDS(1.f));
-            }
+            break;
     }
 
     // Play post cutscene bg fading
@@ -151,14 +232,26 @@ void CutsceneEnd(void)
 
     // Check should set event
     if (sCutsceneData[gCurrentCutscene].event != EVENT_NONE)
-        EventFunction(EVENT_ACTION_SETTING, sCutsceneData[gCurrentCutscene].event);
+    {
+        #ifdef DEBUG
+        if (gBootDebugActive == 0)
+        #endif // DEBUG
+        {
+            EventFunction(EVENT_ACTION_SETTING, sCutsceneData[gCurrentCutscene].event);
+        }
+    }
 
     if (sCutsceneData[gCurrentCutscene].isElevator)
     {
-        // Fade in the elevator sound
-        PlayFadingSound(SOUND_ELEVATOR, sCutsceneData[gCurrentCutscene].fadingTimer);
-        // Fade in the room music
-        CheckPlayFadingMusic(gMusicTrackInfo.currentRoomTrack, sCutsceneData[gCurrentCutscene].fadingTimer, 0);
+        #ifdef DEBUG
+        if (gBootDebugActive == 0)
+        #endif // DEBUG
+        {
+            // Fade in the elevator sound
+            PlayFadingSound(SOUND_ELEVATOR, sCutsceneData[gCurrentCutscene].fadingTimer);
+            // Fade in the room music
+            CheckPlayFadingMusic(gMusicTrackInfo.currentRoomTrack, sCutsceneData[gCurrentCutscene].fadingTimer, 0);
+        }
     }
 }
 
@@ -176,7 +269,7 @@ u8 CutsceneSubroutine(void)
     {
         case CUTSCENE_STAGE_STARTING:
             // Set dummy empty vblank
-            CallbackSetVBlank(CutsceneLoadingVBlank);
+            CallbackSetVblank(CutsceneLoadingVBlank);
 
             // Start the pre cutscene background fading
             if (CutsceneStartBackgroundFading(sCutsceneData[gCurrentCutscene].preBgFading))
@@ -198,20 +291,39 @@ u8 CutsceneSubroutine(void)
             
         case CUTSCENE_STAGE_INIT:
             CutsceneInit();
-            CallbackSetVBlank(CutsceneVBlank);
+            CallbackSetVblank(CutsceneVBlank);
 
             gSubGameModeStage++;
             break;
             
         case CUTSCENE_STAGE_ONGOING:
+            #ifdef DEBUG
+            ended = FALSE;
+            #endif // DEBUG
             APPLY_DELTA_TIME_INC(CUTSCENE_DATA.timeInfo.timer);
             CutsceneUpdateSpecialEffect();
 
             result = sCutsceneData[gCurrentCutscene].pFunction();
+            #ifdef DEBUG
+            if (result)
+            {
+                ended = TRUE;
+                if (gBootDebugActive != 0)
+                    ended = 2;
+            }
+            else if (gBootDebugActive != 0)
+            {
+                if (gChangedInput & KEY_B)
+                    return TRUE;
+                if (gChangedInput & KEY_START)
+                    ended = 2;
+            }
+            #else // !DEBUG
             if (result)
                 ended = TRUE;
             else
                 ended = FALSE;
+            #endif // DEBUG
 
             if (gCutsceneToSkip == gCurrentCutscene && gChangedInput & KEY_B)
             {
@@ -223,6 +335,23 @@ u8 CutsceneSubroutine(void)
             {
                 CUTSCENE_DATA.dispcnt = 0;
                 gSubGameModeStage++;
+                #ifdef DEBUG
+                if (ended == 2)
+                {
+                    if ((gCurrentCutscene == CUTSCENE_COULD_I_SURVIVE ||
+                        gCurrentCutscene == CUTSCENE_GETTING_FULLY_POWERED) &&
+                        gButtonInput & (KEY_RIGHT | KEY_LEFT | KEY_UP | KEY_DOWN))
+                    {
+                        ended = FALSE;
+                    }
+                    if (ended)
+                    {
+                        StopAllMusicAndSounds();
+                        gSubGameModeStage = 0;
+                        SET_BACKDROP_COLOR(COLOR_BLACK);
+                    }
+                }
+                #endif // DEBUG
             }
             break;
             
@@ -248,8 +377,15 @@ u8 CutsceneSubroutine(void)
             gSubGameModeStage = CUTSCENE_STAGE_STARTING;
 
             if (sCutsceneData[gCurrentCutscene].gameplayType == CUTSCENE_TYPE_NON_GAMEPLAY)
-                gCurrentCutscene = CUTSCENE_NONE;
-        
+            {
+                #ifdef DEBUG
+                if (gBootDebugActive == 0)
+                #endif // DEBUG
+                {
+                    gCurrentCutscene = CUTSCENE_NONE;                
+                }
+            }
+
             return TRUE;
     }
 
@@ -274,25 +410,25 @@ void CutsceneVBlank(void)
 {
     DMA_SET(3, gOamData, OAM_BASE, C_32_2_16(DMA_ENABLE | DMA_32BIT, 0x100));
 
-    write16(REG_BG0HOFS, CUTSCENE_DATA.bg0hofs);
-    write16(REG_BG0VOFS, CUTSCENE_DATA.bg0vofs);
-    write16(REG_BG1HOFS, CUTSCENE_DATA.bg1hofs);
-    write16(REG_BG1VOFS, CUTSCENE_DATA.bg1vofs);
-    write16(REG_BG2HOFS, CUTSCENE_DATA.bg2hofs);
-    write16(REG_BG2VOFS, CUTSCENE_DATA.bg2vofs);
-    write16(REG_BG3HOFS, CUTSCENE_DATA.bg3hofs);
-    write16(REG_BG3VOFS, CUTSCENE_DATA.bg3vofs);
+    WRITE_16(REG_BG0HOFS, CUTSCENE_DATA.bg0hofs);
+    WRITE_16(REG_BG0VOFS, CUTSCENE_DATA.bg0vofs);
+    WRITE_16(REG_BG1HOFS, CUTSCENE_DATA.bg1hofs);
+    WRITE_16(REG_BG1VOFS, CUTSCENE_DATA.bg1vofs);
+    WRITE_16(REG_BG2HOFS, CUTSCENE_DATA.bg2hofs);
+    WRITE_16(REG_BG2VOFS, CUTSCENE_DATA.bg2vofs);
+    WRITE_16(REG_BG3HOFS, CUTSCENE_DATA.bg3hofs);
+    WRITE_16(REG_BG3VOFS, CUTSCENE_DATA.bg3vofs);
 
-    write16(REG_BG0CNT, CUTSCENE_DATA.bgcnt[0]);
-    write16(REG_BG1CNT, CUTSCENE_DATA.bgcnt[1]);
-    write16(REG_BG2CNT, CUTSCENE_DATA.bgcnt[2]);
-    write16(REG_BG3CNT, CUTSCENE_DATA.bgcnt[3]);
+    WRITE_16(REG_BG0CNT, CUTSCENE_DATA.bgcnt[0]);
+    WRITE_16(REG_BG1CNT, CUTSCENE_DATA.bgcnt[1]);
+    WRITE_16(REG_BG2CNT, CUTSCENE_DATA.bgcnt[2]);
+    WRITE_16(REG_BG3CNT, CUTSCENE_DATA.bgcnt[3]);
 
-    write16(REG_BLDY, gWrittenToBLDY_NonGameplay);
-    write16(REG_BLDALPHA, C_16_2_8(gWrittenToBLDALPHA_H, gWrittenToBLDALPHA_L));
+    WRITE_16(REG_BLDY, gWrittenToBldy_NonGameplay);
+    WRITE_16(REG_BLDALPHA, C_16_2_8(gWrittenToBldalpha_H, gWrittenToBldalpha_L));
 
-    write16(REG_BLDCNT, CUTSCENE_DATA.bldcnt);
-    write16(REG_DISPCNT, CUTSCENE_DATA.dispcnt);
+    WRITE_16(REG_BLDCNT, CUTSCENE_DATA.bldcnt);
+    WRITE_16(REG_DISPCNT, CUTSCENE_DATA.dispcnt);
 }
 
 /**
@@ -311,29 +447,61 @@ void CutsceneLoadingVBlank(void)
 void CutsceneInit(void)
 {
     s32 gameplayType;
+    #ifdef DEBUG
+    u8 temp;
+    #endif // DEBUG
 
-    CallbackSetVBlank(CutsceneLoadingVBlank);
-    BitFill(3, 0, &gNonGameplayRAM, sizeof(union NonGameplayRAM), 32);
+    CallbackSetVblank(CutsceneLoadingVBlank);
+    BitFill(3, 0, &gNonGameplayRam, sizeof(union NonGameplayRam), 32);
 
     gOamXOffset_NonGameplay = gOamYOffset_NonGameplay = 0;
     gNextOamSlot = 0;
     ResetFreeOam();
 
-    write16(REG_BLDCNT, CUTSCENE_DATA.bldcnt = 0xFF);
-
-    write16(REG_BLDY, gWrittenToBLDY_NonGameplay = BLDY_MAX_VALUE);
-
-    write16(REG_DISPCNT, CUTSCENE_DATA.dispcnt = 0);
-
-    gameplayType = sCutsceneData[gCurrentCutscene].gameplayType;
-    if (gameplayType != CUTSCENE_TYPE_NON_GAMEPLAY)
+    #ifdef REGION_EU
+    if (sCutsceneData[gCurrentCutscene].preBgFading >= COLOR_FADING_SLOW_WHITE)
     {
-        if (gameplayType == CUTSCENE_TYPE_IN_GAMEPLAY)
-            gPauseScreenFlag = PAUSE_SCREEN_PAUSE_OR_CUTSCENE;
-
-        if (gameplayType < CUTSCENE_TYPE_END)
-            DmaTransfer(3, VRAM_OBJ, EWRAM_BASE + 0x1E000, gameplayType * 0x4000, 16);
+        WRITE_16(REG_BLDCNT, CUTSCENE_DATA.bldcnt = 0xBF);
     }
+    else
+    #endif // REGION_EU
+    {
+        WRITE_16(REG_BLDCNT, CUTSCENE_DATA.bldcnt = 0xFF);
+    }
+
+    WRITE_16(REG_BLDY, gWrittenToBldy_NonGameplay = BLDY_MAX_VALUE);
+
+    WRITE_16(REG_DISPCNT, CUTSCENE_DATA.dispcnt = 0);
+
+    #ifdef DEBUG
+    if (gBootDebugActive == 0)
+    #endif // DEBUG
+    {
+        gameplayType = sCutsceneData[gCurrentCutscene].gameplayType;
+        if (gameplayType != CUTSCENE_TYPE_NON_GAMEPLAY)
+        {
+            if (gameplayType == CUTSCENE_TYPE_IN_GAMEPLAY)
+                gPauseScreenFlag = PAUSE_SCREEN_PAUSE_OR_CUTSCENE;
+    
+            if (gameplayType < CUTSCENE_TYPE_END)
+                DmaTransfer(3, VRAM_OBJ, EWRAM_BASE + 0x1E000, gameplayType * 0x4000, 16);
+        }
+    }
+
+    #ifdef DEBUG
+    // Written this way to produce matching ASM
+    temp = gBootDebugActive;
+    if (temp != 0)
+    {
+        if (gButtonInput & KEY_L)
+            gEquipment.suitMiscActivation |= SMF_VARIA_SUIT;
+        else
+            gEquipment.suitMiscActivation &= ~SMF_VARIA_SUIT;
+    }
+
+    if (gDebugMode)
+        gCutsceneToSkip = gCurrentCutscene;
+    #endif // DEBUG
 
     if (gCutsceneToSkip != gCurrentCutscene)
         gCutsceneToSkip = CUTSCENE_NONE;
@@ -400,7 +568,7 @@ void CutsceneSetBgcnt(u16 value, u16 bg)
 /**
  * @brief 614d4 | a4 | Sets the position of a background
  * 
- * @param type Type (HOVS | VOFS)
+ * @param type Type (HOFS | VOFS)
  * @param bg Background (DISPCNT flags)
  * @param value Value
  */
@@ -859,26 +1027,26 @@ void CutsceneUpdateSpecialEffect(void)
         CUTSCENE_DATA.specialEffect.s_Timer = CUTSCENE_DATA.specialEffect.s_Interval;
 
         // Update BLDY
-        if (gWrittenToBLDY_NonGameplay != CUTSCENE_DATA.specialEffect.s_WrittenToBLDY)
+        if (gWrittenToBldy_NonGameplay != CUTSCENE_DATA.specialEffect.s_WrittenToBLDY)
         {
-            if (gWrittenToBLDY_NonGameplay < CUTSCENE_DATA.specialEffect.s_WrittenToBLDY)
+            if (gWrittenToBldy_NonGameplay < CUTSCENE_DATA.specialEffect.s_WrittenToBLDY)
             {
-                if (gWrittenToBLDY_NonGameplay + CUTSCENE_DATA.specialEffect.s_Intensity > CUTSCENE_DATA.specialEffect.s_WrittenToBLDY)
-                    gWrittenToBLDY_NonGameplay = CUTSCENE_DATA.specialEffect.s_WrittenToBLDY;
+                if (gWrittenToBldy_NonGameplay + CUTSCENE_DATA.specialEffect.s_Intensity > CUTSCENE_DATA.specialEffect.s_WrittenToBLDY)
+                    gWrittenToBldy_NonGameplay = CUTSCENE_DATA.specialEffect.s_WrittenToBLDY;
                 else
-                    gWrittenToBLDY_NonGameplay += CUTSCENE_DATA.specialEffect.s_Intensity;
+                    gWrittenToBldy_NonGameplay += CUTSCENE_DATA.specialEffect.s_Intensity;
             }
             else
             {
-                if (gWrittenToBLDY_NonGameplay - CUTSCENE_DATA.specialEffect.s_Intensity < CUTSCENE_DATA.specialEffect.s_WrittenToBLDY)
-                    gWrittenToBLDY_NonGameplay = CUTSCENE_DATA.specialEffect.s_WrittenToBLDY;
+                if (gWrittenToBldy_NonGameplay - CUTSCENE_DATA.specialEffect.s_Intensity < CUTSCENE_DATA.specialEffect.s_WrittenToBLDY)
+                    gWrittenToBldy_NonGameplay = CUTSCENE_DATA.specialEffect.s_WrittenToBLDY;
                 else
-                    gWrittenToBLDY_NonGameplay -= CUTSCENE_DATA.specialEffect.s_Intensity;
+                    gWrittenToBldy_NonGameplay -= CUTSCENE_DATA.specialEffect.s_Intensity;
             }
         }
 
         // Check reached destination value
-        if (gWrittenToBLDY_NonGameplay != CUTSCENE_DATA.specialEffect.s_WrittenToBLDY)
+        if (gWrittenToBldy_NonGameplay != CUTSCENE_DATA.specialEffect.s_WrittenToBLDY)
             return;
 
         // Mark effect as ended
@@ -901,48 +1069,48 @@ void CutsceneUpdateSpecialEffect(void)
         CUTSCENE_DATA.specialEffect.bg_Timer = CUTSCENE_DATA.specialEffect.bg_Interval;
 
         // Update BLDALPHA L
-        if (gWrittenToBLDALPHA_L != CUTSCENE_DATA.specialEffect.bg_WrittenToBldalpha_L)
+        if (gWrittenToBldalpha_L != CUTSCENE_DATA.specialEffect.bg_WrittenToBldalpha_L)
         {
-            if (gWrittenToBLDALPHA_L < CUTSCENE_DATA.specialEffect.bg_WrittenToBldalpha_L)
+            if (gWrittenToBldalpha_L < CUTSCENE_DATA.specialEffect.bg_WrittenToBldalpha_L)
             {
-                if (gWrittenToBLDALPHA_L + CUTSCENE_DATA.specialEffect.bg_Intensity > CUTSCENE_DATA.specialEffect.bg_WrittenToBldalpha_L)
-                    gWrittenToBLDALPHA_L = CUTSCENE_DATA.specialEffect.bg_WrittenToBldalpha_L;
+                if (gWrittenToBldalpha_L + CUTSCENE_DATA.specialEffect.bg_Intensity > CUTSCENE_DATA.specialEffect.bg_WrittenToBldalpha_L)
+                    gWrittenToBldalpha_L = CUTSCENE_DATA.specialEffect.bg_WrittenToBldalpha_L;
                 else
-                    gWrittenToBLDALPHA_L += CUTSCENE_DATA.specialEffect.bg_Intensity;
+                    gWrittenToBldalpha_L += CUTSCENE_DATA.specialEffect.bg_Intensity;
             }
             else
             {
-                if (gWrittenToBLDALPHA_L - CUTSCENE_DATA.specialEffect.bg_Intensity < CUTSCENE_DATA.specialEffect.bg_WrittenToBldalpha_L)
-                    gWrittenToBLDALPHA_L = CUTSCENE_DATA.specialEffect.bg_WrittenToBldalpha_L;
+                if (gWrittenToBldalpha_L - CUTSCENE_DATA.specialEffect.bg_Intensity < CUTSCENE_DATA.specialEffect.bg_WrittenToBldalpha_L)
+                    gWrittenToBldalpha_L = CUTSCENE_DATA.specialEffect.bg_WrittenToBldalpha_L;
                 else
-                    gWrittenToBLDALPHA_L -= CUTSCENE_DATA.specialEffect.bg_Intensity;
+                    gWrittenToBldalpha_L -= CUTSCENE_DATA.specialEffect.bg_Intensity;
             }
         }
 
         // Update BLDALPHA H
-        if (gWrittenToBLDALPHA_H != CUTSCENE_DATA.specialEffect.bg_WrittenToBldalpha_H)
+        if (gWrittenToBldalpha_H != CUTSCENE_DATA.specialEffect.bg_WrittenToBldalpha_H)
         {
-            if (gWrittenToBLDALPHA_H < CUTSCENE_DATA.specialEffect.bg_WrittenToBldalpha_H)
+            if (gWrittenToBldalpha_H < CUTSCENE_DATA.specialEffect.bg_WrittenToBldalpha_H)
             {
-                if (gWrittenToBLDALPHA_H + CUTSCENE_DATA.specialEffect.bg_Intensity > CUTSCENE_DATA.specialEffect.bg_WrittenToBldalpha_H)
-                    gWrittenToBLDALPHA_H = CUTSCENE_DATA.specialEffect.bg_WrittenToBldalpha_H;
+                if (gWrittenToBldalpha_H + CUTSCENE_DATA.specialEffect.bg_Intensity > CUTSCENE_DATA.specialEffect.bg_WrittenToBldalpha_H)
+                    gWrittenToBldalpha_H = CUTSCENE_DATA.specialEffect.bg_WrittenToBldalpha_H;
                 else
-                    gWrittenToBLDALPHA_H += CUTSCENE_DATA.specialEffect.bg_Intensity;
+                    gWrittenToBldalpha_H += CUTSCENE_DATA.specialEffect.bg_Intensity;
             }
             else
             {
-                if (gWrittenToBLDALPHA_H - CUTSCENE_DATA.specialEffect.bg_Intensity < CUTSCENE_DATA.specialEffect.bg_WrittenToBldalpha_H)
-                    gWrittenToBLDALPHA_H = CUTSCENE_DATA.specialEffect.bg_WrittenToBldalpha_H;
+                if (gWrittenToBldalpha_H - CUTSCENE_DATA.specialEffect.bg_Intensity < CUTSCENE_DATA.specialEffect.bg_WrittenToBldalpha_H)
+                    gWrittenToBldalpha_H = CUTSCENE_DATA.specialEffect.bg_WrittenToBldalpha_H;
                 else
-                    gWrittenToBLDALPHA_H -= CUTSCENE_DATA.specialEffect.bg_Intensity;
+                    gWrittenToBldalpha_H -= CUTSCENE_DATA.specialEffect.bg_Intensity;
             }
         }
 
         // Check reached destination values
-        if (gWrittenToBLDALPHA_L != CUTSCENE_DATA.specialEffect.bg_WrittenToBldalpha_L)
+        if (gWrittenToBldalpha_L != CUTSCENE_DATA.specialEffect.bg_WrittenToBldalpha_L)
             return;
 
-        if (gWrittenToBLDALPHA_H != CUTSCENE_DATA.specialEffect.bg_WrittenToBldalpha_H)
+        if (gWrittenToBldalpha_H != CUTSCENE_DATA.specialEffect.bg_WrittenToBldalpha_H)
             return;
 
         // Mark as ended
@@ -984,8 +1152,8 @@ void CutsceneStartSpriteEffect(u16 bldcnt, u8 bldy, u32 interval, u8 intensity)
  * @brief 61dc8 | 70 | Starts a cutscene background effect
  * 
  * @param bldcnt Bldcnt
- * @param bldalphaL Bldqlphq L target
- * @param bldalphaH Bldqlphq H target
+ * @param bldalphaL Bldalpha L target
+ * @param bldalphaH Bldalpha H target
  * @param interval Interval between value changes
  * @param intensity Value change intensity
  */
@@ -1022,9 +1190,9 @@ void CutsceneReset(void)
 {
     s32 i;
 
-    gWrittenToBLDY_NonGameplay = 0;
-    gWrittenToBLDALPHA_L = 16;
-    gWrittenToBLDALPHA_H = 0;
+    gWrittenToBldy_NonGameplay = 0;
+    gWrittenToBldalpha_L = 16;
+    gWrittenToBldalpha_H = 0;
 
     // Clear special effect
     CUTSCENE_DATA.specialEffect.status = 0;
@@ -1052,7 +1220,7 @@ void CutsceneReset(void)
 void CutsceneFadeScreenToBlack(void)
 {
     CUTSCENE_DATA.dispcnt = 0;
-    gWrittenToBLDY_NonGameplay = BLDY_MAX_VALUE;
+    gWrittenToBldy_NonGameplay = BLDY_MAX_VALUE;
     CUTSCENE_DATA.bldcnt = BLDCNT_SCREEN_FIRST_TARGET | BLDCNT_BRIGHTNESS_DECREASE_EFFECT;
 }
 
@@ -1063,7 +1231,7 @@ void CutsceneFadeScreenToBlack(void)
 void CutsceneFadeScreenToWhite(void)
 {
     CUTSCENE_DATA.dispcnt = 0;
-    gWrittenToBLDY_NonGameplay = BLDY_MAX_VALUE;
+    gWrittenToBldy_NonGameplay = BLDY_MAX_VALUE;
     CUTSCENE_DATA.bldcnt = BLDCNT_SCREEN_FIRST_TARGET | BLDCNT_BRIGHTNESS_INCREASE_EFFECT;
 }
 
@@ -1168,14 +1336,22 @@ u8 CutsceneStartBackgroundFading(u8 type)
             CUTSCENE_DATA.fadingType = COLOR_FADING_TYPE_OUT;
             break;
 
+        #ifdef REGION_EU
+        case 10:
+        #else // !REGION_EU
         case COLOR_FADING_SLOW_WHITE:
+        #endif // REGION_EU
             CUTSCENE_DATA.fadingStage = 2;
             CUTSCENE_DATA.fadingIntensity = 2;
             CUTSCENE_DATA.fadingMaxDelay = 0;
             CUTSCENE_DATA.fadingType = COLOR_FADING_TYPE_UNK;
             break;
 
+        #ifdef REGION_EU
+        case 11:
+        #else // !REGION_EU
         case COLOR_FADING_SLOW_BLACK:
+        #endif // REGION_EU
             CUTSCENE_DATA.fadingStage = 2;
             CUTSCENE_DATA.fadingIntensity = 1;
             CUTSCENE_DATA.fadingMaxDelay = 4;
@@ -1311,3 +1487,24 @@ u8 CutsceneUpdateFading(void)
 
     return ended;
 }
+
+#ifdef DEBUG
+/**
+ * @brief Checks if the cutscene stage should be skipped when A is pressed
+ * 
+* @param bg Fade type (1 for black, 2 for white)
+ */
+void CutsceneCheckSkipStage(u8 fade)
+{
+    if (gBootDebugActive != 0 && gChangedInput & KEY_A)
+    {
+        CUTSCENE_DATA.timeInfo.stage++;
+        CUTSCENE_DATA.timeInfo.timer = CUTSCENE_DATA.timeInfo.subStage = 0;
+
+        if (fade == 1)
+            CutsceneFadeScreenToBlack();
+        else if (fade == 2)
+            CutsceneFadeScreenToWhite();
+    }
+}
+#endif // DEBUG

@@ -12,7 +12,7 @@ void UnusedSprites(void)
 {
     gCurrentSprite.ignoreSamusCollisionTimer = DELTA_TIME;
 
-    if (gCurrentSprite.pose == 0)
+    if (gCurrentSprite.pose == SPRITE_POSE_UNINITIALIZED)
     {
         gCurrentSprite.pose++;
         
@@ -27,7 +27,7 @@ void UnusedSprites(void)
         
         gCurrentSprite.animationDurationCounter = 0;
         gCurrentSprite.currentAnimationFrame = 0;
-        gCurrentSprite.pOam = sUnusedSpritesOAM_Idle;
+        gCurrentSprite.pOam = sUnusedSpritesOam_Idle;
         
         gCurrentSprite.bgPriority = 1;
     }

@@ -8,6 +8,8 @@
 
 #include "structs/sprite.h"
 
+#define PRIMARY_SPRITE_B3_POSE_IDLE 0x9
+
 /**
  * @brief 49dcc | ec | Primary Sprite B3 AI, the purpose of this sprite is unknown but it's related to the searchlights in Chozodia
  * 
@@ -30,11 +32,11 @@ void PrimarySpriteB3(void)
         gCurrentSprite.hitboxLeft = 0;
         gCurrentSprite.hitboxRight = 0;
 
-        gCurrentSprite.pOam = sEnemyDropOAM_LargeEnergy;
+        gCurrentSprite.pOam = sEnemyDropOam_LargeEnergy;
         gCurrentSprite.animationDurationCounter = 0;
         gCurrentSprite.currentAnimationFrame = 0;
 
-        gCurrentSprite.pose = 9;
+        gCurrentSprite.pose = PRIMARY_SPRITE_B3_POSE_IDLE;
 
         TransparencyUpdateBldcnt(1, BLDCNT_BG0_FIRST_TARGET_PIXEL | BLDCNT_ALPHA_BLENDING_EFFECT |
             BLDCNT_BG2_SECOND_TARGET_PIXEL | BLDCNT_BG3_SECOND_TARGET_PIXEL);
@@ -42,12 +44,12 @@ void PrimarySpriteB3(void)
         if (gAlarmTimer != 0)
         {
             gCurrentSprite.work2 = FALSE;
-            gCurrentSprite.work3 = 16;
+            gCurrentSprite.work3 = BLDALPHA_MAX_VALUE;
         }
         else
         {
             gCurrentSprite.work2 = TRUE;
-            gCurrentSprite.work3 = 8;
+            gCurrentSprite.work3 = BLDALPHA_MAX_VALUE / 2;
         }
     }
 
@@ -56,7 +58,7 @@ void PrimarySpriteB3(void)
         if (gCurrentSprite.work2)
         {
             gCurrentSprite.work2--;
-            if (!gCurrentSprite.work2 && gCurrentSprite.work3 < 16)
+            if (!gCurrentSprite.work2 && gCurrentSprite.work3 < BLDALPHA_MAX_VALUE)
             {
                 gCurrentSprite.work3++;
                 gCurrentSprite.work2 = TRUE;
@@ -66,12 +68,12 @@ void PrimarySpriteB3(void)
 
     else
     {
-        if (gCurrentSprite.work3 != 8)
+        if (gCurrentSprite.work3 != BLDALPHA_MAX_VALUE / 2)
         {
-            gCurrentSprite.work3 = 8;
+            gCurrentSprite.work3 = BLDALPHA_MAX_VALUE / 2;
             gCurrentSprite.work2 = TRUE;
         }
     }
 
-    TransparencySpriteUpdateBLDALPHA(0, gCurrentSprite.work3, 0, 16);
+    TransparencySpriteUpdateBldalpha(0, gCurrentSprite.work3, 0, 16);
 }

@@ -12,11 +12,19 @@
 
 #include "structs/sprite.h"
 
+#define RIPPER_POSE_MOVING_INIT 0x8
+#define RIPPER_POSE_MOVING 0x9
+#define RIPPER_POSE_TURNING_AROUND_INIT 0xA
+#define RIPPER_POSE_TURNING_AROUND_FIRST_PART 0xB
+#define RIPPER_POSE_TURNING_AROUND_SECOND_PART 0xC
+
+#define RIPPER_SPEED (PIXEL_SIZE / 2)
+
 /**
  * @brief 1bd8c | 70 | Initializes a ripper sprite
  * 
  */
-void RipperInit(void)
+static void RipperInit(void)
 {
     gCurrentSprite.hitboxTop = -(HALF_BLOCK_SIZE + PIXEL_SIZE);
     gCurrentSprite.hitboxBottom = 0;
@@ -33,7 +41,7 @@ void RipperInit(void)
 
     gCurrentSprite.samusCollision = SSC_HURTS_SAMUS;
     gCurrentSprite.health = GET_PSPRITE_HEALTH(gCurrentSprite.spriteId);
-    gCurrentSprite.yPosition -= PIXEL_SIZE * 2;
+    gCurrentSprite.yPosition -= EIGHTH_BLOCK_SIZE;
 
     SpriteUtilChooseRandomXFlip();
     gCurrentSprite.pose = RIPPER_POSE_MOVING_INIT;
@@ -43,7 +51,7 @@ void RipperInit(void)
  * @brief 1bdfc | 20 | Initializes a ripper to be moving
  * 
  */
-void RipperMovingInit(void)
+static void RipperMovingInit(void)
 {
     gCurrentSprite.pose = RIPPER_POSE_MOVING;
 
@@ -56,14 +64,14 @@ void RipperMovingInit(void)
  * @brief 1be1c | 6c | Handles a ripper moving
  * 
  */
-void RipperMove(void)
+static void RipperMove(void)
 {
     u16 speed;
 
     if (gCurrentSprite.spriteId == PSPRITE_RIPPER_PURPLE)
-        speed = 4;
+        speed = RIPPER_SPEED * 2;
     else
-        speed = 2;
+        speed = RIPPER_SPEED;
 
     if (gCurrentSprite.status & SPRITE_STATUS_X_FLIP)
     {
@@ -93,7 +101,7 @@ void RipperMove(void)
  * @brief 1be88 | 20 | Initializes a ripper to be turning around
  * 
  */
-void RipperTurnAroundInit(void)
+static void RipperTurnAroundInit(void)
 {
     gCurrentSprite.pose = RIPPER_POSE_TURNING_AROUND_FIRST_PART;
 
@@ -106,9 +114,9 @@ void RipperTurnAroundInit(void)
  * @brief 1bea8 | 38 | Handles the first part of a ripper turning around
  * 
  */
-void RipperTurnAroundFirstPart(void)
+static void RipperTurnAroundFirstPart(void)
 {
-    if (SpriteUtilCheckEndCurrentSpriteAnim())
+    if (SpriteUtilHasCurrentAnimationEnded())
     {
         gCurrentSprite.status ^= SPRITE_STATUS_X_FLIP;
         gCurrentSprite.pose = RIPPER_POSE_TURNING_AROUND_SECOND_PART;
@@ -123,9 +131,9 @@ void RipperTurnAroundFirstPart(void)
  * @brief 1bee0 | 1c | Handles the second part of a ripper turning around
  * 
  */
-void RipperTurnAroundSecondPart(void)
+static void RipperTurnAroundSecondPart(void)
 {
-    if (SpriteUtilCheckNearEndCurrentSpriteAnim())
+    if (SpriteUtilHasCurrentAnimationNearlyEnded())
         gCurrentSprite.pose = RIPPER_POSE_MOVING_INIT;
 }
 
@@ -176,7 +184,7 @@ void Ripper(void)
             break;
             
         default:
-            SpriteUtilSpriteDeath(DEATH_NORMAL, gCurrentSprite.yPosition - (QUARTER_BLOCK_SIZE + PIXEL_SIZE * 2),
+            SpriteUtilSpriteDeath(DEATH_NORMAL, gCurrentSprite.yPosition - (QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE),
                 gCurrentSprite.xPosition, TRUE, PE_SPRITE_EXPLOSION_MEDIUM);
     }
 }

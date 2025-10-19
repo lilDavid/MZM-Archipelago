@@ -14,9 +14,9 @@
  * 
  * @return u32 bool, doing something
  */
-u32 ProcessPauseButtonPress(void)
+boolu32 ProcessPauseButtonPress(void)
 {
-    u32 doingSomething;
+    boolu32 doingSomething;
     u32 fade;
 
     doingSomething = TRUE;

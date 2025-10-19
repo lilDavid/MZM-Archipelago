@@ -16,11 +16,11 @@ void ScrollWithNoScrollsY(struct Coordinates* pCoords);
 void ScrollWithNoScrollsX(struct Coordinates* pCoords);
 void ScrollUpdateEffectAndHazePosition(struct Coordinates* pCoords);
 void ScrollAutoBg0(void);
-u32 ScrollGetBG3Scroll(void);
+u32 ScrollGetBg3Scroll(void);
 void ScrollBg3(void);
 void ScrollBg3Related(void);
 void ScrollAutoBg3(void);
 void ScrollBg2(struct Coordinates* pCoords);
-void ScrollFreeMovementDebugCameraLock(struct Coordinates* pCoords);
+void ScrollNoClipDebugCameraLock(struct Coordinates* pCoords);
 
 #endif /* SCROLL_H */

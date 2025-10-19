@@ -2,73 +2,77 @@
 #include "gba.h"
 #include "macros.h"
 
-const u16 sTitleScreenPal[15 * 16] = INCBIN_U16("data/menus/TitleScreen/Palette.pal");
-const u16 sTitleScreenPromptPal[5 * 16] = INCBIN_U16("data/menus/TitleScreen/Prompt.pal");
+const u16 sTitleScreenPal[15 * 16] = INCBIN_U16("data/menus/title_screen/palette.pal");
+const u16 sTitleScreenPromptPal[5 * 16] = INCBIN_U16("data/menus/title_screen/prompt.pal");
+
+#ifdef REGION_EU
+const u16 sTitleScreenUnselectedMenuPal[1 * 16] = INCBIN_U16("data/menus/title_screen/unselected_menu.pal");
+#endif // REGION_EU
 
 static const u16 sTitleScreenOam_Comet_Frame0[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xf8, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x6000
+    1,
+    OAM_ENTRY(-8, -8, OAM_DIMS_16x16, OAM_NO_FLIP, 0x0, 14, 0),
 };
 
 static const u16 sTitleScreenOam_Comet_Frame1[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xf8, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x6002
+    1,
+    OAM_ENTRY(-8, -8, OAM_DIMS_16x16, OAM_NO_FLIP, 0x2, 14, 0),
 };
 
 static const u16 sTitleScreenOam_Comet_Frame2[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xf8, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x6004
+    1,
+    OAM_ENTRY(-8, -8, OAM_DIMS_16x16, OAM_NO_FLIP, 0x4, 14, 0),
 };
 
 static const u16 sTitleScreenOam_CometFlying_Frame0[OAM_DATA_SIZE(2)] = {
-    0x2,
-    0xf8, 0x0, OBJ_SPRITE_OAM | 0x6008,
-    0x0, OBJ_SIZE_16x16 | 0x1f0, OBJ_SPRITE_OAM | 0x6026
+    2,
+    OAM_ENTRY(0, -8, OAM_DIMS_8x8, OAM_NO_FLIP, 0x8, 14, 0),
+    OAM_ENTRY(-16, 0, OAM_DIMS_16x16, OAM_NO_FLIP, 0x26, 14, 0),
 };
 
 static const u16 sTitleScreenOam_SparkleIdle_Frame0[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xf8, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x600a
+    1,
+    OAM_ENTRY(-8, -8, OAM_DIMS_16x16, OAM_NO_FLIP, 0xa, 14, 0),
 };
 
 static const u16 sTitleScreenOam_SparkleIdle_Frame1[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xf8, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x600c
+    1,
+    OAM_ENTRY(-8, -8, OAM_DIMS_16x16, OAM_NO_FLIP, 0xc, 14, 0),
 };
 
 static const u16 sTitleScreenOam_SparkleIdle_Frame2[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xf8, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x600e
+    1,
+    OAM_ENTRY(-8, -8, OAM_DIMS_16x16, OAM_NO_FLIP, 0xe, 14, 0),
 };
 
 static const u16 sTitleScreenOam_SparkleIdle_Frame3[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xf8, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x6010
+    1,
+    OAM_ENTRY(-8, -8, OAM_DIMS_16x16, OAM_NO_FLIP, 0x10, 14, 0),
 };
 
 static const u16 sTitleScreenOam_SparkleDisappearing_Frame0[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xf8, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x600a
+    1,
+    OAM_ENTRY(-8, -8, OAM_DIMS_16x16, OAM_NO_FLIP, 0xa, 14, 0),
 };
 
 static const u16 sTitleScreenOam_SparkleDisappearing_Frame1[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xf8, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x600c
+    1,
+    OAM_ENTRY(-8, -8, OAM_DIMS_16x16, OAM_NO_FLIP, 0xc, 14, 0),
 };
 
 static const u16 sTitleScreenOam_SparkleDisappearing_Frame2[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xf8, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x600e
+    1,
+    OAM_ENTRY(-8, -8, OAM_DIMS_16x16, OAM_NO_FLIP, 0xe, 14, 0),
 };
 
 static const u16 sTitleScreenOam_SparkleDisappearing_Frame3[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xf0, OBJ_SIZE_32x32 | 0x1f0, OBJ_SPRITE_OAM | 0x6012
+    1,
+    OAM_ENTRY(-16, -16, OAM_DIMS_32x32, OAM_NO_FLIP, 0x12, 14, 0),
 };
 
 static const u16 sTitleScreenOam_SparkleDisappearing_Frame4[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xf0, OBJ_SIZE_32x32 | 0x1f0, OBJ_SPRITE_OAM | 0x6016
+    1,
+    OAM_ENTRY(-16, -16, OAM_DIMS_32x32, OAM_NO_FLIP, 0x16, 14, 0),
 };
 
 static const struct FrameData sTitleScreenOam_Comet[4] = {
@@ -139,22 +143,45 @@ static const struct FrameData sTitleScreenOam_SparkleDisappearing[6] = {
     [5] = FRAME_DATA_TERMINATOR
 };
 
-const u32 sTitleScreenTitleGfx[1095] = INCBIN_U32("data/menus/TitleScreen/Title.gfx.lz");
-const u32 sTitleScreenSparklesGfx[256] = INCBIN_U32("data/menus/TitleScreen/Sparkles.gfx.lz");
-const u32 sTitleScreenSpaceBackgroundGfx[3203] = INCBIN_U32("data/menus/TitleScreen/SpaceBackground.gfx.lz");
-const u32 sTitleScreenSpaceBackgroundDecorationGfx[797] = INCBIN_U32("data/menus/TitleScreen/SpaceBackgroundDecoration.gfx.lz");
-const u32 sTitleScreenSpaceAndGroundBackgroundGfx[1920] = INCBIN_U32("data/menus/TitleScreen/SpaceAndGroundBackground.gfx.lz");
-const u32 sTitleScreenTitleTileTable[199] = INCBIN_U32("data/menus/TitleScreen/Title.tt");
-const u32 sTitleScreenSpaceBackgroundTileTable[702] = INCBIN_U32("data/menus/TitleScreen/SpaceBackground.tt");
+const u32 sTitleScreenTitleGfx[1095] = INCBIN_U32("data/menus/title_screen/title.gfx.lz");
+const u32 sTitleScreenSparklesGfx[256] = INCBIN_U32("data/menus/title_screen/sparkles.gfx.lz");
+const u32 sTitleScreenSpaceBackgroundGfx[3203] = INCBIN_U32("data/menus/title_screen/space_background.gfx.lz");
+const u32 sTitleScreenSpaceBackgroundDecorationGfx[797] = INCBIN_U32("data/menus/title_screen/space_background_decoration.gfx.lz");
+const u32 sTitleScreenSpaceAndGroundBackgroundGfx[1920] = INCBIN_U32("data/menus/title_screen/space_and_ground_background.gfx.lz");
+
+#ifdef REGION_EU
+const u32 sTitleScreenEnglishMenuGfx_Top[85] = INCBIN_U32("data/menus/title_screen/english_menu_top.gfx.lz");
+const u32 sTitleScreenEnglishMenuGfx_Bottom[72] = INCBIN_U32("data/menus/title_screen/english_menu_bottom.gfx.lz");
+const u32 sTitleScreenGermanMenuGfx_Top[89] = INCBIN_U32("data/menus/title_screen/german_menu_top.gfx.lz");
+const u32 sTitleScreenGermanMenuGfx_Bottom[75] = INCBIN_U32("data/menus/title_screen/german_menu_bottom.gfx.lz");
+const u32 sTitleScreenFrenchMenuGfx_Top[63] = INCBIN_U32("data/menus/title_screen/french_menu_top.gfx.lz");
+const u32 sTitleScreenFrenchMenuGfx_Bottom[55] = INCBIN_U32("data/menus/title_screen/french_menu_bottom.gfx.lz");
+const u32 sTitleScreenItalianMenuGfx_Top[79] = INCBIN_U32("data/menus/title_screen/italian_menu_top.gfx.lz");
+const u32 sTitleScreenItalianMenuGfx_Bottom[62] = INCBIN_U32("data/menus/title_screen/italian_menu_bottom.gfx.lz");
+const u32 sTitleScreenSpanishMenuGfx_Top[64] = INCBIN_U32("data/menus/title_screen/spanish_menu_top.gfx.lz");
+const u32 sTitleScreenSpanishMenuGfx_Bottom[45] = INCBIN_U32("data/menus/title_screen/spanish_menu_bottom.gfx.lz");
+#endif // REGION_EU
+
+const u32 sTitleScreenTitleTileTable[] = INCBIN_U32("data/menus/title_screen/title.tt");
+const u32 sTitleScreenSpaceBackgroundTileTable[702] = INCBIN_U32("data/menus/title_screen/space_background.tt");
 
 const u8 sTitleScreenRomInfoPosition[4] = {
     BLOCK_SIZE * 2 + 8, BLOCK_SIZE + QUARTER_BLOCK_SIZE, 'P', 'x'
 };
 
+#if defined(REGION_EU)
+const u8 sTitleScreenRomInfoTime[12] = "01/14 14:30";
+#elif defined(REGION_US_BETA)
+const u8 sTitleScreenRomInfoTime[12] = "12/02 22:00";
+#else // !(REGION_EU || REGION_US_BETA)
 const u8 sTitleScreenRomInfoTime[12] = "12/04 22:00";
+#endif
+
+#ifndef REGION_EU
 const u8 sTitleScreenRomInfoRegionUSA[4] = "USA";
 const u8 sTitleScreenRomInfoRegionEUR[4] = "EUR";
 const u8 sTitleScreenRomInfoRegionJPN[4] = "JPN";
+#endif // !REGION_EU
 
 const struct TitleScreenPageData sTitleScreenPageData[2] = {
     [0] = {

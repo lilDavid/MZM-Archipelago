@@ -9,311 +9,311 @@ const s16 sZeelaEyesFallingFromBottomSpeed[12] = {
     0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, SHORT_MAX
 };
 
-const u32 sZeelaGfx[578] = INCBIN_U32("data/sprites/Zeela.gfx.lz");
-const u16 sZeelaPal[32] = INCBIN_U16("data/sprites/Zeela.pal");
+const u32 sZeelaGfx[578] = INCBIN_U32("data/sprites/zeela.gfx.lz");
+const u16 sZeelaPal[32] = INCBIN_U16("data/sprites/zeela.pal");
 
-const u16 sZeelaOam_OnGround_Frame0[OAM_DATA_SIZE(2)] = {
-    0x2,
-    0xf0, OBJ_SIZE_16x16 | 0x1f2, OBJ_SPRITE_OAM | 0x200,
-    OBJ_SHAPE_VERTICAL | 0xf0, 0x2, OBJ_SPRITE_OAM | 0x202
+static const u16 sZeelaOam_OnGround_Frame0[OAM_DATA_SIZE(2)] = {
+    2,
+    OAM_ENTRY(-14, -16, OAM_DIMS_16x16, OAM_NO_FLIP, 0x200, 8, 0),
+    OAM_ENTRY(2, -16, OAM_DIMS_8x16, OAM_NO_FLIP, 0x202, 8, 0),
 };
 
-const u16 sZeelaOam_OnGround_Frame1[OAM_DATA_SIZE(3)] = {
-    0x3,
-    0xf0, OBJ_SIZE_16x16 | 0x1f2, OBJ_SPRITE_OAM | 0x203,
-    OBJ_SHAPE_VERTICAL | 0xf0, 0x2, OBJ_SPRITE_OAM | 0x205,
-    0xe8, 0x2, OBJ_SPRITE_OAM | 0x266
+static const u16 sZeelaOam_OnGround_Frame1[OAM_DATA_SIZE(3)] = {
+    3,
+    OAM_ENTRY(-14, -16, OAM_DIMS_16x16, OAM_NO_FLIP, 0x203, 8, 0),
+    OAM_ENTRY(2, -16, OAM_DIMS_8x16, OAM_NO_FLIP, 0x205, 8, 0),
+    OAM_ENTRY(2, -24, OAM_DIMS_8x8, OAM_NO_FLIP, 0x266, 8, 0),
 };
 
-const u16 sZeelaOam_OnGround_Frame2[OAM_DATA_SIZE(2)] = {
-    0x2,
-    0xf0, OBJ_SIZE_16x16 | 0x1f6, OBJ_SPRITE_OAM | 0x240,
-    OBJ_SHAPE_VERTICAL | 0xf0, 0x6, OBJ_SPRITE_OAM | 0x242
+static const u16 sZeelaOam_OnGround_Frame2[OAM_DATA_SIZE(2)] = {
+    2,
+    OAM_ENTRY(-10, -16, OAM_DIMS_16x16, OAM_NO_FLIP, 0x240, 8, 0),
+    OAM_ENTRY(6, -16, OAM_DIMS_8x16, OAM_NO_FLIP, 0x242, 8, 0),
 };
 
-const u16 sZeelaOam_OnGround_Frame3[OAM_DATA_SIZE(2)] = {
-    0x2,
-    0xf0, OBJ_SIZE_16x16 | 0x1f6, OBJ_SPRITE_OAM | 0x243,
-    OBJ_SHAPE_VERTICAL | 0xf0, 0x6, OBJ_SPRITE_OAM | 0x245
+static const u16 sZeelaOam_OnGround_Frame3[OAM_DATA_SIZE(2)] = {
+    2,
+    OAM_ENTRY(-10, -16, OAM_DIMS_16x16, OAM_NO_FLIP, 0x243, 8, 0),
+    OAM_ENTRY(6, -16, OAM_DIMS_8x16, OAM_NO_FLIP, 0x245, 8, 0),
 };
 
-const u16 sZeelaOam_TurningEdgeLeft_Frame0[OAM_DATA_SIZE(3)] = {
-    0x3,
-    0xf3, OBJ_SIZE_16x16 | 0x1f4, OBJ_SPRITE_OAM | 0x22e,
-    OBJ_SHAPE_VERTICAL | 0xf3, 0x4, OBJ_SPRITE_OAM | 0x230,
-    0xeb, 0x1fc, OBJ_SPRITE_OAM | 0x20f
+static const u16 sZeelaOam_TurningEdgeLeft_Frame0[OAM_DATA_SIZE(3)] = {
+    3,
+    OAM_ENTRY(-12, -13, OAM_DIMS_16x16, OAM_NO_FLIP, 0x22e, 8, 0),
+    OAM_ENTRY(4, -13, OAM_DIMS_8x16, OAM_NO_FLIP, 0x230, 8, 0),
+    OAM_ENTRY(-4, -21, OAM_DIMS_8x8, OAM_NO_FLIP, 0x20f, 8, 0),
 };
 
-const u16 sZeelaOam_TurningEdgeLeft_Frame1[OAM_DATA_SIZE(3)] = {
-    0x3,
-    0xf1, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x21a,
-    OBJ_SHAPE_VERTICAL | 0xf1, 0x8, OBJ_SPRITE_OAM | 0x21c,
-    OBJ_SHAPE_HORIZONTAL | 0x1, 0x1f8, OBJ_SPRITE_OAM | 0x25a
+static const u16 sZeelaOam_TurningEdgeLeft_Frame1[OAM_DATA_SIZE(3)] = {
+    3,
+    OAM_ENTRY(-8, -15, OAM_DIMS_16x16, OAM_NO_FLIP, 0x21a, 8, 0),
+    OAM_ENTRY(8, -15, OAM_DIMS_8x16, OAM_NO_FLIP, 0x21c, 8, 0),
+    OAM_ENTRY(-8, 1, OAM_DIMS_16x8, OAM_NO_FLIP, 0x25a, 8, 0),
 };
 
-const u16 sZeelaOam_TurningEdgeLeft_Frame2[OAM_DATA_SIZE(3)] = {
-    0x3,
-    0xf3, OBJ_SIZE_16x16 | 0x1f7, OBJ_SPRITE_OAM | 0x21d,
-    OBJ_SHAPE_VERTICAL | 0xf3, 0x7, OBJ_SPRITE_OAM | 0x21f,
-    0x3, 0x1ff, OBJ_SPRITE_OAM | 0x25e
+static const u16 sZeelaOam_TurningEdgeLeft_Frame2[OAM_DATA_SIZE(3)] = {
+    3,
+    OAM_ENTRY(-9, -13, OAM_DIMS_16x16, OAM_NO_FLIP, 0x21d, 8, 0),
+    OAM_ENTRY(7, -13, OAM_DIMS_8x16, OAM_NO_FLIP, 0x21f, 8, 0),
+    OAM_ENTRY(-1, 3, OAM_DIMS_8x8, OAM_NO_FLIP, 0x25e, 8, 0),
 };
 
-const u16 sZeelaOam_OnWall_Frame0[OAM_DATA_SIZE(2)] = {
-    0x2,
-    0xf2, OBJ_SIZE_16x16 | 0x0, OBJ_SPRITE_OAM | 0x206,
-    OBJ_SHAPE_HORIZONTAL | 0x2, 0x0, OBJ_SPRITE_OAM | 0x246
+static const u16 sZeelaOam_OnWall_Frame0[OAM_DATA_SIZE(2)] = {
+    2,
+    OAM_ENTRY(0, -14, OAM_DIMS_16x16, OAM_NO_FLIP, 0x206, 8, 0),
+    OAM_ENTRY(0, 2, OAM_DIMS_16x8, OAM_NO_FLIP, 0x246, 8, 0),
 };
 
-const u16 sZeelaOam_OnWall_Frame1[OAM_DATA_SIZE(3)] = {
-    0x3,
-    0xf2, OBJ_SIZE_16x16 | 0x0, OBJ_SPRITE_OAM | 0x208,
-    OBJ_SHAPE_HORIZONTAL | 0x2, 0x0, OBJ_SPRITE_OAM | 0x248,
-    0x2, 0x10, OBJ_SPRITE_OAM | 0x267
+static const u16 sZeelaOam_OnWall_Frame1[OAM_DATA_SIZE(3)] = {
+    3,
+    OAM_ENTRY(0, -14, OAM_DIMS_16x16, OAM_NO_FLIP, 0x208, 8, 0),
+    OAM_ENTRY(0, 2, OAM_DIMS_16x8, OAM_NO_FLIP, 0x248, 8, 0),
+    OAM_ENTRY(16, 2, OAM_DIMS_8x8, OAM_NO_FLIP, 0x267, 8, 0),
 };
 
-const u16 sZeelaOam_OnWall_Frame2[OAM_DATA_SIZE(2)] = {
-    0x2,
-    0xf6, OBJ_SIZE_16x16 | 0x0, OBJ_SPRITE_OAM | 0x20a,
-    OBJ_SHAPE_HORIZONTAL | 0x6, 0x0, OBJ_SPRITE_OAM | 0x24a
+static const u16 sZeelaOam_OnWall_Frame2[OAM_DATA_SIZE(2)] = {
+    2,
+    OAM_ENTRY(0, -10, OAM_DIMS_16x16, OAM_NO_FLIP, 0x20a, 8, 0),
+    OAM_ENTRY(0, 6, OAM_DIMS_16x8, OAM_NO_FLIP, 0x24a, 8, 0),
 };
 
-const u16 sZeelaOam_OnWall_Frame3[OAM_DATA_SIZE(2)] = {
-    0x2,
-    0xf6, OBJ_SIZE_16x16 | 0x0, OBJ_SPRITE_OAM | 0x20c,
-    OBJ_SHAPE_HORIZONTAL | 0x6, 0x0, OBJ_SPRITE_OAM | 0x24c
+static const u16 sZeelaOam_OnWall_Frame3[OAM_DATA_SIZE(2)] = {
+    2,
+    OAM_ENTRY(0, -10, OAM_DIMS_16x16, OAM_NO_FLIP, 0x20c, 8, 0),
+    OAM_ENTRY(0, 6, OAM_DIMS_16x8, OAM_NO_FLIP, 0x24c, 8, 0),
 };
 
-const u16 sZeelaOam_TurningCornerRight_Frame0[OAM_DATA_SIZE(3)] = {
-    0x3,
-    0xf4, OBJ_SIZE_16x16 | 0x1f4, OBJ_SPRITE_OAM | 0x22e,
-    OBJ_SHAPE_VERTICAL | 0xf4, 0x4, OBJ_SPRITE_OAM | 0x230,
-    0xec, 0x1fc, OBJ_SPRITE_OAM | 0x20f
+static const u16 sZeelaOam_TurningCornerRight_Frame0[OAM_DATA_SIZE(3)] = {
+    3,
+    OAM_ENTRY(-12, -12, OAM_DIMS_16x16, OAM_NO_FLIP, 0x22e, 8, 0),
+    OAM_ENTRY(4, -12, OAM_DIMS_8x16, OAM_NO_FLIP, 0x230, 8, 0),
+    OAM_ENTRY(-4, -20, OAM_DIMS_8x8, OAM_NO_FLIP, 0x20f, 8, 0),
 };
 
-const u16 sZeelaOam_TurningCornerRight_Frame1[OAM_DATA_SIZE(3)] = {
-    0x3,
-    0xf0, OBJ_SIZE_16x16 | 0x1f4, OBJ_SPRITE_OAM | 0x21a,
-    OBJ_SHAPE_VERTICAL | 0xf0, 0x4, OBJ_SPRITE_OAM | 0x21c,
-    OBJ_SHAPE_HORIZONTAL | 0x0, 0x1f4, OBJ_SPRITE_OAM | 0x25a
+static const u16 sZeelaOam_TurningCornerRight_Frame1[OAM_DATA_SIZE(3)] = {
+    3,
+    OAM_ENTRY(-12, -16, OAM_DIMS_16x16, OAM_NO_FLIP, 0x21a, 8, 0),
+    OAM_ENTRY(4, -16, OAM_DIMS_8x16, OAM_NO_FLIP, 0x21c, 8, 0),
+    OAM_ENTRY(-12, 0, OAM_DIMS_16x8, OAM_NO_FLIP, 0x25a, 8, 0),
 };
 
-const u16 sZeelaOam_TurningCornerRight_Frame2[OAM_DATA_SIZE(3)] = {
-    0x3,
-    0xf0, OBJ_SIZE_16x16 | 0x1f2, OBJ_SPRITE_OAM | 0x21d,
-    OBJ_SHAPE_VERTICAL | 0xf0, 0x2, OBJ_SPRITE_OAM | 0x21f,
-    0x0, 0x1fa, OBJ_SPRITE_OAM | 0x25e
+static const u16 sZeelaOam_TurningCornerRight_Frame2[OAM_DATA_SIZE(3)] = {
+    3,
+    OAM_ENTRY(-14, -16, OAM_DIMS_16x16, OAM_NO_FLIP, 0x21d, 8, 0),
+    OAM_ENTRY(2, -16, OAM_DIMS_8x16, OAM_NO_FLIP, 0x21f, 8, 0),
+    OAM_ENTRY(-6, 0, OAM_DIMS_8x8, OAM_NO_FLIP, 0x25e, 8, 0),
 };
 
-const u16 sZeelaOam_TurningCornerLeft_Frame0[OAM_DATA_SIZE(3)] = {
-    0x3,
-    0xf2, OBJ_SIZE_16x16 | 0x1fa, OBJ_SPRITE_OAM | 0x21d,
-    OBJ_SHAPE_VERTICAL | 0xf2, 0xa, OBJ_SPRITE_OAM | 0x21f,
-    0x2, 0x2, OBJ_SPRITE_OAM | 0x25e
+static const u16 sZeelaOam_TurningCornerLeft_Frame0[OAM_DATA_SIZE(3)] = {
+    3,
+    OAM_ENTRY(-6, -14, OAM_DIMS_16x16, OAM_NO_FLIP, 0x21d, 8, 0),
+    OAM_ENTRY(10, -14, OAM_DIMS_8x16, OAM_NO_FLIP, 0x21f, 8, 0),
+    OAM_ENTRY(2, 2, OAM_DIMS_8x8, OAM_NO_FLIP, 0x25e, 8, 0),
 };
 
-const u16 sZeelaOam_TurningCornerLeft_Frame1[OAM_DATA_SIZE(3)] = {
-    0x3,
-    0xf1, OBJ_SIZE_16x16 | 0x1fb, OBJ_SPRITE_OAM | 0x21a,
-    OBJ_SHAPE_VERTICAL | 0xf1, 0xb, OBJ_SPRITE_OAM | 0x21c,
-    OBJ_SHAPE_HORIZONTAL | 0x1, 0x1fb, OBJ_SPRITE_OAM | 0x25a
+static const u16 sZeelaOam_TurningCornerLeft_Frame1[OAM_DATA_SIZE(3)] = {
+    3,
+    OAM_ENTRY(-5, -15, OAM_DIMS_16x16, OAM_NO_FLIP, 0x21a, 8, 0),
+    OAM_ENTRY(11, -15, OAM_DIMS_8x16, OAM_NO_FLIP, 0x21c, 8, 0),
+    OAM_ENTRY(-5, 1, OAM_DIMS_16x8, OAM_NO_FLIP, 0x25a, 8, 0),
 };
 
-const u16 sZeelaOam_TurningCornerLeft_Frame2[OAM_DATA_SIZE(3)] = {
-    0x3,
-    0xf5, OBJ_SIZE_16x16 | 0x1fa, OBJ_SPRITE_OAM | 0x22e,
-    OBJ_SHAPE_VERTICAL | 0xf5, 0xa, OBJ_SPRITE_OAM | 0x230,
-    0xed, 0x2, OBJ_SPRITE_OAM | 0x20f
+static const u16 sZeelaOam_TurningCornerLeft_Frame2[OAM_DATA_SIZE(3)] = {
+    3,
+    OAM_ENTRY(-6, -11, OAM_DIMS_16x16, OAM_NO_FLIP, 0x22e, 8, 0),
+    OAM_ENTRY(10, -11, OAM_DIMS_8x16, OAM_NO_FLIP, 0x230, 8, 0),
+    OAM_ENTRY(2, -19, OAM_DIMS_8x8, OAM_NO_FLIP, 0x20f, 8, 0),
 };
 
-const u16 sZeelaOam_WalkingOnSlope_Frame0[OAM_DATA_SIZE(3)] = {
-    0x3,
-    0xf2, OBJ_SIZE_16x16 | 0x1f2, OBJ_SPRITE_OAM | 0x22e,
-    OBJ_SHAPE_VERTICAL | 0xf2, 0x2, OBJ_SPRITE_OAM | 0x230,
-    0xea, 0x1fa, OBJ_SPRITE_OAM | 0x20f
+static const u16 sZeelaOam_WalkingOnSlope_Frame0[OAM_DATA_SIZE(3)] = {
+    3,
+    OAM_ENTRY(-14, -14, OAM_DIMS_16x16, OAM_NO_FLIP, 0x22e, 8, 0),
+    OAM_ENTRY(2, -14, OAM_DIMS_8x16, OAM_NO_FLIP, 0x230, 8, 0),
+    OAM_ENTRY(-6, -22, OAM_DIMS_8x8, OAM_NO_FLIP, 0x20f, 8, 0),
 };
 
-const u16 sZeelaOam_WalkingOnSlope_Frame1[OAM_DATA_SIZE(3)] = {
-    0x3,
-    0xf0, OBJ_SIZE_16x16 | 0x1f3, OBJ_SPRITE_OAM | 0x211,
-    OBJ_SHAPE_VERTICAL | 0xf0, 0x3, OBJ_SPRITE_OAM | 0x213,
-    OBJ_SHAPE_HORIZONTAL | 0x0, 0x1fb, OBJ_SPRITE_OAM | 0x252
+static const u16 sZeelaOam_WalkingOnSlope_Frame1[OAM_DATA_SIZE(3)] = {
+    3,
+    OAM_ENTRY(-13, -16, OAM_DIMS_16x16, OAM_NO_FLIP, 0x211, 8, 0),
+    OAM_ENTRY(3, -16, OAM_DIMS_8x16, OAM_NO_FLIP, 0x213, 8, 0),
+    OAM_ENTRY(-5, 0, OAM_DIMS_16x8, OAM_NO_FLIP, 0x252, 8, 0),
 };
 
-const u16 sZeelaOam_WalkingOnSlope_Frame2[OAM_DATA_SIZE(3)] = {
-    0x3,
-    0xf0, OBJ_SIZE_16x16 | 0x1f4, OBJ_SPRITE_OAM | 0x214,
-    OBJ_SHAPE_VERTICAL | 0xf0, 0x4, OBJ_SPRITE_OAM | 0x216,
-    OBJ_SHAPE_HORIZONTAL | 0x0, 0x1fc, OBJ_SPRITE_OAM | 0x255
+static const u16 sZeelaOam_WalkingOnSlope_Frame2[OAM_DATA_SIZE(3)] = {
+    3,
+    OAM_ENTRY(-12, -16, OAM_DIMS_16x16, OAM_NO_FLIP, 0x214, 8, 0),
+    OAM_ENTRY(4, -16, OAM_DIMS_8x16, OAM_NO_FLIP, 0x216, 8, 0),
+    OAM_ENTRY(-4, 0, OAM_DIMS_16x8, OAM_NO_FLIP, 0x255, 8, 0),
 };
 
-const u16 sZeelaOam_WalkingOnSlope_Frame3[OAM_DATA_SIZE(3)] = {
-    0x3,
-    0xf4, OBJ_SIZE_16x16 | 0x1f3, OBJ_SPRITE_OAM | 0x237,
-    OBJ_SHAPE_VERTICAL | 0xf4, 0x3, OBJ_SPRITE_OAM | 0x239,
-    0xec, 0x1fb, OBJ_SPRITE_OAM | 0x218
+static const u16 sZeelaOam_WalkingOnSlope_Frame3[OAM_DATA_SIZE(3)] = {
+    3,
+    OAM_ENTRY(-13, -12, OAM_DIMS_16x16, OAM_NO_FLIP, 0x237, 8, 0),
+    OAM_ENTRY(3, -12, OAM_DIMS_8x16, OAM_NO_FLIP, 0x239, 8, 0),
+    OAM_ENTRY(-5, -20, OAM_DIMS_8x8, OAM_NO_FLIP, 0x218, 8, 0),
 };
 
-const u16 sZeelaOam_FallingOnGround_Frame0[OAM_DATA_SIZE(3)] = {
-    0x3,
-    OBJ_SHAPE_HORIZONTAL | 0xef, 0x1f7, OBJ_SPRITE_OAM | 0x268,
-    0xf0, OBJ_SIZE_16x16 | 0x1f2, OBJ_SPRITE_OAM | 0x200,
-    OBJ_SHAPE_VERTICAL | 0xf0, 0x2, OBJ_SPRITE_OAM | 0x202
+static const u16 sZeelaOam_FallingOnGround_Frame0[OAM_DATA_SIZE(3)] = {
+    3,
+    OAM_ENTRY(-9, -17, OAM_DIMS_16x8, OAM_NO_FLIP, 0x268, 8, 0),
+    OAM_ENTRY(-14, -16, OAM_DIMS_16x16, OAM_NO_FLIP, 0x200, 8, 0),
+    OAM_ENTRY(2, -16, OAM_DIMS_8x16, OAM_NO_FLIP, 0x202, 8, 0),
 };
 
-const u16 sZeelaOam_FallingOnGround_Frame1[OAM_DATA_SIZE(4)] = {
-    0x4,
-    OBJ_SHAPE_HORIZONTAL | 0xf0, 0x1f7, OBJ_SPRITE_OAM | 0x26a,
-    0xf0, OBJ_SIZE_16x16 | 0x1f2, OBJ_SPRITE_OAM | 0x203,
-    OBJ_SHAPE_VERTICAL | 0xf0, 0x2, OBJ_SPRITE_OAM | 0x205,
-    0xe8, 0x2, OBJ_SPRITE_OAM | 0x266
+static const u16 sZeelaOam_FallingOnGround_Frame1[OAM_DATA_SIZE(4)] = {
+    4,
+    OAM_ENTRY(-9, -16, OAM_DIMS_16x8, OAM_NO_FLIP, 0x26a, 8, 0),
+    OAM_ENTRY(-14, -16, OAM_DIMS_16x16, OAM_NO_FLIP, 0x203, 8, 0),
+    OAM_ENTRY(2, -16, OAM_DIMS_8x16, OAM_NO_FLIP, 0x205, 8, 0),
+    OAM_ENTRY(2, -24, OAM_DIMS_8x8, OAM_NO_FLIP, 0x266, 8, 0),
 };
 
-const u16 sZeelaOam_FallingOnGround_Frame2[OAM_DATA_SIZE(3)] = {
-    0x3,
-    OBJ_SHAPE_HORIZONTAL | 0xf0, 0x1f8, OBJ_SPRITE_OAM | 0x274,
-    0xf0, OBJ_SIZE_16x16 | 0x1f6, OBJ_SPRITE_OAM | 0x240,
-    OBJ_SHAPE_VERTICAL | 0xf0, 0x6, OBJ_SPRITE_OAM | 0x242
+static const u16 sZeelaOam_FallingOnGround_Frame2[OAM_DATA_SIZE(3)] = {
+    3,
+    OAM_ENTRY(-8, -16, OAM_DIMS_16x8, OAM_NO_FLIP, 0x274, 8, 0),
+    OAM_ENTRY(-10, -16, OAM_DIMS_16x16, OAM_NO_FLIP, 0x240, 8, 0),
+    OAM_ENTRY(6, -16, OAM_DIMS_8x16, OAM_NO_FLIP, 0x242, 8, 0),
 };
 
-const u16 sZeelaOam_FallingOnGround_Frame3[OAM_DATA_SIZE(3)] = {
-    0x3,
-    OBJ_SHAPE_HORIZONTAL | 0xf0, 0x1f8, OBJ_SPRITE_OAM | 0x276,
-    0xf0, OBJ_SIZE_16x16 | 0x1f6, OBJ_SPRITE_OAM | 0x243,
-    OBJ_SHAPE_VERTICAL | 0xf0, 0x6, OBJ_SPRITE_OAM | 0x245
+static const u16 sZeelaOam_FallingOnGround_Frame3[OAM_DATA_SIZE(3)] = {
+    3,
+    OAM_ENTRY(-8, -16, OAM_DIMS_16x8, OAM_NO_FLIP, 0x276, 8, 0),
+    OAM_ENTRY(-10, -16, OAM_DIMS_16x16, OAM_NO_FLIP, 0x243, 8, 0),
+    OAM_ENTRY(6, -16, OAM_DIMS_8x16, OAM_NO_FLIP, 0x245, 8, 0),
 };
 
-const u16 sZeelaOam_FallingOnGround_Frame4[OAM_DATA_SIZE(3)] = {
-    0x3,
-    OBJ_SHAPE_HORIZONTAL | 0xef, 0x1f7, OBJ_SPRITE_OAM | 0x270,
-    0xf0, OBJ_SIZE_16x16 | 0x1f2, OBJ_SPRITE_OAM | 0x200,
-    OBJ_SHAPE_VERTICAL | 0xf0, 0x2, OBJ_SPRITE_OAM | 0x202
+static const u16 sZeelaOam_FallingOnGround_Frame4[OAM_DATA_SIZE(3)] = {
+    3,
+    OAM_ENTRY(-9, -17, OAM_DIMS_16x8, OAM_NO_FLIP, 0x270, 8, 0),
+    OAM_ENTRY(-14, -16, OAM_DIMS_16x16, OAM_NO_FLIP, 0x200, 8, 0),
+    OAM_ENTRY(2, -16, OAM_DIMS_8x16, OAM_NO_FLIP, 0x202, 8, 0),
 };
 
-const u16 sZeelaOam_FallingOnGround_Frame5[OAM_DATA_SIZE(4)] = {
-    0x4,
-    OBJ_SHAPE_HORIZONTAL | 0xf0, 0x1f7, OBJ_SPRITE_OAM | 0x272,
-    0xf0, OBJ_SIZE_16x16 | 0x1f2, OBJ_SPRITE_OAM | 0x203,
-    OBJ_SHAPE_VERTICAL | 0xf0, 0x2, OBJ_SPRITE_OAM | 0x205,
-    0xe8, 0x2, OBJ_SPRITE_OAM | 0x266
+static const u16 sZeelaOam_FallingOnGround_Frame5[OAM_DATA_SIZE(4)] = {
+    4,
+    OAM_ENTRY(-9, -16, OAM_DIMS_16x8, OAM_NO_FLIP, 0x272, 8, 0),
+    OAM_ENTRY(-14, -16, OAM_DIMS_16x16, OAM_NO_FLIP, 0x203, 8, 0),
+    OAM_ENTRY(2, -16, OAM_DIMS_8x16, OAM_NO_FLIP, 0x205, 8, 0),
+    OAM_ENTRY(2, -24, OAM_DIMS_8x8, OAM_NO_FLIP, 0x266, 8, 0),
 };
 
-const u16 sZeelaOam_FallingOnGround_Frame6[OAM_DATA_SIZE(3)] = {
-    0x3,
-    OBJ_SHAPE_HORIZONTAL | 0xf0, 0x1f8, OBJ_SPRITE_OAM | 0x26c,
-    0xf0, OBJ_SIZE_16x16 | 0x1f6, OBJ_SPRITE_OAM | 0x240,
-    OBJ_SHAPE_VERTICAL | 0xf0, 0x6, OBJ_SPRITE_OAM | 0x242
+static const u16 sZeelaOam_FallingOnGround_Frame6[OAM_DATA_SIZE(3)] = {
+    3,
+    OAM_ENTRY(-8, -16, OAM_DIMS_16x8, OAM_NO_FLIP, 0x26c, 8, 0),
+    OAM_ENTRY(-10, -16, OAM_DIMS_16x16, OAM_NO_FLIP, 0x240, 8, 0),
+    OAM_ENTRY(6, -16, OAM_DIMS_8x16, OAM_NO_FLIP, 0x242, 8, 0),
 };
 
-const u16 sZeelaOam_FallingOnGround_Frame7[OAM_DATA_SIZE(3)] = {
-    0x3,
-    OBJ_SHAPE_HORIZONTAL | 0xf0, 0x1f8, OBJ_SPRITE_OAM | 0x26e,
-    0xf0, OBJ_SIZE_16x16 | 0x1f6, OBJ_SPRITE_OAM | 0x243,
-    OBJ_SHAPE_VERTICAL | 0xf0, 0x6, OBJ_SPRITE_OAM | 0x245
+static const u16 sZeelaOam_FallingOnGround_Frame7[OAM_DATA_SIZE(3)] = {
+    3,
+    OAM_ENTRY(-8, -16, OAM_DIMS_16x8, OAM_NO_FLIP, 0x26e, 8, 0),
+    OAM_ENTRY(-10, -16, OAM_DIMS_16x16, OAM_NO_FLIP, 0x243, 8, 0),
+    OAM_ENTRY(6, -16, OAM_DIMS_8x16, OAM_NO_FLIP, 0x245, 8, 0),
 };
 
-const u16 sZeelaOam_FallingOnWall_Frame0[OAM_DATA_SIZE(4)] = {
-    0x4,
-    0xf7, 0x9, OBJ_SPRITE_OAM | 0x279,
-    0x0, 0x9, OBJ_SPRITE_OAM | 0x279,
-    0xf2, OBJ_SIZE_16x16 | 0x0, OBJ_SPRITE_OAM | 0x206,
-    OBJ_SHAPE_HORIZONTAL | 0x2, 0x0, OBJ_SPRITE_OAM | 0x246
+static const u16 sZeelaOam_FallingOnWall_Frame0[OAM_DATA_SIZE(4)] = {
+    4,
+    OAM_ENTRY(9, -9, OAM_DIMS_8x8, OAM_NO_FLIP, 0x279, 8, 0),
+    OAM_ENTRY(9, 0, OAM_DIMS_8x8, OAM_NO_FLIP, 0x279, 8, 0),
+    OAM_ENTRY(0, -14, OAM_DIMS_16x16, OAM_NO_FLIP, 0x206, 8, 0),
+    OAM_ENTRY(0, 2, OAM_DIMS_16x8, OAM_NO_FLIP, 0x246, 8, 0),
 };
 
-const u16 sZeelaOam_FallingOnWall_Frame1[OAM_DATA_SIZE(5)] = {
-    0x5,
-    0xf7, 0x8, OBJ_SPRITE_OAM | 0x27a,
-    0x0, 0xa, OBJ_SPRITE_OAM | 0x27a,
-    0xf2, OBJ_SIZE_16x16 | 0x0, OBJ_SPRITE_OAM | 0x208,
-    OBJ_SHAPE_HORIZONTAL | 0x2, 0x0, OBJ_SPRITE_OAM | 0x248,
-    0x2, 0x10, OBJ_SPRITE_OAM | 0x267
+static const u16 sZeelaOam_FallingOnWall_Frame1[OAM_DATA_SIZE(5)] = {
+    5,
+    OAM_ENTRY(8, -9, OAM_DIMS_8x8, OAM_NO_FLIP, 0x27a, 8, 0),
+    OAM_ENTRY(10, 0, OAM_DIMS_8x8, OAM_NO_FLIP, 0x27a, 8, 0),
+    OAM_ENTRY(0, -14, OAM_DIMS_16x16, OAM_NO_FLIP, 0x208, 8, 0),
+    OAM_ENTRY(0, 2, OAM_DIMS_16x8, OAM_NO_FLIP, 0x248, 8, 0),
+    OAM_ENTRY(16, 2, OAM_DIMS_8x8, OAM_NO_FLIP, 0x267, 8, 0),
 };
 
-const u16 sZeelaOam_FallingOnWall_Frame2[OAM_DATA_SIZE(4)] = {
-    0x4,
-    0xf8, 0x8, OBJ_SPRITE_OAM | 0x27e,
-    0x1, 0x9, OBJ_SPRITE_OAM | 0x27e,
-    0xf6, OBJ_SIZE_16x16 | 0x0, OBJ_SPRITE_OAM | 0x20a,
-    OBJ_SHAPE_HORIZONTAL | 0x6, 0x0, OBJ_SPRITE_OAM | 0x24a
+static const u16 sZeelaOam_FallingOnWall_Frame2[OAM_DATA_SIZE(4)] = {
+    4,
+    OAM_ENTRY(8, -8, OAM_DIMS_8x8, OAM_NO_FLIP, 0x27e, 8, 0),
+    OAM_ENTRY(9, 1, OAM_DIMS_8x8, OAM_NO_FLIP, 0x27e, 8, 0),
+    OAM_ENTRY(0, -10, OAM_DIMS_16x16, OAM_NO_FLIP, 0x20a, 8, 0),
+    OAM_ENTRY(0, 6, OAM_DIMS_16x8, OAM_NO_FLIP, 0x24a, 8, 0),
 };
 
-const u16 sZeelaOam_FallingOnWall_Frame3[OAM_DATA_SIZE(4)] = {
-    0x4,
-    0xf8, 0x9, OBJ_SPRITE_OAM | 0x27d,
-    0x1, 0x8, OBJ_SPRITE_OAM | 0x27d,
-    0xf6, OBJ_SIZE_16x16 | 0x0, OBJ_SPRITE_OAM | 0x20c,
-    OBJ_SHAPE_HORIZONTAL | 0x6, 0x0, OBJ_SPRITE_OAM | 0x24c
+static const u16 sZeelaOam_FallingOnWall_Frame3[OAM_DATA_SIZE(4)] = {
+    4,
+    OAM_ENTRY(9, -8, OAM_DIMS_8x8, OAM_NO_FLIP, 0x27d, 8, 0),
+    OAM_ENTRY(8, 1, OAM_DIMS_8x8, OAM_NO_FLIP, 0x27d, 8, 0),
+    OAM_ENTRY(0, -10, OAM_DIMS_16x16, OAM_NO_FLIP, 0x20c, 8, 0),
+    OAM_ENTRY(0, 6, OAM_DIMS_16x8, OAM_NO_FLIP, 0x24c, 8, 0),
 };
 
-const u16 sZeelaOam_FallingOnWall_Frame4[OAM_DATA_SIZE(4)] = {
-    0x4,
-    0xf7, 0x9, OBJ_SPRITE_OAM | 0x27c,
-    0x0, 0x9, OBJ_SPRITE_OAM | 0x27c,
-    0xf2, OBJ_SIZE_16x16 | 0x0, OBJ_SPRITE_OAM | 0x206,
-    OBJ_SHAPE_HORIZONTAL | 0x2, 0x0, OBJ_SPRITE_OAM | 0x246
+static const u16 sZeelaOam_FallingOnWall_Frame4[OAM_DATA_SIZE(4)] = {
+    4,
+    OAM_ENTRY(9, -9, OAM_DIMS_8x8, OAM_NO_FLIP, 0x27c, 8, 0),
+    OAM_ENTRY(9, 0, OAM_DIMS_8x8, OAM_NO_FLIP, 0x27c, 8, 0),
+    OAM_ENTRY(0, -14, OAM_DIMS_16x16, OAM_NO_FLIP, 0x206, 8, 0),
+    OAM_ENTRY(0, 2, OAM_DIMS_16x8, OAM_NO_FLIP, 0x246, 8, 0),
 };
 
-const u16 sZeelaOam_FallingOnWall_Frame5[OAM_DATA_SIZE(5)] = {
-    0x5,
-    0xf7, 0x8, OBJ_SPRITE_OAM | 0x27d,
-    0x0, 0xa, OBJ_SPRITE_OAM | 0x27d,
-    0xf2, OBJ_SIZE_16x16 | 0x0, OBJ_SPRITE_OAM | 0x208,
-    OBJ_SHAPE_HORIZONTAL | 0x2, 0x0, OBJ_SPRITE_OAM | 0x248,
-    0x2, 0x10, OBJ_SPRITE_OAM | 0x267
+static const u16 sZeelaOam_FallingOnWall_Frame5[OAM_DATA_SIZE(5)] = {
+    5,
+    OAM_ENTRY(8, -9, OAM_DIMS_8x8, OAM_NO_FLIP, 0x27d, 8, 0),
+    OAM_ENTRY(10, 0, OAM_DIMS_8x8, OAM_NO_FLIP, 0x27d, 8, 0),
+    OAM_ENTRY(0, -14, OAM_DIMS_16x16, OAM_NO_FLIP, 0x208, 8, 0),
+    OAM_ENTRY(0, 2, OAM_DIMS_16x8, OAM_NO_FLIP, 0x248, 8, 0),
+    OAM_ENTRY(16, 2, OAM_DIMS_8x8, OAM_NO_FLIP, 0x267, 8, 0),
 };
 
-const u16 sZeelaOam_FallingOnWall_Frame6[OAM_DATA_SIZE(4)] = {
-    0x4,
-    0xf8, 0x8, OBJ_SPRITE_OAM | 0x27b,
-    0x1, 0x9, OBJ_SPRITE_OAM | 0x27b,
-    0xf6, OBJ_SIZE_16x16 | 0x0, OBJ_SPRITE_OAM | 0x20a,
-    OBJ_SHAPE_HORIZONTAL | 0x6, 0x0, OBJ_SPRITE_OAM | 0x24a
+static const u16 sZeelaOam_FallingOnWall_Frame6[OAM_DATA_SIZE(4)] = {
+    4,
+    OAM_ENTRY(8, -8, OAM_DIMS_8x8, OAM_NO_FLIP, 0x27b, 8, 0),
+    OAM_ENTRY(9, 1, OAM_DIMS_8x8, OAM_NO_FLIP, 0x27b, 8, 0),
+    OAM_ENTRY(0, -10, OAM_DIMS_16x16, OAM_NO_FLIP, 0x20a, 8, 0),
+    OAM_ENTRY(0, 6, OAM_DIMS_16x8, OAM_NO_FLIP, 0x24a, 8, 0),
 };
 
-const u16 sZeelaOam_FallingOnWall_Frame7[OAM_DATA_SIZE(4)] = {
-    0x4,
-    0xf8, 0x9, OBJ_SPRITE_OAM | 0x27a,
-    0x1, 0x8, OBJ_SPRITE_OAM | 0x27a,
-    0xf6, OBJ_SIZE_16x16 | 0x0, OBJ_SPRITE_OAM | 0x20c,
-    OBJ_SHAPE_HORIZONTAL | 0x6, 0x0, OBJ_SPRITE_OAM | 0x24c
+static const u16 sZeelaOam_FallingOnWall_Frame7[OAM_DATA_SIZE(4)] = {
+    4,
+    OAM_ENTRY(9, -8, OAM_DIMS_8x8, OAM_NO_FLIP, 0x27a, 8, 0),
+    OAM_ENTRY(8, 1, OAM_DIMS_8x8, OAM_NO_FLIP, 0x27a, 8, 0),
+    OAM_ENTRY(0, -10, OAM_DIMS_16x16, OAM_NO_FLIP, 0x20c, 8, 0),
+    OAM_ENTRY(0, 6, OAM_DIMS_16x8, OAM_NO_FLIP, 0x24c, 8, 0),
 };
 
-const u16 sZeelaEyesOAM_Idle_Frame0[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xfb, 0x1fc, OBJ_SPRITE_OAM | 0x27f
+static const u16 sZeelaEyesOam_Idle_Frame0[OAM_DATA_SIZE(1)] = {
+    1,
+    OAM_ENTRY(-4, -5, OAM_DIMS_8x8, OAM_NO_FLIP, 0x27f, 8, 0),
 };
 
-const u16 sZeelaEyesOAM_Spinning_Unused_Frame0[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xfb, 0x1fc, OBJ_SPRITE_OAM | 0x268
+static const u16 sZeelaEyesOam_Spinning_Unused_Frame0[OAM_DATA_SIZE(1)] = {
+    1,
+    OAM_ENTRY(-4, -5, OAM_DIMS_8x8, OAM_NO_FLIP, 0x268, 8, 0),
 };
 
-const u16 sZeelaEyesOAM_Spinning_Unused_Frame1[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xfb, 0x1fc, OBJ_SPRITE_OAM | 0x270
+static const u16 sZeelaEyesOam_Spinning_Unused_Frame1[OAM_DATA_SIZE(1)] = {
+    1,
+    OAM_ENTRY(-4, -5, OAM_DIMS_8x8, OAM_NO_FLIP, 0x270, 8, 0),
 };
 
-const u16 sZeelaEyesOAM_Exploding_Frame0[OAM_DATA_SIZE(4)] = {
-    0x4,
-    0xf8, 0x1f8, OBJ_SPRITE_OAM | 0x25c,
-    0xf8, OBJ_X_FLIP | OBJ_Y_FLIP | 0x0, OBJ_SPRITE_OAM | 0x25c,
-    0x0, OBJ_Y_FLIP | 0x0, OBJ_SPRITE_OAM | 0x25c,
-    0x0, OBJ_X_FLIP | 0x1f8, OBJ_SPRITE_OAM | 0x25c
+static const u16 sZeelaEyesOam_Exploding_Frame0[OAM_DATA_SIZE(4)] = {
+    4,
+    OAM_ENTRY(-8, -8, OAM_DIMS_8x8, OAM_NO_FLIP, 0x25c, 8, 0),
+    OAM_ENTRY(0, -8, OAM_DIMS_8x8, OAM_XY_FLIP, 0x25c, 8, 0),
+    OAM_ENTRY(0, 0, OAM_DIMS_8x8, OAM_Y_FLIP, 0x25c, 8, 0),
+    OAM_ENTRY(-8, 0, OAM_DIMS_8x8, OAM_X_FLIP, 0x25c, 8, 0),
 };
 
-const u16 sZeelaEyesOAM_Exploding_Frame1[OAM_DATA_SIZE(4)] = {
-    0x4,
-    0xf5, 0x1f5, OBJ_SPRITE_OAM | 0x25d,
-    0xf5, OBJ_Y_FLIP | 0x3, OBJ_SPRITE_OAM | 0x25d,
-    0x3, 0x3, OBJ_SPRITE_OAM | 0x25d,
-    0x3, OBJ_Y_FLIP | 0x1f5, OBJ_SPRITE_OAM | 0x25d
+static const u16 sZeelaEyesOam_Exploding_Frame1[OAM_DATA_SIZE(4)] = {
+    4,
+    OAM_ENTRY(-11, -11, OAM_DIMS_8x8, OAM_NO_FLIP, 0x25d, 8, 0),
+    OAM_ENTRY(3, -11, OAM_DIMS_8x8, OAM_Y_FLIP, 0x25d, 8, 0),
+    OAM_ENTRY(3, 3, OAM_DIMS_8x8, OAM_NO_FLIP, 0x25d, 8, 0),
+    OAM_ENTRY(-11, 3, OAM_DIMS_8x8, OAM_Y_FLIP, 0x25d, 8, 0),
 };
 
-const u16 sZeelaEyesOAM_Exploding_Frame2[OAM_DATA_SIZE(4)] = {
-    0x4,
-    0xf3, 0x1f3, OBJ_SPRITE_OAM | 0x25f,
-    0xf3, OBJ_X_FLIP | OBJ_Y_FLIP | 0x5, OBJ_SPRITE_OAM | 0x25f,
-    0x5, OBJ_X_FLIP | OBJ_Y_FLIP | 0x5, OBJ_SPRITE_OAM | 0x25f,
-    0x5, 0x1f3, OBJ_SPRITE_OAM | 0x25f
+static const u16 sZeelaEyesOam_Exploding_Frame2[OAM_DATA_SIZE(4)] = {
+    4,
+    OAM_ENTRY(-13, -13, OAM_DIMS_8x8, OAM_NO_FLIP, 0x25f, 8, 0),
+    OAM_ENTRY(5, -13, OAM_DIMS_8x8, OAM_XY_FLIP, 0x25f, 8, 0),
+    OAM_ENTRY(5, 5, OAM_DIMS_8x8, OAM_XY_FLIP, 0x25f, 8, 0),
+    OAM_ENTRY(-13, 5, OAM_DIMS_8x8, OAM_NO_FLIP, 0x25f, 8, 0),
 };
 
 const struct FrameData sZeelaOam_OnGround[5] = {
@@ -512,45 +512,45 @@ const struct FrameData sZeelaOam_FallingOnWall[9] = {
     [8] = FRAME_DATA_TERMINATOR
 };
 
-const struct FrameData sZeelaEyesOAM_Idle[2] = {
+const struct FrameData sZeelaEyesOam_Idle[2] = {
     [0] = {
-        .pFrame = sZeelaEyesOAM_Idle_Frame0,
+        .pFrame = sZeelaEyesOam_Idle_Frame0,
         .timer = UCHAR_MAX
     },
     [1] = FRAME_DATA_TERMINATOR
 };
 
-const struct FrameData sZeelaEyesOAM_Spinning_Unused[5] = {
+const struct FrameData sZeelaEyesOam_Spinning_Unused[5] = {
     [0] = {
-        .pFrame = sZeelaEyesOAM_Spinning_Unused_Frame0,
+        .pFrame = sZeelaEyesOam_Spinning_Unused_Frame0,
         .timer = CONVERT_SECONDS(1.f / 12)
     },
     [1] = {
-        .pFrame = sZeelaEyesOAM_Spinning_Unused_Frame1,
+        .pFrame = sZeelaEyesOam_Spinning_Unused_Frame1,
         .timer = CONVERT_SECONDS(0.2f)
     },
     [2] = {
-        .pFrame = sZeelaEyesOAM_Spinning_Unused_Frame0,
+        .pFrame = sZeelaEyesOam_Spinning_Unused_Frame0,
         .timer = CONVERT_SECONDS(1.f / 12)
     },
     [3] = {
-        .pFrame = sZeelaEyesOAM_Idle_Frame0,
+        .pFrame = sZeelaEyesOam_Idle_Frame0,
         .timer = CONVERT_SECONDS(1.f / 6)
     },
     [4] = FRAME_DATA_TERMINATOR
 };
 
-const struct FrameData sZeelaEyesOAM_Exploding[4] = {
+const struct FrameData sZeelaEyesOam_Exploding[4] = {
     [0] = {
-        .pFrame = sZeelaEyesOAM_Exploding_Frame0,
+        .pFrame = sZeelaEyesOam_Exploding_Frame0,
         .timer = CONVERT_SECONDS(0.05f)
     },
     [1] = {
-        .pFrame = sZeelaEyesOAM_Exploding_Frame1,
+        .pFrame = sZeelaEyesOam_Exploding_Frame1,
         .timer = CONVERT_SECONDS(0.05f)
     },
     [2] = {
-        .pFrame = sZeelaEyesOAM_Exploding_Frame2,
+        .pFrame = sZeelaEyesOam_Exploding_Frame2,
         .timer = CONVERT_SECONDS(0.05f)
     },
     [3] = FRAME_DATA_TERMINATOR

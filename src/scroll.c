@@ -2,7 +2,13 @@
 #include "gba.h"
 
 #include "data/clipdata_data.h"
-#include "data/engine_pointers.h"
+#include "data/rooms/brinstar_rooms_data.h"
+#include "data/rooms/kraid_rooms_data.h"
+#include "data/rooms/norfair_rooms_data.h"
+#include "data/rooms/ridley_rooms_data.h"
+#include "data/rooms/tourian_rooms_data.h"
+#include "data/rooms/crateria_rooms_data.h"
+#include "data/rooms/chozodia_rooms_data.h"
 
 #include "constants/game_state.h"
 #include "constants/samus.h"
@@ -14,6 +20,217 @@
 #include "structs/color_effects.h"
 #include "structs/samus.h"
 #include "structs/room.h"
+
+static const u8* sScrollPointer_Empty[] = {
+    sScroll_Empty
+};
+
+static const u8* sBrinstarScrolls[] = {
+    sBrinstar_0_Scrolls,
+    sBrinstar_1_Scrolls,
+    sBrinstar_2_Scrolls,
+    sBrinstar_3_Scrolls,
+    sBrinstar_4_Scrolls,
+    sBrinstar_5_Scrolls,
+    sBrinstar_6_Scrolls,
+    sBrinstar_7_Scrolls,
+    sBrinstar_8_Scrolls,
+    sBrinstar_9_Scrolls,
+    sBrinstar_10_Scrolls,
+    sBrinstar_11_Scrolls,
+    sBrinstar_12_Scrolls,
+    sBrinstar_13_Scrolls,
+    sBrinstar_14_Scrolls,
+    sBrinstar_15_Scrolls,
+    sBrinstar_16_Scrolls,
+    sBrinstar_17_Scrolls,
+    sBrinstar_18_Scrolls,
+    sScroll_Empty
+};
+
+static const u8* sKraidScrolls[] = {
+    sKraid_0_Scrolls,
+    sKraid_1_Scrolls,
+    sKraid_2_Scrolls,
+    sKraid_3_Scrolls,
+    sKraid_4_Scrolls,
+    sKraid_5_Scrolls,
+    sKraid_6_Scrolls,
+    sKraid_7_Scrolls,
+    sKraid_8_Scrolls,
+    sKraid_9_Scrolls,
+    sKraid_10_Scrolls,
+    sScroll_Empty
+};
+
+static const u8* sNorfairScrolls[] = {
+    sNorfair_0_Scrolls,
+    sNorfair_1_Scrolls,
+    sNorfair_2_Scrolls,
+    sNorfair_3_Scrolls,
+    sNorfair_4_Scrolls,
+    sNorfair_5_Scrolls,
+    sNorfair_6_Scrolls,
+    sNorfair_7_Scrolls,
+    sNorfair_8_Scrolls,
+    sNorfair_9_Scrolls,
+    sNorfair_10_Scrolls,
+    sNorfair_11_Scrolls,
+    sNorfair_12_Scrolls,
+    sNorfair_13_Scrolls,
+    sNorfair_14_Scrolls,
+    sNorfair_15_Scrolls,
+    sNorfair_16_Scrolls,
+    sScroll_Empty
+};
+
+static const u8* sRidleyScrolls[] = {
+    sRidley_0_Scrolls,
+    sRidley_1_Scrolls,
+    sRidley_2_Scrolls,
+    sRidley_3_Scrolls,
+    sRidley_4_Scrolls,
+    sRidley_5_Scrolls,
+    sRidley_6_Scrolls,
+    sRidley_7_Scrolls,
+    sRidley_8_Scrolls,
+    sRidley_9_Scrolls,
+    sRidley_10_Scrolls,
+    sRidley_11_Scrolls,
+    sRidley_12_Scrolls,
+    sRidley_13_Scrolls,
+    sScroll_Empty
+};
+
+static const u8* sTourianScrolls[] = {
+    sTourian_0_Scrolls,
+    sTourian_1_Scrolls,
+    sTourian_2_Scrolls,
+    sTourian_3_Scrolls,
+    sTourian_4_Scrolls,
+    sTourian_5_Scrolls,
+    sScroll_Empty
+};
+
+static const u8* sCrateriaScrolls[] = {
+    sCrateria_0_Scrolls,
+    sCrateria_1_Scrolls,
+    sCrateria_2_Scrolls,
+    sCrateria_3_Scrolls,
+    sCrateria_4_Scrolls,
+    sCrateria_5_Scrolls,
+    sCrateria_6_Scrolls,
+    sCrateria_7_Scrolls,
+    sCrateria_8_Scrolls,
+    sCrateria_9_Scrolls,
+    sCrateria_10_Scrolls,
+    sScroll_Empty
+};
+
+static const u8* sChozodiaScrolls[] = {
+    sChozodia_0_Scrolls,
+    sChozodia_1_Scrolls,
+    sChozodia_2_Scrolls,
+    sChozodia_3_Scrolls,
+    sChozodia_4_Scrolls,
+    sChozodia_5_Scrolls,
+    sChozodia_6_Scrolls,
+    sChozodia_7_Scrolls,
+    sChozodia_8_Scrolls,
+    sChozodia_9_Scrolls,
+    sChozodia_10_Scrolls,
+    sChozodia_11_Scrolls,
+    sChozodia_12_Scrolls,
+    sChozodia_13_Scrolls,
+    sChozodia_14_Scrolls,
+    sChozodia_15_Scrolls,
+    sChozodia_16_Scrolls,
+    sChozodia_17_Scrolls,
+    sChozodia_18_Scrolls,
+    sChozodia_19_Scrolls,
+    sChozodia_20_Scrolls,
+    sChozodia_21_Scrolls,
+    sChozodia_22_Scrolls,
+    sChozodia_23_Scrolls,
+    sChozodia_24_Scrolls,
+    sChozodia_25_Scrolls,
+    sChozodia_26_Scrolls,
+    sChozodia_27_Scrolls,
+    sChozodia_28_Scrolls,
+    sChozodia_29_Scrolls,
+    sChozodia_30_Scrolls,
+    sChozodia_31_Scrolls,
+    sChozodia_32_Scrolls,
+    sChozodia_33_Scrolls,
+    sChozodia_34_Scrolls,
+    sChozodia_35_Scrolls,
+    sChozodia_36_Scrolls,
+    sChozodia_37_Scrolls,
+    sChozodia_38_Scrolls,
+    sChozodia_39_Scrolls,
+    sChozodia_40_Scrolls,
+    sChozodia_41_Scrolls,
+    sChozodia_42_Scrolls,
+    sChozodia_43_Scrolls,
+    sChozodia_44_Scrolls,
+    sChozodia_45_Scrolls,
+    sChozodia_46_Scrolls,
+    sChozodia_47_Scrolls,
+    sChozodia_48_Scrolls,
+    sChozodia_49_Scrolls,
+    sChozodia_50_Scrolls,
+    sChozodia_51_Scrolls,
+    sChozodia_52_Scrolls,
+    sChozodia_53_Scrolls,
+    sChozodia_54_Scrolls,
+    sChozodia_55_Scrolls,
+    sChozodia_56_Scrolls,
+    sChozodia_57_Scrolls,
+    sChozodia_58_Scrolls,
+    sChozodia_59_Scrolls,
+    sScroll_Empty
+};
+
+static const u8** sAreaScrollPointers[AREA_COUNT] = {
+    [AREA_BRINSTAR] = sBrinstarScrolls,
+    [AREA_KRAID] = sKraidScrolls,
+    [AREA_NORFAIR] = sNorfairScrolls,
+    [AREA_RIDLEY] = sRidleyScrolls,
+    [AREA_TOURIAN] = sTourianScrolls,
+    [AREA_CRATERIA] = sCrateriaScrolls,
+    [AREA_CHOZODIA] = sChozodiaScrolls,
+    [AREA_TEST] = sScrollPointer_Empty,
+    [AREA_TEST_1] = sScrollPointer_Empty,
+    [AREA_TEST_2] = sScrollPointer_Empty,
+    [AREA_TEST_3] = sScrollPointer_Empty
+};
+
+static s8 sWaterLoopCounterArray[8][2] = {
+    [0] = {
+        0, 9
+    },
+    [1] = {
+        1, 9
+    },
+    [2] = {
+        2, 21
+    },
+    [3] = {
+        1, 9
+    },
+    [4] = {
+        0, 9
+    },
+    [5] = {
+        -1, 12
+    },
+    [6] = {
+        -2, 99
+    },
+    [7] = {
+        -1, 12
+    }
+};
 
 /**
  * @brief 582c4 | 64 | Processes the current scrolls
@@ -70,7 +287,7 @@ void ScrollScreen(u16 screenX, u16 screenY)
     gCamera.xPosition = screenX;
     gCamera.yPosition = screenY;
 
-    if (gGameModeSub1 == 0)
+    if (gSubGameMode1 == 0)
         return;
 
     // Check needs to scroll
@@ -197,7 +414,7 @@ s32 ScrollProcessY(struct Scroll* pScroll, struct Coordinates* pCoords)
  */
 void ScrollLoad(void)
 {
-    const u8* const * ppSrc;
+    const u8** ppSrc;
 
     ppSrc = sAreaScrollPointers[gCurrentArea];
 
@@ -463,10 +680,10 @@ void ScrollProcessGeneral(void)
     if (!gDisableScrolling)
     {
         // Process scrolling
-        if (gFreeMovementLockCamera && gGameModeSub1 == SUB_GAME_MODE_FREE_MOVEMENT)
+        if (gNoClipLockCamera && gSubGameMode1 == SUB_GAME_MODE_NO_CLIP)
         {
             // Update camera lock movement
-            ScrollFreeMovementDebugCameraLock(&coords);
+            ScrollNoClipDebugCameraLock(&coords);
         }
         else if (gCurrentRoomEntry.scrollsFlag == ROOM_SCROLLS_FLAG_HAS_SCROLLS)
         {
@@ -483,7 +700,7 @@ void ScrollProcessGeneral(void)
         ScrollBg2(&coords);
 
         // Check auto scroll bg0
-        if (gBg0Movement.type != 0 && gCurrentRoomEntry.Bg0Prop & BG_PROP_LZ77_COMPRESSED)
+        if (gBg0Movement.type != 0 && gCurrentRoomEntry.bg0Prop & BG_PROP_LZ77_COMPRESSED)
             ScrollAutoBg0();
 
         // Update effect and haze
@@ -651,9 +868,9 @@ void ScrollUpdateEffectAndHazePosition(struct Coordinates* pCoords)
     u16 temp;
     
     var_0 = FALSE;
-    if (gCurrentRoomEntry.Bg0Prop & BG_PROP_RLE_COMPRESSED)
+    if (gCurrentRoomEntry.bg0Prop & BG_PROP_RLE_COMPRESSED)
     {
-        if (gCurrentRoomEntry.Bg0Prop == 0x11)
+        if (gCurrentRoomEntry.bg0Prop == 0x11)
         {
             gBg0XPosition = gBg1XPosition / 2;
             gBg0YPosition = gBg1YPosition;
@@ -686,7 +903,9 @@ void ScrollUpdateEffectAndHazePosition(struct Coordinates* pCoords)
                 waterOffset = sWaterLoopCounterArray[gWaterMovement.stage][0];
             }
             else
+            {
                 waterOffset = 0;
+            }
 
             gWaterMovement.yOffset = (waterOffset - 8) * 4;
             position += waterOffset;
@@ -696,7 +915,7 @@ void ScrollUpdateEffectAndHazePosition(struct Coordinates* pCoords)
                 if (gIoRegistersBackup.unk_12 & 0xC000 && gIoRegistersBackup.BG0CNT & 0xC000)
                 {
                     gIoRegistersBackup.unk_12 &= ~0xC000;
-                    write16(REG_BG0CNT, gIoRegistersBackup.unk_12);
+                    WRITE_16(REG_BG0CNT, gIoRegistersBackup.unk_12);
                 }
             }
             else
@@ -704,7 +923,7 @@ void ScrollUpdateEffectAndHazePosition(struct Coordinates* pCoords)
                 if (!(gIoRegistersBackup.unk_12 & 0xC000) && gIoRegistersBackup.BG0CNT & 0xC000)
                 {
                     gIoRegistersBackup.unk_12 |= (gIoRegistersBackup.BG0CNT & 0xC000);
-                    write16(REG_BG0CNT, read16(REG_BG0CNT) | gIoRegistersBackup.unk_12);
+                    WRITE_16(REG_BG0CNT, READ_16(REG_BG0CNT) | gIoRegistersBackup.unk_12);
                 }
             }
 
@@ -717,7 +936,7 @@ void ScrollUpdateEffectAndHazePosition(struct Coordinates* pCoords)
         else
         {
             var_0 = TRUE;
-            switch (gCurrentRoomEntry.Bg0Prop)
+            switch (gCurrentRoomEntry.bg0Prop)
             {
                 case BG_PROP_CLOSE_UP:
                     gBg0XPosition = 0;
@@ -813,7 +1032,7 @@ void ScrollAutoBg0(void)
  * 
  * @return u32 Types (y << 16 | x)
  */
-u32 ScrollGetBG3Scroll(void)
+u32 ScrollGetBg3Scroll(void)
 {
     u32 xScroll;
     u32 yScroll;
@@ -821,7 +1040,7 @@ u32 ScrollGetBG3Scroll(void)
     yScroll = BG3_SCROLLING_TYPE_NONE;
     xScroll = BG3_SCROLLING_TYPE_NONE;
 
-    switch (gCurrentRoomEntry.Bg3Scrolling)
+    switch (gCurrentRoomEntry.bg3Scrolling)
     {
         case 0:
             break;
@@ -883,7 +1102,7 @@ void ScrollBg3(void)
     s32 size;
 
     // Get scrolling values
-    yScrolling = ScrollGetBG3Scroll();
+    yScrolling = ScrollGetBg3Scroll();
     xScrolling = LOW_BYTE(yScrolling);
     yScrolling = HIGH_SHORT(yScrolling);
 
@@ -897,11 +1116,11 @@ void ScrollBg3(void)
             gBg3XPosition = DIV_SHIFT(gBg1XPosition - SCREEN_X_BLOCK_PADDING, 4);
     }
 
-    if (gCurrentRoomEntry.BG3FromBottomFlag)
+    if (gCurrentRoomEntry.bg3FromBottomFlag)
     {
         size = BLOCK_TO_SUB_PIXEL(gBgPointersAndDimensions.clipdataHeight - (SCREEN_SIZE_Y_BLOCKS + SCREEN_Y_PADDING));
 
-        if (gCurrentRoomEntry.Bg3Size & 2)
+        if (gCurrentRoomEntry.bg3Size & 2)
             offset = 0x800;
         else
             offset = 0x400;
@@ -944,7 +1163,7 @@ void ScrollBg3Related(void)
 {
     u32 xScroll;
 
-    xScroll = LOW_BYTE(ScrollGetBG3Scroll());
+    xScroll = LOW_BYTE(ScrollGetBg3Scroll());
 
     if (xScroll == BG3_SCROLLING_TYPE_NONE)
         gBg3XPosition = 0;
@@ -981,12 +1200,12 @@ void ScrollBg2(struct Coordinates* pCoords)
     u32 temp;
     u8 temp2;
 
-    gCurrentRoomEntry.Bg2Prop = gCurrentRoomEntry.Bg2Prop;
-    if (gCurrentRoomEntry.Bg2Prop & BG_PROP_RLE_COMPRESSED)
+    gCurrentRoomEntry.bg2Prop = gCurrentRoomEntry.bg2Prop;
+    if (gCurrentRoomEntry.bg2Prop & BG_PROP_RLE_COMPRESSED)
     {
-        if (gCurrentRoomEntry.Bg2Prop & 0x20)
+        if (gCurrentRoomEntry.bg2Prop & 0x20)
         {
-            if (gCurrentRoomEntry.Bg2Prop == BG_PROP_MOVING)
+            if (gCurrentRoomEntry.bg2Prop == BG_PROP_MOVING)
             {
                 position = gBg1XPosition + gBg2Movement.xOffset;
                 if (position < 0)
@@ -1026,11 +1245,11 @@ void ScrollBg2(struct Coordinates* pCoords)
 }
 
 /**
- * @brief 59008 | a8 | Handle the free movement camera lock functionality
+ * @brief 59008 | a8 | Handle the debug no-clip camera lock functionality
  * 
  * @param pCoords Coords pointer
  */
-void ScrollFreeMovementDebugCameraLock(struct Coordinates* pCoords)
+void ScrollNoClipDebugCameraLock(struct Coordinates* pCoords)
 {
     if (pCoords->x < BLOCK_SIZE * 7 + HALF_BLOCK_SIZE)
     {

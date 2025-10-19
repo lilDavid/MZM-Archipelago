@@ -4,6 +4,15 @@
 #include "types.h"
 #include "constants/sprite.h"
 
+#define GET_PSPRITE_HEALTH(id) sPrimarySpriteStats[(id)][0]
+#define GET_SSPRITE_HEALTH(id) sSecondarySpriteStats[(id)][0]
+
+#define GET_PSPRITE_DAMAGE(id) sPrimarySpriteStats[(id)][1]
+#define GET_SSPRITE_DAMAGE(id) sSecondarySpriteStats[(id)][1]
+
+#define GET_PSPRITE_WEAKNESS(id) sPrimarySpriteStats[(id)][2]
+#define GET_SSPRITE_WEAKNESS(id) sSecondarySpriteStats[(id)][2]
+
 // 2b0c94
 
 extern const u8 sOamXFlipOffsets[3][4];
@@ -34,7 +43,7 @@ extern const s16 sWorkerRobotSleepingFallingSpeed[10];
  * 7 : Super missile drop probability
  * 8 : Power bomb drop probability
  */
-extern const u16 sPrimarySpriteStats[PSPRITE_END][9];
+extern const u16 sPrimarySpriteStats[PSPRITE_COUNT][9];
 
 /**
  * @brief Stats of the secondary sprites
@@ -48,8 +57,6 @@ extern const u16 sPrimarySpriteStats[PSPRITE_END][9];
  * 7 : Super missile drop probability
  * 8 : Power bomb drop probability
  */
-extern const u16 sSecondarySpriteStats[SSPRITE_END][9];
+extern const u16 sSecondarySpriteStats[SSPRITE_COUNT][9];
 
-
-
-#endif
+#endif /* SPRITE_DATA_H */

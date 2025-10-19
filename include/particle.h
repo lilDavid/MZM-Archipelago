@@ -3,6 +3,9 @@
 
 #include "types.h"
 #include "oam.h"
+
+#include "constants/particle.h"
+
 #include "structs/particle.h"
 
 // Functions
@@ -10,8 +13,8 @@
 void ParticleCheckOnScreen(struct ParticleEffect* pParticle);
 void ParticleDraw(struct ParticleEffect* pParticle);
 void ParticleProcessAll(void);
-void ParticleSet(u16 yPosition, u16 xPosition, u8 effect);
-u8 ParticleUpdateAnimation(struct ParticleEffect* pParticle, const struct FrameData* pOam);
+void ParticleSet(u16 yPosition, u16 xPosition, ParticleEffectId effect);
+boolu8 ParticleUpdateAnimation(struct ParticleEffect* pParticle, const struct FrameData* pOam);
 void ParticleSetCurrentOamFramePointer(struct ParticleEffect* pParticle, const struct FrameData* pOam);
 void ParticleSpriteSplashWaterSmall(struct ParticleEffect* pParticle);
 void ParticleSpriteSplashWaterBig(struct ParticleEffect* pParticle);
@@ -50,7 +53,7 @@ void ParticleSpriteExplosionBig(struct ParticleEffect* pParticle);
 void ParticleSpriteExplosionSingleThenBig(struct ParticleEffect* pParticle);
 void ParticleScrewAttackDestroyed(struct ParticleEffect* pParticle);
 void ParticleShinesparkDestroyed(struct ParticleEffect* pParticle);
-void ParticleSudoScrewDestroyed(struct ParticleEffect* pParticle);
+void ParticlePseudoScrewDestroyed(struct ParticleEffect* pParticle);
 void ParticleSpeedboosterDestroyed(struct ParticleEffect* pParticle);
 void ParticleMainBossDeath(struct ParticleEffect* pParticle);
 void ParticleFreezingSpriteWithIce(struct ParticleEffect* pParticle);

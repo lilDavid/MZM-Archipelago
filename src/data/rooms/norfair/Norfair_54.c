@@ -20,16 +20,16 @@ const u8 sNorfair_15_Scrolls[SCROLL_DATA_SIZE(2)] = {
 	UCHAR_MAX, // Breakeable block Y bound extension
 };
 
-const u8 sNorfair_54_Clipdata[266] = INCBIN_U8("data/rooms/norfair/Norfair_54_Clipdata.gfx");
+const u8 sNorfair_54_Clipdata[266] = INCBIN_U8("data/rooms/norfair/norfair_54_clipdata.gfx");
 
-const u8 sNorfair_54_Bg2[606] = INCBIN_U8("data/rooms/norfair/Norfair_54_Bg2.gfx");
+const u8 sNorfair_54_Bg2[606] = INCBIN_U8("data/rooms/norfair/norfair_54_bg2.gfx");
 
-const u8 sNorfair_54_Bg1[927] = INCBIN_U8("data/rooms/norfair/Norfair_54_Bg1.gfx");
+const u8 sNorfair_54_Bg1[927] = INCBIN_U8("data/rooms/norfair/norfair_54_bg1.gfx");
 
 const u8 sNorfair_54_Spriteset0[ENEMY_ROOM_DATA_ARRAY_SIZE(2)] = {
 	2, 23, SPRITESET_IDX(0),
 	ROOM_SPRITE_DATA_TERMINATOR
 };
 
-const u8 sNorfair_54_Bg0[85] = INCBIN_U8("data/rooms/norfair/Norfair_54_Bg0.gfx");
+const u8 sNorfair_54_Bg0[85] = INCBIN_U8("data/rooms/norfair/norfair_54_bg0.gfx");
 

@@ -1,7 +1,7 @@
 #ifndef GBA_DMA_H
 #define GBA_DMA_H
 
-#include "memory.h"
+#include "gba/memory.h"
 #include "types.h"
 
 #define REG_DMA0 (REG_BASE + 0x0b0)
@@ -40,7 +40,7 @@
 
 #define dma_fill16(channel, value, dest, size)                                 \
     dma_fill(channel, value, dest, size, 16)
-#define dma_fill32(channel, value, dest, size)                                 \
+#define DMA_FILL_32(channel, value, dest, size)                                \
     dma_fill(channel, value, dest, size, 32)
 
 #define dma_clear(channel, dest, size, bit)                                    \
@@ -72,7 +72,24 @@
 #define DMA_INTR_ENABLE (1 << 14)
 #define DMA_ENABLE (1 << 15)
 
+#define CPU_FILL(val, dst, size, bit)                                          \
+    {                                                                          \
+        vu##bit cpu_tmp_ = (vu##bit)val;                                       \
+        CpuSet(                                                                \
+            (void*)&cpu_tmp_,                                                  \
+            dst,                                                               \
+            (CPU_SET_##bit##BIT | CPU_SET_SRC_FIXED)                           \
+                    << 16                                                      \
+                | ((size) / (bit / 8)));                                       \
+    }
+
+#define CPU_FILL_16(value, dest, size)                                         \
+    CPU_FILL(value, dest, size, 16)
+#define CPU_FILL_32(value, dest, size)                                         \
+    CPU_FILL(value, dest, size, 32)
+
 #define CPU_SET_SRC_FIXED (1 << 8)
+#define CPU_SET_16BIT 0x0000
 #define CPU_SET_32BIT (1 << 10)
 
 #endif /* GBA_DMA_H */

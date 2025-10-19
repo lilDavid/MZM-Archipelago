@@ -52,16 +52,15 @@ struct TourianEscapeData {
     s16 win0v_L;
 };
 
+extern s32 gWrittenToBg2X;
+extern s32 gWrittenToBg2Y;
 
+extern u16 gBg2XScaling;
+extern u16 gBg2YScaling;
 extern u16 gBg2Rotation;
-extern u16 gBg2Scaling;
-extern s16 gWrittenToBG2PA;
-extern s16 gWrittenToBG2PB;
-extern s16 gWrittenToBG2PC;
-extern s16 gWrittenToBG2PD;
-extern s32 gWrittenToBG2X;
-extern s32 gWrittenToBG2Y;
-extern u16 gUnk_30013a2;
-
+extern s16 gWrittenToBg2Pa;
+extern s16 gWrittenToBg2Pb;
+extern s16 gWrittenToBg2Pc;
+extern s16 gWrittenToBg2Pd;
 
 #endif /* TOURIAN_ESCAPE_STRUCT_H */

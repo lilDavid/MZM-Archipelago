@@ -20,11 +20,11 @@ const u8 sRidley_3_Scrolls[SCROLL_DATA_SIZE(2)] = {
 	UCHAR_MAX, // Breakeable block Y bound extension
 };
 
-const u8 sRidley_9_Clipdata[231] = INCBIN_U8("data/rooms/ridley/Ridley_9_Clipdata.gfx");
+const u8 sRidley_9_Clipdata[231] = INCBIN_U8("data/rooms/ridley/ridley_9_clipdata.gfx");
 
-const u8 sRidley_9_Bg2[14] = INCBIN_U8("data/rooms/ridley/Ridley_9_Bg2.gfx");
+const u8 sRidley_9_Bg2[14] = INCBIN_U8("data/rooms/ridley/ridley_9_bg2.gfx");
 
-const u8 sRidley_9_Bg1[396] = INCBIN_U8("data/rooms/ridley/Ridley_9_Bg1.gfx");
+const u8 sRidley_9_Bg1[396] = INCBIN_U8("data/rooms/ridley/ridley_9_bg1.gfx");
 
 const u8 sRidley_9_Spriteset0[ENEMY_ROOM_DATA_ARRAY_SIZE(3)] = {
 	7, 8, SPRITESET_IDX(0),

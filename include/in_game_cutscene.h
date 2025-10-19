@@ -3,20 +3,22 @@
 
 #include "types.h"
 
-u32 InGameCutsceneSamusCloseUp(u8 cutsceneNumber, u8 cutsceneNumberNoFlag);
+#include "constants/in_game_cutscene.h"
+
+u32 InGameCutsceneSamusCloseUp(InGameCutsceneScene cutsceneNumber, InGameCutsceneScene cutsceneNumberNoFlag);
 void unk_5fd58(void);
 
-u32 InGameCutsceneUpgradingSuit(u8 cutsceneNumber, u8 cutsceneNumberNoFlag);
+u32 InGameCutsceneUpgradingSuit(InGameCutsceneScene cutsceneNumber, InGameCutsceneScene cutsceneNumberNoFlag);
 u16 InGameCutsceneCalculateSuitFlashOffset(u8 intensity, u8 start, u8 end);
 
-void MakeBackgroundFlash(u8 type);
+void MakeBackgroundFlash(BackgroundFlash type);
 
-void InGameCutsceneStart(u8 number);
+void InGameCutsceneStart(InGameCutsceneScene number);
 void InGameCutsceneProcess(void);
 void InGameCutsceneInit(void);
 void InGameCutsceneCheckPlayOnTransition(void);
 
-u32 InGameCutsceneTryQueue(u8 param_1);
+boolu32 InGameCutsceneTryQueue(InGameCutsceneScene cutscene);
 void InGameCutsceneCheckStartQueued(void);
 
 void UpdateAnimatedPaletteAfterTransitionOrReload(void);

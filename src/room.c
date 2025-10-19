@@ -1,7 +1,7 @@
 #include "room.h"
+#include "dma.h"
 #include "gba.h"
 
-#include "data/engine_pointers.h"
 #include "data/empty_datatypes.h"
 #include "data/common_pals.h"
 #include "data/clipdata_types.h"
@@ -34,6 +34,7 @@
 #include "structs/scroll.h"
 #include "structs/room.h"
 #include "structs/samus.h"
+#include "structs/save_file.h"
 #include "structs/text.h"
 #include "structs/screen_shake.h"
 #include "structs/visual_effects.h"
@@ -41,6 +42,38 @@
 #include "rando/item.h"
 #include "rando/graphics.h"
 
+
+const struct Door* sAreaDoorsPointers[AREA_ENTRY_COUNT] = {
+    [AREA_BRINSTAR] = sBrinstarDoors,
+    [AREA_KRAID] = sKraidDoors,
+    [AREA_NORFAIR] = sNorfairDoors,
+    [AREA_RIDLEY] = sRidleyDoors,
+    [AREA_TOURIAN] = sTourianDoors,
+    [AREA_CRATERIA] = sCrateriaDoors,
+    [AREA_CHOZODIA] = sChozodiaDoors,
+    #ifdef DEBUG
+    [AREA_TEST] = sTestDoors,
+    [AREA_TEST_1] = sTest123Doors,
+    [AREA_TEST_2] = sTest123Doors,
+    [AREA_TEST_3] = sTest123Doors
+    #endif // DEBUG
+};
+
+const struct RoomEntryRom* sAreaRoomEntryPointers[AREA_ENTRY_COUNT] = {
+    [AREA_BRINSTAR] = sBrinstarRoomEntries,
+    [AREA_KRAID] = sKraidRoomEntries,
+    [AREA_NORFAIR] = sNorfairRoomEntries,
+    [AREA_RIDLEY] = sRidleyRoomEntries,
+    [AREA_TOURIAN] = sTourianRoomEntries,
+    [AREA_CRATERIA] = sCrateriaRoomEntries,
+    [AREA_CHOZODIA] = sChozodiaRoomEntries,
+    #ifdef DEBUG
+    [AREA_TEST] = sTestRoomEntries,
+    [AREA_TEST_1] = sTest1RoomEntries,
+    [AREA_TEST_2] = sTest2RoomEntries,
+    [AREA_TEST_3] = sTest3RoomEntries
+    #endif // DEBUG
+};
 
 /**
  * @brief 55f7c | 26c | Loads the current room
@@ -140,7 +173,7 @@ void RoomLoad(void)
     MinimapCheckOnTransition();
 
     // Check using elevator
-    if (!gIsLoadingFile && gGameModeSub3 != 0 && gPauseScreenFlag == PAUSE_SCREEN_NONE && gSamusData.pose == SPOSE_USING_AN_ELEVATOR)
+    if (!gIsLoadingFile && gSubGameMode3 != 0 && gPauseScreenFlag == PAUSE_SCREEN_NONE && gSamusData.pose == SPOSE_USING_AN_ELEVATOR)
     {
         if (gSamusData.elevatorDirection == KEY_UP)
             gSamusData.yPosition += BLOCK_SIZE * 3;
@@ -191,10 +224,10 @@ void RoomLoadTileset(void)
 
     DmaTransfer(3, entry.pTilemap + 2, gTilemap, sizeof(gTilemap) * 2 * sizeof(u16), 16); // write past?
 
-    if (gCurrentArea > AREA_DEBUG_1)
+    if (gCurrentArea > AREA_TEST)
     {
-        DmaTransfer(3, sClipdataCollisionTypes_Debug, gClipdataCollisionTypes, sizeof(gClipdataCollisionTypes), 16);
-        DmaTransfer(3, sClipdataBehaviorTypes_Debug, gClipdataBehaviorTypes, sizeof(gClipdataBehaviorTypes), 16);
+        DmaTransfer(3, sClipdataCollisionTypes_Test, gClipdataCollisionTypes, sizeof(gClipdataCollisionTypes), 16);
+        DmaTransfer(3, sClipdataBehaviorTypes_Test, gClipdataBehaviorTypes, sizeof(gClipdataBehaviorTypes), 16);
     }
     else
     {
@@ -236,7 +269,7 @@ void RoomLoadTileset(void)
     gCurrentRoomEntry.animatedTileset = gAnimatedGraphicsEntry.tileset = entry.animatedTileset;
     gCurrentRoomEntry.animatedPalette = gAnimatedGraphicsEntry.palette = entry.animatedPalette;
 
-    if (gCurrentRoomEntry.Bg2Prop == BG_PROP_MOVING)
+    if (gCurrentRoomEntry.bg2Prop == BG_PROP_MOVING)
         BitFill(3, 0x40, VRAM_BASE + 0x2000, 0x1000, 16);
 }
 
@@ -246,18 +279,18 @@ void RoomLoadTileset(void)
  */
 void RoomLoadEntry(void)
 {
-    struct RoomEntryROM entry;
+    struct RoomEntryRom entry;
 
     entry = sAreaRoomEntryPointers[gCurrentArea][gCurrentRoom];
 
     gCurrentRoomEntry.tileset = entry.tileset;
 
-    gCurrentRoomEntry.Bg0Prop = entry.Bg0Prop;
-    gCurrentRoomEntry.Bg1Prop = entry.Bg1Prop;
-    gCurrentRoomEntry.Bg2Prop = entry.Bg2Prop;
-    gCurrentRoomEntry.Bg3Prop = entry.Bg3Prop;
+    gCurrentRoomEntry.bg0Prop = entry.bg0Prop;
+    gCurrentRoomEntry.bg1Prop = entry.bg1Prop;
+    gCurrentRoomEntry.bg2Prop = entry.bg2Prop;
+    gCurrentRoomEntry.bg3Prop = entry.bg3Prop;
 
-    gCurrentRoomEntry.Bg3Scrolling = entry.Bg3Scrolling;
+    gCurrentRoomEntry.bg3Scrolling = entry.bg3Scrolling;
     gCurrentRoomEntry.transparency = entry.transparency;
 
     gCurrentRoomEntry.mapX = entry.mapX;
@@ -295,20 +328,20 @@ void RoomLoadEntry(void)
 
     gCurrentRoomEntry.scrollsFlag = ROOM_SCROLLS_FLAG_NO_SCROLLS;
     gCurrentRoomEntry.damageEffect = EFFECT_NONE;
-    gCurrentRoomEntry.Bg0Size = 0;
-    gCurrentRoomEntry.Bg3Size = 0;
+    gCurrentRoomEntry.bg0Size = 0;
+    gCurrentRoomEntry.bg3Size = 0;
 
-    if (gSpritesetEntryUsed != 0 && gCurrentRoomEntry.Bg0Prop == 0x44)
+    if (gSpritesetEntryUsed != 0 && gCurrentRoomEntry.bg0Prop == 0x44)
     {
         gWaitingSpacePiratesPosition.x = 0x8000;
         gWaitingSpacePiratesPosition.y = 0x8000;
     }
 
-    gCurrentRoomEntry.BG3FromBottomFlag = FALSE;
+    gCurrentRoomEntry.bg3FromBottomFlag = FALSE;
 
-    if (gCurrentRoomEntry.Bg3Prop == BG_PROP_STARTS_FROM_BOTTOM)
+    if (gCurrentRoomEntry.bg3Prop == BG_PROP_STARTS_FROM_BOTTOM)
     {
-        gCurrentRoomEntry.BG3FromBottomFlag = TRUE;
+        gCurrentRoomEntry.bg3FromBottomFlag = TRUE;
         gBg0Movement.type = BG0_MOVEMENT_WATER_CLOUDS;
     }
 }
@@ -319,24 +352,24 @@ void RoomLoadEntry(void)
  */
 void RoomLoadBackgrounds(void)
 {
-    struct RoomEntryROM entry;
+    struct RoomEntryRom entry;
     const u8* src;
 
     // Why
     entry = sAreaRoomEntryPointers[gCurrentArea][gCurrentRoom];
 
     // Load BG3, always LZ77
-    gCurrentRoomEntry.Bg3Size = *entry.pBg3Data;
+    gCurrentRoomEntry.bg3Size = *entry.pBg3Data;
     src = entry.pBg3Data + 4;
     CallLZ77UncompWram(src, gDecompBg3Map);
 
     if (gPauseScreenFlag == 0)
     {
-        if (gGameModeSub3 == 0 || gTourianEscapeCutsceneStage != 0)
+        if (gSubGameMode3 == 0 || gTourianEscapeCutsceneStage != 0)
             BitFill(3, 0x40, VRAM_BASE + 0x3000, 0x1000, 0x10);
 
         // Load BG0, either RLE or LZ77
-        if (gCurrentRoomEntry.Bg0Prop & BG_PROP_RLE_COMPRESSED)
+        if (gCurrentRoomEntry.bg0Prop & BG_PROP_RLE_COMPRESSED)
         {
             src = entry.pBg0Data;
             gBgPointersAndDimensions.backgrounds[0].pDecomp = gDecompBg0Map;
@@ -344,10 +377,10 @@ void RoomLoadBackgrounds(void)
             gBgPointersAndDimensions.backgrounds[0].height = *src++;
             RoomRleDecompress(TRUE, src, (u8*)gDecompBg0Map);
         }
-        else if (gCurrentRoomEntry.Bg0Prop & BG_PROP_LZ77_COMPRESSED)
+        else if (gCurrentRoomEntry.bg0Prop & BG_PROP_LZ77_COMPRESSED)
         {
             src = entry.pBg0Data;
-            gCurrentRoomEntry.Bg0Size = *src;
+            gCurrentRoomEntry.bg0Size = *src;
 
             src += 4;
             CallLZ77UncompWram(src, gDecompBg0Map);
@@ -368,7 +401,7 @@ void RoomLoadBackgrounds(void)
         RoomRleDecompress(TRUE, src, (u8*)gDecompBg1Map);
 
         // Load BG2, force RLE
-        if (gCurrentRoomEntry.Bg2Prop & BG_PROP_RLE_COMPRESSED)
+        if (gCurrentRoomEntry.bg2Prop & BG_PROP_RLE_COMPRESSED)
         {
             src = entry.pBg2Data;
             gBgPointersAndDimensions.backgrounds[2].pDecomp = gDecompBg2Map;
@@ -410,11 +443,11 @@ void RoomReset(void)
         gScreenShakeX = sScreenShake_Empty;
 
     gCurrentPowerBomb = sPowerBomb_Empty;
-    gWrittenToBLDCNT_Internal = 0;
+    gWrittenToBldcnt_Internal = 0;
     gScrollCounter = 0;
     gMusicTrackInfo.takingNormalTransition = FALSE;
 
-    if (gGameModeSub3 == 0)
+    if (gSubGameMode3 == 0)
     {
         gMusicTrackInfo.currentRoomTrack = MUSIC_NONE;
         gMusicTrackInfo.unk = FALSE;
@@ -431,6 +464,16 @@ void RoomReset(void)
         if (!gIsLoadingFile && gCurrentDemo.loading)
             unk_60cbc(FALSE);
 
+        if (!gIsLoadingFile)
+        {
+            #ifdef DEBUG
+            if (gDebugMode)
+                gEquipment.downloadedMapStatus = gSectionInfo.downloadedMaps;
+            #endif // DEBUG
+            if (gCurrentDemo.loading)
+                unk_60cbc(FALSE);
+        }
+    
         gDoorPositionStart.x = 0;
         gDoorPositionStart.y = 0;
         gCurrentItemBeingAcquired = 0;
@@ -456,7 +499,7 @@ void RoomReset(void)
     gScreenYOffset = 0;
     gScreenXOffset = 0;
 
-    gDISPCNTBackup = 0;
+    gDispcntBackup = 0;
     gInGameCutscene.cutsceneNumber = 0;
     gInGameCutscene.queuedCutscene = 0;
 
@@ -465,7 +508,7 @@ void RoomReset(void)
     gHatchesState.hatchesLockedWithTimer = 0;
     gHatchesState.navigationDoorsUnlocking = FALSE;
     gHatchesState.hatchesLockedWithEvent = 0;
-    gHatchesState.hatchesLockedWithEventUnlockeable = 0;
+    gHatchesState.hatchesLockedWithEventUnlockable = 0;
     gDoorUnlockTimer = 0;
 
     pDoor = &sAreaDoorsPointers[gCurrentArea][0];
@@ -539,7 +582,7 @@ void RoomReset(void)
             gSamusDoorPositionOffset = 0;
         else
         {
-            temp = gSamusPhysics.drawDistanceTop;
+            temp = gSamusPhysics.hitboxTop;
             yOffset = (u16)-temp;
             temp = (u16)yOffset;
             if (temp + gSamusDoorPositionOffset > UCHAR_MAX)
@@ -567,7 +610,7 @@ void RoomSetBackgroundScrolling(void)
 {
     gBg3Movement = sBg3Movement_Empty;
 
-    switch (gCurrentRoomEntry.Bg3Scrolling)
+    switch (gCurrentRoomEntry.bg3Scrolling)
     {
         case 7:
         case 8:
@@ -586,8 +629,8 @@ void RoomSetBackgroundScrolling(void)
 }
 
 /**
- * @brief 56b28 | 1f0 | Setups the initial tilemapfor the BG specified
- *
+ * @brief 56b28 | 1f0 | Sets up the initial tilemap for the BG specified
+ * 
  * @param bgNumber Background number
  */
 void RoomSetInitialTilemap(u8 bgNumber)
@@ -618,7 +661,7 @@ void RoomSetInitialTilemap(u8 bgNumber)
 
     if (bgNumber == 0)
     {
-        properties = gCurrentRoomEntry.Bg0Prop;
+        properties = gCurrentRoomEntry.bg0Prop;
         do {
             yPosition = SUB_PIXEL_TO_BLOCK(gBg0YPosition);
             xPosition = SUB_PIXEL_TO_BLOCK(gBg0XPosition);
@@ -626,13 +669,13 @@ void RoomSetInitialTilemap(u8 bgNumber)
     }
     else if (bgNumber == 1)
     {
-        properties = gCurrentRoomEntry.Bg1Prop;
+        properties = gCurrentRoomEntry.bg1Prop;
         yPosition = SUB_PIXEL_TO_BLOCK(gBg1YPosition);
         xPosition = SUB_PIXEL_TO_BLOCK(gBg1XPosition);
     }
     else
     {
-        properties = gCurrentRoomEntry.Bg2Prop;
+        properties = gCurrentRoomEntry.bg2Prop;
         yPosition = SUB_PIXEL_TO_BLOCK(gBg2YPosition);
         xPosition = SUB_PIXEL_TO_BLOCK(gBg2XPosition);
     }
@@ -702,10 +745,10 @@ void RoomSetInitialTilemap(u8 bgNumber)
         if (properties & BG_PROP_LZ77_COMPRESSED && bgNumber == 0)
         {
             offset = 0x800;
-            if (gCurrentRoomEntry.Bg0Size & 1)
+            if (gCurrentRoomEntry.bg0Size & 1)
                 offset *= 2;
 
-            if (gCurrentRoomEntry.Bg0Size & 2)
+            if (gCurrentRoomEntry.bg0Size & 2)
                 offset *= 2;
 
             DmaTransfer(3, gDecompBg0Map, VRAM_BASE, offset, 16);
@@ -884,9 +927,9 @@ void RoomUpdateAnimatedGraphicsAndPalettes(void)
     dontUpdateBgEffect = FALSE;
     dontUpdateGraphics = FALSE;
 
-    if (gGameModeSub1 == SUB_GAME_MODE_DOOR_TRANSITION || gGameModeSub1 == SUB_GAME_MODE_LOADING_ROOM)
+    if (gSubGameMode1 == SUB_GAME_MODE_DOOR_TRANSITION || gSubGameMode1 == SUB_GAME_MODE_LOADING_ROOM)
         dontUpdateBgEffect = TRUE;
-    else if (gGameModeSub1 != SUB_GAME_MODE_PLAYING)
+    else if (gSubGameMode1 != SUB_GAME_MODE_PLAYING)
     {
         dontUpdateBgEffect = TRUE;
         dontUpdateGraphics = TRUE;
@@ -923,7 +966,7 @@ void RoomUpdateHatchFlashingAnimation(void)
 {
     const u16* pPalette;
 
-    if (gGameModeSub1 != SUB_GAME_MODE_PLAYING)
+    if (gSubGameMode1 != SUB_GAME_MODE_PLAYING)
         return;
 
     // Get palette pointer
@@ -935,32 +978,36 @@ void RoomUpdateHatchFlashingAnimation(void)
     // Update hatches that unlocked
     if (gHatchesState.unlocking)
     {
-        APPLY_DELTA_TIME_INC(gHatchFlashingAnimation.unlocking_delay);
-        if (gHatchFlashingAnimation.unlocking_delay >= CONVERT_SECONDS(2.f / 15))
+        APPLY_DELTA_TIME_INC(gHatchFlashingAnimation.timer1);
+        if (gHatchFlashingAnimation.timer1 >= CONVERT_SECONDS(2.f / 15))
         {
-            gHatchFlashingAnimation.unlocking_delay = 0;
-            APPLY_DELTA_TIME_INC(gHatchFlashingAnimation.unlocking_paletteRow);
+            gHatchFlashingAnimation.timer1 = 0;
+            gHatchFlashingAnimation.row1++;
 
-            if (gHatchFlashingAnimation.unlocking_paletteRow >= CONVERT_SECONDS(.1f))
-                gHatchFlashingAnimation.unlocking_paletteRow = 0;
+            if (gHatchFlashingAnimation.row1 >= 6)
+                gHatchFlashingAnimation.row1 = 0;
 
-            DmaTransfer(3, &pPalette[gHatchFlashingAnimation.unlocking_paletteRow * PAL_ROW + 6], PALRAM_BASE + 1 * PAL_ROW_SIZE + 6 * sizeof(u16), 2 * sizeof(u16), 16);
+            DmaTransfer(3, &pPalette[gHatchFlashingAnimation.row1 * PAL_ROW + 6], PALRAM_BASE + 1 * PAL_ROW_SIZE + 6 * sizeof(u16), 2 * sizeof(u16), 16);
         }
     }
 
     // Left over code from fusion
     if (gHatchesState.navigationDoorsUnlocking)
     {
-        APPLY_DELTA_TIME_INC(gHatchFlashingAnimation.navigation_delay);
-        if (gHatchFlashingAnimation.navigation_delay >= CONVERT_SECONDS(2.f / 15))
+        APPLY_DELTA_TIME_INC(gHatchFlashingAnimation.timer2);
+        if (gHatchFlashingAnimation.timer2 >= CONVERT_SECONDS(2.f / 15))
         {
-            gHatchFlashingAnimation.navigation_delay = 0;
-            APPLY_DELTA_TIME_INC(gHatchFlashingAnimation.navigation_paletteRow);
+            gHatchFlashingAnimation.timer2 = 0;
+            gHatchFlashingAnimation.row2++;
 
-            if (gHatchFlashingAnimation.navigation_paletteRow >= CONVERT_SECONDS(.1f))
-                gHatchFlashingAnimation.navigation_paletteRow = 0;
+            if (gHatchFlashingAnimation.row2 >= 6)
+                gHatchFlashingAnimation.row2 = 0;
 
-            DMA_SET(3, &pPalette[gHatchFlashingAnimation.navigation_paletteRow * PAL_ROW + 6], PALRAM_BASE + 2 * PAL_ROW_SIZE + 6 * sizeof(u16), C_32_2_16(DMA_ENABLE, 2));
+            #ifdef REGION_EU
+            DmaTransfer(3, &pPalette[gHatchFlashingAnimation.row2 * PAL_ROW + 6], PALRAM_BASE + 2 * PAL_ROW_SIZE + 6 * sizeof(u16), 2 * sizeof(u16), 16);
+            #else // !REGION_EU
+            DMA_SET(3, &pPalette[gHatchFlashingAnimation.row2 * PAL_ROW + 6], PALRAM_BASE + 2 * PAL_ROW_SIZE + 6 * sizeof(u16), C_32_2_16(DMA_ENABLE, 2));
+            #endif // REGION_EU
         }
     }
 }
@@ -992,12 +1039,27 @@ void RoomUpdate(void)
         }
     }
 
-    if (gGameModeSub1 == SUB_GAME_MODE_PLAYING)
+    #ifdef DEBUG
+    if (gSubGameMode1 == SUB_GAME_MODE_PLAYING || gSubGameMode1 == SUB_GAME_MODE_NO_CLIP)
+    {
+        BgClipCheckTouchingSpecialClipdata();
+    }
+    // Check still in "playing" mode
+    if (gSubGameMode1 == SUB_GAME_MODE_PLAYING || gSubGameMode1 == SUB_GAME_MODE_NO_CLIP)
+    {
+        BlockUpdateBrokenBlocks();
+        BlockProcessBombChains();
+        InGameCutsceneProcess();
+        ConnectionCheckUnlockDoors();
+        ConnectionUpdateHatches();
+    }
+    #else // !DEBUG
+    if (gSubGameMode1 == SUB_GAME_MODE_PLAYING)
     {
         BgClipCheckTouchingSpecialClipdata();
 
         // Check still in "playing" mode
-        if (gGameModeSub1 == SUB_GAME_MODE_PLAYING)
+        if (gSubGameMode1 == SUB_GAME_MODE_PLAYING)
         {
             BlockUpdateBrokenBlocks();
             BlockProcessBombChains();
@@ -1006,6 +1068,7 @@ void RoomUpdate(void)
             ConnectionUpdateHatches();
         }
     }
+    #endif // DEBUG
 
     if (HazeProcess())
     {
@@ -1091,19 +1154,19 @@ void RoomUpdateVerticalTilemap(s32 offset)
     {
         if (i == 0)
         {
-            properties = gCurrentRoomEntry.Bg0Prop;
+            properties = gCurrentRoomEntry.bg0Prop;
             yPosition = gBg0YPosition / BLOCK_SIZE;
             xPosition = gBg0XPosition / BLOCK_SIZE;
         }
         else if (i == 1)
         {
-            properties = gCurrentRoomEntry.Bg1Prop;
+            properties = gCurrentRoomEntry.bg1Prop;
             yPosition = gBg1YPosition / BLOCK_SIZE;
             xPosition = gBg1XPosition / BLOCK_SIZE;
         }
         else
         {
-            properties = gCurrentRoomEntry.Bg2Prop;
+            properties = gCurrentRoomEntry.bg2Prop;
             yPosition = gBg2YPosition / BLOCK_SIZE;
             xPosition = gBg2XPosition / BLOCK_SIZE;
         }
@@ -1172,19 +1235,19 @@ void RoomUpdateHorizontalTilemap(s32 offset)
     {
         if (i == 0)
         {
-            properties = gCurrentRoomEntry.Bg0Prop;
+            properties = gCurrentRoomEntry.bg0Prop;
             yPosition = gBg0YPosition / BLOCK_SIZE;
             xPosition = gBg0XPosition / BLOCK_SIZE;
         }
         else if (i == 1)
         {
-            properties = gCurrentRoomEntry.Bg1Prop;
+            properties = gCurrentRoomEntry.bg1Prop;
             yPosition = gBg1YPosition / BLOCK_SIZE;
             xPosition = gBg1XPosition / BLOCK_SIZE;
         }
         else
         {
-            properties = gCurrentRoomEntry.Bg2Prop;
+            properties = gCurrentRoomEntry.bg2Prop;
             yPosition = gBg2YPosition / BLOCK_SIZE;
             xPosition = gBg2XPosition / BLOCK_SIZE;
         }
@@ -1237,7 +1300,7 @@ void RoomUpdateHorizontalTilemap(s32 offset)
  * @brief 5743c | 20 | Checks if DMA 3 has ended
  *
  */
-void RoomCheckDMA3Ended(void)
+static void RoomCheckDma3Ended(void)
 {
     vu32* pDma;
 

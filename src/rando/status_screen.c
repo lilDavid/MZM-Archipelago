@@ -48,7 +48,7 @@ void RandoDrawSingleDNAAmount(u8 group, u8 amount, u8 palette, u8 isMax) {
     position = sRandoStatusScreenData[group][RANDO_ABILITY_GROUP_Y] * HALF_BLOCK_SIZE + sRandoStatusScreenData[group][RANDO_ABILITY_GROUP_X_LEFT];
     pTilemap = &pTilemap[position];
     digits = sRandoStatusScreenData[group][RANDO_ABILITY_GROUP_X_RIGHT] - sRandoStatusScreenData[group][RANDO_ABILITY_GROUP_X_LEFT];
-    value = sPauseScreen_40d102[digits];
+    value = sPowersOfTen[digits];
     digits++;
 
     var_0 = FALSE;

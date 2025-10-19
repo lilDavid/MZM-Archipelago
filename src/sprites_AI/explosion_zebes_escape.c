@@ -26,7 +26,7 @@ void ExplosionZebesEscape(void)
 
     // Weird unused local variable, probably optimized out or its use was commented out?
     tmp = 0;
-    if (gCurrentSprite.pose == 0)
+    if (gCurrentSprite.pose == SPRITE_POSE_UNINITIALIZED)
     {
         gCurrentSprite.status |= SPRITE_STATUS_NOT_DRAWN;
         
@@ -42,7 +42,7 @@ void ExplosionZebesEscape(void)
         gCurrentSprite.samusCollision = SSC_NONE;
         
         // Default oam
-        gCurrentSprite.pOam = sEnemyDropOAM_LargeEnergy;
+        gCurrentSprite.pOam = sEnemyDropOam_LargeEnergy;
         gCurrentSprite.animationDurationCounter = 0;
         gCurrentSprite.currentAnimationFrame = 0;
 

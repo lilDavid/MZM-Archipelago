@@ -1,5 +1,6 @@
 #include "color_effects.h"
 #include "macros.h"
+#include "dma.h"
 #include "gba.h"
 
 #include "data/color_fading_data.h"
@@ -99,7 +100,7 @@ void CheckTransferFadedPalette_Unused(void)
  */
 void CheckTransferFadedPalette(void)
 {
-    if (gGameModeSub1 == SUB_GAME_MODE_PLAYING)
+    if (gSubGameMode1 == SUB_GAME_MODE_PLAYING)
     {
         if (gColorFading.status == 0)
             return;
@@ -222,11 +223,11 @@ void PowerBombYellowTint(u8 paletteRow)
         g += 5;
 
         // Check for overflow
-        if (r > COLOR_MASK)
-            r = COLOR_MASK;
+        if (r > COLOR_MAX)
+            r = COLOR_MAX;
 
-        if (g > COLOR_MASK)
-            g = COLOR_MASK;
+        if (g > COLOR_MAX)
+            g = COLOR_MAX;
 
         // Apply color
         *pPalette = COLOR(r, g, b);
@@ -236,7 +237,7 @@ void PowerBombYellowTint(u8 paletteRow)
 }
 
 /**
- * @brief 5b624 | 68 | Applyes a monochrome effect to a palette
+ * @brief 5b624 | 68 | Applies a monochrome effect to a palette
  * 
  * @param src Source address
  * @param dst Destination address
@@ -258,7 +259,7 @@ void ApplyMonochromeToPalette(const u16* src, u16* dst, s8 additionalValue)
 
         // Get average
         result = (r + g + b) / 3 + additionalValue;
-        CLAMP2(result, 0, COLOR_MASK);
+        CLAMP2(result, 0, COLOR_MAX);
         
         // Create grey color
         *dst = COLOR(result, result, result);
@@ -327,11 +328,11 @@ void ApplySmoothMonochromeToPalette(u16* srcBase, u16* srcMonochrome, u16* dst, 
         baseB = RED(color);
 
         // Lerp the difference with the stage, clamp to max color value
-        color = (monoR - baseR) * stage / (COLOR_MASK + 1);
+        color = (monoR - baseR) * stage / (COLOR_MAX + 1);
         baseR += color;
-        color = (monoG - baseG) * stage / (COLOR_MASK + 1);
+        color = (monoG - baseG) * stage / (COLOR_MAX + 1);
         baseG += color;
-        color = (monoB - baseB) * stage / (COLOR_MASK + 1);
+        color = (monoB - baseB) * stage / (COLOR_MAX + 1);
         baseB += color;
 
         // Create color
@@ -395,11 +396,11 @@ void ApplySmoothPaletteTransition(u16* srcStart, u16* srcEnd, u16* dst, u8 stage
         color >>= 5;
         startB = RED(color);
 
-        color = (endR - startR) * stage / (COLOR_MASK + 1);
+        color = (endR - startR) * stage / (COLOR_MAX + 1);
         startR += color;
-        color = (endG - startG) * stage / (COLOR_MASK + 1);
+        color = (endG - startG) * stage / (COLOR_MAX + 1);
         startG += color;
-        color = (endB - startB) * stage / (COLOR_MASK + 1);
+        color = (endB - startB) * stage / (COLOR_MAX + 1);
         startB += color;
 
         *dst = COLOR(startR, startG, startB);
@@ -575,27 +576,27 @@ void ApplySpecialBackgroundFadingColor(u8 type, u8 color, u16** ppSrc, u16** ppD
             switch (type)
             {
                 case COLOR_FADING_TYPE_IN:
-                    red = (red * color) >> 5 & COLOR_MASK;
-                    green = (green * color) >> 5 & COLOR_MASK;
-                    blue = (blue * color) >> 5 & COLOR_MASK;
+                    red = (red * color) >> 5 & COLOR_MAX;
+                    green = (green * color) >> 5 & COLOR_MAX;
+                    blue = (blue * color) >> 5 & COLOR_MAX;
                     break;
 
                 case COLOR_FADING_TYPE_FLASH:
-                    red = (COLOR_MASK - (((COLOR_MASK - red) * color) >> 5)) & COLOR_MASK;
-                    green = (COLOR_MASK - (((COLOR_MASK - green) * color) >> 5)) & COLOR_MASK;
-                    blue = (COLOR_MASK - (((COLOR_MASK - blue) * color) >> 5)) & COLOR_MASK;
+                    red = (COLOR_MAX - (((COLOR_MAX - red) * color) >> 5)) & COLOR_MAX;
+                    green = (COLOR_MAX - (((COLOR_MAX - green) * color) >> 5)) & COLOR_MAX;
+                    blue = (COLOR_MAX - (((COLOR_MAX - blue) * color) >> 5)) & COLOR_MAX;
                     break;
 
                 case COLOR_FADING_TYPE_OUT:
-                    red = (red - ((red * color) >> 5)) & COLOR_MASK;
-                    green = (green - ((green * color) >> 5)) & COLOR_MASK;
-                    blue = (blue - ((blue * color) >> 5)) & COLOR_MASK;
+                    red = (red - ((red * color) >> 5)) & COLOR_MAX;
+                    green = (green - ((green * color) >> 5)) & COLOR_MAX;
+                    blue = (blue - ((blue * color) >> 5)) & COLOR_MAX;
                     break;
 
                 case COLOR_FADING_TYPE_UNK:
-                    red = (red + ((color * (COLOR_MASK - red)) >> 5)) & COLOR_MASK;
-                    green = (green + ((color * (COLOR_MASK - green)) >> 5)) & COLOR_MASK;
-                    blue = (blue + ((color * (COLOR_MASK - blue)) >> 5)) & COLOR_MASK;
+                    red = (red + ((color * (COLOR_MAX - red)) >> 5)) & COLOR_MAX;
+                    green = (green + ((color * (COLOR_MAX - green)) >> 5)) & COLOR_MAX;
+                    blue = (blue + ((color * (COLOR_MAX - blue)) >> 5)) & COLOR_MAX;
                     break;
             }
 
@@ -627,27 +628,27 @@ u16 ApplyFadeOnColor(u8 type, u16 color, u8 currentColor)
     switch (type)
     {
         case COLOR_FADING_TYPE_IN:
-            red = (red * currentColor) >> 5 & COLOR_MASK;
-            green = (green * currentColor) >> 5 & COLOR_MASK;
-            blue = (blue * currentColor) >> 5 & COLOR_MASK;
+            red = (red * currentColor) >> 5 & COLOR_MAX;
+            green = (green * currentColor) >> 5 & COLOR_MAX;
+            blue = (blue * currentColor) >> 5 & COLOR_MAX;
             break;
 
         case COLOR_FADING_TYPE_FLASH:
-            red = (COLOR_MASK - (((COLOR_MASK - red) * currentColor) >> 5)) & COLOR_MASK;
-            green = (COLOR_MASK - (((COLOR_MASK - green) * currentColor) >> 5)) & COLOR_MASK;
-            blue = (COLOR_MASK - (((COLOR_MASK - blue) * currentColor) >> 5)) & COLOR_MASK;
+            red = (COLOR_MAX - (((COLOR_MAX - red) * currentColor) >> 5)) & COLOR_MAX;
+            green = (COLOR_MAX - (((COLOR_MAX - green) * currentColor) >> 5)) & COLOR_MAX;
+            blue = (COLOR_MAX - (((COLOR_MAX - blue) * currentColor) >> 5)) & COLOR_MAX;
             break;
 
         case COLOR_FADING_TYPE_OUT:
-            red = (red - ((red * currentColor) >> 5)) & COLOR_MASK;
-            green = (green - ((green * currentColor) >> 5)) & COLOR_MASK;
-            blue = (blue - ((blue * currentColor) >> 5)) & COLOR_MASK;
+            red = (red - ((red * currentColor) >> 5)) & COLOR_MAX;
+            green = (green - ((green * currentColor) >> 5)) & COLOR_MAX;
+            blue = (blue - ((blue * currentColor) >> 5)) & COLOR_MAX;
             break;
 
         case COLOR_FADING_TYPE_UNK:
-            red = (red + ((currentColor * (COLOR_MASK - red)) >> 5)) & COLOR_MASK;
-            green = (green + ((currentColor * (COLOR_MASK - green)) >> 5)) & COLOR_MASK;
-            blue = (blue + ((currentColor * (COLOR_MASK - blue)) >> 5)) & COLOR_MASK;
+            red = (red + ((currentColor * (COLOR_MAX - red)) >> 5)) & COLOR_MAX;
+            green = (green + ((currentColor * (COLOR_MAX - green)) >> 5)) & COLOR_MAX;
+            blue = (blue + ((currentColor * (COLOR_MAX - blue)) >> 5)) & COLOR_MAX;
             break;
     }
 

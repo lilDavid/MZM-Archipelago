@@ -1,4 +1,5 @@
 #include "chozodia_escape.h"
+#include "dma.h"
 #include "gba.h"
 #include "callbacks.h"
 #include "complex_oam.h" // Required
@@ -9,7 +10,6 @@
 #include "data/shortcut_pointers.h"
 #include "data/tourian_escape_data.h"
 #include "data/chozodia_escape_data.h"
-#include "data/internal_chozodia_escape_data.h"
 #include "data/cutscenes/ridley_landing_data.h"
 
 #include "constants/audio.h"
@@ -27,22 +27,22 @@
  * @brief 8784c | ec | V-blank code for the chozodia escape
  * 
  */
-void ChozodiaEscapeVBlank(void)
+static void ChozodiaEscapeVBlank(void)
 {
     DMA_SET(3, gOamData, OAM_BASE, C_32_2_16(DMA_ENABLE | DMA_32BIT, OAM_SIZE / sizeof(u32)));
 
-    write16(REG_DISPCNT, CHOZODIA_ESCAPE_DATA.dispcnt);
-    write16(REG_BLDCNT, CHOZODIA_ESCAPE_DATA.bldcnt);
+    WRITE_16(REG_DISPCNT, CHOZODIA_ESCAPE_DATA.dispcnt);
+    WRITE_16(REG_BLDCNT, CHOZODIA_ESCAPE_DATA.bldcnt);
 
-    write16(REG_BLDALPHA, C_16_2_8(gWrittenToBLDALPHA_H, gWrittenToBLDALPHA_L));
-    write16(REG_BLDY, gWrittenToBLDY_NonGameplay);
+    WRITE_16(REG_BLDALPHA, C_16_2_8(gWrittenToBldalpha_H, gWrittenToBldalpha_L));
+    WRITE_16(REG_BLDY, gWrittenToBldy_NonGameplay);
 
-    write16(REG_BG0HOFS, MOD_AND(gBg0XPosition, 0x200));
-    write16(REG_BG0VOFS, MOD_AND(gBg0YPosition, 0x100));
-    write16(REG_BG1HOFS, MOD_AND(gBg1XPosition, 0x200));
-    write16(REG_BG1VOFS, MOD_AND(gBg1YPosition, 0x100));
-    write16(REG_BG2HOFS, MOD_AND(gBg2XPosition, 0x200));
-    write16(REG_BG2VOFS, MOD_AND(gBg2YPosition, 0x100));
+    WRITE_16(REG_BG0HOFS, MOD_AND(gBg0XPosition, 0x200));
+    WRITE_16(REG_BG0VOFS, MOD_AND(gBg0YPosition, 0x100));
+    WRITE_16(REG_BG1HOFS, MOD_AND(gBg1XPosition, 0x200));
+    WRITE_16(REG_BG1VOFS, MOD_AND(gBg1YPosition, 0x100));
+    WRITE_16(REG_BG2HOFS, MOD_AND(gBg2XPosition, 0x200));
+    WRITE_16(REG_BG2VOFS, MOD_AND(gBg2YPosition, 0x100));
 
     // Swap the buffer id for reading, it will use the buffer that was populated during this frame
     CHOZODIA_ESCAPE_DATA.hazeBufferReadingId = CHOZODIA_ESCAPE_DATA.hazeBufferWritingId;
@@ -52,65 +52,65 @@ void ChozodiaEscapeVBlank(void)
  * @brief 87938 | 3c | H-blank code for the chozodia escape
  * 
  */
-void ChozodiaEscapeHBlank(void)
+static void ChozodiaEscapeHBlank(void)
 {
     u16 vcount;
 
-    vcount = read16(REG_VCOUNT);
+    vcount = READ_16(REG_VCOUNT);
 
     // Write to the window 0 width register using the previously calculated haze values
     // Since this is h-blank code, this gets called at the end of each scanline, thus the VCOUNT register is used
     // to forward the correct value
-    write16(REG_WIN0H, CHOZODIA_ESCAPE_DATA.explosionHazeValues[CHOZODIA_ESCAPE_DATA.hazeBufferReadingId][vcount]);
+    WRITE_16(REG_WIN0H, CHOZODIA_ESCAPE_DATA.explosionHazeValues[CHOZODIA_ESCAPE_DATA.hazeBufferReadingId][vcount]);
 }
 
 /**
  * @brief 87974 | 34 | Transfers and sets the h-blank code
  * 
  */
-void ChozodiaEscapeSetHBlank(void)
+static void ChozodiaEscapeSetHBlank(void)
 {
     // Transfer code to RAM
     DMA_SET(3, ChozodiaEscapeHBlank, CHOZODIA_ESCAPE_DATA.hblankCode, C_32_2_16(DMA_ENABLE, 0x20));
     
     // Set pointer
-    CallbackSetHBlank((Func_T)(CHOZODIA_ESCAPE_DATA.hblankCode + 1));
+    CallbackSetHblank((Func_T)(CHOZODIA_ESCAPE_DATA.hblankCode + 1));
 }
 
 /**
  * @brief 879a8 | 64 | Sets up the registers for the h-blank code
  * 
  */
-void ChozodiaEscapeSetupHBlankRegisters(void)
+static void ChozodiaEscapeSetupHBlankRegisters(void)
 {
     // Setup window 0 size (no width, max height)
-    write16(REG_WIN0H, 0);
-    write16(REG_WIN0V, SCREEN_SIZE_Y);
+    WRITE_16(REG_WIN0H, 0);
+    WRITE_16(REG_WIN0V, SCREEN_SIZE_Y);
     
     // Setup window 0 masks with every background and obj (BG0, BG1, BG2, BG3, OBJ)
     // Mask out color effects
-    write16(REG_WININ, WIN0_BG0 | WIN0_BG1 | WIN0_BG2 | WIN0_BG3 | WIN0_OBJ | WIN0_COLOR_EFFECT);
-    write16(REG_WINOUT, WIN0_BG0 | WIN0_BG1 | WIN0_BG2 | WIN0_BG3 | WIN0_OBJ);
+    WRITE_16(REG_WININ, WIN0_BG0 | WIN0_BG1 | WIN0_BG2 | WIN0_BG3 | WIN0_OBJ | WIN0_COLOR_EFFECT);
+    WRITE_16(REG_WINOUT, WIN0_BG0 | WIN0_BG1 | WIN0_BG2 | WIN0_BG3 | WIN0_OBJ);
 
     // Enable window 0 and H-blank
     CHOZODIA_ESCAPE_DATA.dispcnt |= (DCNT_OAM_HBL | DCNT_WIN0);
 
     // Disable interrupts
-    write16(REG_IME, FALSE);
+    WRITE_16(REG_IME, FALSE);
 
     // Enable H-blank
-    write16(REG_DISPSTAT, read16(REG_DISPSTAT) | DSTAT_IF_HBLANK);
-    write16(REG_IE, read16(REG_IE) | IF_HBLANK);
+    WRITE_16(REG_DISPSTAT, READ_16(REG_DISPSTAT) | DSTAT_IF_HBLANK);
+    WRITE_16(REG_IE, READ_16(REG_IE) | IF_HBLANK);
 
     // Enable interrupts
-    write16(REG_IME, TRUE);
+    WRITE_16(REG_IME, TRUE);
 }
 
 /**
  * @brief 87a0c | e0 | Updates the explosion haze values
  * 
  */
-void ChozodiaEscapeUpdateExplosionHaze(void)
+static void ChozodiaEscapeUpdateExplosionHaze(void)
 {
     u32 semiMinorAxis;
     u32 subSlice;
@@ -284,10 +284,10 @@ u32 ChozodiaEscapeGetItemCountAndEndingNumber(void)
 }
 
 /**
- * @brief 87c08 | f4 | Processe the OAM for the chozodia escape, to document
+ * @brief 87c08 | f4 | Processes the OAM for the chozodia escape, to document
  * 
  */
-void ChozodiaEscapeProcessOam_1(void)
+static void ChozodiaEscapeProcessOam_1(void)
 {
     u16* dst;
     const u16* src;
@@ -340,10 +340,10 @@ void ChozodiaEscapeProcessOam_1(void)
 }
 
 /**
- * @brief 87cfc | 150 | Processe the OAM for the chozodia escape, to document
+ * @brief 87cfc | 150 | Processes the OAM for the chozodia escape, to document
  * 
  */
-void ChozodiaEscapeProcessOam_2(void)
+static void ChozodiaEscapeProcessOam_2(void)
 {
     u16* dst;
     const u16* src;
@@ -416,21 +416,19 @@ void ChozodiaEscapeProcessOam_2(void)
  * @brief 87e4c | 30c | Initializes the chozodia escape
  * 
  */
-void ChozodiaEscapeInit(void)
+static void ChozodiaEscapeInit(void)
 {
-    u32 zero;
+    WRITE_16(REG_IME, FALSE);
+    WRITE_16(REG_DISPSTAT, READ_16(REG_DISPSTAT) & ~DSTAT_IF_HBLANK);
+    WRITE_16(REG_IE, READ_16(REG_IE) & ~IF_HBLANK);
+    WRITE_16(REG_IF, IF_HBLANK);
 
-    write16(REG_IME, FALSE);
-    write16(REG_DISPSTAT, read16(REG_DISPSTAT) & ~DSTAT_IF_HBLANK);
-    write16(REG_IE, read16(REG_IE) & ~IF_HBLANK);
-    write16(REG_IF, IF_HBLANK);
+    WRITE_16(REG_IME, TRUE);
+    WRITE_16(REG_DISPCNT, 0);
 
-    write16(REG_IME, TRUE);
-    write16(REG_DISPCNT, 0);
-
-    write16(REG_IME, FALSE);
-    CallbackSetVBlank(ChozodiaEscapeVBlank);
-    write16(REG_IME, TRUE);
+    WRITE_16(REG_IME, FALSE);
+    CallbackSetVblank(ChozodiaEscapeVBlank);
+    WRITE_16(REG_IME, TRUE);
 
     ClearGfxRam();
 
@@ -442,12 +440,17 @@ void ChozodiaEscapeInit(void)
     LZ77UncompVRAM(sCutscene_3b5168_TileTable, VRAM_BASE + 0xA800);
     LZ77UncompVRAM(sCutsceneZebesMotherShipBackgroundTileTable, VRAM_BASE + 0xB000);
 
+    #ifdef REGION_EU
+    DmaTransfer(3, sCutsceneZebesPal, PALRAM_BASE, sizeof(sCutsceneZebesPal), 16);
+    DmaTransfer(3, sCutsceneMotherShipPal, PALRAM_OBJ, sizeof(sCutsceneMotherShipPal), 16);
+    #else // !REGION_EU
     DMA_SET(3, sCutsceneZebesPal, PALRAM_BASE, C_32_2_16(DMA_ENABLE, ARRAY_SIZE(sCutsceneZebesPal)));
     DMA_SET(3, sCutsceneMotherShipPal, PALRAM_OBJ, C_32_2_16(DMA_ENABLE, ARRAY_SIZE(sCutsceneMotherShipPal)));
+    #endif // REGION_EU
 
-    write16(REG_BG0CNT, CREATE_BGCNT(2, 20, BGCNT_HIGH_PRIORITY, BGCNT_SIZE_256x256));
-    write16(REG_BG1CNT, CREATE_BGCNT(2, 21, BGCNT_HIGH_MID_PRIORITY, BGCNT_SIZE_256x256));
-    write16(REG_BG2CNT, CREATE_BGCNT(0, 22, BGCNT_LOW_MID_PRIORITY, BGCNT_SIZE_256x512));
+    WRITE_16(REG_BG0CNT, CREATE_BGCNT(2, 20, BGCNT_HIGH_PRIORITY, BGCNT_SIZE_256x256));
+    WRITE_16(REG_BG1CNT, CREATE_BGCNT(2, 21, BGCNT_HIGH_MID_PRIORITY, BGCNT_SIZE_256x256));
+    WRITE_16(REG_BG2CNT, CREATE_BGCNT(0, 22, BGCNT_LOW_MID_PRIORITY, BGCNT_SIZE_256x512));
 
     gBg0XPosition = 0;
     gBg0YPosition = BLOCK_SIZE + HALF_BLOCK_SIZE;
@@ -458,17 +461,16 @@ void ChozodiaEscapeInit(void)
     gBg3XPosition = 0;
     gBg3YPosition = 0;
 
-    write16(REG_BG0HOFS, 0);
-    write16(REG_BG0VOFS, BLOCK_SIZE + HALF_BLOCK_SIZE);
-    write16(REG_BG1HOFS, 0);
-    write16(REG_BG1VOFS, BLOCK_SIZE + HALF_BLOCK_SIZE);
-    write16(REG_BG2HOFS, 0);
-    write16(REG_BG2VOFS, BLOCK_SIZE * 2 + HALF_BLOCK_SIZE + 8);
-    write16(REG_BG3HOFS, 0);
-    write16(REG_BG3VOFS, 0);
+    WRITE_16(REG_BG0HOFS, 0);
+    WRITE_16(REG_BG0VOFS, BLOCK_SIZE + HALF_BLOCK_SIZE);
+    WRITE_16(REG_BG1HOFS, 0);
+    WRITE_16(REG_BG1VOFS, BLOCK_SIZE + HALF_BLOCK_SIZE);
+    WRITE_16(REG_BG2HOFS, 0);
+    WRITE_16(REG_BG2VOFS, BLOCK_SIZE * 2 + HALF_BLOCK_SIZE + 8);
+    WRITE_16(REG_BG3HOFS, 0);
+    WRITE_16(REG_BG3VOFS, 0);
 
-    zero = 0;
-    DMA_SET(3, &zero, &gNonGameplayRAM, C_32_2_16(DMA_ENABLE | DMA_32BIT | DMA_SRC_FIXED, sizeof(gNonGameplayRAM) / 4));
+    DMA_FILL_32(3, 0, &gNonGameplayRam, sizeof(gNonGameplayRam));
 
     gNextOamSlot = 0;
 
@@ -500,11 +502,11 @@ void ChozodiaEscapeInit(void)
     if (gFileScreenOptionsUnlocked.galleryImages == 0)
         gEndingFlags |= ENDING_FLAG_FIRST_CLEAR;
 
-    if (gDifficulty == DIFF_HARD && !(gFileScreenOptionsUnlocked.soundTestAndOgMetroid & (1 << DIFF_HARD)))
+    if (gDifficulty == DIFF_HARD && !(gFileScreenOptionsUnlocked.soundTestAndOrigMetroid & (1 << DIFF_HARD)))
         gEndingFlags |= ENDING_FLAG_FIRST_HARD_MODE_CLEAR;
 
     // Flag new difficulty clear
-    gFileScreenOptionsUnlocked.soundTestAndOgMetroid |= 1 << gDifficulty;
+    gFileScreenOptionsUnlocked.soundTestAndOrigMetroid |= 1 << gDifficulty;
     CheckUnlockTimeAttack();
 
     // Flag new gallery image based on the ending
@@ -522,17 +524,17 @@ void ChozodiaEscapeInit(void)
 
     // Disable soft reset if first time beating the game
     if (gCompletedGameFlagCopy)
-        gDisableSoftreset = FALSE;
+        gDisableSoftReset = FALSE;
     else
-        gDisableSoftreset = TRUE;
+        gDisableSoftReset = TRUE;
 
     CHOZODIA_ESCAPE_DATA.dispcnt = DCNT_BG0 | DCNT_BG1 | DCNT_BG2 | DCNT_OBJ;
 
     CHOZODIA_ESCAPE_DATA.bldcnt = BLDCNT_SCREEN_FIRST_TARGET | BLDCNT_BRIGHTNESS_DECREASE_EFFECT;
 
-    gWrittenToBLDALPHA_L = BLDALPHA_MAX_VALUE;
-    gWrittenToBLDALPHA_H = 0;
-    gWrittenToBLDY_NonGameplay = BLDY_MAX_VALUE;
+    gWrittenToBldalpha_L = BLDALPHA_MAX_VALUE;
+    gWrittenToBldalpha_H = 0;
+    gWrittenToBldy_NonGameplay = BLDY_MAX_VALUE;
 
     ChozodiaEscapeVBlank();
 }
@@ -542,7 +544,7 @@ void ChozodiaEscapeInit(void)
  * 
  * @return u8 bool, ended
  */
-u8 ChozodiaEscapeShipLeaving(void)
+static u8 ChozodiaEscapeShipLeaving(void)
 {
     u8 ended;
     s32 velocity;
@@ -639,7 +641,7 @@ u8 ChozodiaEscapeShipLeaving(void)
  * 
  * @return u8 bool, ended
  */
-u8 ChozodiaEscapeShipHeatingUp(void)
+static u8 ChozodiaEscapeShipHeatingUp(void)
 {
     u8 ended;
     u32 timer;
@@ -660,7 +662,7 @@ u8 ChozodiaEscapeShipHeatingUp(void)
         case CONVERT_SECONDS(2.5f + 1.f / 30):
             ChozodiaEscapeSetHBlank();
             ChozodiaEscapeSetupHBlankRegisters();
-            gWrittenToBLDY_NonGameplay = BLDY_MAX_VALUE / 2;
+            gWrittenToBldy_NonGameplay = BLDY_MAX_VALUE / 2;
             break;
 
         case CONVERT_SECONDS(2.f) + TWO_THIRD_SECOND:
@@ -671,11 +673,11 @@ u8 ChozodiaEscapeShipHeatingUp(void)
 
         case CONVERT_SECONDS(3.7f + 1.f / 30):
             // Disable H-blank callback
-            write16(REG_IME, FALSE);
-            write16(REG_DISPSTAT, read16(REG_DISPSTAT) & ~DSTAT_IF_HBLANK);
-            write16(REG_IE, read16(REG_IE) & ~IF_HBLANK);
-            write16(REG_IF, IF_HBLANK);
-            write16(REG_IME, TRUE);
+            WRITE_16(REG_IME, FALSE);
+            WRITE_16(REG_DISPSTAT, READ_16(REG_DISPSTAT) & ~DSTAT_IF_HBLANK);
+            WRITE_16(REG_IE, READ_16(REG_IE) & ~IF_HBLANK);
+            WRITE_16(REG_IF, IF_HBLANK);
+            WRITE_16(REG_IME, TRUE);
             ended = TRUE;
             break;
     }
@@ -686,8 +688,8 @@ u8 ChozodiaEscapeShipHeatingUp(void)
     {
         if (CHOZODIA_ESCAPE_DATA.unk_2++ >= CONVERT_SECONDS(.1f))
         {
-            if (gWrittenToBLDY_NonGameplay < BLDY_MAX_VALUE)
-                gWrittenToBLDY_NonGameplay++;
+            if (gWrittenToBldy_NonGameplay < BLDY_MAX_VALUE)
+                gWrittenToBldy_NonGameplay++;
 
             CHOZODIA_ESCAPE_DATA.unk_2 = 0;
         }
@@ -705,8 +707,13 @@ u8 ChozodiaEscapeShipHeatingUp(void)
         offset = sChozodiaEscapeHeatingUpPalOffsets[tmp];
         src1 = &sChozodiaEscapeShipHeatingUpPal[offset];
         src2 = &sChozodiaEscapeGroundHeatingUpPal[offset];
-        DMA_SET(3, src1, PALRAM_OBJ, C_32_2_16(DMA_ENABLE, 16));
-        DMA_SET(3, src2, PALRAM_OBJ + 0x80, C_32_2_16(DMA_ENABLE, 16));
+        #ifdef REGION_EU
+        DmaTransfer(3, src1, PALRAM_OBJ, PAL_ROW_SIZE, 16);
+        DmaTransfer(3, src2, PALRAM_OBJ + 0x80, PAL_ROW_SIZE, 16);
+        #else // !REGION_EU
+        DMA_SET(3, src1, PALRAM_OBJ, C_32_2_16(DMA_ENABLE, PAL_ROW));
+        DMA_SET(3, src2, PALRAM_OBJ + 0x80, C_32_2_16(DMA_ENABLE, PAL_ROW));
+        #endif // REGION_EU
     }
 
     if (CHOZODIA_ESCAPE_DATA.timer > 128)
@@ -769,7 +776,7 @@ u8 ChozodiaEscapeShipHeatingUp(void)
  * 
  * @return u8 bool, ended
  */
-u8 ChozodiaEscapeShipBlowingUp(void)
+static u8 ChozodiaEscapeShipBlowingUp(void)
 {
     u8 ended;
     u8 i;
@@ -796,15 +803,20 @@ u8 ChozodiaEscapeShipBlowingUp(void)
             LZ77UncompVRAM(sChozodiaEscapeCraterBackgroundTileTable, VRAM_BASE + 0xE800);
             LZ77UncompVRAM(sMotherShipExplodingFlashTileTable, VRAM_BASE + 0xF000);
 
-            DMA_SET(3, sChozodiaEscapeShipExplodingPal, PALRAM_BASE, DMA_ENABLE << 16 | ARRAY_SIZE(sChozodiaEscapeShipExplodingPal) - 16 * 2);
+            #ifdef REGION_EU
+            DmaTransfer(3, sChozodiaEscapeShipExplodingPal, PALRAM_BASE, sizeof(sChozodiaEscapeShipExplodingPal) - PAL_ROW_SIZE * 2, 16);
+            DmaTransfer(3, sMotherShipBlowingUpExplosionsPal, PALRAM_OBJ, sizeof(sMotherShipBlowingUpExplosionsPal), 16);
+            #else // !REGION_EU
+            DMA_SET(3, sChozodiaEscapeShipExplodingPal, PALRAM_BASE, DMA_ENABLE << 16 | ARRAY_SIZE(sChozodiaEscapeShipExplodingPal) - PAL_ROW * 2);
             DMA_SET(3, sMotherShipBlowingUpExplosionsPal, PALRAM_OBJ, DMA_ENABLE << 16 | ARRAY_SIZE(sMotherShipBlowingUpExplosionsPal));
+            #endif // REGION_EU
 
-            write16(REG_BG0CNT, 0x1E08);
-            write16(REG_BG1CNT, 0x1D01);
+            WRITE_16(REG_BG0CNT, CREATE_BGCNT(2, 30, BGCNT_HIGH_PRIORITY, BGCNT_SIZE_256x256));
+            WRITE_16(REG_BG1CNT, CREATE_BGCNT(0, 29, BGCNT_HIGH_MID_PRIORITY, BGCNT_SIZE_256x256));
 
             CHOZODIA_ESCAPE_DATA.dispcnt = DCNT_BG0 | DCNT_BG1 | DCNT_OBJ;
             CHOZODIA_ESCAPE_DATA.bldcnt = BLDCNT_BG0_FIRST_TARGET_PIXEL | BLDCNT_ALPHA_BLENDING_EFFECT | BLDCNT_BG1_SECOND_TARGET_PIXEL;
-            gWrittenToBLDY_NonGameplay = 0;
+            gWrittenToBldy_NonGameplay = 0;
 
             CHOZODIA_ESCAPE_DATA.oamTypes[0]++;
             CHOZODIA_ESCAPE_DATA.oamXPositions[0] = BLOCK_SIZE * 2 - 8;
@@ -838,9 +850,9 @@ u8 ChozodiaEscapeShipBlowingUp(void)
             CHOZODIA_ESCAPE_DATA.bldcnt = BLDCNT_SCREEN_FIRST_TARGET | BLDCNT_BRIGHTNESS_DECREASE_EFFECT;
 
             CHOZODIA_ESCAPE_DATA.unk_1++;
-            gWrittenToBLDALPHA_L = 16;
-            gWrittenToBLDALPHA_H = 0;
-            gWrittenToBLDY_NonGameplay = 0;
+            gWrittenToBldalpha_L = 16;
+            gWrittenToBldalpha_H = 0;
+            gWrittenToBldy_NonGameplay = 0;
             break;
 
         case 288:
@@ -853,17 +865,17 @@ u8 ChozodiaEscapeShipBlowingUp(void)
 
     if (CHOZODIA_ESCAPE_DATA.unk_1 == 1 && CHOZODIA_ESCAPE_DATA.unk_2++ > 2)
     {
-        if (gWrittenToBLDALPHA_L != 0)
-            gWrittenToBLDALPHA_L--;
+        if (gWrittenToBldalpha_L != 0)
+            gWrittenToBldalpha_L--;
 
-        gWrittenToBLDALPHA_H = 16 - gWrittenToBLDALPHA_L;
+        gWrittenToBldalpha_H = 16 - gWrittenToBldalpha_L;
         CHOZODIA_ESCAPE_DATA.unk_2 = 0;
     }
 
     if (CHOZODIA_ESCAPE_DATA.unk_1 == 2 && CHOZODIA_ESCAPE_DATA.unk_2++ > 5)
     {
-        if (gWrittenToBLDY_NonGameplay < BLDY_MAX_VALUE)
-            gWrittenToBLDY_NonGameplay++;
+        if (gWrittenToBldy_NonGameplay < BLDY_MAX_VALUE)
+            gWrittenToBldy_NonGameplay++;
 
         CHOZODIA_ESCAPE_DATA.unk_2 = 0;
     }
@@ -947,7 +959,7 @@ u8 ChozodiaEscapeShipBlowingUp(void)
  * 
  * @return u8 bool, ended
  */
-u8 ChozodiaEscapeShipLeavingPlanet(void)
+static u8 ChozodiaEscapeShipLeavingPlanet(void)
 {
     u8 ended;
     u32 yPosition;
@@ -974,10 +986,17 @@ u8 ChozodiaEscapeShipLeavingPlanet(void)
             LZ77UncompVRAM(sChozodiaEscapeZebesSkyTileTable, VRAM_BASE + 0xF000);
             LZ77UncompVRAM(sChozodiaEscapeSamusInBlueShipTileTable, VRAM_BASE + 0xF800);
             
+            #ifdef REGION_EU
+            DmaTransfer(3, sChozodiaEscapeMissionAccomplishedPal, PALRAM_BASE,
+                sizeof(sChozodiaEscapeMissionAccomplishedPal), 16);
+            DmaTransfer(3, sChozodiaEscapeMissionAccomplishedPal, PALRAM_OBJ,
+                sizeof(sChozodiaEscapeMissionAccomplishedPal), 16);
+            #else // !REGION_EU
             DMA_SET(3, sChozodiaEscapeMissionAccomplishedPal, PALRAM_BASE,
                 DMA_ENABLE << 16 | ARRAY_SIZE(sChozodiaEscapeMissionAccomplishedPal));
             DMA_SET(3, sChozodiaEscapeMissionAccomplishedPal, PALRAM_OBJ,
                 DMA_ENABLE << 16 | ARRAY_SIZE(sChozodiaEscapeMissionAccomplishedPal));
+            #endif // REGION_EU
 
             // Setup ship object
             CHOZODIA_ESCAPE_DATA.oamTypes[CHOZODIA_ESCAPE_OAM_BLUE_SHIP]++;
@@ -993,9 +1012,9 @@ u8 ChozodiaEscapeShipLeavingPlanet(void)
             CHOZODIA_ESCAPE_DATA.oamYPositions[CHOZODIA_ESCAPE_OAM_MOTHER_SHIP_DOOR] =
                 CHOZODIA_ESCAPE_DATA.oamYPositions[CHOZODIA_ESCAPE_OAM_BLUE_SHIP] * 8;
 
-            write16(REG_BG0CNT, 0x1F08);
-            write16(REG_BG1CNT, 0x1D01);
-            write16(REG_BG2CNT, 0x1E02);
+            WRITE_16(REG_BG0CNT, CREATE_BGCNT(2, 31, BGCNT_HIGH_PRIORITY, BGCNT_SIZE_256x256));
+            WRITE_16(REG_BG1CNT, CREATE_BGCNT(0, 29, BGCNT_HIGH_MID_PRIORITY, BGCNT_SIZE_256x256));
+            WRITE_16(REG_BG2CNT, CREATE_BGCNT(0, 30, BGCNT_LOW_MID_PRIORITY, BGCNT_SIZE_256x256));
 
             CHOZODIA_ESCAPE_DATA.dispcnt = DCNT_BG1 | DCNT_BG2 | DCNT_OBJ;
             gBg1XPosition = QUARTER_BLOCK_SIZE;
@@ -1032,8 +1051,8 @@ u8 ChozodiaEscapeShipLeavingPlanet(void)
     // Update color effect
     if (!CHOZODIA_ESCAPE_DATA.unk_1 && !(CHOZODIA_ESCAPE_DATA.timer & 3))
     {
-        if (gWrittenToBLDY_NonGameplay)
-            gWrittenToBLDY_NonGameplay--;
+        if (gWrittenToBldy_NonGameplay)
+            gWrittenToBldy_NonGameplay--;
         else
             CHOZODIA_ESCAPE_DATA.unk_1++;
     }
@@ -1103,7 +1122,7 @@ u8 ChozodiaEscapeShipLeavingPlanet(void)
  * 
  * @return u8 bool, ended (0, 2)
  */
-u8 ChozodiaEscapeMissionAccomplished(void)
+static u8 ChozodiaEscapeMissionAccomplished(void)
 {
     u8 ended;
 
@@ -1115,8 +1134,12 @@ u8 ChozodiaEscapeMissionAccomplished(void)
             LZ77UncompVRAM(sChozodiaEscapeMissionAccomplishedLettersGfx, VRAM_OBJ);
 
             // Load the "correct" palette for samus in blue ship, makes her visible
+            #ifdef REGION_EU
+            DmaTransfer(3, sChozodiaEscapeSamusInBlueShipPal, PALRAM_OBJ, sizeof(sChozodiaEscapeSamusInBlueShipPal), 16);
+            #else // !REGION_EU
             DMA_SET(3, sChozodiaEscapeSamusInBlueShipPal, PALRAM_OBJ, C_32_2_16(DMA_ENABLE, ARRAY_SIZE(sChozodiaEscapeSamusInBlueShipPal)));
-            
+            #endif // REGION_EU
+
             CHOZODIA_ESCAPE_DATA.dispcnt = DCNT_BG0 | DCNT_BG1 | DCNT_BG2 | DCNT_OBJ;
             break;
 
@@ -1131,6 +1154,11 @@ u8 ChozodiaEscapeMissionAccomplished(void)
         case CONVERT_SECONDS(1.f + 1.f / 15):
             // Setup mission accomplished OAM
             CHOZODIA_ESCAPE_DATA.oamTypes[CHOZODIA_ESCAPE_OAM_MISSION_ACCOMPLISHED]++;
+            
+            #ifdef REGION_EU
+            CHOZODIA_ESCAPE_DATA.oamPointers[CHOZODIA_ESCAPE_OAM_MISSION_ACCOMPLISHED] =
+                sChozodiaEscapeOamPointers_MissionAccomplished[gLanguage];
+            #else // !REGION_EU
             if (gLanguage == LANGUAGE_HIRAGANA)
             {
                 CHOZODIA_ESCAPE_DATA.oamPointers[CHOZODIA_ESCAPE_OAM_MISSION_ACCOMPLISHED] =
@@ -1141,6 +1169,7 @@ u8 ChozodiaEscapeMissionAccomplished(void)
                 CHOZODIA_ESCAPE_DATA.oamPointers[CHOZODIA_ESCAPE_OAM_MISSION_ACCOMPLISHED] =
                     sChozodiaEscapeOam_MissionAccomplishedEnglish_Frame0;
             }
+            #endif // REGION_EU
 
             CHOZODIA_ESCAPE_DATA.oamFrames[CHOZODIA_ESCAPE_OAM_MISSION_ACCOMPLISHED] = 1;
             CHOZODIA_ESCAPE_DATA.oamXPositions[CHOZODIA_ESCAPE_OAM_MISSION_ACCOMPLISHED] = SCREEN_X_MIDDLE;
@@ -1150,7 +1179,7 @@ u8 ChozodiaEscapeMissionAccomplished(void)
         case CONVERT_SECONDS(7.8f + 1.f / 15):
             CHOZODIA_ESCAPE_DATA.bldcnt = BLDCNT_SCREEN_FIRST_TARGET | BLDCNT_BRIGHTNESS_DECREASE_EFFECT;
 
-            gWrittenToBLDY_NonGameplay = 0;
+            gWrittenToBldy_NonGameplay = 0;
             ended = TRUE + 1;
             break;
     }
@@ -1178,6 +1207,14 @@ u8 ChozodiaEscapeMissionAccomplished(void)
     return ended;
 }
 
+static ChozodiaEscapeFunc_T sChozodiaEscapeFunctionPointers[5] = {
+    [0] = ChozodiaEscapeShipLeaving,
+    [1] = ChozodiaEscapeShipHeatingUp,
+    [2] = ChozodiaEscapeShipBlowingUp,
+    [3] = ChozodiaEscapeShipLeavingPlanet,
+    [4] = ChozodiaEscapeMissionAccomplished,
+};
+
 /**
  * @brief 88d5c | 144 | Subroutine for the chozodia escape
  * 
@@ -1192,23 +1229,23 @@ u32 ChozodiaEscapeSubroutine(void)
     ended = FALSE;
     gNextOamSlot = 0;
 
-    switch (gGameModeSub1)
+    switch (gSubGameMode1)
     {
         case 0:
             ChozodiaEscapeInit();
-            gGameModeSub1++;
+            gSubGameMode1++;
             break;
 
         case 1:
             // Fade
-            if (gWrittenToBLDY_NonGameplay != 0)
+            if (gWrittenToBldy_NonGameplay != 0)
             {
-                gWrittenToBLDY_NonGameplay--;
+                gWrittenToBldy_NonGameplay--;
                 break;
             }
 
             CHOZODIA_ESCAPE_DATA.bldcnt = 0;
-            gGameModeSub1++;
+            gSubGameMode1++;
             break;
 
         case 2:
@@ -1249,8 +1286,8 @@ u32 ChozodiaEscapeSubroutine(void)
             if (subroutineResult == 2)
             {
                 // Cutscene ended
-                gGameModeSub1++;
-                gGameModeSub2 = 0;
+                gSubGameMode1++;
+                gSubGameMode2 = 0;
             }
             
             ResetFreeOam();
@@ -1258,9 +1295,9 @@ u32 ChozodiaEscapeSubroutine(void)
 
         case 3:
             // Fade
-            if (gWrittenToBLDY_NonGameplay < BLDY_MAX_VALUE)
+            if (gWrittenToBldy_NonGameplay < BLDY_MAX_VALUE)
             {
-                gWrittenToBLDY_NonGameplay++;
+                gWrittenToBldy_NonGameplay++;
                 break;
             }
 

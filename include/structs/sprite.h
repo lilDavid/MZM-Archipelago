@@ -3,6 +3,8 @@
 
 #include "types.h"
 
+#include "constants/sprite.h"
+
 #define ENEMY_ROOM_DATA_SIZE 3
 #define ENEMY_ROOM_DATA_ARRAY_SIZE(nbr) (ENEMY_ROOM_DATA_SIZE * nbr)
 
@@ -30,17 +32,17 @@ struct SubSpriteData {
     u16 xPosition;
     u16 health;
     u8 animationDurationCounter;
-    u8 workVariable1;
-    u8 workVariable2;
-    u8 workVariable3;
-    u8 workVariable4;
-    u8 workVariable5;
-    u8 workVariable6;
-    u8 workVariable7;
+    u8 work1;
+    u8 work2;
+    u8 work3;
+    u8 work4;
+    u8 work5;
+    u8 work6;
+    u8 work7;
 };
 
 struct SpriteData {
-    u16 status;
+    SpriteStatus status;
     u16 yPosition;
     u16 xPosition;
     u16 yPositionSpawn;
@@ -62,7 +64,7 @@ struct SpriteData {
     u8 drawOrder;
     u8 primarySpriteRamSlot;
     u8 pose;
-    u8 samusCollision;
+    SamusSpriteCollision samusCollision;
     u8 ignoreSamusCollisionTimer;
     u8 drawDistanceTop;
     u8 drawDistanceBottom;
@@ -74,8 +76,8 @@ struct SpriteData {
     u8 work2;
     u8 work3;
     u8 freezeTimer;
-    u8 standingOnSprite;
-    u8 properties;
+    SamusStandingOnSpriteStatus standingOnSprite;
+    SpritePropery properties;
     u8 frozenPaletteRowOffset;
     u8 absolutePaletteRow;
 };
@@ -136,4 +138,4 @@ extern struct BossWork gBossWork;
 extern u8 gSpriteRng;
 extern u8 gDisableDrawingSprites;
 
-#endif
+#endif /* SPRITE_STRUCT_H */

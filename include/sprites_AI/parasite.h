@@ -26,34 +26,6 @@
 #define PARASITE_POSE_DYING 0x67
 
 u32 ParasiteCount(void);
-void ParasiteInit(struct SpriteData* pSprite);
-void ParasiteGrabSamus(struct SpriteData* pSprite);
-void ParasiteSamusGrabbed(struct SpriteData* pSprite);
-void ParasiteExpulsedInit(struct SpriteData* pSprite);
-void ParasiteExpulsedUp(struct SpriteData* pSprite);
-void ParasiteMultipleExpulsedUp(struct SpriteData* pSprite);
-void ParasiteExpulsedDown(struct SpriteData* pSprite);
-void ParasiteMultipleExpulsedDown(struct SpriteData* pSprite);
-void ParasiteJumpingUp(struct SpriteData* pSprite);
-void ParasiteMultipleJumpingUp(struct SpriteData* pSprite);
-void ParasiteJumpingDown(struct SpriteData* pSprite);
-void ParasiteMultipleJumpingDown(struct SpriteData* pSprite);
-void ParasiteIdleInit(struct SpriteData* pSprite);
-void ParasiteIdle(struct SpriteData* pSprite);
-void ParasiteMultipleIdle(struct SpriteData* pSprite);
-void ParasiteTurningAroundInit(struct SpriteData* pSprite);
-void ParasiteTurningAroundFirstPart(struct SpriteData* pSprite);
-void ParasiteTurningAroundSecondPart(struct SpriteData* pSprite);
-void ParasiteLandingInit(struct SpriteData* pSprite);
-void ParasiteLanding(struct SpriteData* pSprite);
-void ParasiteFallingInit(struct SpriteData* pSprite);
-void ParasiteFalling(struct SpriteData* pSprite);
-void ParasiteDyingInit(struct SpriteData* pSprite);
-void ParasiteDying(struct SpriteData* pSprite);
-void ParasiteMultipleDying(struct SpriteData* pSprite);
-void ParasiteGrabGeron(struct SpriteData* pSprite);
-void ParasiteGeronGrabbed(struct SpriteData* pSprite);
-void ParasiteBombCollision(struct SpriteData* pSprite);
 void ParasiteMultiple(void);
 void Parasite(void);
 

@@ -1,8 +1,11 @@
 #ifndef GAME_STATE_CONSTANTS_H
 #define GAME_STATE_CONSTANTS_H
 
-enum GameMode {
-    GM_SOFTRESET,
+#include "types.h"
+#include "macros.h"
+
+MAKE_ENUM(s16, GameMode) {
+    GM_SOFT_RESET,
     GM_INTRO,
     GM_TITLE,
     GM_FILE_SELECT,
@@ -16,12 +19,12 @@ enum GameMode {
     GM_DEMO,
     GM_GALLERY,
     GM_FUSION_GALLERY,
-    GM_START_SOFTRESET,
+    GM_START_SOFT_RESET,
     GM_ERASE_SRAM,
     GM_DEBUG_MENU
 };
 
-enum Difficulty {
+MAKE_ENUM(u8, Difficulty) {
     DIFF_EASY,
     DIFF_NORMAL,
     DIFF_HARD,
@@ -29,7 +32,7 @@ enum Difficulty {
     DIFF_END
 };
 
-enum Language {
+MAKE_ENUM(s8, Language) {
     LANGUAGE_JAPANESE,
     LANGUAGE_HIRAGANA,
     LANGUAGE_ENGLISH,
@@ -41,7 +44,19 @@ enum Language {
     LANGUAGE_END
 };
 
-enum PauseScreenFlag {
+#ifdef REGION_JP
+#define LANGUAGE_DEFAULT LANGUAGE_JAPANESE
+#else // !REGION_JP
+// US and EU default to English
+#define LANGUAGE_DEFAULT LANGUAGE_ENGLISH
+#endif // REGION_JP
+
+/**
+ * @brief Condition to check if the language is not a valid European language
+ */
+#define INVALID_EU_LANGUAGE(lang) ((lang) < LANGUAGE_ENGLISH || (lang) >= LANGUAGE_END)
+
+MAKE_ENUM(s8, PauseScreenFlag) {
     PAUSE_SCREEN_NONE,
     PAUSE_SCREEN_UNKNOWN_1,
     PAUSE_SCREEN_PAUSE_OR_CUTSCENE,
@@ -61,7 +76,7 @@ enum SubGameMode {
     SUB_GAME_MODE_LOADING_ROOM,
 
     SUB_GAME_MODE_DYING = 5,
-    SUB_GAME_MODE_FREE_MOVEMENT,
+    SUB_GAME_MODE_NO_CLIP,
 };
 
 #endif /* GAME_STATE_CONSTANTS_H */

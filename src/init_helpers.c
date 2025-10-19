@@ -1,8 +1,10 @@
-#include "funcs.h"
+#include "init_helpers.h"
+#include "dma.h"
 #include "gba.h"
 #include "globals.h"
 #include "interrupts.h"
-#include "memory.h"
+#include "dma.h"
+#include "oam.h"
 #include "types.h"
 
 /**

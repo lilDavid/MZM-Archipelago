@@ -6,8 +6,8 @@ const u32 sTileset_42_Gfx[736] = INCBIN_U32("data/tilesets/42.gfx.lz");
 const u32 sTileset_78_Gfx[736] = INCBIN_U32("data/tilesets/78.gfx.lz");
 const u32 sTileset_27_Gfx[807] = INCBIN_U32("data/tilesets/27.gfx.lz");
 
-const u32 sTileset_42_Bg_Gfx[591] = INCBIN_U32("data/tilesets/42_Bg.gfx.lz");
-const u32 sTileset_27_Bg_Gfx[1487] = INCBIN_U32("data/tilesets/27_Bg.gfx.lz");
+const u32 sTileset_42_Bg_Gfx[591] = INCBIN_U32("data/tilesets/42_bg.gfx.lz");
+const u32 sTileset_27_Bg_Gfx[1487] = INCBIN_U32("data/tilesets/27_bg.gfx.lz");
 
 const u16 sTileset_42_Pal[14 * 16] = INCBIN_U16("data/tilesets/42.pal");
 

@@ -1,12 +1,11 @@
 #include "minimap.h"
+#include "dma.h"
 #include "gba.h"
 #include "macros.h"
 
 #include "data/shortcut_pointers.h"
-#include "data/engine_pointers.h"
 #include "data/menus/pause_screen_data.h"
 #include "data/menus/pause_screen_map_data.h"
-#include "data/menus/internal_pause_screen_data.h"
 
 #include "constants/connection.h"
 #include "constants/game_state.h"
@@ -17,6 +16,66 @@
 #include "structs/minimap.h"
 #include "structs/samus.h"
 #include "structs/room.h"
+
+#ifdef DEBUG
+static void MinimapDrawNumber(u8 value, void* dst);
+#endif // DEBUG
+static void MinimapSetTileAsExplored(void);
+static void MinimapCheckForUnexploredTile(void);
+static void MinimapUpdateForExploredTiles(void);
+static void MinimapCopyTileGfx(u32* dst, u16* pTile, u8 palette);
+static void MinimapCopyTileXFlippedGfx(u32* dst, u16* pTile, u8 palette);
+static void MinimapCopyTileYFlippedGfx(u32* dst, u16* pTile, u8 palette);
+static void MinimapCopyTileXYFlippedGfx(u32* dst, u16* pTile, u8 palette);
+
+extern const struct RoomEntryRom* sAreaRoomEntryPointers[AREA_ENTRY_COUNT];
+
+#ifdef DEBUG
+
+/**
+ * @brief Draws room ID and coordinates on the minimap
+ * 
+ */
+void MinimapDrawRoomInfo(void)
+{
+    MinimapDrawNumber(gCurrentRoom, VRAM_OBJ + 0x12E0);
+    MinimapDrawNumber(gMinimapX, VRAM_OBJ + 0x1340);
+    MinimapDrawNumber(gMinimapY, VRAM_OBJ + 0x13A0);
+}
+
+/**
+ * @brief Draws a number on the minimap
+ * 
+ * @param value Number to draw
+ * @param dst Destination address
+ */
+static void MinimapDrawNumber(u8 value, void* dst)
+{
+    s32 zeroTile;
+    s32 divisor;
+    s32 tile;
+
+    zeroTile = 10;
+    divisor = 100;
+
+    while (divisor > 0)
+    {
+        if (divisor == 1)
+            zeroTile = 0;
+
+        tile = ((value + 1) / divisor) % 10;
+        if (tile == 0)
+            tile = zeroTile;
+        else
+            zeroTile = 0;
+
+        DmaTransfer(3, VRAM_OBJ + 0x7EA0 + (tile * 32), dst, 32, 32);
+        divisor /= 10;
+        dst += 0x20;
+    }
+}
+
+#endif // DEBUG
 
 /**
  * @brief 6c154 | 24 | Updates the minimap
@@ -33,13 +92,24 @@ void MinimapUpdate(void)
     MinimapDraw();
 }
 
+static u32 sExploredMinimapBitFlags[32] = {
+    1 << 0,  1 << 1,  1 << 2,  1 << 3,  1 << 4,
+    1 << 5,  1 << 6,  1 << 7,  1 << 8,  1 << 9,
+    1 << 10, 1 << 11, 1 << 12, 1 << 13, 1 << 14,
+    1 << 15, 1 << 16, 1 << 17, 1 << 18, 1 << 19,
+    1 << 20, 1 << 21, 1 << 22, 1 << 23, 1 << 24,
+    1 << 25, 1 << 26, 1 << 27, 1 << 28, 1 << 29,
+    1 << 30, 1 << 31
+};
+
 /**
  * @brief 6c178 | 4c | Sets the current minimap tile to be explored
  * 
  */
-void MinimapSetTileAsExplored(void)
+static void MinimapSetTileAsExplored(void)
 {
     u32 offset;
+
     if (!gShipLandingFlag)
     {
         offset = gCurrentArea * MINIMAP_SIZE + gMinimapY; 
@@ -47,21 +117,20 @@ void MinimapSetTileAsExplored(void)
     }
 }
 
-#ifdef NON_MATCHING
-void MinimapCheckSetAreaNameAsExplored(u8 afterTransition)
+/**
+ * @brief 6c1c4 | 1d8 | To document
+ * 
+ * @param afterTransition To document
+ */
+static void MinimapCheckSetAreaNameAsExplored(u8 afterTransition)
 {
-    // https://decomp.me/scratch/lc52R
-    
     u32 set;
     s32 i;
     s32 j;
     u32 area;
-    u32 xPosition;
-    u32 yPosition;
     u16* pMap;
     u32 actualX;
     u32 actualY;
-    u32 tile;
     u32 offset;
 
     if (gShipLandingFlag)
@@ -110,18 +179,18 @@ void MinimapCheckSetAreaNameAsExplored(u8 afterTransition)
     if (set == 1)
     {
         area = sMinimapAreaNames[i].area1;
-        xPosition = sMinimapAreaNames[i].mapX1;
-        actualX = xPosition + sMinimapAreaNames[i].xOffset1 - 1;
-        yPosition = sMinimapAreaNames[i].mapY1;
-        actualY = yPosition + sMinimapAreaNames[i].yOffset1 - 1;
+        actualX = sMinimapAreaNames[i].mapX1 + sMinimapAreaNames[i].xOffset1 - 1;
+        actualY = sMinimapAreaNames[i].mapY1 + sMinimapAreaNames[i].yOffset1 - 1;
+        gLastAreaNameVisited.mapX = sMinimapAreaNames[i].mapX1 - 1;
+        gLastAreaNameVisited.mapY = sMinimapAreaNames[i].mapY1 - 1;
     }
     else if (set == 2)
     {
         area = sMinimapAreaNames[i].area2;
-        xPosition = sMinimapAreaNames[i].mapX2;
-        actualX = xPosition + sMinimapAreaNames[i].xOffset2 - 1;
-        yPosition = sMinimapAreaNames[i].mapY2;
-        actualY = yPosition + sMinimapAreaNames[i].yOffset2 - 1;
+        actualX = sMinimapAreaNames[i].mapX2 + sMinimapAreaNames[i].xOffset2 - 1;
+        actualY = sMinimapAreaNames[i].mapY2 + sMinimapAreaNames[i].yOffset2 - 1;
+        gLastAreaNameVisited.mapX = sMinimapAreaNames[i].mapX2 - 1;
+        gLastAreaNameVisited.mapY = sMinimapAreaNames[i].mapY2 - 1;
     }
     else
     {
@@ -129,21 +198,14 @@ void MinimapCheckSetAreaNameAsExplored(u8 afterTransition)
         return;
     }
 
-    do {
-    gLastAreaNameVisited.mapX = --xPosition;
-    }while(0);
-    gLastAreaNameVisited.mapY = --yPosition;
-
-    //pMap = &gDecompressedMinimapData[actualX + actualY * MINIMAP_SIZE];
-    pMap = &((u16*)(0x02034800))[actualX + actualY * MINIMAP_SIZE];
+    pMap = &gDecompressedMinimapData[actualX + actualY * MINIMAP_SIZE];
 
     offset = area * MINIMAP_SIZE + actualY;
 
     for (j = 0, i = 0; i < MINIMAP_SIZE; i++, pMap++)
     {
         set = *pMap & 0x3FF;
-        tile = set - 0x141;
-        if (tile <= 0x1D)
+        if (set >= 0x141 && set <= 0x15E)
         {
             sVisitedMinimapTilesPointer[offset] |= sExploredMinimapBitFlags[actualX + j];
             j++;
@@ -161,261 +223,12 @@ void MinimapCheckSetAreaNameAsExplored(u8 afterTransition)
         gLastAreaNameVisited.flags = 0;
     }
 }
-#else
-NAKED_FUNCTION
-void MinimapCheckSetAreaNameAsExplored(u8 afterTransition)
-{
-    asm(" \n\
-    push {r4, r5, r6, r7, lr} \n\
-    mov r7, sl \n\
-    mov r6, sb \n\
-    mov r5, r8 \n\
-    push {r5, r6, r7} \n\
-    sub sp, #4 \n\
-    lsl r0, r0, #0x18 \n\
-    lsr r0, r0, #0x18 \n\
-    str r0, [sp] \n\
-    ldr r0, lbl_0806c21c @ =gShipLandingFlag \n\
-    ldrb r0, [r0] \n\
-    cmp r0, #0 \n\
-    beq lbl_0806c1e0 \n\
-    b lbl_0806c372 \n\
-lbl_0806c1e0: \n\
-    ldr r0, lbl_0806c220 @ =gLastAreaNameVisited \n\
-    ldrb r1, [r0] \n\
-    mov ip, r0 \n\
-    cmp r1, #0 \n\
-    bne lbl_0806c1ec \n\
-    b lbl_0806c372 \n\
-lbl_0806c1ec: \n\
-    movs r4, #0 \n\
-    movs r6, #0 \n\
-    ldr r0, [sp] \n\
-    cmp r0, #1 \n\
-    bne lbl_0806c236 \n\
-    movs r0, #0x80 \n\
-    and r0, r1 \n\
-    cmp r0, #0 \n\
-    beq lbl_0806c2a6 \n\
-    movs r6, #0x7f \n\
-    and r6, r1 \n\
-    ldr r1, lbl_0806c224 @ =sMinimapAreaNames \n\
-    lsl r0, r6, #1 \n\
-    add r0, r0, r6 \n\
-    lsl r0, r0, #2 \n\
-    add r3, r0, r1 \n\
-    ldr r0, lbl_0806c228 @ =gAreaBeforeTransition \n\
-    ldrb r1, [r3] \n\
-    ldrb r2, [r0] \n\
-    cmp r1, r2 \n\
-    bne lbl_0806c22c \n\
-    movs r4, #1 \n\
-    b lbl_0806c2a6 \n\
-    .align 2, 0 \n\
-lbl_0806c21c: .4byte gShipLandingFlag \n\
-lbl_0806c220: .4byte gLastAreaNameVisited \n\
-lbl_0806c224: .4byte sMinimapAreaNames \n\
-lbl_0806c228: .4byte gAreaBeforeTransition \n\
-lbl_0806c22c: \n\
-    ldrb r0, [r3, #5] \n\
-    cmp r0, r2 \n\
-    bne lbl_0806c2a6 \n\
-    movs r4, #2 \n\
-    b lbl_0806c2a6 \n\
-lbl_0806c236: \n\
-    ldr r1, lbl_0806c264 @ =sMinimapAreaNames \n\
-    mov r8, r1 \n\
-    ldrb r0, [r1] \n\
-    cmp r0, #0xff \n\
-    beq lbl_0806c294 \n\
-    mov r5, ip \n\
-    ldrb r2, [r5, #1] \n\
-    movs r3, #0 \n\
-lbl_0806c246: \n\
-    ldrb r0, [r1] \n\
-    cmp r0, r2 \n\
-    bne lbl_0806c268 \n\
-    mov r7, ip \n\
-    ldrb r0, [r7, #2] \n\
-    ldrb r7, [r1, #1] \n\
-    cmp r0, r7 \n\
-    bne lbl_0806c280 \n\
-    ldrb r0, [r5, #3] \n\
-    ldrb r7, [r1, #2] \n\
-    cmp r0, r7 \n\
-    bne lbl_0806c280 \n\
-    movs r4, #1 \n\
-    b lbl_0806c298 \n\
-    .align 2, 0 \n\
-lbl_0806c264: .4byte sMinimapAreaNames \n\
-lbl_0806c268: \n\
-    ldrb r0, [r1, #5] \n\
-    cmp r0, r2 \n\
-    bne lbl_0806c280 \n\
-    ldrb r0, [r5, #2] \n\
-    ldrb r7, [r1, #6] \n\
-    cmp r0, r7 \n\
-    bne lbl_0806c280 \n\
-    ldrb r0, [r5, #3] \n\
-    ldrb r7, [r1, #7] \n\
-    cmp r0, r7 \n\
-    bne lbl_0806c280 \n\
-    movs r4, #2 \n\
-lbl_0806c280: \n\
-    cmp r4, #0 \n\
-    bne lbl_0806c298 \n\
-    add r3, #0xc \n\
-    add r1, #0xc \n\
-    add r6, #1 \n\
-    mov r7, r8 \n\
-    add r0, r3, r7 \n\
-    ldrb r0, [r0] \n\
-    cmp r0, #0xff \n\
-    bne lbl_0806c246 \n\
-lbl_0806c294: \n\
-    cmp r4, #0 \n\
-    beq lbl_0806c2a6 \n\
-lbl_0806c298: \n\
-    movs r0, #0x80 \n\
-    neg r0, r0 \n\
-    add r1, r0, #0 \n\
-    add r0, r6, #0 \n\
-    orr r0, r1 \n\
-    mov r1, ip \n\
-    strb r0, [r1] \n\
-lbl_0806c2a6: \n\
-    cmp r4, #1 \n\
-    bne lbl_0806c2cc \n\
-    ldr r0, lbl_0806c2c8 @ =sMinimapAreaNames \n\
-    lsl r1, r6, #1 \n\
-    add r1, r1, r6 \n\
-    lsl r1, r1, #2 \n\
-    add r1, r1, r0 \n\
-    ldrb r5, [r1] \n\
-    ldrb r3, [r1, #1] \n\
-    movs r0, #3 \n\
-    ldrsb r0, [r1, r0] \n\
-    add r0, r3, r0 \n\
-    sub r4, r0, #1 \n\
-    ldrb r2, [r1, #2] \n\
-    movs r0, #4 \n\
-    ldrsb r0, [r1, r0] \n\
-    b lbl_0806c2f4 \n\
-    .align 2, 0 \n\
-lbl_0806c2c8: .4byte sMinimapAreaNames \n\
-lbl_0806c2cc: \n\
-    cmp r4, #2 \n\
-    beq lbl_0806c2d8 \n\
-    movs r0, #0 \n\
-    mov r1, ip \n\
-    strb r0, [r1] \n\
-    b lbl_0806c372 \n\
-lbl_0806c2d8: \n\
-    ldr r0, lbl_0806c384 @ =sMinimapAreaNames \n\
-    lsl r1, r6, #1 \n\
-    add r1, r1, r6 \n\
-    lsl r1, r1, #2 \n\
-    add r1, r1, r0 \n\
-    ldrb r5, [r1, #5] \n\
-    ldrb r3, [r1, #6] \n\
-    movs r0, #8 \n\
-    ldrsb r0, [r1, r0] \n\
-    add r0, r3, r0 \n\
-    sub r4, r0, #1 \n\
-    ldrb r2, [r1, #7] \n\
-    movs r0, #9 \n\
-    ldrsb r0, [r1, r0] \n\
-lbl_0806c2f4: \n\
-    add r0, r2, r0 \n\
-    sub r1, r0, #1 \n\
-    sub r3, #1 \n\
-    mov r7, ip \n\
-    strb r3, [r7, #2] \n\
-    sub r2, #1 \n\
-    strb r2, [r7, #3] \n\
-    lsl r0, r1, #5 \n\
-    add r0, r4, r0 \n\
-    lsl r0, r0, #1 \n\
-    ldr r2, lbl_0806c388 @ =0x02034800 \n\
-    add r3, r0, r2 \n\
-    lsl r0, r5, #5 \n\
-    add r5, r0, r1 \n\
-    movs r6, #0 \n\
-    mov sl, r0 \n\
-    ldr r1, lbl_0806c38c @ =sExploredMinimapBitFlags \n\
-    lsl r0, r4, #2 \n\
-    add r7, r0, r1 \n\
-    ldr r0, lbl_0806c390 @ =0xfffffebf \n\
-    mov sb, r0 \n\
-    ldr r1, lbl_0806c394 @ =sVisitedMinimapTilesPointer \n\
-    mov r8, r1 \n\
-lbl_0806c322: \n\
-    ldrh r0, [r3] \n\
-    ldr r4, lbl_0806c398 @ =0x000003ff \n\
-    and r4, r0 \n\
-    mov r2, sb \n\
-    add r0, r4, r2 \n\
-    cmp r0, #0x1d \n\
-    bhi lbl_0806c348 \n\
-    mov r1, r8 \n\
-    ldr r0, [r1] \n\
-    lsl r2, r5, #2 \n\
-    add r2, r2, r0 \n\
-    ldr r0, [r2] \n\
-    ldm r7!, {r1} \n\
-    orr r0, r1 \n\
-    str r0, [r2] \n\
-    add r6, #1 \n\
-    add r3, #2 \n\
-    cmp r6, #0x1f \n\
-    ble lbl_0806c322 \n\
-lbl_0806c348: \n\
-    ldr r2, [sp] \n\
-    cmp r2, #0 \n\
-    beq lbl_0806c372 \n\
-    mov r3, ip \n\
-    ldrb r0, [r3, #3] \n\
-    mov r7, sl \n\
-    add r5, r7, r0 \n\
-    ldr r0, lbl_0806c394 @ =sVisitedMinimapTilesPointer \n\
-    ldr r0, [r0] \n\
-    lsl r2, r5, #2 \n\
-    add r2, r2, r0 \n\
-    ldr r1, lbl_0806c38c @ =sExploredMinimapBitFlags \n\
-    ldrb r0, [r3, #2] \n\
-    lsl r0, r0, #2 \n\
-    add r0, r0, r1 \n\
-    ldr r1, [r2] \n\
-    ldr r0, [r0] \n\
-    orr r1, r0 \n\
-    str r1, [r2] \n\
-    movs r0, #0 \n\
-    strb r0, [r3] \n\
-lbl_0806c372: \n\
-    add sp, #4 \n\
-    pop {r3, r4, r5} \n\
-    mov r8, r3 \n\
-    mov sb, r4 \n\
-    mov sl, r5 \n\
-    pop {r4, r5, r6, r7} \n\
-    pop {r0} \n\
-    bx r0 \n\
-    .align 2, 0 \n\
-lbl_0806c384: .4byte sMinimapAreaNames \n\
-lbl_0806c388: .4byte 0x02034800 \n\
-lbl_0806c38c: .4byte sExploredMinimapBitFlags \n\
-lbl_0806c390: .4byte 0xfffffebf \n\
-lbl_0806c394: .4byte sVisitedMinimapTilesPointer \n\
-lbl_0806c398: .4byte 0x000003ff \n\
-    ");
-}
-#endif
 
 /**
  * @brief 6c39c | d8 | Checks if Samus is on an unexplored minimap tile
  * 
  */
-void MinimapCheckForUnexploredTile(void)
+static void MinimapCheckForUnexploredTile(void)
 {
     u16 samusX;
     u16 samusY;
@@ -484,9 +297,13 @@ void MinimapCheckOnTransition(void)
 
         // Get new minimap
         gAreaBeforeTransition = gCurrentArea;
-        PauseScreenGetMinimapData(gAreaBeforeTransition, gDecompressedMinimapData); // Undefined
+        PauseScreenGetMinimapData(gAreaBeforeTransition, gDecompressedMinimapData);
 
-        DMA_SET(3, gDecompressedMinimapData, gDecompressedMinimapVisitedTiles, C_32_2_16(DMA_ENABLE, MINIMAP_SIZE * MINIMAP_SIZE));
+        #ifdef REGION_EU
+        DmaTransfer(3, gDecompressedMinimapData, gDecompressedMinimapVisitedTiles, sizeof(gDecompressedMinimapData), 16);
+        #else // !REGION_EU
+        DMA_SET(3, gDecompressedMinimapData, gDecompressedMinimapVisitedTiles, C_32_2_16(DMA_ENABLE, sizeof(gDecompressedMinimapData) / 2));
+        #endif // REGION_EU
 
         MinimapCheckSetAreaNameAsExplored(TRUE);
         MinimapSetDownloadedTiles(gAreaBeforeTransition, gDecompressedMinimapVisitedTiles);
@@ -521,7 +338,7 @@ void MinimapCheckOnTransition(void)
  * @brief 6c518 | 9c | Updates the minimap for the explored tiles
  * 
  */
-void MinimapUpdateForExploredTiles(void)
+static void MinimapUpdateForExploredTiles(void)
 {
     u32 offset;
     u32 tile;
@@ -532,13 +349,11 @@ void MinimapUpdateForExploredTiles(void)
         return;
 
     offset = gMinimapX + gMinimapY * MINIMAP_SIZE;
-    // FIXME use symbol
-    tiles = (u16*)0x2034000 + offset; // gDecompressedMinimapVisitedTiles
+    tiles = &gDecompressedMinimapVisitedTiles[offset];
     
     if (!(*tiles & 0xF000))
     {
-        // FIXME use symbol
-        map = (u16*)0x2034800 + offset; // gDecompressedMinimapData
+        map = &gDecompressedMinimapData[offset];
         if (*map & 0xF000)
             *tiles = *map;
         else
@@ -555,11 +370,19 @@ void MinimapUpdateForExploredTiles(void)
     }
 }
 
-#ifdef NON_MATCHING
+static MinimapFunc_T sMinimapTilesCopyGfxFunctionPointers[4] = {
+    MinimapCopyTileGfx,
+    MinimapCopyTileXFlippedGfx,
+    MinimapCopyTileYFlippedGfx,
+    MinimapCopyTileXYFlippedGfx,
+};
+
+/**
+ * @brief 6c5b4 | 100 | To document
+ * 
+ */
 void MinimapDraw(void)
 {
-    // https://decomp.me/scratch/EaJoP
-
     s32 yOffset;
     s32 xOffset;
     s32 xPosition;
@@ -571,13 +394,17 @@ void MinimapDraw(void)
     u8 palette;
     u32 flip;
     u16* src;
-    u32 offset;
+    u16* tmp;
+    #ifndef BUGFIX
+    u16 tmp1;
+    u16 tmp2;
+    #endif // !BUGFIX
 
     if (gUpdateMinimapFlag == MINIMAP_UPDATE_FLAG_NONE)
         return;
-    
-    src = (u16*)0x2034000;
-    dst = (u32*)0x2037e20 + (gUpdateMinimapFlag - 1) * 24;
+
+    src = gDecompressedMinimapVisitedTiles;
+    dst = (u32*)gMinimapTilesGfx + (gUpdateMinimapFlag - 1) * 24;
 
     if (gUpdateMinimapFlag == MINIMAP_UPDATE_FLAG_LOWER_LINE)
         yOffset = 1;
@@ -609,156 +436,33 @@ void MinimapDraw(void)
             yPosition = limit;
         }
 
-        offset = yPosition * MINIMAP_SIZE + xPosition;
-        flip = (src[offset] & 0xC00) >> 0xA;
-        palette = src[offset] >> 0xC;
-        tile = src[offset] & 0x3ff;
+        tmp = &src[yPosition * MINIMAP_SIZE + xPosition];
+
+        do {
+        #ifndef BUGFIX
+        // BUG: uses uninitalized variables
+        tmp1 = tmp2 & 0xC00;
+        #endif // !BUGFIX
+        flip = (*tmp & 0xC00) >> 0xA;
+        } while(0);
+
+        do {
+        palette = *tmp >> 0xC;
+        } while(0);
+
+        do {
+        tile = *tmp & 0x3ff;
+        } while(0);
         
+        #ifndef REGION_EU
         if (gLanguage == LANGUAGE_HIRAGANA && tile > MINIMAP_TILE_BACKGROUND)
             tile += 0x20;
+        #endif // !REGION_EU
 
-        tile <<= 0x5;
+        tile <<= 5;
         sMinimapTilesCopyGfxFunctionPointers[flip](dst, &tile, palette);
     }
 }
-#else
-NAKED_FUNCTION
-void MinimapDraw(void)
-{
-    asm(" \n\
-    push {r4, r5, r6, r7, lr} \n\
-    mov r7, sb \n\
-    mov r6, r8 \n\
-    push {r6, r7} \n\
-    sub sp, #4 \n\
-    ldr r3, lbl_0806c5e4 @ =gUpdateMinimapFlag \n\
-    ldrb r0, [r3] \n\
-    cmp r0, #0 \n\
-    beq lbl_0806c690 \n\
-    ldr r0, lbl_0806c5e8 @ =0x02034000 \n\
-    mov r8, r0 \n\
-    ldrb r2, [r3] \n\
-    sub r1, r2, #1 \n\
-    lsl r0, r1, #1 \n\
-    add r0, r0, r1 \n\
-    lsl r0, r0, #5 \n\
-    ldr r1, lbl_0806c5ec @ =0x02037e20 \n\
-    add r6, r0, r1 \n\
-    cmp r2, #3 \n\
-    bne lbl_0806c5f0 \n\
-    movs r7, #1 \n\
-    mov sb, r7 \n\
-    b lbl_0806c60a \n\
-    .align 2, 0 \n\
-lbl_0806c5e4: .4byte gUpdateMinimapFlag \n\
-lbl_0806c5e8: .4byte 0x02034000 \n\
-lbl_0806c5ec: .4byte 0x02037e20 \n\
-lbl_0806c5f0: \n\
-    cmp r2, #2 \n\
-    bne lbl_0806c5fa \n\
-    movs r0, #0 \n\
-    mov sb, r0 \n\
-    b lbl_0806c60a \n\
-lbl_0806c5fa: \n\
-    cmp r2, #1 \n\
-    beq lbl_0806c604 \n\
-    movs r0, #0 \n\
-    strb r0, [r3] \n\
-    b lbl_0806c690 \n\
-lbl_0806c604: \n\
-    movs r1, #1 \n\
-    neg r1, r1 \n\
-    mov sb, r1 \n\
-lbl_0806c60a: \n\
-    movs r5, #1 \n\
-    neg r5, r5 \n\
-    mov r4, sp \n\
-lbl_0806c610: \n\
-    ldr r0, lbl_0806c6a0 @ =gMinimapX \n\
-    ldrb r0, [r0] \n\
-    add r1, r0, r5 \n\
-    cmp r1, #0x1f \n\
-    bls lbl_0806c61e \n\
-    movs r1, #1 \n\
-    neg r1, r1 \n\
-lbl_0806c61e: \n\
-    ldr r0, lbl_0806c6a4 @ =gMinimapY \n\
-    ldrb r0, [r0] \n\
-    add r0, sb \n\
-    cmp r0, #0x1f \n\
-    bls lbl_0806c62c \n\
-    movs r0, #1 \n\
-    neg r0, r0 \n\
-lbl_0806c62c: \n\
-    cmp r0, #0 \n\
-    blt lbl_0806c634 \n\
-    cmp r1, #0 \n\
-    bge lbl_0806c638 \n\
-lbl_0806c634: \n\
-    movs r1, #0x1f \n\
-    movs r0, #0x1f \n\
-lbl_0806c638: \n\
-    lsl r0, r0, #5 \n\
-    add r0, r0, r1 \n\
-    lsl r0, r0, #1 \n\
-    add r0, r8 \n\
-    movs r7, #0xc0 \n\
-    lsl r7, r7, #4 \n\
-    add r2, r7, #0 \n\
-    ldrh r1, [r0] \n\
-    add r0, r1, #0 \n\
-    and r0, r2 \n\
-    lsr r3, r0, #0xa \n\
-    lsr r2, r1, #0xc \n\
-    ldr r7, lbl_0806c6a8 @ =0x000003ff \n\
-    add r0, r7, #0 \n\
-    and r1, r0 \n\
-    strh r1, [r4] \n\
-    ldr r0, lbl_0806c6ac @ =gLanguage \n\
-    ldrb r0, [r0] \n\
-    lsl r0, r0, #0x18 \n\
-    asr r0, r0, #0x18 \n\
-    cmp r0, #1 \n\
-    bne lbl_0806c672 \n\
-    movs r0, #0xa0 \n\
-    lsl r0, r0, #1 \n\
-    cmp r1, r0 \n\
-    bls lbl_0806c672 \n\
-    add r0, r1, #0 \n\
-    add r0, #0x20 \n\
-    strh r0, [r4] \n\
-lbl_0806c672: \n\
-    ldrh r0, [r4] \n\
-    lsl r0, r0, #5 \n\
-    strh r0, [r4] \n\
-    ldr r1, lbl_0806c6b0 @ =sMinimapTilesCopyGfxFunctionPointers \n\
-    lsl r0, r3, #2 \n\
-    add r0, r0, r1 \n\
-    ldr r3, [r0] \n\
-    add r0, r6, #0 \n\
-    mov r1, sp \n\
-    bl _call_via_r3 \n\
-    add r5, #1 \n\
-    add r6, #0x20 \n\
-    cmp r5, #1 \n\
-    ble lbl_0806c610 \n\
-lbl_0806c690: \n\
-    add sp, #4 \n\
-    pop {r3, r4} \n\
-    mov r8, r3 \n\
-    mov sb, r4 \n\
-    pop {r4, r5, r6, r7} \n\
-    pop {r0} \n\
-    bx r0 \n\
-    .align 2, 0 \n\
-lbl_0806c6a0: .4byte gMinimapX \n\
-lbl_0806c6a4: .4byte gMinimapY \n\
-lbl_0806c6a8: .4byte 0x000003ff \n\
-lbl_0806c6ac: .4byte gLanguage \n\
-lbl_0806c6b0: .4byte sMinimapTilesCopyGfxFunctionPointers \n\
-    ");
-}
-#endif
 
 /**
  * @brief 6c6b4 | d8 | Copies the graphics of a map tile
@@ -767,7 +471,7 @@ lbl_0806c6b0: .4byte sMinimapTilesCopyGfxFunctionPointers \n\
  * @param pTile Tile pointer
  * @param palette Palette
  */
-void MinimapCopyTileGfx(u32* dst, u16* pTile, u8 palette)
+static void MinimapCopyTileGfx(u32* dst, u16* pTile, u8 palette)
 {
     s32 i;
     u32 value;
@@ -806,7 +510,7 @@ void MinimapCopyTileGfx(u32* dst, u16* pTile, u8 palette)
  * @param pTile Tile pointer
  * @param palette Palette
  */
-void MinimapCopyTileXFlippedGfx(u32* dst, u16* pTile, u8 palette)
+static void MinimapCopyTileXFlippedGfx(u32* dst, u16* pTile, u8 palette)
 {
     s32 i;
     u32 value;
@@ -848,7 +552,7 @@ void MinimapCopyTileXFlippedGfx(u32* dst, u16* pTile, u8 palette)
  * @param pTile Tile pointer
  * @param palette Palette
  */
-void MinimapCopyTileYFlippedGfx(u32* dst, u16* pTile, u8 palette)
+static void MinimapCopyTileYFlippedGfx(u32* dst, u16* pTile, u8 palette)
 {
     s32 i;
     u32 value;
@@ -889,7 +593,7 @@ void MinimapCopyTileYFlippedGfx(u32* dst, u16* pTile, u8 palette)
  * @param pTile Tile pointer
  * @param palette Palette
  */
-void MinimapCopyTileXYFlippedGfx(u32* dst, u16* pTile, u8 palette)
+static void MinimapCopyTileXYFlippedGfx(u32* dst, u16* pTile, u8 palette)
 {
     s32 i;
     u32 value;
@@ -933,7 +637,7 @@ void MinimapCopyTileXYFlippedGfx(u32* dst, u16* pTile, u8 palette)
  * @param area Area
  * @param dst Destination pointer
  */
-void MinimapSetTilesWithObtainedItems(u8 area, u16* dst)
+void MinimapSetTilesWithObtainedItems(Area area, u16* dst)
 {
     u32* src;
     u32 tile;
@@ -943,8 +647,7 @@ void MinimapSetTilesWithObtainedItems(u8 area, u16* dst)
     if (area >= MAX_AMOUNT_OF_AREAS)
         return;
 
-    // 0x2033800 = gMinimapTilesWithObtainedItems
-    src = (u32*)(0x2033800 + area * 512 / 4);
+    src = gMinimapTilesWithObtainedItems[area];
 
     for (i = 0; i < MINIMAP_SIZE; i++, src++)
     {
@@ -969,7 +672,7 @@ void MinimapSetTilesWithObtainedItems(u8 area, u16* dst)
  * @param area Area
  * @param dst Destination pointer
  */
-void MinimapSetDownloadedTiles(u8 area, u16* dst)
+void MinimapSetDownloadedTiles(Area area, u16* dst)
 {
     u32* pVisited;
     s32 i;
@@ -1052,8 +755,6 @@ void MinimapUpdateForCollectedItem(u8 xPosition, u8 yPosition)
 {
     u32 itemX;
     u32 itemY;
-    u32 offset;
-    u32 offset2;
     u32* ptr;
     u16* ptrU;
 
@@ -1062,18 +763,15 @@ void MinimapUpdateForCollectedItem(u8 xPosition, u8 yPosition)
         itemX = (xPosition - SCREEN_X_PADDING) / SCREEN_SIZE_X_BLOCKS + gCurrentRoomEntry.mapX;
         itemY = (yPosition - SCREEN_Y_PADDING) / SCREEN_SIZE_Y_BLOCKS + gCurrentRoomEntry.mapY;
 
-        offset = gCurrentArea * MINIMAP_SIZE;
-        // FIXME use symbol
-        ptr = (u32*)(0x2033800) + offset; // gMinimapTilesWithObtainedItems
+        ptr = gMinimapTilesWithObtainedItems[gCurrentArea];
         ptr[itemY] |= sExploredMinimapBitFlags[itemX];
 
-        
         itemX += itemY * MINIMAP_SIZE;
-        // FIXME use symbol
-        ptrU = (u16*)0x2034000; // gDecompressedMinimapVisitedTiles
+
+        ptrU = gDecompressedMinimapVisitedTiles;
         ptrU[itemX]++;
-        // FIXME use symbol
-        ptrU = (u16*)0x2034800; // gDecompressedMinimapData
+
+        ptrU = gDecompressedMinimapData;
         ptrU[itemX]++;
 
         gUpdateMinimapFlag = MINIMAP_UPDATE_FLAG_LOWER_LINE;
@@ -1122,14 +820,12 @@ void MinimapLoadTilesWithObtainedItems(void)
     u32 xOffset;
     u32 yOffset;
 
-    // FIXME use symbol
-    BitFill(3, 0, 0x2033800, sizeof(gMinimapTilesWithObtainedItems), 16);
+    BitFill(3, 0, gMinimapTilesWithObtainedItems, sizeof(gMinimapTilesWithObtainedItems) * 2, 16);
 
     for (i = 0; i < MAX_AMOUNT_OF_AREAS; i++)
     {
-        // FIXME use symbol
-        pItem = ((struct ItemInfo*)0x2036c00 + i * MAX_AMOUNT_OF_ITEMS_PER_AREA); // gItemsCollected
-        pTiles = ((u32*)0x2033800 + i * MINIMAP_SIZE); // gMinimapTilesWithObtainedItems
+        pItem = gItemsCollected[i];
+        pTiles = gMinimapTilesWithObtainedItems[i];
 
         for (j = 0; j < MINIMAP_SIZE * 2; j++, pItem++)
         {
@@ -1152,7 +848,7 @@ void MinimapLoadTilesWithObtainedItems(void)
  * 
  * @param event Event linked
  */
-void MinimapUpdateChunk(u8 event)
+void MinimapUpdateChunk(Event event)
 {
     s32 i;
     u16* pMinimap;
@@ -1176,9 +872,8 @@ void MinimapUpdateChunk(u8 event)
 
     i = sBossIcons[i][3] * MINIMAP_SIZE + sBossIcons[i][2];
 
-    // FIXME use symbol
-    pMinimap = (u16*)0x2034800 + i; // gDecompressedMinimapData
-    pVisited = (u16*)0x2034000 + i; // gDecompressedMinimapVisitedTiles
+    pMinimap = &gDecompressedMinimapData[i];
+    pVisited = &gDecompressedMinimapVisitedTiles[i];
 
     if (gCurrentArea == AREA_CRATERIA)
     {

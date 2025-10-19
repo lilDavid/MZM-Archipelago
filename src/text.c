@@ -1,13 +1,11 @@
 #include "text.h"
+#include "dma.h"
 #include "gba.h"
 #include "macros.h"
 
 #include "data/text_data.h"
-#include "data/text_pointers.h"
-#include "data/internal_text_data.h"
 #include "data/shortcut_pointers.h"
 #include "data/menus/pause_screen_data.h"
-#include "data/cutscenes/internal_story_text_cutscene_data.h"
 
 #include "constants/text.h"
 #include "constants/menus/pause_screen.h"
@@ -15,6 +13,104 @@
 #include "structs/bg_clip.h"
 #include "structs/game_state.h"
 #include "structs/menus/pause_screen.h"
+
+extern u16** sStoryTextPointers[LANGUAGE_END];
+
+static const u16** sDescriptionTextPointers[LANGUAGE_END] = {
+    [LANGUAGE_JAPANESE] = sJapaneseTextPointers_Description,
+    [LANGUAGE_HIRAGANA] = sHiraganaTextPointers_Description,
+    [LANGUAGE_ENGLISH] = sEnglishTextPointers_Description,
+    #if defined(REGION_EU) || defined(REGION_US_BETA)
+    [LANGUAGE_GERMAN] = sGermanTextPointers_Description,
+    [LANGUAGE_FRENCH] = sFrenchTextPointers_Description,
+    [LANGUAGE_ITALIAN] = sItalianTextPointers_Description,
+    [LANGUAGE_SPANISH] = sSpanishTextPointers_Description
+    #else // !(REGION_EU || REGION_US_BETA)
+    [LANGUAGE_GERMAN] = sEnglishTextPointers_Description,
+    [LANGUAGE_FRENCH] = sEnglishTextPointers_Description,
+    [LANGUAGE_ITALIAN] = sEnglishTextPointers_Description,
+    [LANGUAGE_SPANISH] = sEnglishTextPointers_Description
+    #endif // REGION_EU || REGION_US_BETA
+};
+
+static u32 sArray_7602f0[9] = {
+    [0] = UINT_MAX ^ (UINT_MAX << 0 * sizeof(u32)),
+    [1] = UINT_MAX ^ (UINT_MAX << 1 * sizeof(u32)),
+    [2] = UINT_MAX ^ (UINT_MAX << 2 * sizeof(u32)),
+    [3] = UINT_MAX ^ (UINT_MAX << 3 * sizeof(u32)),
+    [4] = UINT_MAX ^ (UINT_MAX << 4 * sizeof(u32)),
+    [5] = UINT_MAX ^ (UINT_MAX << 5 * sizeof(u32)),
+    [6] = UINT_MAX ^ (UINT_MAX << 6 * sizeof(u32)),
+    [7] = UINT_MAX ^ (UINT_MAX << 7 * sizeof(u32)),
+    [8] = UINT_MAX
+};
+
+static u32 sArray_760314[9] = {
+    [0] = UINT_MAX ^ (UINT_MAX >> 0 * sizeof(u32)),
+    [1] = UINT_MAX ^ (UINT_MAX >> 1 * sizeof(u32)),
+    [2] = UINT_MAX ^ (UINT_MAX >> 2 * sizeof(u32)),
+    [3] = UINT_MAX ^ (UINT_MAX >> 3 * sizeof(u32)),
+    [4] = UINT_MAX ^ (UINT_MAX >> 4 * sizeof(u32)),
+    [5] = UINT_MAX ^ (UINT_MAX >> 5 * sizeof(u32)),
+    [6] = UINT_MAX ^ (UINT_MAX >> 6 * sizeof(u32)),
+    [7] = UINT_MAX ^ (UINT_MAX >> 7 * sizeof(u32)),
+    [8] = UINT_MAX
+};
+
+static u32 sArray_760338[8] = {
+    [0] = 15 << 0 * sizeof(u32),
+    [1] = 15 << 1 * sizeof(u32),
+    [2] = 15 << 2 * sizeof(u32),
+    [3] = 15 << 3 * sizeof(u32),
+    [4] = 15 << 4 * sizeof(u32),
+    [5] = 15 << 5 * sizeof(u32),
+    [6] = 15 << 6 * sizeof(u32),
+    [7] = 15 << 7 * sizeof(u32)
+};
+
+static u32 sArray_760358[8] = {
+    [0] = 2 << 0 * sizeof(u32),
+    [1] = 2 << 1 * sizeof(u32),
+    [2] = 2 << 2 * sizeof(u32),
+    [3] = 2 << 3 * sizeof(u32),
+    [4] = 2 << 4 * sizeof(u32),
+    [5] = 2 << 5 * sizeof(u32),
+    [6] = 2 << 6 * sizeof(u32),
+    [7] = 2 << 7 * sizeof(u32)
+};
+
+static u32 sArray_760378[8] = {
+    [0] = 1 << 0 * sizeof(u32),
+    [1] = 1 << 1 * sizeof(u32),
+    [2] = 1 << 2 * sizeof(u32),
+    [3] = 1 << 3 * sizeof(u32),
+    [4] = 1 << 4 * sizeof(u32),
+    [5] = 1 << 5 * sizeof(u32),
+    [6] = 1 << 6 * sizeof(u32),
+    [7] = 1 << 7 * sizeof(u32)
+};
+
+static u32 sArray_760398[8] = {
+    [0] = 4 << 0 * sizeof(u32),
+    [1] = 4 << 1 * sizeof(u32),
+    [2] = 4 << 2 * sizeof(u32),
+    [3] = 4 << 3 * sizeof(u32),
+    [4] = 4 << 4 * sizeof(u32),
+    [5] = 4 << 5 * sizeof(u32),
+    [6] = 4 << 6 * sizeof(u32),
+    [7] = 4 << 7 * sizeof(u32)
+};
+
+static u32 sArray_7603b8[8] = {
+    [0] = 15 << 0 * sizeof(u32),
+    [1] = 15 << 1 * sizeof(u32),
+    [2] = 15 << 2 * sizeof(u32),
+    [3] = 15 << 3 * sizeof(u32),
+    [4] = 15 << 4 * sizeof(u32),
+    [5] = 15 << 5 * sizeof(u32),
+    [6] = 15 << 6 * sizeof(u32),
+    [7] = 15 << 7 * sizeof(u32)
+};
 
 /**
  * @brief 6e460 | 24 | Gets the width of a character
@@ -43,11 +139,11 @@ void TextDrawCharacter(u16 charID, u32* dst, u16 indent, u8 color)
     s32 palette;
     u32* dstGfx;
     const u32* srcGfx;
+    s32 pass;
     s32 size;
     u32 pixelSrc;
     u32 pixelDst;
     u8 width;
-    s32 pass;
     u32 value;
     s32 i;
 
@@ -167,7 +263,9 @@ void TextDrawCharacter(u16 charID, u32* dst, u16 indent, u8 color)
             }
         }
         else
+        {
             DmaTransfer(3, srcGfx, dstGfx, size * 4, 16);
+        }
 
         dstGfx = dst + ((indent & 0xFF) / 8) * 8 + pass * 0x100;
         dstGfx += (indent / 256) * 0x200;
@@ -176,7 +274,17 @@ void TextDrawCharacter(u16 charID, u32* dst, u16 indent, u8 color)
         else
             srcGfx = gCurrentCharacterGfx;
 
+        #ifdef REGION_EU
+        palette = indent;
+        palette &= 7;
+        // If next char position is within same line, and next char position is
+        // on a tile boundary, and char width is not an exact tile multiple,
+        // increment char width
+        if (indent + width < 224 && (indent + width) % 8 == 0 && width % 8 != 0)
+            width++;
+        #else // !REGION_EU
         palette = indent & 7;
+        #endif // REGION_EU
 
         if (palette != 0)
         {
@@ -311,17 +419,15 @@ void TextDrawMessageCharacter(u16 charID, u32* dst, u16 indent, u8 color)
     u32 value;
     s32 i;
 
-    // FIXME use symbol
-    BitFill(3, 0, 0x2027700, sizeof(gCurrentCharacterGfx), 16); // gCurrentCharacterGfx
+    BitFill(3, 0, gCurrentCharacterGfx, sizeof(gCurrentCharacterGfx), 16);
     width = TextGetCharacterWidth(charID);
 
     for (pass = 0; pass < 2; pass++)
     {
-        // FIXME use symbol
         if (pass != 0)
-            dstGfx = ((u32*)0x2027700) + 16; // gCurrentCharacterGfx
+            dstGfx = gCurrentCharacterGfx + 16;
         else
-            dstGfx = ((u32*)0x2027700); // gCurrentCharacterGfx
+            dstGfx = gCurrentCharacterGfx + 0;
 
         pixelDst = charID * 0x20 + pass * 0x400;
         srcGfx = (const u32*)&sCharactersGfx[pixelDst];
@@ -446,7 +552,14 @@ void TextDrawMessageCharacter(u16 charID, u32* dst, u16 indent, u8 color)
         else
             srcGfx = gCurrentCharacterGfx;
 
+        #ifdef REGION_EU
+        palette = indent;
+        palette &= 7;
+        if (indent + width < 224 && (indent + width) % 8 == 0 && width % 8 != 0)
+            width++;
+        #else // !REGION_EU
         palette = indent & 7;
+        #endif // REGION_EU
 
         if (palette != 0)
         {
@@ -630,10 +743,10 @@ void TextDrawLocationTextCharacters(u8 param_1, const u16** ppText)
 /**
  * @brief 6f018 | 90 | Draws a location text
  * 
- * @param locationText 
- * @param gfxSlot 
+ * @param locationText Location text
+ * @param gfxSlot Graphics slot
  */
-void TextDrawlocation(u8 locationText, u8 gfxSlot)
+void TextDrawLocation(u8 locationText, u8 gfxSlot)
 {
     const u16* pText;
 
@@ -642,8 +755,14 @@ void TextDrawlocation(u8 locationText, u8 gfxSlot)
     pText = sLocationTextPointers[gLanguage][locationText];
     TextDrawLocationTextCharacters(1, &pText);
 
+    
+    #ifdef REGION_EU
+    DmaTransfer(3, EWRAM_BASE, VRAM_BASE + 0x14000 + gfxSlot * 0x800, 0xE0 * sizeof(u32), 32);
+    DmaTransfer(3, EWRAM_BASE + 0x400, VRAM_BASE + 0x14400 + gfxSlot * 0x800, 0xE0 * sizeof(u32), 32);
+    #else // !REGION_EU
     DMA_SET(3, EWRAM_BASE, VRAM_BASE + 0x14000 + gfxSlot * 0x800, C_32_2_16(DMA_ENABLE | DMA_32BIT, 0xE0));
     DMA_SET(3, EWRAM_BASE + 0x400, VRAM_BASE + 0x14400 + gfxSlot * 0x800, C_32_2_16(DMA_ENABLE | DMA_32BIT, 0xE0));
+    #endif // REGION_EU
 }
 
 /**
@@ -751,11 +870,11 @@ void TextStartMessage(u8 textID, u8 gfxSlot)
 }
 
 /**
- * @brief 6f28c | 178 | Processes an item banner text
+ * @brief 6f28c | 178 | Processes a message banner text
  * 
  * @return u8 Current line
  */
-u8 TextProcessItemBanner(void)
+u8 TextProcessMessageBanner(void)
 {
     s32 i;
     u32 flag;
@@ -847,10 +966,10 @@ u8 TextProcessItemBanner(void)
  * 
  * @param textID Story text ID
  */
-void TextStartStory(u8 textID)
+void TextStartStory(StoryTextId textId)
 {
     gCurrentMessage = sMessageStoryText_Empty;
-    gCurrentMessage.messageID = textID;
+    gCurrentMessage.messageID = textId;
 }
 
 /**
@@ -889,6 +1008,10 @@ u8 TextProcessStory(void)
             break;
 
         case 2:
+            #ifdef BUGFIX
+            dst = NULL;
+            #endif // BUGFIX
+
             i = 6;
             if (gCurrentMessage.gfxSlot != 0)
             {
@@ -969,15 +1092,20 @@ void TextStartFileScreen(u8 textID)
     gCurrentMessage.messageID = textID;
 }
 
-#ifdef NON_MATCHING
+/**
+ * @brief 6f5c4 | bc | To document
+ * 
+ * @return u8 To document
+ */
 u8 TextProcessFileScreenPopUp(void)
 {
-    // https://decomp.me/scratch/OOQTv
-
     s32 i;
     u32* dst;
     s32 flag;
     s32 result;
+    struct Message *currentMessage;
+    const u16*** fileScreenTextPointers;
+    s32 tmp;
 
     switch (gCurrentMessage.stage)
     {
@@ -990,10 +1118,12 @@ u8 TextProcessFileScreenPopUp(void)
             }
 
             dst = VRAM_BASE + gCurrentMessage.line * 0x800;
-            for (; i != 0; i--)
+            for (; (tmp = (i != 0)); i--)
             {
-                result = TextProcessCurrentMessage(&gCurrentMessage, sFileScreenTextPointers[gLanguage][gCurrentMessage.messageID], dst);
-                
+                currentMessage = &gCurrentMessage;
+                fileScreenTextPointers = sFileScreenTextPointers;
+                result = TextProcessCurrentMessage(currentMessage, fileScreenTextPointers[gLanguage][currentMessage->messageID], dst);
+
                 switch (result)
                 {
                     case TEXT_STATE_ENDED:
@@ -1014,6 +1144,9 @@ u8 TextProcessFileScreenPopUp(void)
                     
                 if (gCurrentMessage.line > 3)
                     break;
+
+                currentMessage = &gCurrentMessage;
+                fileScreenTextPointers = sFileScreenTextPointers;
             }
             break;
 
@@ -1022,123 +1155,12 @@ u8 TextProcessFileScreenPopUp(void)
             gCurrentMessage.stage++;
 
         case 2:
-            return gCurrentMessage.line;
-        
         default:
             return gCurrentMessage.line;
     }
 
     return 0;
 }
-#else
-NAKED_FUNCTION
-u8 TextProcessFileScreenPopUp(void)
-{
-    asm(" \n\
-    push {r4, r5, r6, lr} \n\
-    ldr r0, lbl_0806f5ec @ =gCurrentMessage \n\
-    ldrb r1, [r0, #0xc] \n\
-    add r2, r0, #0 \n\
-    cmp r1, #1 \n\
-    beq lbl_0806f668 \n\
-    cmp r1, #1 \n\
-    bgt lbl_0806f674 \n\
-    cmp r1, #0 \n\
-    bne lbl_0806f674 \n\
-    movs r5, #8 \n\
-    ldrb r0, [r2, #7] \n\
-    cmp r0, #3 \n\
-    bhi lbl_0806f5e6 \n\
-    ldrb r0, [r2, #0xe] \n\
-    cmp r0, #0 \n\
-    beq lbl_0806f5f0 \n\
-lbl_0806f5e6: \n\
-    movs r0, #1 \n\
-    strb r0, [r2, #0xc] \n\
-    b lbl_0806f678 \n\
-    .align 2, 0 \n\
-lbl_0806f5ec: .4byte gCurrentMessage \n\
-lbl_0806f5f0: \n\
-    ldrb r0, [r2, #7] \n\
-    lsl r0, r0, #0xb \n\
-    movs r1, #0xc0 \n\
-    lsl r1, r1, #0x13 \n\
-    add r6, r0, r1 \n\
-lbl_0806f5fa: \n\
-    ldr r4, lbl_0806f630 @ =gCurrentMessage \n\
-    ldr r1, lbl_0806f634 @ =sFileScreenTextPointers \n\
-    ldr r0, lbl_0806f638 @ =gLanguage \n\
-    ldrb r0, [r0] \n\
-    lsl r0, r0, #0x18 \n\
-    asr r0, r0, #0x18 \n\
-    lsl r0, r0, #2 \n\
-    add r0, r0, r1 \n\
-    ldrb r1, [r4, #0xa] \n\
-    ldr r0, [r0] \n\
-    lsl r1, r1, #2 \n\
-    add r1, r1, r0 \n\
-    ldr r1, [r1] \n\
-    add r0, r4, #0 \n\
-    add r2, r6, #0 \n\
-    bl TextProcessCurrentMessage \n\
-    lsl r0, r0, #0x18 \n\
-    lsr r0, r0, #0x18 \n\
-    cmp r0, #2 \n\
-    beq lbl_0806f642 \n\
-    cmp r0, #2 \n\
-    bgt lbl_0806f63c \n\
-    cmp r0, #1 \n\
-    beq lbl_0806f648 \n\
-    b lbl_0806f654 \n\
-    .align 2, 0 \n\
-lbl_0806f630: .4byte gCurrentMessage \n\
-lbl_0806f634: .4byte sFileScreenTextPointers \n\
-lbl_0806f638: .4byte gLanguage \n\
-lbl_0806f63c: \n\
-    cmp r0, #4 \n\
-    beq lbl_0806f648 \n\
-    b lbl_0806f654 \n\
-lbl_0806f642: \n\
-    ldrb r0, [r4, #0xc] \n\
-    add r0, #1 \n\
-    strb r0, [r4, #0xc] \n\
-lbl_0806f648: \n\
-    ldr r1, lbl_0806f650 @ =gCurrentMessage \n\
-    movs r0, #0 \n\
-    strh r0, [r1, #2] \n\
-    b lbl_0806f678 \n\
-    .align 2, 0 \n\
-lbl_0806f650: .4byte gCurrentMessage \n\
-lbl_0806f654: \n\
-    ldr r0, lbl_0806f664 @ =gCurrentMessage \n\
-    ldrb r0, [r0, #7] \n\
-    cmp r0, #3 \n\
-    bhi lbl_0806f678 \n\
-    sub r5, #1 \n\
-    cmp r5, #0 \n\
-    bne lbl_0806f5fa \n\
-    b lbl_0806f678 \n\
-    .align 2, 0 \n\
-lbl_0806f664: .4byte gCurrentMessage \n\
-lbl_0806f668: \n\
-    ldrb r0, [r2, #7] \n\
-    add r0, #1 \n\
-    strb r0, [r2, #7] \n\
-    ldrb r0, [r2, #0xc] \n\
-    add r0, #1 \n\
-    strb r0, [r2, #0xc] \n\
-lbl_0806f674: \n\
-    ldrb r0, [r2, #7] \n\
-    b lbl_0806f67a \n\
-lbl_0806f678: \n\
-    movs r0, #0 \n\
-lbl_0806f67a: \n\
-    pop {r4, r5, r6} \n\
-    pop {r1} \n\
-    bx r1 \n\
-    ");
-}
-#endif
 
 /**
  * @brief 6f680 | 30c | Processes the description text
@@ -1154,7 +1176,7 @@ void TextProcessDescription(void)
         PAUSE_SCREEN_DATA.miscOam[1].exists = FALSE;
         PAUSE_SCREEN_DATA.unk_56 = 0;
         PAUSE_SCREEN_DATA.currentStatusSlot = PAUSE_SCREEN_DATA.statusScreenData.currentStatusSlot;
-        PAUSE_SCREEN_DATA.currentEquipment = 0;
+        PAUSE_SCREEN_DATA.currentEquipment = DESCRIPTION_TEXT_LONG_BEAM;
 
         gCurrentMessage = sMessageDescription_Empty;
     }
@@ -1166,7 +1188,7 @@ void TextProcessDescription(void)
             PAUSE_SCREEN_DATA.currentEquipment = StatusScreenGetCurrentEquipmentSelected(PAUSE_SCREEN_DATA.currentStatusSlot);
             BitFill(3, 0, VRAM_BASE + 0x7800, 0x800, 16);
 
-            if (PAUSE_SCREEN_DATA.currentEquipment <= DESCRIPTION_TEXT_PISTOL)
+            if (PAUSE_SCREEN_DATA.currentEquipment < DESCRIPTION_TEXT_COUNT)
                 PAUSE_SCREEN_DATA.unk_56++;
             else
                 PAUSE_SCREEN_DATA.unk_56 = 0x80;
@@ -1294,6 +1316,7 @@ void TextProcessDescription(void)
             break;
 
         case 6:
+            break;
     }
 }
 

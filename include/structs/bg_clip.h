@@ -38,9 +38,19 @@ struct ItemInfo {
 // Globals
 
 #define MAX_AMOUNT_OF_ITEMS_PER_AREA 64
+#define MAX_AMOUNT_OF_NEVER_REFORM_BLOCK_PER_AREA 256
+// The number of bytes required to save a never reform block
+#define NEVER_REFORM_BLOCK_INFO_SIZE 2
+#define NEVER_REFORM_BLOCKS_SIZE (MAX_AMOUNT_OF_NEVER_REFORM_BLOCK_PER_AREA * NEVER_REFORM_BLOCK_INFO_SIZE)
 
+#ifdef USE_EWRAM_SYMBOLS
 extern struct ItemInfo gItemsCollected[MAX_AMOUNT_OF_AREAS][MAX_AMOUNT_OF_ITEMS_PER_AREA];
 extern u8 gNeverReformBlocks[MAX_AMOUNT_OF_AREAS][512];
+#else
+#define gItemsCollected CAST_TO_ARRAY(struct ItemInfo, [MAX_AMOUNT_OF_AREAS][MAX_AMOUNT_OF_ITEMS_PER_AREA], EWRAM_BASE + 0x36C00)
+#define gNeverReformBlocks CAST_TO_ARRAY(u8, [MAX_AMOUNT_OF_AREAS][NEVER_REFORM_BLOCKS_SIZE], EWRAM_BASE + 0x35C00)
+#endif /* USE_EWRAM_SYMBOLS */
+
 extern u8 gNumberOfNeverReformBlocks[MAX_AMOUNT_OF_AREAS];
 extern u8 gNumberOfItemsCollected[MAX_AMOUNT_OF_AREAS];
 extern struct LastTank gLastTankCollected;
@@ -63,4 +73,4 @@ extern s8 gCollectingTank;
 extern u8 gDisableDoorAndTanks;
 extern u8 gDisableClipdataChangingTransparency;
 
-#endif
+#endif /* BG_CLIP_STRUCT_H */

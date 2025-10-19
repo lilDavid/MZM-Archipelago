@@ -9,6 +9,8 @@
 
 #include "structs/sprite.h"
 
+#define STEAM_POSE_IDLE 9
+
 /**
  * @brief 4a5e4 | 208 | Steam AI
  * 

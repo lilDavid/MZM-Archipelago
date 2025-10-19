@@ -59,39 +59,9 @@ enum ChozoStatuePart {
 #define CHOZO_BALL_POSE_REVEALING 0x67
 
 #ifndef CHOZO_STATUE_IGNORE_FUNCTIONS
-void ChozoStatueSyncSubSprites(void);
 void ChozoStatueRegisterItem(u8 spriteId);
 void ChozoStatueSetDirection(void);
 u8 ChozoStatueGetBehavior(u8 spriteId);
-void ChozoStatueInit(void);
-void ChozoStatue_Empty(void);
-void ChozoStatueRegisterHint(void);
-void ChozoStatueHintFlashing(void);
-void ChozoStatueSittingInit(void);
-void ChozoStatueSitting(void);
-void ChozoStatueDelayBeforeRefillAfterHint(void);
-void ChozoStatueWaitForItemToBeCollected(void);
-void ChozoStatueTimerAfterItemGrabbed(void);
-void ChozoStatueRefillInit(void);
-void ChozoStatueRefillSamus(void);
-void ChozoStatueSleepingInit(void);
-void ChozoStatueSleeping(void);
-void ChozoStatuePartInit(void);
-void ChozoStatuePartGlowIdle(void);
-void ChozoStatuePartArmCheckGrabSamusHint(void);
-void ChozoStatuePartSyncSamusPosition(void);
-void ChozoStatuePartArmSitting(void);
-void ChozoStatuePartArmSeated(void);
-void ChozoStatuePartArmCheckGrabSamusRefill(void);
-void ChozoStatuePartArmRefill(void);
-void ChozoStatuePart_Empty(void);
-void ChozoStatuePartSleepingInit(void);
-void ChozoStatuePartArmSleeping(void);
-void ChozoStatuePartEyeOpeningInit(void);
-void ChozoStatuePartEyeOpening(void);
-void ChozoStatuePartEyeClosingInit(void);
-void ChozoStatuePartEyeClosing(void);
-void ChozoStatuePartLegIdle(void);
 void ChozoStatue(void);
 void ChozoStatuePart(void);
 void ChozoStatueRefill(void);

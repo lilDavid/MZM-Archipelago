@@ -1,7 +1,6 @@
 #include "sram_misc.h"
 #include "gba.h"
-#include "globals.h"
-#include "memory.h"
+#include "dma.h"
 #include "sram/sram.h"
 #include "types.h"
 #include "structs/save_file.h"
@@ -127,8 +126,8 @@ u8* DoSramOperation(u8 operation)
                 break;
 
             case 12:
-                diff = SramWriteChecked((u8*)&gSram.unk_7f70,
-                    SRAM_BASE + OFFSET_OF(struct Sram, unk_7f70), sizeof(gSram.unk_7f70));
+                diff = SramWriteChecked((u8*)&gSram.bootDebugSave,
+                    SRAM_BASE + OFFSET_OF(struct Sram, bootDebugSave), sizeof(gSram.bootDebugSave));
                 break;
 
             case SRAM_OPERATION_SAVE_DEMO_RAM:
@@ -167,7 +166,7 @@ u32 unk_fbc(u8 param_1)
     s32 var_1;
 
     size = 0x200;
-    var_0 = gUnk_3000c20 * size;
+    var_0 = gUnk_3000C20 * size;
     if (var_0 > (s32)sizeof(struct SaveFile))
         size = var_0 - sizeof(struct SaveFile);
 
@@ -196,7 +195,7 @@ u32 unk_fbc(u8 param_1)
     if ((s32)(var_0 + size) < (s32)sizeof(struct SaveFile))
         var_1 = TRUE;
 
-    gUnk_3000c20 = (gUnk_3000c20 + var_1) * var_1;
+    gUnk_3000C20 = (gUnk_3000C20 + var_1) * var_1;
 
     return var_1 ^ TRUE;
 }

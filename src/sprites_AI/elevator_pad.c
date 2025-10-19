@@ -9,6 +9,8 @@
 #include "structs/sprite.h"
 #include "structs/samus.h"
 
+#define ELEVATOR_PAD_POSE_IDLE 0x9
+
 /**
  * @brief 2872c | b8 | Elevator pad AI
  * 
@@ -19,10 +21,10 @@ void ElevatorPad(void)
 
     if (gCurrentSprite.pose == SPRITE_POSE_UNINITIALIZED)
     {
-        gCurrentSprite.yPosition -= PIXEL_SIZE * 2;
+        gCurrentSprite.yPosition -= EIGHTH_BLOCK_SIZE;
         gCurrentSprite.properties |= SP_ALWAYS_ACTIVE;
         gCurrentSprite.samusCollision = SSC_NONE;
-        gCurrentSprite.pose = 0x9;
+        gCurrentSprite.pose = ELEVATOR_PAD_POSE_IDLE;
 
         gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(PIXEL_SIZE);
         gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(HALF_BLOCK_SIZE);
@@ -33,7 +35,7 @@ void ElevatorPad(void)
         gCurrentSprite.hitboxLeft = -PIXEL_SIZE;
         gCurrentSprite.hitboxRight = PIXEL_SIZE;
 
-        gCurrentSprite.pOam = sElevatorPadOAM_Idle;
+        gCurrentSprite.pOam = sElevatorPadOam_Idle;
         gCurrentSprite.animationDurationCounter = 0;
         gCurrentSprite.currentAnimationFrame = 0;
     }
@@ -44,20 +46,20 @@ void ElevatorPad(void)
         gCurrentSprite.yPosition = gSamusData.yPosition;
         gCurrentSprite.xPosition = gSamusData.xPosition;
 
-        if (gCurrentSprite.pOam == sElevatorPadOAM_Idle)
+        if (gCurrentSprite.pOam == sElevatorPadOam_Idle)
         {
             // Set moving
-            gCurrentSprite.pOam = sElevatorPadOAM_Moving;
+            gCurrentSprite.pOam = sElevatorPadOam_Moving;
             gCurrentSprite.animationDurationCounter = 0;
             gCurrentSprite.currentAnimationFrame = 0;
         }
     }
     else
     {
-        if (gCurrentSprite.pOam == sElevatorPadOAM_Moving)
+        if (gCurrentSprite.pOam == sElevatorPadOam_Moving)
         {
             // Set idle
-            gCurrentSprite.pOam = sElevatorPadOAM_Idle;
+            gCurrentSprite.pOam = sElevatorPadOam_Idle;
             gCurrentSprite.animationDurationCounter = 0;
             gCurrentSprite.currentAnimationFrame = 0;
         }

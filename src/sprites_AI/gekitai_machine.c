@@ -1,4 +1,5 @@
 #include "sprites_AI/gekitai_machine.h"
+
 #include "structs/sprite.h"
 
 /**

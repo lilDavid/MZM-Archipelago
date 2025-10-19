@@ -17,7 +17,7 @@
  * 
  * @param caa Clipdata Affecting Action
  */
-void EscapeGateChangeCcaa(u8 caa)
+static void EscapeGateChangeCcaa(u8 caa)
 {
     u16 yPosition;
     u16 xPosition;
@@ -27,31 +27,31 @@ void EscapeGateChangeCcaa(u8 caa)
 
     // Left part
     gCurrentClipdataAffectingAction = caa;
-    ClipdataProcess(yPosition, xPosition); // Top
+    ClipdataProcess(yPosition - BLOCK_SIZE * 0, xPosition); // Top
 
     gCurrentClipdataAffectingAction = caa;
-    ClipdataProcess(yPosition - BLOCK_SIZE, xPosition); // Middle top
+    ClipdataProcess(yPosition - BLOCK_SIZE * 1, xPosition); // Middle top
 
     gCurrentClipdataAffectingAction = caa;
-    ClipdataProcess(yPosition - (BLOCK_SIZE * 2), xPosition); // Middle bottom
+    ClipdataProcess(yPosition - BLOCK_SIZE * 2, xPosition); // Middle bottom
 
     gCurrentClipdataAffectingAction = caa;
-    ClipdataProcess(yPosition - (BLOCK_SIZE * 3), xPosition); // Bottom
+    ClipdataProcess(yPosition - BLOCK_SIZE * 3, xPosition); // Bottom
 
     xPosition += BLOCK_SIZE;
 
     // Right part
     gCurrentClipdataAffectingAction = caa;
-    ClipdataProcess(yPosition, xPosition); // Top
+    ClipdataProcess(yPosition - BLOCK_SIZE * 0, xPosition); // Top
 
     gCurrentClipdataAffectingAction = caa;
-    ClipdataProcess(yPosition - BLOCK_SIZE, xPosition); // Middle top
+    ClipdataProcess(yPosition - BLOCK_SIZE * 1, xPosition); // Middle top
 
     gCurrentClipdataAffectingAction = caa;
-    ClipdataProcess(yPosition - (BLOCK_SIZE * 2), xPosition); // Middle bottom
+    ClipdataProcess(yPosition - BLOCK_SIZE * 2, xPosition); // Middle bottom
 
     gCurrentClipdataAffectingAction = caa;
-    ClipdataProcess(yPosition - (BLOCK_SIZE * 3), xPosition); // Bottom
+    ClipdataProcess(yPosition - BLOCK_SIZE * 3, xPosition); // Bottom
 }
 
 /**
@@ -72,7 +72,7 @@ void EscapeGate(void)
 
     switch (gCurrentSprite.pose)
     {
-        case 0:
+        case SPRITE_POSE_UNINITIALIZED:
             gCurrentSprite.status |= SPRITE_STATUS_NOT_DRAWN;
             gCurrentSprite.xPosition += HALF_BLOCK_SIZE;
 
@@ -86,7 +86,7 @@ void EscapeGate(void)
             gCurrentSprite.hitboxRight = 0;
 
             gCurrentSprite.samusCollision = SSC_NONE;
-            gCurrentSprite.pOam = sEscapeGateOAM_Closed,
+            gCurrentSprite.pOam = sEscapeGateOam_Closed,
             gCurrentSprite.currentAnimationFrame = 0;
             gCurrentSprite.animationDurationCounter = 0;
 
@@ -95,7 +95,7 @@ void EscapeGate(void)
             gCurrentSprite.work2 = 1;
             gCurrentSprite.drawOrder = 3;
 
-            gSubSpriteData1.workVariable3 = 0;
+            gSubSpriteData1.work3 = 0;
             EscapeGateChangeCcaa(CAA_MAKE_SOLID_GRIPPABLE); // Set gate collision
             break;
 
@@ -107,10 +107,10 @@ void EscapeGate(void)
                 DMA_SET(3, sEscapeGateAndTimerPal, PALRAM_OBJ + (PAL_SIZE - 1 * PAL_ROW_SIZE), C_32_2_16(DMA_ENABLE, 0x10));
 
                 SpriteSpawnPrimary(PSPRITE_BLACK_SPACE_PIRATE, 0x80, gCurrentSprite.spritesetGfxSlot,
-                    gCurrentSprite.yPosition, gCurrentSprite.xPosition - (BLOCK_SIZE * 2), 0);
+                    gCurrentSprite.yPosition, gCurrentSprite.xPosition - BLOCK_SIZE * 2, 0);
 
                 SpriteSpawnPrimary(PSPRITE_BLACK_SPACE_PIRATE, 0x80, gCurrentSprite.spritesetGfxSlot,
-                    gCurrentSprite.yPosition, gCurrentSprite.xPosition - (BLOCK_SIZE * 10), SPRITE_STATUS_X_FLIP);
+                    gCurrentSprite.yPosition, gCurrentSprite.xPosition - BLOCK_SIZE * 10, SPRITE_STATUS_X_FLIP);
             }
             gCurrentSprite.pose = ESCAPE_GATE_POSE_IDLE;
             gCurrentSprite.status &= ~SPRITE_STATUS_NOT_DRAWN;
@@ -125,7 +125,7 @@ void EscapeGate(void)
             }
             else
             {
-                if (gSubSpriteData1.workVariable3 == 2)
+                if (gSubSpriteData1.work3 == 2)
                     gCurrentSprite.pose = ESCAPE_GATE_POSE_CHECK_OPEN;
             }
             break;
@@ -134,7 +134,7 @@ void EscapeGate(void)
             if (spriteId != PSPRITE_ESCAPE_GATE1 || SpriteUtilCheckSamusNearSpriteLeftRight(BLOCK_SIZE, BLOCK_SIZE * 6) == NSLR_LEFT)
             {
                 // Open gate if samus near
-                gCurrentSprite.pOam = sEscapeGateOAM_Opening;
+                gCurrentSprite.pOam = sEscapeGateOam_Opening;
                 gCurrentSprite.currentAnimationFrame = 0;
                 gCurrentSprite.animationDurationCounter = 0;
 
@@ -146,9 +146,9 @@ void EscapeGate(void)
         case ESCAPE_GATE_POSE_OPENING:
             delay = 3 * DELTA_TIME;
 
-            if (SpriteUtilCheckEndCurrentSpriteAnim())
+            if (SpriteUtilHasCurrentAnimationEnded())
             {
-                gCurrentSprite.pOam = sEscapeGateOAM_Opened;
+                gCurrentSprite.pOam = sEscapeGateOam_Opened;
                 gCurrentSprite.currentAnimationFrame = 0;
                 gCurrentSprite.animationDurationCounter = 0;
 
@@ -165,7 +165,7 @@ void EscapeGate(void)
             if (spriteId != PSPRITE_ESCAPE_GATE1)
                 return;
 
-            if (gSubSpriteData1.workVariable3 == 1)
+            if (gSubSpriteData1.work3 == 1)
             {
                 // Spawn pirate that chases the escape ship
                 SpriteSpawnPrimary(PSPRITE_SPACE_PIRATE_WAITING1, 0x81, 0, gCurrentSprite.yPosition,
@@ -179,7 +179,7 @@ void EscapeGate(void)
             if (spriteId != PSPRITE_ESCAPE_GATE1)
                 return;
 
-            if (gSubSpriteData1.workVariable3 == 2)
+            if (gSubSpriteData1.work3 == 2)
                 delay = 3 * DELTA_TIME;
             break;
     }

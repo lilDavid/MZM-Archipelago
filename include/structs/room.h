@@ -3,6 +3,8 @@
 
 #include "types.h"
 
+#include "constants/event.h"
+
 #define ROOM_SPRITE_DATA_TERMINATOR UCHAR_MAX, UCHAR_MAX, UCHAR_MAX
 
 struct AnimatedGraphicsEntry {
@@ -23,41 +25,41 @@ extern struct TilesetTransparentColor gTilesetTransparentColor;
 
 struct RoomEntry {
     u8 tileset;
-    u8 Bg0Prop;
-    u8 Bg1Prop;
-    u8 Bg2Prop;
-    u8 Bg3Prop;
+    u8 bg0Prop;
+    u8 bg1Prop;
+    u8 bg2Prop;
+    u8 bg3Prop;
     u8 scrollsFlag;
-    u8 Bg3Scrolling;
+    u8 bg3Scrolling;
     u8 transparency;
     const u8* pEnemyRoomData;
-    u8 firstSpritesetEvent;
-    u8 secondSpritesetEvent;
+    Event firstSpritesetEvent;
+    Event secondSpritesetEvent;
     u8 mapX;
     u8 mapY;
     u8 visualEffect;
     u16 effectY;
     u8 damageEffect;
     u16 musicTrack;
-    u8 Bg0Size;
-    u8 Bg3Size;
-    u8 BG3FromBottomFlag;
+    u8 bg0Size;
+    u8 bg3Size;
+    u8 bg3FromBottomFlag;
     u8 animatedTileset;
     u8 animatedPalette;
 };
 
-struct RoomEntryROM {
+struct RoomEntryRom {
     u8 tileset;
-    u8 Bg0Prop;
-    u8 Bg1Prop;
-    u8 Bg2Prop;
-    u8 Bg3Prop;
+    u8 bg0Prop;
+    u8 bg1Prop;
+    u8 bg2Prop;
+    u8 bg3Prop;
     const u8* pBg0Data;
     const u8* pBg1Data;
     const u8* pBg2Data;
     const u8* pClipData;
     const u8* pBg3Data;
-    u8 Bg3Scrolling;
+    u8 bg3Scrolling;
     u8 transparency;
     const u8* pDefaultSpriteData;
     u8 defaultSpriteset;
@@ -126,9 +128,9 @@ extern u16 gTilemap[1024];
 extern u16 gCommonTilemap[1024];
 
 extern u16 gDecompClipdataMap[1024];
-extern u16 gDecompBg0Map[1024];
-extern u16 gDecompBg1Map[1024];
-extern u16 gDecompBg2Map[1024];
+extern u16 gDecompBg0Map[6144];
+extern u16 gDecompBg1Map[6144];
+extern u16 gDecompBg2Map[6144];
 extern u16 gDecompBg3Map[2048];
 
 extern u8 gSpriteset;
@@ -146,4 +148,4 @@ extern struct Unused_3005504 gUnusedStruct_3005504;
 
 extern u8 gDestinationRoom;
 
-#endif
+#endif /* ROOM_STRUCT_H */

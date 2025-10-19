@@ -1,8 +1,7 @@
-#include "gba.h"
 #include "connection.h"
+#include "gba.h"
 
 #include "data/rando_data.h"
-#include "data/engine_pointers.h"
 #include "data/empty_datatypes.h"
 #include "data/hatch_data.h"
 
@@ -25,10 +24,21 @@
 #include "structs/room.h"
 #include "structs/samus.h"
 
-// FIXME, find a better solution
+extern const struct Door* sAreaDoorsPointers[AREA_ENTRY_COUNT];
+
 void BgClipSetClipdataBlockValue(u16, u16, u16); // From bg_clip.h
 // bg_clip.h must not be included, as declaring the correct signature for some
 // of its functions produces non-matching code here.
+
+static const struct HatchLockEvent* sHatchLockEventsPointers[AREA_NORMAL_COUNT] = {
+    [AREA_BRINSTAR] = sHatchLockEventsBrinstar,
+    [AREA_KRAID] = sHatchLockEventsKraid,
+    [AREA_NORFAIR] = sHatchLockEventsCrateria,
+    [AREA_RIDLEY] = sHatchLockEventsCrateria,
+    [AREA_TOURIAN] = sHatchLockEventsCrateria,
+    [AREA_CRATERIA] = sHatchLockEventsCrateria,
+    [AREA_CHOZODIA] = sHatchLockEventsChozodia
+};
 
 /**
  * @brief 5e760 | 198 | Updates the hatches
@@ -87,7 +97,7 @@ void ConnectionUpdateHatches(void)
         {
             if (gHatchData[i].state == HATCH_STATE_OPENING)
             {
-                gHatchData[i].currentAnimationFrame = 0x4;
+                gHatchData[i].currentAnimationFrame = 4;
                 ConnectionUpdateHatchAnimation(TRUE, i);
                 gHatchData[i].state = HATCH_STATE_OPENED;
                 gHatchData[i].currentAnimationFrame = 0;
@@ -125,7 +135,7 @@ void ConnectionUpdateHatches(void)
  * @param dontSetRaw Flag for "do not set raw"
  * @param hatchNbr Hatch number
  */
-void ConnectionUpdateHatchAnimation(u8 dontSetRaw, u32 hatchNbr)
+void ConnectionUpdateHatchAnimation(boolu8 dontSetRaw, u32 hatchNbr)
 {
     s32 caf;
     u32 tilemapValue;
@@ -162,10 +172,10 @@ void ConnectionUpdateHatchAnimation(u8 dontSetRaw, u32 hatchNbr)
     }
     else
     {
-        BgClipSetRawBG1BlockValue(tilemapValue + 16 * 0, gHatchData[hatchNbr].yPosition + 0, gHatchData[hatchNbr].xPosition);
-        BgClipSetRawBG1BlockValue(tilemapValue + 16 * 1, gHatchData[hatchNbr].yPosition + 1, gHatchData[hatchNbr].xPosition);
-        BgClipSetRawBG1BlockValue(tilemapValue + 16 * 2, gHatchData[hatchNbr].yPosition + 2, gHatchData[hatchNbr].xPosition);
-        BgClipSetRawBG1BlockValue(tilemapValue + 16 * 3, gHatchData[hatchNbr].yPosition + 3, gHatchData[hatchNbr].xPosition);
+        BgClipSetRawBg1BlockValue(tilemapValue + 16 * 0, gHatchData[hatchNbr].yPosition + 0, gHatchData[hatchNbr].xPosition);
+        BgClipSetRawBg1BlockValue(tilemapValue + 16 * 1, gHatchData[hatchNbr].yPosition + 1, gHatchData[hatchNbr].xPosition);
+        BgClipSetRawBg1BlockValue(tilemapValue + 16 * 2, gHatchData[hatchNbr].yPosition + 2, gHatchData[hatchNbr].xPosition);
+        BgClipSetRawBg1BlockValue(tilemapValue + 16 * 3, gHatchData[hatchNbr].yPosition + 3, gHatchData[hatchNbr].xPosition);
     }
 
     BgClipSetClipdataBlockValue(tilemapValue + 16 * 0, gHatchData[hatchNbr].yPosition + 0, gHatchData[hatchNbr].xPosition);
@@ -256,18 +266,18 @@ void ConnectionOverrideOpenedHatch(u8 hatch, u32 type)
  * 
  * @param yPosition Y Position
  * @param xPosition X Position
- * @return u8 Could enter
+ * @return boolu32 Could enter
  */
-u32 ConnectionCheckEnterDoor(u16 yPosition, u16 xPosition)
+boolu32 ConnectionCheckEnterDoor(u16 yPosition, u16 xPosition)
 {
     const struct Door* pDoor;
     struct HatchData* pHatch;
     s32 i;
     u8 state;
-    u8 doorType;
+    DoorType doorType;
 
     // Don't care for doors if not in control of samus
-    if (gGameModeSub1 != SUB_GAME_MODE_PLAYING)
+    if (gSubGameMode1 != SUB_GAME_MODE_PLAYING)
         return FALSE;
 
     state = FALSE;
@@ -332,12 +342,12 @@ u32 ConnectionCheckEnterDoor(u16 yPosition, u16 xPosition)
 
             // Compute the vertical offset of Samus within the door
             // Start from the bottom of the door (+ 1 to align to the bottom of the door)
-            // Then remove samus' position
-            gSamusDoorPositionOffset = BLOCK_TO_SUB_PIXEL(pDoor->yEnd + 1) - gSamusData.yPosition - 1;
+            // Then remove Samus's position
+            gSamusDoorPositionOffset = BLOCK_TO_SUB_PIXEL(pDoor->yEnd + 1) - gSamusData.yPosition - ONE_SUB_PIXEL;
             ConnectionProcessDoorType(pDoor->type);
 
             // Start the room loading behavior
-            gGameModeSub1 = SUB_GAME_MODE_LOADING_ROOM;
+            gSubGameMode1 = SUB_GAME_MODE_LOADING_ROOM;
 
             if (gHatchData[i].exists && gHatchData[i].state == HATCH_STATE_OPENING)
             {
@@ -365,19 +375,23 @@ u32 ConnectionCheckEnterDoor(u16 yPosition, u16 xPosition)
  * 
  * @param yPosition Y Position
  * @param xPosition X Position
- * @return u8 Could enter
+ * @return boolu32 Could enter
  */
-u32 ConnectionCheckAreaConnection(u16 yPosition, u16 xPosition)
+boolu32 ConnectionCheckAreaConnection(u16 yPosition, u16 xPosition)
 {
     const struct Door* pDoor;
     struct HatchData* pHatch;
     s32 i;
     s32 j;
     u8 state;
-    u8 doorType;
+    DoorType doorType;
 
-    if (gGameModeSub1 != SUB_GAME_MODE_PLAYING)
+    if (gSubGameMode1 != SUB_GAME_MODE_PLAYING)
         return FALSE;
+
+    #ifdef BUGFIX
+    pDoor = NULL;
+    #endif
 
     state = FALSE;
     pHatch = gHatchData;
@@ -461,11 +475,11 @@ u32 ConnectionCheckAreaConnection(u16 yPosition, u16 xPosition)
     else
     {
         // Compute vertical offset as normal
-        gSamusDoorPositionOffset = BLOCK_TO_SUB_PIXEL(pDoor->yEnd + 1) - gSamusData.yPosition - 1;
+        gSamusDoorPositionOffset = BLOCK_TO_SUB_PIXEL(pDoor->yEnd + 1) - gSamusData.yPosition - ONE_SUB_PIXEL;
     }
 
     ColorFadingStart(COLOR_FADING_NO_TRANSITION);
-    gGameModeSub1 = SUB_GAME_MODE_LOADING_ROOM;
+    gSubGameMode1 = SUB_GAME_MODE_LOADING_ROOM;
 
     // Check for stuff during the transition
     pDoor = sAreaDoorsPointers[gCurrentArea] + gLastDoorUsed;
@@ -482,7 +496,7 @@ u32 ConnectionCheckAreaConnection(u16 yPosition, u16 xPosition)
  * 
  * @param type Door type
  */
-void ConnectionProcessDoorType(u8 type)
+void ConnectionProcessDoorType(DoorType type)
 {
     u8 transition;
 
@@ -548,10 +562,10 @@ u8 ConnectionFindEventBasedDoor(u8 sourceDoor)
  * @param hatch Hatch number
  * @return u32 bool, closed
  */
-u32 ConnectionSetHatchAsOpened(u8 action, u8 hatch)
+boolu32 ConnectionSetHatchAsOpened(HatchAction action, u8 hatch)
 {
     u32* pHatch;
-    u32 closed;
+    boolu32 closed;
     u32 doorBit;
     u32 chunk;
     struct Door currDoor;
@@ -609,7 +623,7 @@ void ConnectionCheckUnlockDoors(void)
 
     // Update timer
     APPLY_DELTA_TIME_INC(gDoorUnlockTimer);
-    if (gDoorUnlockTimer == 0 && (gHatchesState.hatchesLockedWithTimer || gHatchesState.hatchesLockedWithEventUnlockeable))
+    if (gDoorUnlockTimer == 0 && (gHatchesState.hatchesLockedWithTimer || gHatchesState.hatchesLockedWithEventUnlockable))
     {
         // Timer done and has hatches to unlock
         SoundPlay(SOUND_DOORS_UNLOCKING);
@@ -624,7 +638,7 @@ void ConnectionCheckUnlockDoors(void)
  * @param hatch Hatch ID
  * @param state Opening status
  */
-void ConnectionHatchStartLockAnimation(u8 dontSetRaw, u8 hatch, u8 state)
+void ConnectionHatchStartLockAnimation(boolu8 dontSetRaw, u8 hatch, u8 state)
 {
     gHatchData[hatch].state = state;
     gHatchData[hatch].currentAnimationFrame = 0;
@@ -637,7 +651,7 @@ void ConnectionHatchStartLockAnimation(u8 dontSetRaw, u8 hatch, u8 state)
  * 
  * @param isEvent bool, is event lock
  */
-void ConnectionLockHatches(u8 isEvent)
+void ConnectionLockHatches(boolu8 isEvent)
 {
     s32 i;
     u16 lockedHatches;
@@ -658,13 +672,13 @@ void ConnectionLockHatches(u8 isEvent)
     else
     {
         gHatchesState.hatchesLockedWithEvent &= lockedHatches;
-        gHatchesState.hatchesLockedWithEventUnlockeable &= lockedHatches;
+        gHatchesState.hatchesLockedWithEventUnlockable &= lockedHatches;
     }
 
     if (!isEvent)
     {
         // Remove hatches that were locked via an event, at this point only the normal, non locked hatches will be processed
-        lockedHatches = gHatchesState.hatchesLockedWithTimer &= ~(gHatchesState.hatchesLockedWithEvent | gHatchesState.hatchesLockedWithEventUnlockeable);
+        lockedHatches = gHatchesState.hatchesLockedWithTimer &= ~(gHatchesState.hatchesLockedWithEvent | gHatchesState.hatchesLockedWithEventUnlockable);
 
         for (i = 0, hatch = 0; i < MAX_AMOUNT_OF_HATCHES; hatch++, i++)
         {
@@ -686,7 +700,7 @@ void ConnectionLockHatches(u8 isEvent)
     else
     {
         // Include both types of locked doors
-        lockedHatches = gHatchesState.hatchesLockedWithEvent | gHatchesState.hatchesLockedWithEventUnlockeable;
+        lockedHatches = gHatchesState.hatchesLockedWithEvent | gHatchesState.hatchesLockedWithEventUnlockable;
         
         for (i = 0, hatch = 0; i < MAX_AMOUNT_OF_HATCHES; hatch++, i++)
         {
@@ -694,7 +708,7 @@ void ConnectionLockHatches(u8 isEvent)
             if ((lockedHatches >> i) & 1)
             {
                 // Can be 2 different types of locked
-                if ((gHatchesState.hatchesLockedWithEventUnlockeable >> i) & 1)
+                if ((gHatchesState.hatchesLockedWithEventUnlockable >> i) & 1)
                 {
                     // Normal locked, can be opened with the door unlock timer
                     gHatchData[hatch].locked = HATCH_LOCK_STATE_LOCKED;
@@ -792,7 +806,7 @@ void ConnectionLoadDoors(void)
             if (behaviorCheck < BEHAVIOR_TO_DOOR(CLIP_BEHAVIOR_POWER_BOMB_DOOR))
                 hatchType = BEHAVIOR_TO_DOOR(behavior);
             else
-                hatchType = 0;
+                hatchType = HATCH_NONE;
 
             // Get hatch type
             hatchType = sHatchTypeTable[hatchType];
@@ -903,7 +917,7 @@ void ConnectionLoadDoors(void)
             ConnectionOverrideOpenedHatch(i, HATCH_NORMAL);
     }
 
-    if (currHatchId != UCHAR_MAX && gGameModeSub3 != 0)
+    if (currHatchId != UCHAR_MAX && gSubGameMode3 != 0)
     {
         // Check start lock animation
         if (gHatchData[currHatchId].exists && gHatchData[currHatchId].type != HATCH_NONE)
@@ -928,12 +942,12 @@ void ConnectionLoadDoors(void)
         if (bldalpha != 0)
         {
             // Update bldalpha
-            TransparencyUpdateBLDALPHA(LOW_BYTE(bldalpha), HIGH_BYTE(bldalpha), 1, 1);
+            TransparencyUpdateBldalpha(LOW_BYTE(bldalpha), HIGH_BYTE(bldalpha), 1, 1);
 
             gIoRegistersBackup.BLDALPHA_NonGameplay_EVB = gBldalphaData1.evbCoef;
             gIoRegistersBackup.BLDALPHA_NonGameplay_EVA = gBldalphaData1.evaCoef;
 
-            write16(REG_BLDALPHA, C_16_2_8(gIoRegistersBackup.BLDALPHA_NonGameplay_EVB, gIoRegistersBackup.BLDALPHA_NonGameplay_EVA));
+            WRITE_16(REG_BLDALPHA, C_16_2_8(gIoRegistersBackup.BLDALPHA_NonGameplay_EVB, gIoRegistersBackup.BLDALPHA_NonGameplay_EVA));
         }
     }
 }
@@ -967,7 +981,7 @@ void ConnectionCheckHatchLockEvents(void)
 
     // Reset locked doors
     gHatchesState.hatchesLockedWithEvent = 0;
-    gHatchesState.hatchesLockedWithEventUnlockeable = 0;
+    gHatchesState.hatchesLockedWithEventUnlockable = 0;
 
     // Bounds check
     if (gCurrentArea >= MAX_AMOUNT_OF_AREAS - 1)
@@ -1020,13 +1034,13 @@ void ConnectionCheckHatchLockEvents(void)
         else if (pLock->type == HATCH_LOCK_EVENT_TYPE_BEFORE)
             gHatchesState.hatchesLockedWithEvent |= hatchesToLock;
         else if (pLock->type == HATCH_LOCK_EVENT_TYPE_AFTER_UNLOCKEABLE)
-            gHatchesState.hatchesLockedWithEventUnlockeable |= hatchesToLock;
+            gHatchesState.hatchesLockedWithEventUnlockable |= hatchesToLock;
         else if (pLock->type == HATCH_LOCK_EVENT_TYPE_BEFORE_UNLOCKEABLE)
-            gHatchesState.hatchesLockedWithEventUnlockeable |= hatchesToLock;
+            gHatchesState.hatchesLockedWithEventUnlockable |= hatchesToLock;
     }
 
     // Check actually lock doors
-    if (gHatchesState.hatchesLockedWithEvent != 0 || gHatchesState.hatchesLockedWithEventUnlockeable != 0)
+    if (gHatchesState.hatchesLockedWithEvent != 0 || gHatchesState.hatchesLockedWithEventUnlockable != 0)
         ConnectionLockHatches(TRUE);
 }
 
@@ -1036,7 +1050,7 @@ void ConnectionCheckHatchLockEvents(void)
  * @param area Current area
  * @param dstRoomPlusOne Destination room (+ 1)
  */
-void ConnectionCheckPlayCutsceneDuringTransition(u8 area, u8 dstRoomPlusOne)
+void ConnectionCheckPlayCutsceneDuringTransition(Area area, u8 dstRoomPlusOne)
 {
     switch (area)
     {
@@ -1051,11 +1065,11 @@ void ConnectionCheckPlayCutsceneDuringTransition(u8 area, u8 dstRoomPlusOne)
             break;
 
         case AREA_CHOZODIA:
-            // Room 0x2A is the Charlie fight room
+            // Room 0x2A is the Ruins Test fight room
             if (dstRoomPlusOne == 0x2B)
             {
                 if (!EventFunction(EVENT_ACTION_CHECKING, EVENT_FULLY_POWERED_SUIT_OBTAINED))
-                    gCurrentCutscene = CUTSCENE_BEFORE_CHARLIE;
+                    gCurrentCutscene = CUTSCENE_BEFORE_RUINS_TEST;
             }
             // Room 0xA is the suitless entry of the mothership
             else if (dstRoomPlusOne == 0xB && !EventFunction(EVENT_ACTION_CHECKING, EVENT_ENTER_MOTHERSHIP_DEMO_PLAYED))

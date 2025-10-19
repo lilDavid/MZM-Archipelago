@@ -22,11 +22,15 @@
 
 #define CHARGE_BEAM_GLOW_POSE_IDLE 0x9
 
+#define CHARGE_BEAM_FLICKER_TIMER work0
+#define CHARGE_BEAM_SPRITE_SLOT work1
+#define CHARGE_BEAM_IDLE_MOVEMENT_OFFSET work3
+
 /**
  * @brief 13498 | a4 | Initializes the charge beam sprite
  * 
  */
-void ChargeBeamInit(void)
+static void ChargeBeamInit(void)
 {
     if (RandoIsLocationChecked(RC_BRINSTAR_WORM_DROP))
     {
@@ -52,7 +56,7 @@ void ChargeBeamInit(void)
 
     gCurrentSprite.samusCollision = SSC_NONE;
     gCurrentSprite.health = 1;
-    gCurrentSprite.work3 = 0;
+    gCurrentSprite.CHARGE_BEAM_IDLE_MOVEMENT_OFFSET = 0;
     gCurrentSprite.pose = CHARGE_BEAM_POSE_SPAWN_GLOW;
     gCurrentSprite.status |= SPRITE_STATUS_IGNORE_PROJECTILES;
     gCurrentSprite.drawOrder = 2;
@@ -62,22 +66,22 @@ void ChargeBeamInit(void)
  * @brief 1353c | 4c | Spawns the charge beam glow
  * 
  */
-void ChargeBeamSpawnGlow(void)
+static void ChargeBeamSpawnGlow(void)
 {
     u8 gfxSlot;
 
     gCurrentSprite.ignoreSamusCollisionTimer = DELTA_TIME;
 
-    if (SpriteUtilCheckNearEndCurrentSpriteAnim())
+    if (SpriteUtilHasCurrentAnimationNearlyEnded())
     {
         gCurrentSprite.pose = CHARGE_BEAM_POSE_IDLE_INIT;
 
         gfxSlot = gCurrentSprite.spritesetGfxSlot;
         if (sPlacedItems[RC_BRINSTAR_WORM_DROP].sprite->gfx == sRandoChargeBeamSprite.gfx) {
-            gCurrentSprite.work1 = SpriteSpawnSecondary(SSPRITE_CHARGE_BEAM_GLOW, 0, gfxSlot,
+            gCurrentSprite.CHARGE_BEAM_SPRITE_SLOT = SpriteSpawnSecondary(SSPRITE_CHARGE_BEAM_GLOW, 0, gfxSlot,
                 gCurrentSprite.primarySpriteRamSlot, gCurrentSprite.yPosition, gCurrentSprite.xPosition, 0);
         } else {
-            gCurrentSprite.work1 = MAX_AMOUNT_OF_SPRITES;
+            gCurrentSprite.CHARGE_BEAM_SPRITE_SLOT = MAX_AMOUNT_OF_SPRITES;
             RandoPlaceItemInSpriteGraphics(RC_BRINSTAR_WORM_DROP, gfxSlot, 0, gfxSlot, 3);
         }
     }
@@ -87,7 +91,7 @@ void ChargeBeamSpawnGlow(void)
  * @brief 13588 | 44 | Initializes the charge beam to be visible/idle
  * 
  */
-void ChargeBeamVisibleInit(void)
+static void ChargeBeamVisibleInit(void)
 {
     gCurrentSprite.ignoreSamusCollisionTimer = DELTA_TIME;
     gCurrentSprite.pose = CHARGE_BEAM_POSE_IDLE;
@@ -101,20 +105,20 @@ void ChargeBeamVisibleInit(void)
 
     gCurrentSprite.status &= ~SPRITE_STATUS_IGNORE_PROJECTILES;
     gCurrentSprite.samusCollision = SSC_CHECK_COLLIDING;
-    gCurrentSprite.work3 = 0;
+    gCurrentSprite.CHARGE_BEAM_IDLE_MOVEMENT_OFFSET = 0;
 }
 
 /**
  * @brief 135cc | 44 | Handles the charge beam being idle
  * 
  */
-void ChargeBeamIdle(void)
+static void ChargeBeamIdle(void)
 {
     u8 offset;
     s32 velocity;
 
     // Y floating movement
-    offset = gCurrentSprite.work3;
+    offset = gCurrentSprite.CHARGE_BEAM_IDLE_MOVEMENT_OFFSET;
     velocity = sChargeBeamIdleYMovement[offset];
 
     if (velocity == SHORT_MAX)
@@ -123,11 +127,11 @@ void ChargeBeamIdle(void)
         offset = 0;
     }
 
-    gCurrentSprite.work3 = offset + 1;
+    gCurrentSprite.CHARGE_BEAM_IDLE_MOVEMENT_OFFSET = offset + 1;
     gCurrentSprite.yPosition += velocity;
 
     if (gCurrentSprite.status & SPRITE_STATUS_SAMUS_COLLIDING) {
-        offset = gCurrentSprite.work1;
+        offset = gCurrentSprite.CHARGE_BEAM_SPRITE_SLOT;
         if (offset < MAX_AMOUNT_OF_SPRITES)
             gSpriteData[offset].status = 0; // Kill glow
 
@@ -136,7 +140,7 @@ void ChargeBeamIdle(void)
         gCurrentSprite.ignoreSamusCollisionTimer = DELTA_TIME;
 
         gCurrentSprite.pose = CHARGE_BEAM_POSE_FLASHING;
-        gCurrentSprite.work0 = 0;
+        gCurrentSprite.CHARGE_BEAM_FLICKER_TIMER = 0;
 
         gCurrentSprite.animationDurationCounter = 0;
         gCurrentSprite.currentAnimationFrame = 0;
@@ -153,13 +157,14 @@ void ChargeBeamIdle(void)
  * @brief 13694 | 44 | Handles the flashing animation of the charge beam
  * 
  */
-void ChargeBeamFlashingAnim(void)
+static void ChargeBeamFlashingAnim(void)
 {
     gCurrentSprite.ignoreSamusCollisionTimer = DELTA_TIME;
     APPLY_DELTA_TIME_DEC(gCurrentSprite.animationDurationCounter);
 
     // Flicker
-    if (MOD_AND(gCurrentSprite.work0, 2) == 0)
+    // 2 * DELTA_TIME
+    if (MOD_AND(gCurrentSprite.CHARGE_BEAM_FLICKER_TIMER, 2) == 0)
         gCurrentSprite.status ^= SPRITE_STATUS_NOT_DRAWN;
 
     // Check message banner disappeared
@@ -171,7 +176,7 @@ void ChargeBeamFlashingAnim(void)
  * @brief 136d8 | 64 | Initializes the charge beam glow sprite
  * 
  */
-void ChargeBeamGlowInit(void)
+static void ChargeBeamGlowInit(void)
 {
     gCurrentSprite.status &= ~SPRITE_STATUS_NOT_DRAWN;
     gCurrentSprite.drawOrder = 3;

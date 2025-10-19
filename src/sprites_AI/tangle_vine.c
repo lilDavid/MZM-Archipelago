@@ -1,7 +1,6 @@
 #include "sprites_AI/tangle_vine.h"
 #include "macros.h"
 
-#include "data/frame_data_pointers.h"
 #include "data/sprites/tangle_vine.h"
 #include "data/sprite_data.h"
 
@@ -12,6 +11,35 @@
 #include "constants/sprite_util.h"
 
 #include "structs/sprite.h"
+
+#define TANGLE_VINE_GERUTA_POSE_IDLE 0x9
+#define TANGLE_VINE_GERUTA_POSE_NO_GERUTA 0x23
+
+enum TangleVineGerutaStatus {
+    TANGLE_VINE_GERUTA_STATUS_VINE_DEAD,
+    TANGLE_VINE_GERUTA_STATUS_GERUTA_DEAD,
+    TANGLE_VINE_GERUTA_STATUS_FULL
+};
+
+#define TANGLE_VINE_GERUTA_PART_IDLE 0xF
+
+#define TANGLE_VINE_POSE_IDLE 0x9
+
+static const struct FrameData* sTangleVineFrameDataPointers[TANGLE_VINE_OAM_END] = {
+    [TANGLE_VINE_OAM_TALL_ON_GROUND] = sTangleVineTallOam_OnGround,
+    [TANGLE_VINE_OAM_MEDIUM_ON_GROUND] = sTangleVineMediumOam_OnGround,
+    [TANGLE_VINE_OAM_SHORT_ON_GROUND] = sTangleVineShortOam_OnGround,
+    [TANGLE_VINE_OAM_CURVED_ON_GROUND] = sTangleVineCurvedOam_OnGround,
+    [TANGLE_VINE_OAM_TALL_ON_CEILING] = sTangleVineTallOam_OnCeiling,
+    [TANGLE_VINE_OAM_MEDIUM_ON_CEILING] = sTangleVineMediumOam_OnCeiling,
+    [TANGLE_VINE_OAM_SHORT_ON_CEILING] = sTangleVineShortOam_OnCeiling,
+    [TANGLE_VINE_OAM_CURVED_ON_CEILING] = sTangleVineCurvedOam_OnCeiling,
+    [TANGLE_VINE_OAM_GERUTA_GRIP] = sTangleVineGerutaPartOam_Grip,
+    [TANGLE_VINE_OAM_GERUTA_ROOT] = sTangleVineGerutaOam_Root,
+    [TANGLE_VINE_OAM_GERUTA_FULL] = sTangleVineGerutaOam_Full,
+    [TANGLE_VINE_OAM_RED_GERUTA_OAM] = sTangleVineRedGerutaOam,
+    [TANGLE_VINE_OAM_GERUTA] = sTangleVineGerutaPartOam_Geruta
+};
 
 /**
  * @brief 413c4 | 88 | Synchronize the sub sprites of a tangle vine
@@ -61,20 +89,20 @@ void TangleVineGeruta(void)
     }
 
     counter = 0;
-    if (gCurrentSprite.pose == 0)
+    if (gCurrentSprite.pose == SPRITE_POSE_UNINITIALIZED)
     {
-        gCurrentSprite.drawDistanceTop = 0x40;
-        gCurrentSprite.drawDistanceBottom = 0;
-        gCurrentSprite.drawDistanceHorizontal = 0x18;
+        gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 4);
+        gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(0);
+        gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE + HALF_BLOCK_SIZE);
 
-        gCurrentSprite.hitboxTop = -0xE0;
+        gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 3 + HALF_BLOCK_SIZE);
         gCurrentSprite.hitboxBottom = 0;
-        gCurrentSprite.hitboxLeft = -0x1C;
-        gCurrentSprite.hitboxRight = 0x1C;
+        gCurrentSprite.hitboxLeft = -(HALF_BLOCK_SIZE - PIXEL_SIZE);
+        gCurrentSprite.hitboxRight = HALF_BLOCK_SIZE - PIXEL_SIZE;
 
         gCurrentSprite.health = GET_PSPRITE_HEALTH(gCurrentSprite.spriteId);
         gCurrentSprite.samusCollision = SSC_HURTS_SAMUS_SOLID;
-        gCurrentSprite.pose = 0x9;
+        gCurrentSprite.pose = TANGLE_VINE_GERUTA_POSE_IDLE;
 
         gCurrentSprite.pOam = sTangleVineGerutaOam_Root;
         gCurrentSprite.animationDurationCounter = 0;
@@ -88,8 +116,8 @@ void TangleVineGeruta(void)
         gSubSpriteData1.yPosition = gCurrentSprite.yPosition;
         gSubSpriteData1.xPosition = gCurrentSprite.xPosition;
 
-        gCurrentSprite.frozenPaletteRowOffset = 0x1;
-        gCurrentSprite.drawOrder = 0x5;
+        gCurrentSprite.frozenPaletteRowOffset = 1;
+        gCurrentSprite.drawOrder = 5;
         gCurrentSprite.roomSlot = TANGLE_VINE_GERUTA_PART_ROOT;
 
         yPosition = gSubSpriteData1.yPosition;
@@ -97,14 +125,14 @@ void TangleVineGeruta(void)
         gfxSlot = gCurrentSprite.spritesetGfxSlot;
         ramSlot = gCurrentSprite.primarySpriteRamSlot;
 
-        newRamSlot = SpriteSpawnSecondary(SSPRITE_TANGLE_VINE_GERUTA_PART, TANGLE_VINE_GERUTA_PART_GRIP, gfxSlot,
-            ramSlot, yPosition, xPosition, 0);
+        newRamSlot = SpriteSpawnSecondary(SSPRITE_TANGLE_VINE_GERUTA_PART, TANGLE_VINE_GERUTA_PART_GRIP,
+            gfxSlot, ramSlot, yPosition, xPosition, 0);
 
         if (newRamSlot >= MAX_AMOUNT_OF_SPRITES)
             counter = TRUE;
 
-        newRamSlot = SpriteSpawnSecondary(SSPRITE_TANGLE_VINE_GERUTA_PART, TANGLE_VINE_GERUTA_PART_GERUTA, gfxSlot,
-            ramSlot, yPosition, xPosition, 0);
+        newRamSlot = SpriteSpawnSecondary(SSPRITE_TANGLE_VINE_GERUTA_PART, TANGLE_VINE_GERUTA_PART_GERUTA,
+            gfxSlot, ramSlot, yPosition, xPosition, 0);
 
         if (newRamSlot >= MAX_AMOUNT_OF_SPRITES)
             counter++;
@@ -116,21 +144,22 @@ void TangleVineGeruta(void)
     }
     else 
     {
-        if (gCurrentSprite.pose > 0x61)
+        if (gCurrentSprite.pose >= SPRITE_POSE_DESTROYED)
         {
             gSubSpriteData1.health = TANGLE_VINE_GERUTA_STATUS_VINE_DEAD;
             ParticleSet(gCurrentSprite.yPosition - HALF_BLOCK_SIZE, gCurrentSprite.xPosition, PE_SPRITE_EXPLOSION_SINGLE_THEN_BIG);
-            SpriteUtilSpriteDeath(DEATH_NORMAL, gCurrentSprite.yPosition - 0x92, gCurrentSprite.xPosition + QUARTER_BLOCK_SIZE, TRUE, PE_SPRITE_EXPLOSION_BIG);
+            SpriteUtilSpriteDeath(DEATH_NORMAL, gCurrentSprite.yPosition - (BLOCK_SIZE * 2 + QUARTER_BLOCK_SIZE + PIXEL_SIZE / 2),
+                gCurrentSprite.xPosition + QUARTER_BLOCK_SIZE, TRUE, PE_SPRITE_EXPLOSION_BIG);
             return;
         }
 
-        if (gCurrentSprite.pose == 0x9 && gSubSpriteData1.health == TANGLE_VINE_GERUTA_STATUS_GERUTA_DEAD)
+        if (gCurrentSprite.pose == TANGLE_VINE_GERUTA_POSE_IDLE && gSubSpriteData1.health == TANGLE_VINE_GERUTA_STATUS_GERUTA_DEAD)
         {
             gCurrentSprite.pOam = sTangleVineGerutaOam_Full;
             gCurrentSprite.animationDurationCounter = 0;
             gCurrentSprite.currentAnimationFrame = 0;
 
-            gCurrentSprite.pose = 0x23;
+            gCurrentSprite.pose = TANGLE_VINE_GERUTA_POSE_NO_GERUTA;
         }
     }
 
@@ -148,16 +177,16 @@ void TangleVineGerutaPart(void)
 
     ramSlot = gCurrentSprite.primarySpriteRamSlot;
 
-    if (gCurrentSprite.pose == 0)
+    if (gCurrentSprite.pose == SPRITE_POSE_UNINITIALIZED)
     {
         gCurrentSprite.status &= ~SPRITE_STATUS_NOT_DRAWN;
-        gCurrentSprite.pose = 0xF;
+        gCurrentSprite.pose = TANGLE_VINE_GERUTA_PART_IDLE;
 
         if (gCurrentSprite.roomSlot == TANGLE_VINE_GERUTA_PART_GRIP)
         {
-            gCurrentSprite.drawDistanceTop = 0x40;
-            gCurrentSprite.drawDistanceBottom = 0;
-            gCurrentSprite.drawDistanceHorizontal = 0x10;
+            gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 4);
+            gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(0);
+            gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE);
 
             gCurrentSprite.hitboxTop = 0;
             gCurrentSprite.hitboxBottom = 0;
@@ -166,24 +195,26 @@ void TangleVineGerutaPart(void)
 
             gCurrentSprite.health = 0;
             gCurrentSprite.samusCollision = SSC_NONE;
-            gCurrentSprite.drawOrder = 0x3;
+            gCurrentSprite.drawOrder = 3;
         }
         else if (gCurrentSprite.roomSlot == TANGLE_VINE_GERUTA_PART_GERUTA)
         {
-            gCurrentSprite.drawDistanceTop = 0x10;
-            gCurrentSprite.drawDistanceBottom = 0x10;
-            gCurrentSprite.drawDistanceHorizontal = 0x18;
+            gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE);
+            gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE);
+            gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE + HALF_BLOCK_SIZE);
 
-            gCurrentSprite.hitboxTop = -0x20;
-            gCurrentSprite.hitboxBottom = 0x20;
-            gCurrentSprite.hitboxLeft = -0x40;
-            gCurrentSprite.hitboxRight = 0x40;
+            gCurrentSprite.hitboxTop = -HALF_BLOCK_SIZE;
+            gCurrentSprite.hitboxBottom = HALF_BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = -BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE;
 
-            gCurrentSprite.health = 0x1;
+            gCurrentSprite.health = 1;
             gCurrentSprite.samusCollision = SSC_HURTS_SAMUS;
         }
         else
+        {
             gCurrentSprite.status = 0;
+        }
     }
 
     if (gCurrentSprite.roomSlot == TANGLE_VINE_GERUTA_PART_GRIP)
@@ -194,14 +225,16 @@ void TangleVineGerutaPart(void)
             return;
         }
         else
+        {
             gCurrentSprite.paletteRow = gSpriteData[ramSlot].paletteRow;
+        }
     }
     else if (gCurrentSprite.roomSlot == TANGLE_VINE_GERUTA_PART_GERUTA)
     {
         if (gCurrentSprite.health == 0)
         {
             gSubSpriteData1.health = TANGLE_VINE_GERUTA_STATUS_GERUTA_DEAD;
-            ParticleSet(gCurrentSprite.yPosition + 0x8, gCurrentSprite.xPosition, PE_SPRITE_EXPLOSION_MEDIUM);
+            ParticleSet(gCurrentSprite.yPosition + EIGHTH_BLOCK_SIZE, gCurrentSprite.xPosition, PE_SPRITE_EXPLOSION_MEDIUM);
             SoundPlay(SOUND_SPRITE_EXPLOSION_MEDIUM);
             gCurrentSprite.status = 0;
             return;
@@ -209,7 +242,7 @@ void TangleVineGerutaPart(void)
         
         if (gSubSpriteData1.health == TANGLE_VINE_GERUTA_STATUS_VINE_DEAD)
         {
-            SpriteSpawnPrimary(PSPRITE_GERUTA_RED, 0x80, 0x5, gCurrentSprite.yPosition + HALF_BLOCK_SIZE, gCurrentSprite.xPosition, 0);
+            SpriteSpawnPrimary(PSPRITE_GERUTA_RED, 0x80, 5, gCurrentSprite.yPosition + HALF_BLOCK_SIZE, gCurrentSprite.xPosition, 0);
             gCurrentSprite.status = 0;
             return;
         }
@@ -231,16 +264,16 @@ void TangleVineRedGeruta(void)
             SoundPlayNotAlreadyPlaying(SOUND_TANGLE_VINE_DAMAGE);
     }
 
-    if (gCurrentSprite.pose == 0)
+    if (gCurrentSprite.pose == SPRITE_POSE_UNINITIALIZED)
     {
-        gCurrentSprite.drawDistanceTop = 0x48;
-        gCurrentSprite.drawDistanceBottom = 0;
-        gCurrentSprite.drawDistanceHorizontal = 0x18;
+        gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 4 + HALF_BLOCK_SIZE);
+        gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(0);
+        gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE + HALF_BLOCK_SIZE);
 
-        gCurrentSprite.hitboxTop = -0x110;
+        gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 4 + QUARTER_BLOCK_SIZE);
         gCurrentSprite.hitboxBottom = 0;
-        gCurrentSprite.hitboxLeft = -0x24;
-        gCurrentSprite.hitboxRight = 0x24;
+        gCurrentSprite.hitboxLeft = -(HALF_BLOCK_SIZE + PIXEL_SIZE);
+        gCurrentSprite.hitboxRight = (HALF_BLOCK_SIZE + PIXEL_SIZE);
 
         gCurrentSprite.pOam = sTangleVineRedGerutaOam;
         gCurrentSprite.health = GET_PSPRITE_HEALTH(gCurrentSprite.spriteId);
@@ -249,14 +282,14 @@ void TangleVineRedGeruta(void)
         gCurrentSprite.currentAnimationFrame = 0;
         gCurrentSprite.animationDurationCounter = 0;
 
-        gCurrentSprite.pose = 0x9;
-        gCurrentSprite.frozenPaletteRowOffset = 0x2;
+        gCurrentSprite.pose = TANGLE_VINE_POSE_IDLE;
+        gCurrentSprite.frozenPaletteRowOffset = 2;
     }
-    else if (gCurrentSprite.pose > 0x61)
+    else if (gCurrentSprite.pose >= SPRITE_POSE_DESTROYED)
     {
         ParticleSet(gCurrentSprite.yPosition - HALF_BLOCK_SIZE, gCurrentSprite.xPosition + QUARTER_BLOCK_SIZE,
             PE_SPRITE_EXPLOSION_SINGLE_THEN_BIG);
-        SpriteUtilSpriteDeath(DEATH_NORMAL, gCurrentSprite.yPosition - 0x92,
+        SpriteUtilSpriteDeath(DEATH_NORMAL, gCurrentSprite.yPosition - (BLOCK_SIZE * 2 + QUARTER_BLOCK_SIZE + PIXEL_SIZE / 2),
             gCurrentSprite.xPosition - QUARTER_BLOCK_SIZE, TRUE, PE_SPRITE_EXPLOSION_SINGLE_THEN_BIG);
     }
 }
@@ -274,18 +307,18 @@ void TangleVineLarvaRight(void)
             SoundPlayNotAlreadyPlaying(SOUND_TANGLE_VINE_DAMAGE);
     }
 
-    if (gCurrentSprite.pose == 0)
+    if (gCurrentSprite.pose == SPRITE_POSE_UNINITIALIZED)
     {
         gCurrentSprite.yPosition -= QUARTER_BLOCK_SIZE;
 
-        gCurrentSprite.drawDistanceTop = 0x38;
-        gCurrentSprite.drawDistanceBottom = 0x8;
-        gCurrentSprite.drawDistanceHorizontal = 0x10;
+        gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 3 + HALF_BLOCK_SIZE);
+        gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(HALF_BLOCK_SIZE);
+        gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE);
 
-        gCurrentSprite.hitboxTop = -0xC0;
+        gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 3);
         gCurrentSprite.hitboxBottom = 0;
         gCurrentSprite.hitboxLeft = 0;
-        gCurrentSprite.hitboxRight = 0x24;
+        gCurrentSprite.hitboxRight = HALF_BLOCK_SIZE + PIXEL_SIZE;
 
         gCurrentSprite.pOam = sTangleVineLarvaRightOam;
         gCurrentSprite.health = GET_PSPRITE_HEALTH(gCurrentSprite.spriteId);
@@ -294,13 +327,13 @@ void TangleVineLarvaRight(void)
         gCurrentSprite.currentAnimationFrame = 0;
         gCurrentSprite.animationDurationCounter = 0;
 
-        gCurrentSprite.pose = 0x9;
-        gCurrentSprite.frozenPaletteRowOffset = 0x2;
+        gCurrentSprite.pose = TANGLE_VINE_POSE_IDLE;
+        gCurrentSprite.frozenPaletteRowOffset = 2;
     }
-    else if (gCurrentSprite.pose > 0x61)
+    else if (gCurrentSprite.pose >= SPRITE_POSE_DESTROYED)
     {
         ParticleSet(gCurrentSprite.yPosition - HALF_BLOCK_SIZE, gCurrentSprite.xPosition - QUARTER_BLOCK_SIZE, PE_SPRITE_EXPLOSION_BIG);
-        SpriteUtilSpriteDeath(DEATH_NORMAL, gCurrentSprite.yPosition - 0x78,
+        SpriteUtilSpriteDeath(DEATH_NORMAL, gCurrentSprite.yPosition - (BLOCK_SIZE * 2 - EIGHTH_BLOCK_SIZE),
             gCurrentSprite.xPosition + QUARTER_BLOCK_SIZE, TRUE, PE_SPRITE_EXPLOSION_SINGLE_THEN_BIG);
     }
 }
@@ -318,17 +351,17 @@ void TangleVineLarvaLeft(void)
             SoundPlayNotAlreadyPlaying(SOUND_TANGLE_VINE_DAMAGE);
     }
 
-    if (gCurrentSprite.pose == 0)
+    if (gCurrentSprite.pose == SPRITE_POSE_UNINITIALIZED)
     {
         gCurrentSprite.xPosition -= QUARTER_BLOCK_SIZE;
 
-        gCurrentSprite.drawDistanceTop = 0x38;
-        gCurrentSprite.drawDistanceBottom = 0x8;
-        gCurrentSprite.drawDistanceHorizontal = 0x10;
+        gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 3 + HALF_BLOCK_SIZE);
+        gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(HALF_BLOCK_SIZE);
+        gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE);
 
-        gCurrentSprite.hitboxTop = -0xC0;
+        gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 3);
         gCurrentSprite.hitboxBottom = 0;
-        gCurrentSprite.hitboxLeft = -0x24;
+        gCurrentSprite.hitboxLeft = -(HALF_BLOCK_SIZE + PIXEL_SIZE);
         gCurrentSprite.hitboxRight = 0;
 
         gCurrentSprite.pOam = sTangleVineLarvaLeftOam;
@@ -338,14 +371,14 @@ void TangleVineLarvaLeft(void)
         gCurrentSprite.currentAnimationFrame = 0;
         gCurrentSprite.animationDurationCounter = 0;
 
-        gCurrentSprite.pose = 0x9;
-        gCurrentSprite.frozenPaletteRowOffset = 0x2;
-        gCurrentSprite.drawOrder = 0x5;
+        gCurrentSprite.pose = TANGLE_VINE_POSE_IDLE;
+        gCurrentSprite.frozenPaletteRowOffset = 2;
+        gCurrentSprite.drawOrder = 5;
     }
-    else if (gCurrentSprite.pose > 0x61)
+    else if (gCurrentSprite.pose >= SPRITE_POSE_DESTROYED)
     {
         ParticleSet(gCurrentSprite.yPosition - HALF_BLOCK_SIZE, gCurrentSprite.xPosition + QUARTER_BLOCK_SIZE, PE_SPRITE_EXPLOSION_BIG);
-        SpriteUtilSpriteDeath(DEATH_NORMAL, gCurrentSprite.yPosition - 0x78,
+        SpriteUtilSpriteDeath(DEATH_NORMAL, gCurrentSprite.yPosition - (BLOCK_SIZE * 2 - EIGHTH_BLOCK_SIZE),
             gCurrentSprite.xPosition - QUARTER_BLOCK_SIZE, TRUE, PE_SPRITE_EXPLOSION_SINGLE_THEN_BIG);
     }
 }
@@ -365,31 +398,31 @@ void TangleVineTall(void)
             SoundPlayNotAlreadyPlaying(SOUND_TANGLE_VINE_DAMAGE);
     }
 
-    if (gCurrentSprite.pose == 0)
+    if (gCurrentSprite.pose == SPRITE_POSE_UNINITIALIZED)
     {
         if (SpriteUtilGetCollisionAtPosition(gCurrentSprite.yPosition + HALF_BLOCK_SIZE, gCurrentSprite.xPosition) != COLLISION_AIR)
         {
-            gCurrentSprite.drawDistanceTop = 0x40;
+            gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 4);
             gCurrentSprite.drawDistanceBottom = 0;
-            gCurrentSprite.drawDistanceHorizontal = 0x10;
+            gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE);
 
-            gCurrentSprite.hitboxTop = -0xF8;
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 4 - EIGHTH_BLOCK_SIZE);
             gCurrentSprite.hitboxBottom = 0;
-            gCurrentSprite.hitboxLeft = -0x18;
-            gCurrentSprite.hitboxRight = 0x18;
+            gCurrentSprite.hitboxLeft = -(QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE);
+            gCurrentSprite.hitboxRight = QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE;
 
             gCurrentSprite.pOam = sTangleVineTallOam_OnGround;
         }
         else
         {
             gCurrentSprite.drawDistanceTop = 0;
-            gCurrentSprite.drawDistanceBottom = 0x40;
-            gCurrentSprite.drawDistanceHorizontal = 0x10;
+            gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 4);
+            gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE);
 
             gCurrentSprite.hitboxTop = 0;
-            gCurrentSprite.hitboxBottom = 0xF8;
-            gCurrentSprite.hitboxLeft = -0x18;
-            gCurrentSprite.hitboxRight = 0x18;
+            gCurrentSprite.hitboxBottom = BLOCK_SIZE * 4 - EIGHTH_BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = -(QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE);
+            gCurrentSprite.hitboxRight = QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE;
 
             gCurrentSprite.pOam = sTangleVineTallOam_OnCeiling;
 
@@ -403,13 +436,13 @@ void TangleVineTall(void)
         gCurrentSprite.currentAnimationFrame = 0;
         gCurrentSprite.animationDurationCounter = 0;
 
-        gCurrentSprite.pose = 0x9;
-        gCurrentSprite.frozenPaletteRowOffset = 0x1;
+        gCurrentSprite.pose = TANGLE_VINE_POSE_IDLE;
+        gCurrentSprite.frozenPaletteRowOffset = 1;
     }
-    else if (gCurrentSprite.pose > 0x61)
+    else if (gCurrentSprite.pose >= SPRITE_POSE_DESTROYED)
     {
         if (gCurrentSprite.status & SPRITE_STATUS_FACING_DOWN)
-            yPosition = gCurrentSprite.yPosition + 0x64;
+            yPosition = gCurrentSprite.yPosition + BLOCK_SIZE + HALF_BLOCK_SIZE + PIXEL_SIZE;
         else
             yPosition = gCurrentSprite.yPosition - BLOCK_SIZE;
 
@@ -432,31 +465,31 @@ void TangleVineMedium(void)
             SoundPlayNotAlreadyPlaying(SOUND_TANGLE_VINE_DAMAGE);
     }
 
-    if (gCurrentSprite.pose == 0)
+    if (gCurrentSprite.pose == SPRITE_POSE_UNINITIALIZED)
     {
         if (SpriteUtilGetCollisionAtPosition(gCurrentSprite.yPosition + HALF_BLOCK_SIZE, gCurrentSprite.xPosition) != COLLISION_AIR)
         {
-            gCurrentSprite.drawDistanceTop = 0x30;
+            gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 3);
             gCurrentSprite.drawDistanceBottom = 0;
-            gCurrentSprite.drawDistanceHorizontal = 0x10;
+            gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE);
 
-            gCurrentSprite.hitboxTop = -0xB8;
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 3 - EIGHTH_BLOCK_SIZE);
             gCurrentSprite.hitboxBottom = 0;
-            gCurrentSprite.hitboxLeft = -0x18;
-            gCurrentSprite.hitboxRight = 0x18;
+            gCurrentSprite.hitboxLeft = -(QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE);
+            gCurrentSprite.hitboxRight = QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE;
 
             gCurrentSprite.pOam = sTangleVineMediumOam_OnGround;
         }
         else
         {
             gCurrentSprite.drawDistanceTop = 0;
-            gCurrentSprite.drawDistanceBottom = 0x30;
-            gCurrentSprite.drawDistanceHorizontal = 0x10;
+            gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 3);
+            gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE);
 
             gCurrentSprite.hitboxTop = 0;
-            gCurrentSprite.hitboxBottom = 0xB8;
-            gCurrentSprite.hitboxLeft = -0x18;
-            gCurrentSprite.hitboxRight = 0x18;
+            gCurrentSprite.hitboxBottom = BLOCK_SIZE * 3 - EIGHTH_BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = -(QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE);
+            gCurrentSprite.hitboxRight = QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE;
 
             gCurrentSprite.pOam = sTangleVineMediumOam_OnCeiling;
 
@@ -470,15 +503,15 @@ void TangleVineMedium(void)
         gCurrentSprite.currentAnimationFrame = 0;
         gCurrentSprite.animationDurationCounter = 0;
 
-        gCurrentSprite.pose = 0x9;
-        gCurrentSprite.frozenPaletteRowOffset = 0x1;
+        gCurrentSprite.pose = TANGLE_VINE_POSE_IDLE;
+        gCurrentSprite.frozenPaletteRowOffset = 1;
     }
-    else if (gCurrentSprite.pose > 0x61)
+    else if (gCurrentSprite.pose >= SPRITE_POSE_DESTROYED)
     {
         if (gCurrentSprite.status & SPRITE_STATUS_FACING_DOWN)
-            yPosition = gCurrentSprite.yPosition + 0x70;
+            yPosition = gCurrentSprite.yPosition + BLOCK_SIZE + THREE_QUARTER_BLOCK_SIZE;
         else
-            yPosition = gCurrentSprite.yPosition - 0x30;
+            yPosition = gCurrentSprite.yPosition - THREE_QUARTER_BLOCK_SIZE;
 
         SpriteUtilSpriteDeath(DEATH_NORMAL, yPosition, gCurrentSprite.xPosition, TRUE, PE_SPRITE_EXPLOSION_BIG);
     }
@@ -499,31 +532,31 @@ void TangleVineCurved(void)
             SoundPlayNotAlreadyPlaying(SOUND_TANGLE_VINE_DAMAGE);
     }
 
-    if (gCurrentSprite.pose == 0)
+    if (gCurrentSprite.pose == SPRITE_POSE_UNINITIALIZED)
     {
         if (SpriteUtilGetCollisionAtPosition(gCurrentSprite.yPosition + HALF_BLOCK_SIZE, gCurrentSprite.xPosition) != COLLISION_AIR)
         {
-            gCurrentSprite.drawDistanceTop = 0x28;
+            gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 2 + HALF_BLOCK_SIZE);
             gCurrentSprite.drawDistanceBottom = 0;
-            gCurrentSprite.drawDistanceHorizontal = 0x8;
+            gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(HALF_BLOCK_SIZE);
 
-            gCurrentSprite.hitboxTop = -0x80;
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 2);
             gCurrentSprite.hitboxBottom = 0;
-            gCurrentSprite.hitboxLeft = -0x10;
-            gCurrentSprite.hitboxRight = 0x10;
+            gCurrentSprite.hitboxLeft = -QUARTER_BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = QUARTER_BLOCK_SIZE;
 
             gCurrentSprite.pOam = sTangleVineCurvedOam_OnGround;
         }
         else
         {
             gCurrentSprite.drawDistanceTop = 0;
-            gCurrentSprite.drawDistanceBottom = 0x28;
-            gCurrentSprite.drawDistanceHorizontal = 0x8;
+            gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 2 + HALF_BLOCK_SIZE);
+            gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(HALF_BLOCK_SIZE);
 
             gCurrentSprite.hitboxTop = 0;
-            gCurrentSprite.hitboxBottom = 0x80;
-            gCurrentSprite.hitboxLeft = -0x10;
-            gCurrentSprite.hitboxRight = 0x10;
+            gCurrentSprite.hitboxBottom = BLOCK_SIZE * 2;
+            gCurrentSprite.hitboxLeft = -QUARTER_BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = QUARTER_BLOCK_SIZE;
 
             gCurrentSprite.pOam = sTangleVineCurvedOam_OnCeiling;
 
@@ -537,15 +570,15 @@ void TangleVineCurved(void)
         gCurrentSprite.currentAnimationFrame = 0;
         gCurrentSprite.animationDurationCounter = 0;
 
-        gCurrentSprite.pose = 0x9;
-        gCurrentSprite.frozenPaletteRowOffset = 0x1;
+        gCurrentSprite.pose = TANGLE_VINE_POSE_IDLE;
+        gCurrentSprite.frozenPaletteRowOffset = 1;
     }
-    else if (gCurrentSprite.pose > 0x61)
+    else if (gCurrentSprite.pose >= SPRITE_POSE_DESTROYED)
     {
         if (gCurrentSprite.status & SPRITE_STATUS_FACING_DOWN)
-            yPosition = gCurrentSprite.yPosition + 0x48;
+            yPosition = gCurrentSprite.yPosition + BLOCK_SIZE + EIGHTH_BLOCK_SIZE;
         else
-            yPosition = gCurrentSprite.yPosition - 0x28;
+            yPosition = gCurrentSprite.yPosition - (HALF_BLOCK_SIZE + EIGHTH_BLOCK_SIZE);
 
         SpriteUtilSpriteDeath(DEATH_NORMAL, yPosition, gCurrentSprite.xPosition, TRUE, PE_SPRITE_EXPLOSION_MEDIUM);
     }
@@ -566,31 +599,31 @@ void TangleVineShort(void)
             SoundPlayNotAlreadyPlaying(SOUND_TANGLE_VINE_DAMAGE);
     }
 
-    if (gCurrentSprite.pose == 0)
+    if (gCurrentSprite.pose == SPRITE_POSE_UNINITIALIZED)
     {
         if (SpriteUtilGetCollisionAtPosition(gCurrentSprite.yPosition + HALF_BLOCK_SIZE, gCurrentSprite.xPosition) != COLLISION_AIR)
         {
-            gCurrentSprite.drawDistanceTop = 0x28;
+            gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 2 + HALF_BLOCK_SIZE);
             gCurrentSprite.drawDistanceBottom = 0;
-            gCurrentSprite.drawDistanceHorizontal = 0x8;
+            gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(HALF_BLOCK_SIZE);
 
-            gCurrentSprite.hitboxTop = -0x88;
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 2 + EIGHTH_BLOCK_SIZE);
             gCurrentSprite.hitboxBottom = 0;
-            gCurrentSprite.hitboxLeft = -0x10;
-            gCurrentSprite.hitboxRight = 0x10;
+            gCurrentSprite.hitboxLeft = -QUARTER_BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = QUARTER_BLOCK_SIZE;
 
             gCurrentSprite.pOam = sTangleVineShortOam_OnGround;
         }
         else
         {
             gCurrentSprite.drawDistanceTop = 0;
-            gCurrentSprite.drawDistanceBottom = 0x28;
-            gCurrentSprite.drawDistanceHorizontal = 0x8;
+            gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 2 + HALF_BLOCK_SIZE);
+            gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(HALF_BLOCK_SIZE);
 
             gCurrentSprite.hitboxTop = 0;
-            gCurrentSprite.hitboxBottom = 0x88;
-            gCurrentSprite.hitboxLeft = -0x10;
-            gCurrentSprite.hitboxRight = 0x10;
+            gCurrentSprite.hitboxBottom = BLOCK_SIZE * 2 + EIGHTH_BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = -QUARTER_BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = QUARTER_BLOCK_SIZE;
 
             gCurrentSprite.pOam = sTangleVineShortOam_OnCeiling;
 
@@ -604,10 +637,10 @@ void TangleVineShort(void)
         gCurrentSprite.currentAnimationFrame = 0;
         gCurrentSprite.animationDurationCounter = 0;
 
-        gCurrentSprite.pose = 0x9;
-        gCurrentSprite.frozenPaletteRowOffset = 0x1;
+        gCurrentSprite.pose = TANGLE_VINE_POSE_IDLE;
+        gCurrentSprite.frozenPaletteRowOffset = 1;
     }
-    else if (gCurrentSprite.pose > 0x61)
+    else if (gCurrentSprite.pose >= SPRITE_POSE_DESTROYED)
     {
         if (gCurrentSprite.status & SPRITE_STATUS_FACING_DOWN)
             yPosition = gCurrentSprite.yPosition + BLOCK_SIZE;

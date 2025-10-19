@@ -6,10 +6,10 @@ const u32 sTileset_69_Gfx[3143] = INCBIN_U32("data/tilesets/69.gfx.lz");
 const u32 sTileset_40_Gfx[1558] = INCBIN_U32("data/tilesets/40.gfx.lz");
 const u32 sTileset_35_Gfx[3095] = INCBIN_U32("data/tilesets/35.gfx.lz");
 
-const u32 sTileset_69_Bg_Gfx[2287] = INCBIN_U32("data/tilesets/69_Bg.gfx.lz");
-const u32 sTileset_26_Bg_Gfx[2281] = INCBIN_U32("data/tilesets/26_Bg.gfx.lz");
-const u32 sTileset_35_Bg_Gfx[920] = INCBIN_U32("data/tilesets/35_Bg.gfx.lz");
-const u32 sTileset_40_Bg_Gfx[709] = INCBIN_U32("data/tilesets/40_Bg.gfx.lz");
+const u32 sTileset_69_Bg_Gfx[2287] = INCBIN_U32("data/tilesets/69_bg.gfx.lz");
+const u32 sTileset_26_Bg_Gfx[2281] = INCBIN_U32("data/tilesets/26_bg.gfx.lz");
+const u32 sTileset_35_Bg_Gfx[920] = INCBIN_U32("data/tilesets/35_bg.gfx.lz");
+const u32 sTileset_40_Bg_Gfx[709] = INCBIN_U32("data/tilesets/40_bg.gfx.lz");
 
 const u8 sTileset_26_Tilemap[4868] = INCBIN_U8("data/tilesets/26.tm");
 const u8 sTileset_69_Tilemap[3332] = INCBIN_U8("data/tilesets/69.tm");

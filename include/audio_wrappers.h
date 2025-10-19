@@ -1,27 +1,33 @@
 #ifndef AUDIO_WRAPPERS_H
 #define AUDIO_WRAPPERS_H
 
+#include "constants/audio.h"
+
 #include "structs/audio.h"
+
+extern void CallSoundCodeA(void);
+extern void CallSoundCodeB(void);
+extern void CallSoundCodeC(void);
 
 void InitializeAudio(void);
 void DoSoundAction(u32 action);
 void SetupSoundTransfer(void);
-void SoundPlay(u16 sound);
-void SoundStop(u16 sound);
+void SoundPlay(Sound sound);
+void SoundStop(Sound sound);
 void unk_2a38(struct TrackData* pTrack);
-void StopAllMusicsAndSounds(void);
+void StopAllMusicAndSounds(void);
 void unk_2a8c(void);
 void FadeAllSounds(u16 timer);
-void SoundPlayNotAlreadyPlaying(u16 sound);
-void unk_2b64(u16 sound);
-void unk_2bd4(u16 sound);
+void SoundPlayNotAlreadyPlaying(Sound sound);
+void unk_2b64(Sound sound);
+void unk_2bd4(Sound sound);
 void unk_2c10(struct TrackData* pTrack);
 void unk_2c4c(void);
-void SoundFade(u16 sound, u16 timer);
+void SoundFade(Sound sound, u16 timer);
 void ApplyMusicSoundFading(struct TrackData* pTrack, u16 timer);
 void ApplyRawMusicSoundFading(struct TrackData* pTrack, u16 timer);
 void unk_2d2c(struct TrackData* pTrack);
-void PlayFadingSound(u16 sound, u16 timer);
+void PlayFadingSound(Sound sound, u16 timer);
 void InitFadingMusic(struct TrackData* pTrack, const u8* pHeader, u16 timer);
 void unk_2e34(struct TrackData* pTrack, u16 timer);
 void unk_2e6c(struct TrackData* pTrack);

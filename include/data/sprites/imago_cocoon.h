@@ -73,11 +73,11 @@ extern const struct FrameData sImagoCocoonOam_Static[2];
 
 extern const struct FrameData sImagoCocoonSporeOam_Spawning[5];
 
-extern const struct FrameData sImagoCocoonSpore_Nest[4];
+extern const struct FrameData sImagoCocoonSporeOam_Nest[4];
 
-extern const struct FrameData sImagoCocoonSpore_Moving[4];
+extern const struct FrameData sImagoCocoonSporeOam_Moving[4];
 
-extern const struct FrameData sImagoCocoonSpore_Exploding[5];
+extern const struct FrameData sImagoCocoonSporeOam_Exploding[5];
 
 extern const struct FrameData sWingedRipperOam_Moving[10];
 

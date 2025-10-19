@@ -12,49 +12,60 @@
 
 #include "structs/sprite.h"
 
+#define VIOLA_POSE_MOVE_RIGHT 0x9
+#define VIOLA_POSE_FALLING_INIT 0x1E
+#define VIOLA_POSE_FALLING 0x1F
+#define VIOLA_POSE_MOVE_LEFT 0x23
+#define VIOLA_POSE_MOVE_DOWN 0x25
+#define VIOLA_POSE_MOVE_UP 0x27
+
+#define VIOLA_SPEED (PIXEL_SIZE / 2)
+
+#define VIOLA_SIZE (QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE)
+
 /**
  * @brief 3743c | 120 | Initializes a viola sprite
  * 
  */
-void ViolaInit(void)
+static void ViolaInit(void)
 {
     SpriteUtilChooseRandomXDirection();
     gCurrentSprite.yPosition -= (HALF_BLOCK_SIZE);
 
     // Check for solid blocks around
-    SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition +(HALF_BLOCK_SIZE), gCurrentSprite.xPosition);
-    if (gPreviousCollisionCheck & 0xF0)
+    SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition + (HALF_BLOCK_SIZE), gCurrentSprite.xPosition);
+    if (gPreviousCollisionCheck & COLLISION_FLAGS_UNKNOWN_F0)
     {
-        gCurrentSprite.yPosition += 0x8;
+        gCurrentSprite.yPosition += EIGHTH_BLOCK_SIZE;
         gCurrentSprite.pose = VIOLA_POSE_MOVE_RIGHT;
     }
     else
     {
-        SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition - 0x24, gCurrentSprite.xPosition);
-        if (gPreviousCollisionCheck & 0xF0)
+        SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition - (HALF_BLOCK_SIZE + PIXEL_SIZE), gCurrentSprite.xPosition);
+        if (gPreviousCollisionCheck & COLLISION_FLAGS_UNKNOWN_F0)
         {
-            gCurrentSprite.yPosition -= 0x8;
+            gCurrentSprite.yPosition -= EIGHTH_BLOCK_SIZE;
             gCurrentSprite.pose = VIOLA_POSE_MOVE_LEFT;
         }
         else
         {
-            SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition, gCurrentSprite.xPosition - 0x24);
-            if (gPreviousCollisionCheck & 0xF0)
+            SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition, gCurrentSprite.xPosition - (HALF_BLOCK_SIZE + PIXEL_SIZE));
+            if (gPreviousCollisionCheck & COLLISION_FLAGS_UNKNOWN_F0)
             {
-                gCurrentSprite.xPosition -= 0x8;
+                gCurrentSprite.xPosition -= EIGHTH_BLOCK_SIZE;
                 gCurrentSprite.pose = VIOLA_POSE_MOVE_DOWN;
             }
             else
             {
                 SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition, gCurrentSprite.xPosition + HALF_BLOCK_SIZE);
-                if (gPreviousCollisionCheck & 0xF0)
+                if (gPreviousCollisionCheck & COLLISION_FLAGS_UNKNOWN_F0)
                 {
-                    gCurrentSprite.xPosition += 0x8;
+                    gCurrentSprite.xPosition += EIGHTH_BLOCK_SIZE;
                     gCurrentSprite.pose = VIOLA_POSE_MOVE_UP;
                 }
                 else
                 {
-                    gCurrentSprite.status = 0x0;
+                    gCurrentSprite.status = 0;
                     return;
                 }
             }
@@ -63,33 +74,33 @@ void ViolaInit(void)
 
     gCurrentSprite.samusCollision = SSC_HURTS_SAMUS;
 
-    gCurrentSprite.pOam = sViolaOAM_Moving;
-    gCurrentSprite.animationDurationCounter = 0x0;
-    gCurrentSprite.currentAnimationFrame = 0x0;
+    gCurrentSprite.pOam = sViolaOam_Moving;
+    gCurrentSprite.animationDurationCounter = 0;
+    gCurrentSprite.currentAnimationFrame = 0;
 
     gCurrentSprite.health = GET_PSPRITE_HEALTH(gCurrentSprite.spriteId);
 
-    gCurrentSprite.drawDistanceTop = 0x10;
-    gCurrentSprite.drawDistanceBottom = 0x10;
-    gCurrentSprite.drawDistanceHorizontal = 0x10;
+    gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE);
+    gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE);
+    gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE);
 
-    gCurrentSprite.hitboxTop = -0x14;
-    gCurrentSprite.hitboxBottom = 0x14;
-    gCurrentSprite.hitboxLeft = -0x14;
-    gCurrentSprite.hitboxRight = 0x14;
+    gCurrentSprite.hitboxTop = -(QUARTER_BLOCK_SIZE + PIXEL_SIZE);
+    gCurrentSprite.hitboxBottom = QUARTER_BLOCK_SIZE + PIXEL_SIZE;
+    gCurrentSprite.hitboxLeft = -(QUARTER_BLOCK_SIZE + PIXEL_SIZE);
+    gCurrentSprite.hitboxRight = QUARTER_BLOCK_SIZE + PIXEL_SIZE;
 
     // Set speed
     if (gCurrentSprite.spriteId == PSPRITE_VIOLA_ORANGE)
-        gCurrentSprite.work2 = 0x4;
+        gCurrentSprite.work2 = VIOLA_SPEED * 2;
     else
-        gCurrentSprite.work2 = 0x2;
+        gCurrentSprite.work2 = VIOLA_SPEED;
 }
 
 /**
  * @brief 3755c | 1a8 | Handles the viola moving to the right
  * 
  */
-void ViolaMoveRight(void)
+static void ViolaMoveRight(void)
 {
     u16 velocity;
     u16 yPosition;
@@ -97,14 +108,14 @@ void ViolaMoveRight(void)
     u32 topEdge;
 
     velocity = gCurrentSprite.work2;
-    yPosition = gCurrentSprite.yPosition + 0x18;
+    yPosition = gCurrentSprite.yPosition + VIOLA_SIZE;
     xPosition = gCurrentSprite.xPosition;
 
     // Check should fall
-    SpriteUtilCheckCollisionAtPosition(yPosition, xPosition + 0x1C);
+    SpriteUtilCheckCollisionAtPosition(yPosition, xPosition + (VIOLA_SIZE + PIXEL_SIZE));
     if (gPreviousCollisionCheck == COLLISION_AIR)
     {
-        SpriteUtilCheckCollisionAtPosition(yPosition, xPosition - 0x20);
+        SpriteUtilCheckCollisionAtPosition(yPosition, xPosition - HALF_BLOCK_SIZE);
         if (gPreviousCollisionCheck == COLLISION_AIR)
         {
             gCurrentSprite.pose = VIOLA_POSE_FALLING_INIT;
@@ -113,76 +124,88 @@ void ViolaMoveRight(void)
     }
 
     // Handle slope movement
-    topEdge = SpriteUtilCheckVerticalCollisionAtPosition(yPosition - 0x4, xPosition);
-    if ((gPreviousVerticalCollisionCheck & 0xF) > 0x1)
-        gCurrentSprite.yPosition = topEdge - 0x18;
+    topEdge = SpriteUtilCheckVerticalCollisionAtPosition(yPosition - PIXEL_SIZE, xPosition);
+    if ((gPreviousVerticalCollisionCheck & COLLISION_FLAGS_UNKNOWN_F) >= COLLISION_LEFT_SLIGHT_FLOOR_SLOPE)
+    {
+        gCurrentSprite.yPosition = topEdge - VIOLA_SIZE;
+    }
     else
     {
         topEdge = SpriteUtilCheckVerticalCollisionAtPosition(yPosition, xPosition);
-        if ((gPreviousVerticalCollisionCheck & 0xF) > 0x1)
-            gCurrentSprite.yPosition = topEdge - 0x18;
+        if ((gPreviousVerticalCollisionCheck & COLLISION_FLAGS_UNKNOWN_F) >= COLLISION_LEFT_SLIGHT_FLOOR_SLOPE)
+        {
+            gCurrentSprite.yPosition = topEdge - VIOLA_SIZE;
+        }
         else
         {
-            topEdge = SpriteUtilCheckVerticalCollisionAtPosition(yPosition + 0x4, xPosition);
+            topEdge = SpriteUtilCheckVerticalCollisionAtPosition(yPosition + PIXEL_SIZE, xPosition);
             if (gPreviousVerticalCollisionCheck != COLLISION_AIR)
-                gCurrentSprite.yPosition = topEdge - 0x18;
+                gCurrentSprite.yPosition = topEdge - VIOLA_SIZE;
         }
     }
 
     // Check should change direction or not
-    yPosition = gCurrentSprite.yPosition + 0x18;
-    if (gPreviousVerticalCollisionCheck == COLLISION_AIR || (gPreviousVerticalCollisionCheck & 0xF0))
+    yPosition = gCurrentSprite.yPosition + VIOLA_SIZE;
+    if (gPreviousVerticalCollisionCheck == COLLISION_AIR || (gPreviousVerticalCollisionCheck & COLLISION_FLAGS_UNKNOWN_F0))
     {
         if (gCurrentSprite.status & SPRITE_STATUS_FACING_RIGHT)
         {
-            SpriteUtilCheckCollisionAtPosition(yPosition, xPosition - 0x18);
+            SpriteUtilCheckCollisionAtPosition(yPosition, xPosition - VIOLA_SIZE);
             if (gPreviousCollisionCheck == COLLISION_AIR)
             {
-                SpriteUtilCheckCollisionAtPosition(yPosition, xPosition + 0x18);
+                SpriteUtilCheckCollisionAtPosition(yPosition, xPosition + VIOLA_SIZE);
                 if (gPreviousCollisionCheck == COLLISION_AIR)
                 {
                     gCurrentSprite.status |= SPRITE_STATUS_FACING_RIGHT;
                     gCurrentSprite.pose = VIOLA_POSE_MOVE_DOWN;
                 }
                 else
+                {
                     gCurrentSprite.xPosition += velocity;
+                }
             }
             else
             {
-                SpriteUtilCheckCollisionAtPosition(yPosition - 0x4, xPosition + 0x18);
+                SpriteUtilCheckCollisionAtPosition(yPosition - PIXEL_SIZE, xPosition + VIOLA_SIZE);
                 if (gPreviousCollisionCheck == COLLISION_SOLID)
                 {
                     gCurrentSprite.status &= ~SPRITE_STATUS_FACING_RIGHT;
                     gCurrentSprite.pose = VIOLA_POSE_MOVE_UP;
                 }
                 else
+                {
                     gCurrentSprite.xPosition += velocity;
+                }
             }
         }
         else
         {
-            SpriteUtilCheckCollisionAtPosition(yPosition, xPosition + 0x14);
+            SpriteUtilCheckCollisionAtPosition(yPosition, xPosition + (VIOLA_SIZE - PIXEL_SIZE));
             if (gPreviousCollisionCheck == COLLISION_AIR)
             {
-                SpriteUtilCheckCollisionAtPosition(yPosition, xPosition - 0x1C);
+                SpriteUtilCheckCollisionAtPosition(yPosition, xPosition - (VIOLA_SIZE + PIXEL_SIZE));
                 if (gPreviousCollisionCheck == COLLISION_AIR)
                 {
                     gCurrentSprite.status |= SPRITE_STATUS_FACING_RIGHT;
                     gCurrentSprite.pose = VIOLA_POSE_MOVE_UP;
                 }
                 else
+                {
                     gCurrentSprite.xPosition -= velocity;
+                }
             }
             else
             {
-                SpriteUtilCheckCollisionAtPosition(yPosition - 0x4, xPosition - 0x1C);
+                SpriteUtilCheckCollisionAtPosition(yPosition - PIXEL_SIZE, xPosition - (VIOLA_SIZE + PIXEL_SIZE));
                 if (gPreviousCollisionCheck == COLLISION_SOLID)
                 {
                     gCurrentSprite.status &= ~SPRITE_STATUS_FACING_RIGHT;
                     gCurrentSprite.pose = VIOLA_POSE_MOVE_DOWN;
                 }
                 else
+                {
                     gCurrentSprite.xPosition -= velocity;
+                }
             }
         }
     }
@@ -199,25 +222,25 @@ void ViolaMoveRight(void)
  * @brief 37704 | 148 | Handles the viola moving left
  * 
  */
-void ViolaMoveLeft(void)
+static void ViolaMoveLeft(void)
 {
     u16 velocity;
     u16 yPosition;
     u16 xPosition;
     u32 blockY;
 
-    blockY = gCurrentSprite.yPosition &= 0xFFC0;
-    gCurrentSprite.yPosition += 0x18;
+    blockY = gCurrentSprite.yPosition &= BLOCK_POSITION_FLAG;
+    gCurrentSprite.yPosition += VIOLA_SIZE;
 
     velocity = gCurrentSprite.work2;
-    yPosition = blockY - 0x4;
+    yPosition = blockY - PIXEL_SIZE;
     xPosition = gCurrentSprite.xPosition;
 
     // Check should fall
-    SpriteUtilCheckCollisionAtPosition(yPosition, xPosition + 0x1C);
+    SpriteUtilCheckCollisionAtPosition(yPosition, xPosition + (VIOLA_SIZE + PIXEL_SIZE));
     if (gPreviousCollisionCheck == COLLISION_AIR)
     {
-        SpriteUtilCheckCollisionAtPosition(yPosition, xPosition - 0x20);
+        SpriteUtilCheckCollisionAtPosition(yPosition, xPosition - HALF_BLOCK_SIZE);
         if (gPreviousCollisionCheck == COLLISION_AIR)
         {
             gCurrentSprite.pose = VIOLA_POSE_FALLING_INIT;
@@ -228,10 +251,10 @@ void ViolaMoveLeft(void)
     // Check should change direction or not
     if (gCurrentSprite.status & SPRITE_STATUS_FACING_RIGHT)
     {
-        SpriteUtilCheckCollisionAtPosition(yPosition, xPosition - 0x18);
-        if (!(gPreviousCollisionCheck & 0xF))
+        SpriteUtilCheckCollisionAtPosition(yPosition, xPosition - VIOLA_SIZE);
+        if (!(gPreviousCollisionCheck & COLLISION_FLAGS_UNKNOWN_F))
         {
-            SpriteUtilCheckCollisionAtPosition(yPosition, xPosition + 0x18);
+            SpriteUtilCheckCollisionAtPosition(yPosition, xPosition + VIOLA_SIZE);
             if (gPreviousCollisionCheck == COLLISION_AIR)
             {
                 gCurrentSprite.status &= ~SPRITE_STATUS_FACING_RIGHT;
@@ -242,7 +265,7 @@ void ViolaMoveLeft(void)
         }
         else
         {
-            SpriteUtilCheckCollisionAtPosition(yPosition + 0x4, xPosition + 0x18);
+            SpriteUtilCheckCollisionAtPosition(yPosition + PIXEL_SIZE, xPosition + VIOLA_SIZE);
             if (gPreviousCollisionCheck == COLLISION_SOLID)
             {
                 gCurrentSprite.status |= SPRITE_STATUS_FACING_RIGHT;
@@ -254,10 +277,10 @@ void ViolaMoveLeft(void)
     }
     else
     {
-        SpriteUtilCheckCollisionAtPosition(yPosition, xPosition + 0x14);
-        if (!(gPreviousCollisionCheck & 0xF))
+        SpriteUtilCheckCollisionAtPosition(yPosition, xPosition + (VIOLA_SIZE - PIXEL_SIZE));
+        if (!(gPreviousCollisionCheck & COLLISION_FLAGS_UNKNOWN_F))
         {
-            SpriteUtilCheckCollisionAtPosition(yPosition, xPosition - 0x1C);
+            SpriteUtilCheckCollisionAtPosition(yPosition, xPosition - (VIOLA_SIZE + PIXEL_SIZE));
             if (gPreviousCollisionCheck == COLLISION_AIR)
             {
                 gCurrentSprite.status &= ~SPRITE_STATUS_FACING_RIGHT;
@@ -268,7 +291,7 @@ void ViolaMoveLeft(void)
         }
         else
         {
-            SpriteUtilCheckCollisionAtPosition(yPosition + 0x4, xPosition - 0x1C);
+            SpriteUtilCheckCollisionAtPosition(yPosition + PIXEL_SIZE, xPosition - (VIOLA_SIZE + PIXEL_SIZE));
             if (gPreviousCollisionCheck == COLLISION_SOLID)
             {
                 gCurrentSprite.status |= SPRITE_STATUS_FACING_RIGHT;
@@ -284,25 +307,25 @@ void ViolaMoveLeft(void)
  * @brief 3784c | 148 | Handles a viola moving down
  * 
  */
-void ViolaMoveDown(void)
+static void ViolaMoveDown(void)
 {
     u16 velocity;
     u16 yPosition;
     u16 xPosition;
     u32 blockX;
 
-    blockX = gCurrentSprite.xPosition &= 0xFFC0;
-    gCurrentSprite.xPosition += 0x18;
+    blockX = gCurrentSprite.xPosition &= BLOCK_POSITION_FLAG;
+    gCurrentSprite.xPosition += VIOLA_SIZE;
 
     velocity = gCurrentSprite.work2;
     yPosition = gCurrentSprite.yPosition;
-    xPosition = blockX - 0x4;
+    xPosition = blockX - PIXEL_SIZE;
 
     // Check should fall
-    SpriteUtilCheckCollisionAtPosition(yPosition + 0x1C, xPosition);
+    SpriteUtilCheckCollisionAtPosition(yPosition + (VIOLA_SIZE + PIXEL_SIZE), xPosition);
     if (gPreviousCollisionCheck == COLLISION_AIR)
     {
-        SpriteUtilCheckCollisionAtPosition(yPosition - 0x20, xPosition);
+        SpriteUtilCheckCollisionAtPosition(yPosition - (VIOLA_SIZE + EIGHTH_BLOCK_SIZE), xPosition);
         if (gPreviousCollisionCheck == COLLISION_AIR)
         {
             gCurrentSprite.pose = VIOLA_POSE_FALLING_INIT;
@@ -313,54 +336,62 @@ void ViolaMoveDown(void)
     // Check should change direction or not
     if (gCurrentSprite.status & SPRITE_STATUS_FACING_RIGHT)
     {
-        SpriteUtilCheckCollisionAtPosition(yPosition - 0x18, xPosition);
-        if (!(gPreviousCollisionCheck & 0xF0))
+        SpriteUtilCheckCollisionAtPosition(yPosition - VIOLA_SIZE, xPosition);
+        if (!(gPreviousCollisionCheck & COLLISION_FLAGS_UNKNOWN_F0))
         {
-            SpriteUtilCheckCollisionAtPosition(yPosition + 0x18, xPosition);
+            SpriteUtilCheckCollisionAtPosition(yPosition + VIOLA_SIZE, xPosition);
             if (gPreviousCollisionCheck == COLLISION_AIR)
             {
                 gCurrentSprite.status &= ~SPRITE_STATUS_FACING_RIGHT;
                 gCurrentSprite.pose = VIOLA_POSE_MOVE_LEFT;
             }
             else
+            {
                 gCurrentSprite.yPosition += velocity;
+            }
         }
         else
         {
-            SpriteUtilCheckCollisionAtPosition(yPosition + 0x18, xPosition + 0x4);
+            SpriteUtilCheckCollisionAtPosition(yPosition + VIOLA_SIZE, xPosition + PIXEL_SIZE);
             if (gPreviousCollisionCheck == COLLISION_SOLID)
             {
                 gCurrentSprite.status |= SPRITE_STATUS_FACING_RIGHT;
                 gCurrentSprite.pose = VIOLA_POSE_MOVE_RIGHT;
             }
             else
+            {
                 gCurrentSprite.yPosition += velocity;
+            }
         }
     }
     else
     {
-        SpriteUtilCheckCollisionAtPosition(yPosition + 0x14, xPosition);
-        if (!(gPreviousCollisionCheck & 0xF0))
+        SpriteUtilCheckCollisionAtPosition(yPosition + (VIOLA_SIZE - PIXEL_SIZE), xPosition);
+        if (!(gPreviousCollisionCheck & COLLISION_FLAGS_UNKNOWN_F0))
         {
-            SpriteUtilCheckCollisionAtPosition(yPosition - 0x1C, xPosition);
+            SpriteUtilCheckCollisionAtPosition(yPosition - (VIOLA_SIZE + PIXEL_SIZE), xPosition);
             if (gPreviousCollisionCheck == COLLISION_AIR)
             {
                 gCurrentSprite.status &= ~SPRITE_STATUS_FACING_RIGHT;
                 gCurrentSprite.pose = VIOLA_POSE_MOVE_RIGHT;
             }
             else
+            {
                 gCurrentSprite.yPosition -= velocity;
+            }
         }
         else
         {
-            SpriteUtilCheckCollisionAtPosition(yPosition - 0x1C, xPosition + 0x4);
+            SpriteUtilCheckCollisionAtPosition(yPosition - (VIOLA_SIZE + PIXEL_SIZE), xPosition + PIXEL_SIZE);
             if (gPreviousCollisionCheck == COLLISION_SOLID)
             {
                 gCurrentSprite.status |= SPRITE_STATUS_FACING_RIGHT;
                 gCurrentSprite.pose = VIOLA_POSE_MOVE_LEFT;
             }
             else
+            {
                 gCurrentSprite.yPosition -= velocity;
+            }
         }
     }
 }
@@ -369,25 +400,25 @@ void ViolaMoveDown(void)
  * @brief 37994 | 14c | Handles the viola moving up
  * 
  */
-void ViolaMoveUp(void)
+static void ViolaMoveUp(void)
 {
     u16 velocity;
     u16 yPosition;
     u16 xPosition;
     u32 blockX;
 
-    blockX = gCurrentSprite.xPosition &= 0xFFC0;
-    gCurrentSprite.xPosition += 0x28;
+    blockX = gCurrentSprite.xPosition &= BLOCK_POSITION_FLAG;
+    gCurrentSprite.xPosition += HALF_BLOCK_SIZE + EIGHTH_BLOCK_SIZE;
 
     velocity = gCurrentSprite.work2;
     yPosition = gCurrentSprite.yPosition;
     xPosition = blockX + BLOCK_SIZE;
 
     // Check should fall
-    SpriteUtilCheckCollisionAtPosition(yPosition + 0x1C, xPosition);
+    SpriteUtilCheckCollisionAtPosition(yPosition + (VIOLA_SIZE + PIXEL_SIZE), xPosition);
     if (gPreviousCollisionCheck == COLLISION_AIR)
     {
-        SpriteUtilCheckCollisionAtPosition(yPosition - 0x20, xPosition);
+        SpriteUtilCheckCollisionAtPosition(yPosition - HALF_BLOCK_SIZE, xPosition);
         if (gPreviousCollisionCheck == COLLISION_AIR)
         {
             gCurrentSprite.pose = VIOLA_POSE_FALLING_INIT;
@@ -398,54 +429,62 @@ void ViolaMoveUp(void)
     // Check should change direction or not
     if (gCurrentSprite.status & SPRITE_STATUS_FACING_RIGHT)
     {
-        SpriteUtilCheckCollisionAtPosition(yPosition - 0x18, xPosition);
-        if (!(gPreviousCollisionCheck & 0xF0))
+        SpriteUtilCheckCollisionAtPosition(yPosition - VIOLA_SIZE, xPosition);
+        if (!(gPreviousCollisionCheck & COLLISION_FLAGS_UNKNOWN_F0))
         {
-            SpriteUtilCheckCollisionAtPosition(yPosition + 0x18, xPosition);
+            SpriteUtilCheckCollisionAtPosition(yPosition + VIOLA_SIZE, xPosition);
             if (gPreviousCollisionCheck == COLLISION_AIR)
             {
                 gCurrentSprite.status |= SPRITE_STATUS_FACING_RIGHT;
                 gCurrentSprite.pose = VIOLA_POSE_MOVE_LEFT;
             }
             else
+            {
                 gCurrentSprite.yPosition += velocity;
+            }
         }
         else
         {
-            SpriteUtilCheckCollisionAtPosition(yPosition + 0x18, xPosition - 0x4);
+            SpriteUtilCheckCollisionAtPosition(yPosition + VIOLA_SIZE, xPosition - PIXEL_SIZE);
             if (gPreviousCollisionCheck == COLLISION_SOLID)
             {
                 gCurrentSprite.status &= ~SPRITE_STATUS_FACING_RIGHT;
                 gCurrentSprite.pose = VIOLA_POSE_MOVE_RIGHT;
             }
             else
+            {
                 gCurrentSprite.yPosition += velocity;
+            }
         }
     }
     else
     {
-        SpriteUtilCheckCollisionAtPosition(yPosition + 0x14, xPosition);
-        if (!(gPreviousCollisionCheck & 0xF0))
+        SpriteUtilCheckCollisionAtPosition(yPosition + (VIOLA_SIZE - PIXEL_SIZE), xPosition);
+        if (!(gPreviousCollisionCheck & COLLISION_FLAGS_UNKNOWN_F0))
         {
-            SpriteUtilCheckCollisionAtPosition(yPosition - 0x1C, xPosition);
+            SpriteUtilCheckCollisionAtPosition(yPosition - (VIOLA_SIZE + PIXEL_SIZE), xPosition);
             if (gPreviousCollisionCheck == COLLISION_AIR)
             {
                 gCurrentSprite.status |= SPRITE_STATUS_FACING_RIGHT;
                 gCurrentSprite.pose = VIOLA_POSE_MOVE_RIGHT;
             }
             else
+            {
                 gCurrentSprite.yPosition -= velocity;
+            }
         }
         else
         {
-            SpriteUtilCheckCollisionAtPosition(yPosition - 0x1C, xPosition - 0x4);
+            SpriteUtilCheckCollisionAtPosition(yPosition - (VIOLA_SIZE + PIXEL_SIZE), xPosition - PIXEL_SIZE);
             if (gPreviousCollisionCheck == COLLISION_SOLID)
             {
                 gCurrentSprite.status &= ~SPRITE_STATUS_FACING_RIGHT;
                 gCurrentSprite.pose = VIOLA_POSE_MOVE_LEFT;
             }
             else
+            {
                 gCurrentSprite.yPosition -= velocity;
+            }
         }
     }
 }
@@ -454,26 +493,26 @@ void ViolaMoveUp(void)
  * @brief 37ae0 | 18 | Initializes a viola to be falling
  * 
  */
-void ViolaFallingInit(void)
+static void ViolaFallingInit(void)
 {
     gCurrentSprite.pose = VIOLA_POSE_FALLING;
-    gCurrentSprite.work3 = 0x0;
+    gCurrentSprite.work3 = 0;
 }
 
 /**
  * @brief 37af8 | 78 | Handles a viola falling
  * 
  */
-void ViolaFalling(void)
+static void ViolaFalling(void)
 {
     u8 offset;
     s32 movement;
     u32 topEdge;
 
-    topEdge = SpriteUtilCheckVerticalCollisionAtPositionSlopes(gCurrentSprite.yPosition + 0x18, gCurrentSprite.xPosition);
+    topEdge = SpriteUtilCheckVerticalCollisionAtPositionSlopes(gCurrentSprite.yPosition + VIOLA_SIZE, gCurrentSprite.xPosition);
     if (gPreviousVerticalCollisionCheck != COLLISION_AIR)
     {
-        gCurrentSprite.yPosition = topEdge - 0x18;
+        gCurrentSprite.yPosition = topEdge - VIOLA_SIZE;
         gCurrentSprite.pose = VIOLA_POSE_MOVE_RIGHT;
         SpriteUtilChooseRandomXDirection();
     }
@@ -488,7 +527,7 @@ void ViolaFalling(void)
         }
         else
         {
-            gCurrentSprite.work3 = offset + 0x1;
+            gCurrentSprite.work3 = offset + 1;
             gCurrentSprite.yPosition += movement;
         }
     }
@@ -507,44 +546,45 @@ void Viola(void)
             SoundPlayNotAlreadyPlaying(SOUND_VIOLA_DAMAGED);
     }
 
-    if (gCurrentSprite.freezeTimer != 0x0)
-        SpriteUtilUpdateFreezeTimer();
-    else
+    if (gCurrentSprite.freezeTimer != 0)
     {
-        if (SpriteUtilIsSpriteStunned())
-            return;
+        SpriteUtilUpdateFreezeTimer();
+        return;
+    }
 
-        switch (gCurrentSprite.pose)
-        {
-            case 0x0:
-                ViolaInit();
-                break;
+    if (SpriteUtilIsSpriteStunned())
+        return;
 
-            case VIOLA_POSE_MOVE_RIGHT:
-                ViolaMoveRight();
-                break;
+    switch (gCurrentSprite.pose)
+    {
+        case SPRITE_POSE_UNINITIALIZED:
+            ViolaInit();
+            break;
 
-            case VIOLA_POSE_MOVE_LEFT:
-                ViolaMoveLeft();
-                break;
+        case VIOLA_POSE_MOVE_RIGHT:
+            ViolaMoveRight();
+            break;
 
-            case VIOLA_POSE_MOVE_DOWN:
-                ViolaMoveDown();
-                break;
+        case VIOLA_POSE_MOVE_LEFT:
+            ViolaMoveLeft();
+            break;
 
-            case VIOLA_POSE_MOVE_UP:
-                ViolaMoveUp();
-                break;
+        case VIOLA_POSE_MOVE_DOWN:
+            ViolaMoveDown();
+            break;
 
-            case VIOLA_POSE_FALLING_INIT:
-                ViolaFallingInit();
+        case VIOLA_POSE_MOVE_UP:
+            ViolaMoveUp();
+            break;
 
-            case VIOLA_POSE_FALLING:
-                ViolaFalling();
-                break;
+        case VIOLA_POSE_FALLING_INIT:
+            ViolaFallingInit();
 
-            default:
-                SpriteUtilSpriteDeath(DEATH_NORMAL, gCurrentSprite.yPosition, gCurrentSprite.xPosition, TRUE, PE_SPRITE_EXPLOSION_MEDIUM);
-        }
+        case VIOLA_POSE_FALLING:
+            ViolaFalling();
+            break;
+
+        default:
+            SpriteUtilSpriteDeath(DEATH_NORMAL, gCurrentSprite.yPosition, gCurrentSprite.xPosition, TRUE, PE_SPRITE_EXPLOSION_MEDIUM);
     }
 }

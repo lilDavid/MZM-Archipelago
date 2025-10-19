@@ -12,11 +12,16 @@
 #include "structs/sprite.h"
 #include "structs/samus.h"
 
+#define GEEGA_POSE_IDLE_INIT 0x8
+#define GEEGA_POSE_IDLE 0x9
+#define GEEGA_POSE_GOING_UP 0x23
+#define GEEGA_POSE_MOVING 0x25
+
 /**
  * @brief 40230 | 60 | Initializes a geega sprite
  * 
  */
-void GeegaInit(void)
+static void GeegaInit(void)
 {
     gCurrentSprite.hitboxTop = -(HALF_BLOCK_SIZE - PIXEL_SIZE);
     gCurrentSprite.hitboxBottom = HALF_BLOCK_SIZE - PIXEL_SIZE;
@@ -25,7 +30,7 @@ void GeegaInit(void)
 
     gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(HALF_BLOCK_SIZE + EIGHTH_BLOCK_SIZE);
     gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(HALF_BLOCK_SIZE + EIGHTH_BLOCK_SIZE);
-    gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(HALF_BLOCK_SIZE + QUARTER_BLOCK_SIZE);
+    gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(THREE_QUARTER_BLOCK_SIZE);
 
     gCurrentSprite.work1 = 1 * DELTA_TIME;
     gCurrentSprite.health = GET_PSPRITE_HEALTH(gCurrentSprite.spriteId);
@@ -41,12 +46,12 @@ void GeegaInit(void)
  * @brief 40290 | 3c | Initializes a geega to be idle
  * 
  */
-void GeegaIdleInit(void)
+static void GeegaIdleInit(void)
 {
     gCurrentSprite.samusCollision = SSC_NONE;
     gCurrentSprite.pose = GEEGA_POSE_IDLE;
 
-    gCurrentSprite.pOam = sGeegaOAM_Idle;
+    gCurrentSprite.pOam = sGeegaOam_Idle;
     gCurrentSprite.currentAnimationFrame = 0;
     gCurrentSprite.animationDurationCounter = 0;
 
@@ -58,7 +63,7 @@ void GeegaIdleInit(void)
  * @brief 402cc | 118 | Handles a geega being idle
  * 
  */
-void GeegaIdle(void)
+static void GeegaIdle(void)
 {
     u16 samusX;
     u16 samusY;
@@ -72,54 +77,61 @@ void GeegaIdle(void)
         // Directly go up if follower
         gCurrentSprite.pose = GEEGA_POSE_GOING_UP;
         gCurrentSprite.status &= ~(SPRITE_STATUS_NOT_DRAWN | SPRITE_STATUS_IGNORE_PROJECTILES);
+        return;
     }
-    else if ((gCurrentSprite.spriteId != PSPRITE_GEEGA_LEADER ||
-        SpriteUtilCountPrimarySpritesWithCurrentSpriteRAMSlot(PSPRITE_GEEGA_FOLLOWER) == 0)
-        && !SpriteUtilCheckHasDrops())
-    {
-        if (gCurrentSprite.work1 != 0)
-            APPLY_DELTA_TIME_DEC(gCurrentSprite.work1);
-        else
-        {
-            samusY = gSamusData.yPosition;
-            samusX = gSamusData.xPosition;
-            spriteY = gCurrentSprite.yPosition;
-            spriteX = gCurrentSprite.xPosition;
 
-            if (samusY <= spriteY - (HALF_BLOCK_SIZE - PIXEL_SIZE / 2))
-            {
-                if (ABS_DIFF(spriteX, samusX) <= (HALF_BLOCK_SIZE + PIXEL_SIZE) ||
-                    SpriteUtilCheckSamusNearSpriteAboveBelow(BLOCK_SIZE * 5, BLOCK_SIZE * 5) != NSAB_ABOVE)
-                    return;
-                else
-                {
-                    // Samus in range, set going up
-                    gCurrentSprite.scaling = gSamusData.yPosition;
-                    gCurrentSprite.pose = GEEGA_POSE_GOING_UP;
-                    gCurrentSprite.work0 = 2 * DELTA_TIME;
-                    gCurrentSprite.status &= ~(SPRITE_STATUS_NOT_DRAWN | SPRITE_STATUS_IGNORE_PROJECTILES);
-    
-                    SpriteUtilMakeSpriteFaceSamusXFlip();
-    
-                    if (gCurrentSprite.status & SPRITE_STATUS_ONSCREEN)
-                        SoundPlay(SOUND_GEEGA_RISING);
-    
-                    if (gCurrentSprite.spriteId == PSPRITE_GEEGA_LEADER)
-                    {
-                        // Spawn follower
-                        ramSlot = SpriteSpawnDropFollowers(PSPRITE_GEEGA_FOLLOWER, gCurrentSprite.roomSlot,
-                            gCurrentSprite.spritesetGfxSlot, gCurrentSprite.primarySpriteRamSlot,
-                            gCurrentSprite.yPosition + (BLOCK_SIZE * 2 + HALF_BLOCK_SIZE),
-                            gCurrentSprite.xPosition - HALF_BLOCK_SIZE, gCurrentSprite.status & SPRITE_STATUS_X_FLIP);
-    
-                        if (ramSlot != UCHAR_MAX)
-                        {
-                            gSpriteData[ramSlot].scaling = gCurrentSprite.scaling;
-                            gSpriteData[ramSlot].work0 = CONVERT_SECONDS(.3f);
-                        }
-                    }
-                }
-            }
+    if (gCurrentSprite.spriteId == PSPRITE_GEEGA_LEADER)
+    {
+        if (SpriteUtilCountChildPrimarySprites(PSPRITE_GEEGA_FOLLOWER) != 0)
+            return;
+    }
+
+    if (SpriteUtilCheckHasDrops())
+        return;
+
+    if (gCurrentSprite.work1 != 0)
+    {
+        APPLY_DELTA_TIME_DEC(gCurrentSprite.work1);
+        return;
+    }
+
+    samusY = gSamusData.yPosition;
+    samusX = gSamusData.xPosition;
+    spriteY = gCurrentSprite.yPosition;
+    spriteX = gCurrentSprite.xPosition;
+
+    if (samusY > spriteY - (HALF_BLOCK_SIZE - PIXEL_SIZE / 2))
+        return;
+
+    if (ABS_DIFF(spriteX, samusX) <= (HALF_BLOCK_SIZE + PIXEL_SIZE))
+        return;
+        
+    if (SpriteUtilCheckSamusNearSpriteAboveBelow(BLOCK_SIZE * 5, BLOCK_SIZE * 5) != NSAB_ABOVE)
+        return;
+
+    // Samus in range, set going up
+    gCurrentSprite.scaling = gSamusData.yPosition;
+    gCurrentSprite.pose = GEEGA_POSE_GOING_UP;
+    gCurrentSprite.work0 = 2 * DELTA_TIME;
+    gCurrentSprite.status &= ~(SPRITE_STATUS_NOT_DRAWN | SPRITE_STATUS_IGNORE_PROJECTILES);
+
+    SpriteUtilMakeSpriteFaceSamusXFlip();
+
+    if (gCurrentSprite.status & SPRITE_STATUS_ONSCREEN)
+        SoundPlay(SOUND_GEEGA_RISING);
+
+    if (gCurrentSprite.spriteId == PSPRITE_GEEGA_LEADER)
+    {
+        // Spawn follower
+        ramSlot = SpriteSpawnDropFollowers(PSPRITE_GEEGA_FOLLOWER, gCurrentSprite.roomSlot,
+            gCurrentSprite.spritesetGfxSlot, gCurrentSprite.primarySpriteRamSlot,
+            gCurrentSprite.yPosition + (BLOCK_SIZE * 2 + HALF_BLOCK_SIZE),
+            gCurrentSprite.xPosition - HALF_BLOCK_SIZE, gCurrentSprite.status & SPRITE_STATUS_X_FLIP);
+
+        if (ramSlot != UCHAR_MAX)
+        {
+            gSpriteData[ramSlot].scaling = gCurrentSprite.scaling;
+            gSpriteData[ramSlot].work0 = CONVERT_SECONDS(.3f);
         }
     }
 }
@@ -128,7 +140,7 @@ void GeegaIdle(void)
  * @brief 403e4 | 80 | Handles a geega going up
  * 
  */
-void GeegaGoingUp(void)
+static void GeegaGoingUp(void)
 {
     u16 positionRange;
 
@@ -152,7 +164,7 @@ void GeegaGoingUp(void)
             gCurrentSprite.pose = GEEGA_POSE_MOVING;
             gCurrentSprite.work0 = CONVERT_SECONDS(1.f / 6);
 
-            gCurrentSprite.pOam = sGeegaOAM_Moving;
+            gCurrentSprite.pOam = sGeegaOam_Moving;
             gCurrentSprite.currentAnimationFrame = 0;
             gCurrentSprite.animationDurationCounter = 0;
             gCurrentSprite.bgPriority = 1;
@@ -164,7 +176,7 @@ void GeegaGoingUp(void)
  * @brief 40464 | 94 | Handles a geega respawning
  * 
  */
-void GeegaRespawn(void)
+static void GeegaRespawn(void)
 {
     if (gCurrentSprite.spriteId == PSPRITE_GEEGA_FOLLOWER)
         gCurrentSprite.status = 0; // Kill if not leader
@@ -192,7 +204,7 @@ void GeegaRespawn(void)
  * @brief 404c8 | c8 | Handles a geega moving
  * 
  */
-void GeegaMove(void)
+static void GeegaMove(void)
 {
     if (gCurrentSprite.work0 != 0)
     {
@@ -251,35 +263,36 @@ void Geega(void)
     }
 
     if (gCurrentSprite.freezeTimer != 0)
-        SpriteUtilUpdateFreezeTimer();
-    else
     {
-        if (SpriteUtilIsSpriteStunned())
-            return;
+        SpriteUtilUpdateFreezeTimer();
+        return;
+    }
 
-        switch (gCurrentSprite.pose)
-        {
-            case 0x0:
-                GeegaInit();
+    if (SpriteUtilIsSpriteStunned())
+        return;
 
-            case GEEGA_POSE_IDLE_INIT:
-                GeegaIdleInit();
+    switch (gCurrentSprite.pose)
+    {
+        case SPRITE_POSE_UNINITIALIZED:
+            GeegaInit();
 
-            case GEEGA_POSE_IDLE:
-                GeegaIdle();
-                break;
+        case GEEGA_POSE_IDLE_INIT:
+            GeegaIdleInit();
 
-            case GEEGA_POSE_GOING_UP:
-                GeegaGoingUp();
-                break;
+        case GEEGA_POSE_IDLE:
+            GeegaIdle();
+            break;
 
-            case GEEGA_POSE_MOVING:
-                GeegaMove();
-                break;
+        case GEEGA_POSE_GOING_UP:
+            GeegaGoingUp();
+            break;
 
-            default:
-                SpriteUtilSpriteDeath(DEATH_RESPAWNING, gCurrentSprite.yPosition, gCurrentSprite.xPosition, TRUE, PE_SPRITE_EXPLOSION_MEDIUM);
-                GeegaRespawn();
-        }
+        case GEEGA_POSE_MOVING:
+            GeegaMove();
+            break;
+
+        default:
+            SpriteUtilSpriteDeath(DEATH_RESPAWNING, gCurrentSprite.yPosition, gCurrentSprite.xPosition, TRUE, PE_SPRITE_EXPLOSION_MEDIUM);
+            GeegaRespawn();
     }
 }

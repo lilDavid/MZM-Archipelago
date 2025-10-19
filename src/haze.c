@@ -1,9 +1,9 @@
 #include "haze.h"
+#include "dma.h"
 #include "gba.h"
 #include "macros.h"
 #include "temp_globals.h"
 
-#include "data/engine_pointers.h"
 #include "data/haze_data.h"
 
 #include "constants/color_fading.h"
@@ -14,6 +14,7 @@
 
 #include "structs/bg_clip.h"
 #include "structs/clipdata.h"
+#include "structs/color_effects.h"
 #include "structs/display.h"
 #include "structs/game_state.h"
 #include "structs/haze.h"
@@ -24,6 +25,55 @@
 do {                        \
 gHazeInfo.active = FALSE;   \
 } while(0);
+
+/**
+ * @brief Haze data for each room effect
+ * 0 : Haze value
+ * 1 : Damage effect
+ * 2 : BG0 water moving flag
+ * 3 : Power bomb related
+ */
+u8 sHazeData[EFFECT_HAZE_END][4] = {
+    [EFFECT_NONE] = {
+        HAZE_VALUE_NONE, EFFECT_NONE, FALSE, 0
+    },
+    [EFFECT_WATER] = {
+        HAZE_VALUE_BG3, EFFECT_WATER, TRUE, 1
+    },
+    [EFFECT_STRONG_LAVA] = {
+        HAZE_VALUE_BG3, EFFECT_STRONG_LAVA, FALSE, 1
+    },
+    [EFFECT_WEAK_LAVA] = {
+        HAZE_VALUE_BG3, EFFECT_WEAK_LAVA, FALSE, 1
+    },
+    [EFFECT_STRONG_LAVA_HEAT_HAZE] = {
+        HAZE_VALUE_BG3_STRONG_WEAK, EFFECT_STRONG_LAVA_HEAT_HAZE, FALSE, 1
+    },
+    [EFFECT_ACID] = {
+        HAZE_VALUE_BG3, EFFECT_ACID, FALSE, 1
+    },
+    [EFFECT_SNOWFLAKES_COLD_KNOCKBACK] = {
+        HAZE_VALUE_COLD, EFFECT_SNOWFLAKES_COLD_KNOCKBACK, FALSE, 1
+    },
+    [EFFECT_SNOWFLAKES_COLD] = {
+        HAZE_VALUE_COLD, EFFECT_SNOWFLAKES_COLD, FALSE, 1
+    },
+    [EFFECT_HEAT_BG3_HAZE] = {
+        HAZE_VALUE_BG3_NONE_WEAK, EFFECT_NONE, FALSE, 0
+    },
+    [EFFECT_HEAT_BG2_BG3_HAZE] = {
+        HAZE_VALUE_BG3_BG2_STRONG_WEAK_MEDIUM, EFFECT_NONE, FALSE, 0
+    },
+    [EFFECT_BG3_GRADIENT] = {
+        HAZE_VALUE_GRADIENT, EFFECT_NONE, FALSE, 2
+    },
+    [EFFECT_BG2_GRADIENT] = {
+        HAZE_VALUE_GRADIENT, EFFECT_NONE, FALSE, 2
+    },
+    [EFFECT_HAZE_BG1_BG2_BG3] = {
+        HAZE_VALUE_BG3_BG2_BG1, EFFECT_NONE, FALSE, 0
+    }
+};
 
 /**
  * @brief 5cfe0 | 54 | Sets the background haze effect based on the visual effect of the room entry
@@ -114,8 +164,8 @@ void HazeSetupCode(u8 hazeValue)
             break;
 
         case HAZE_VALUE_BG3:
-            DmaTransfer(3, Haze_Bg3, &gNonGameplayRAM.inGame[640], 0x200, 16);
-            gHazeProcessCodePointer = (HazeFunc_T)(&gNonGameplayRAM.inGame[640] + 1);
+            DmaTransfer(3, Haze_Bg3, gNonGameplayRam.inGame.hazeCode, sizeof(gNonGameplayRam.inGame.hazeCode), 16);
+            gHazeProcessCodePointer = (HazeFunc_T)(gNonGameplayRam.inGame.hazeCode + 1);
 
             gHazeInfo.enabled = TRUE;
             
@@ -125,8 +175,8 @@ void HazeSetupCode(u8 hazeValue)
             break;
 
         case HAZE_VALUE_BG3_STRONG_WEAK:
-            DmaTransfer(3, Haze_Bg3StrongWeak, &gNonGameplayRAM.inGame[640], 0x200, 16);
-            gHazeProcessCodePointer = (HazeFunc_T)(&gNonGameplayRAM.inGame[640] + 1);
+            DmaTransfer(3, Haze_Bg3StrongWeak, gNonGameplayRam.inGame.hazeCode, sizeof(gNonGameplayRam.inGame.hazeCode), 16);
+            gHazeProcessCodePointer = (HazeFunc_T)(gNonGameplayRam.inGame.hazeCode + 1);
 
             gHazeInfo.enabled = TRUE;
             
@@ -136,8 +186,8 @@ void HazeSetupCode(u8 hazeValue)
             break;
  
         case HAZE_VALUE_BG3_NONE_WEAK:
-            DmaTransfer(3, Haze_Bg3NoneWeak, &gNonGameplayRAM.inGame[640], 0x200, 16);
-            gHazeProcessCodePointer = (HazeFunc_T)(&gNonGameplayRAM.inGame[640] + 1);
+            DmaTransfer(3, Haze_Bg3NoneWeak, gNonGameplayRam.inGame.hazeCode, sizeof(gNonGameplayRam.inGame.hazeCode), 16);
+            gHazeProcessCodePointer = (HazeFunc_T)(gNonGameplayRam.inGame.hazeCode + 1);
 
             gHazeInfo.enabled = TRUE;
             
@@ -147,8 +197,8 @@ void HazeSetupCode(u8 hazeValue)
             break;
 
         case HAZE_VALUE_BG3_BG2_STRONG_WEAK_MEDIUM:
-            DmaTransfer(3, Haze_Bg3Bg2StrongWeakMedium, &gNonGameplayRAM.inGame[640], 0x200, 16);
-            gHazeProcessCodePointer = (HazeFunc_T)(&gNonGameplayRAM.inGame[640] + 1);
+            DmaTransfer(3, Haze_Bg3Bg2StrongWeakMedium, gNonGameplayRam.inGame.hazeCode, sizeof(gNonGameplayRam.inGame.hazeCode), 16);
+            gHazeProcessCodePointer = (HazeFunc_T)(gNonGameplayRam.inGame.hazeCode + 1);
 
             gHazeInfo.enabled = TRUE;
             
@@ -158,8 +208,8 @@ void HazeSetupCode(u8 hazeValue)
             break;
 
         case HAZE_VALUE_BG3_BG2_BG1:
-            DmaTransfer(3, Haze_Bg3Bg2Bg1, &gNonGameplayRAM.inGame[640], 0x200, 16);
-            gHazeProcessCodePointer = (HazeFunc_T)(&gNonGameplayRAM.inGame[640] + 1);
+            DmaTransfer(3, Haze_Bg3Bg2Bg1, gNonGameplayRam.inGame.hazeCode, sizeof(gNonGameplayRam.inGame.hazeCode), 16);
+            gHazeProcessCodePointer = (HazeFunc_T)(gNonGameplayRam.inGame.hazeCode + 1);
 
             gHazeInfo.enabled = TRUE;
             
@@ -169,26 +219,30 @@ void HazeSetupCode(u8 hazeValue)
             break;
 
         case HAZE_VALUE_POWER_BOMB_EXPANDING:
-            gWrittenToWININ_H = HIGH_BYTE(WIN1_ALL_NO_COLOR_EFFECT);
-            gWrittenToWINOUT_L = WIN0_BG0 | WIN0_BG1 | WIN0_BG2 | WIN0_OBJ | WIN0_COLOR_EFFECT;
+            gWrittenToWinIn_H = HIGH_BYTE(WIN1_ALL_NO_COLOR_EFFECT);
+            gWrittenToWinOut_L = WIN0_BG0 | WIN0_BG1 | WIN0_BG2 | WIN0_OBJ | WIN0_COLOR_EFFECT;
 
-            gWrittenToBLDCNT = BLDCNT_BG0_FIRST_TARGET_PIXEL | BLDCNT_BG1_FIRST_TARGET_PIXEL | BLDCNT_BG2_FIRST_TARGET_PIXEL |
+            gWrittenToBldcnt = BLDCNT_BG0_FIRST_TARGET_PIXEL | BLDCNT_BG1_FIRST_TARGET_PIXEL | BLDCNT_BG2_FIRST_TARGET_PIXEL |
                 BLDCNT_BG3_FIRST_TARGET_PIXEL | BLDCNT_BRIGHTNESS_DECREASE_EFFECT;
 
-            write16(REG_BLDY, 12);
+            WRITE_16(REG_BLDY, 12);
 
-            gWrittenToWIN1V = SCREEN_SIZE_Y;
-            gWrittenToWIN1H = 0;
+            gWrittenToWin1V = SCREEN_SIZE_Y;
+            gWrittenToWin1H = 0;
 
             PowerBombYellowTint(0);
 
-            if (gIoRegistersBackup.Dispcnt_NonGameplay & DCNT_BG0 && gCurrentRoomEntry.Bg0Prop != BG_PROP_DISABLE_TRANSPARENCY)
-                gWrittenToDISPCNT = read16(REG_DISPCNT) ^ DCNT_BG0;
+            #ifdef REGION_EU
+            WRITE_16(COLOR_DATA_BG_EWRAM, COLOR_WHITE);
+            #endif // REGION_EU
+
+            if (gIoRegistersBackup.Dispcnt_NonGameplay & DCNT_BG0 && gCurrentRoomEntry.bg0Prop != BG_PROP_DISABLE_TRANSPARENCY)
+                gWrittenToDispcnt = READ_16(REG_DISPCNT) ^ DCNT_BG0;
 
             gBackdropColor = COLOR_WHITE;
 
-            DmaTransfer(3, Haze_PowerBombExpanding, &gNonGameplayRAM.inGame[640], 0x200, 16);
-            gHazeProcessCodePointer = (HazeFunc_T)(&gNonGameplayRAM.inGame[640] + 1);
+            DmaTransfer(3, Haze_PowerBombExpanding, gNonGameplayRam.inGame.hazeCode, sizeof(gNonGameplayRam.inGame.hazeCode), 16);
+            gHazeProcessCodePointer = (HazeFunc_T)(gNonGameplayRam.inGame.hazeCode + 1);
 
             gHazeInfo.enabled = TRUE;
             
@@ -201,8 +255,8 @@ void HazeSetupCode(u8 hazeValue)
             break;
 
         case HAZE_VALUE_POWER_BOMB_RETRACTING:
-            DmaTransfer(3, Haze_PowerBombRetracting, &gNonGameplayRAM.inGame[640], 0x200, 16);
-            gHazeProcessCodePointer = (HazeFunc_T)(&gNonGameplayRAM.inGame[640] + 1);
+            DmaTransfer(3, Haze_PowerBombRetracting, gNonGameplayRam.inGame.hazeCode, sizeof(gNonGameplayRam.inGame.hazeCode), 16);
+            gHazeProcessCodePointer = (HazeFunc_T)(gNonGameplayRam.inGame.hazeCode + 1);
 
             gHazeInfo.enabled = TRUE;
 
@@ -235,7 +289,7 @@ void HazeResetLoops(void)
 }
 
 /**
- * @brief 5d414 | 1a8 | Calcules the gradiant
+ * @brief 5d414 | 1a8 | Calculates the gradient
  * 
  */
 void HazeCalculateGradient(void)
@@ -357,8 +411,8 @@ u32 HazeProcess(void)
                 }
 
                 gColorFading.status |= COLOR_FADING_STATUS_ON_BG;
-                gWrittenToWININ_H = HIGH_BYTE(WIN1_BG0 | WIN1_BG1 | WIN1_BG2 | WIN1_OBJ | WIN1_COLOR_EFFECT);
-                gWrittenToWINOUT_L = WIN0_ALL_NO_COLOR_EFFECT;
+                gWrittenToWinIn_H = HIGH_BYTE(WIN1_BG0 | WIN1_BG1 | WIN1_BG2 | WIN1_OBJ | WIN1_COLOR_EFFECT);
+                gWrittenToWinOut_L = WIN0_ALL_NO_COLOR_EFFECT;
                 gBackdropColor = COLOR_BLACK;
             }
             break;
@@ -692,8 +746,7 @@ u32 Haze_PowerBombExpanding(void)
     xPosition = SUB_PIXEL_TO_PIXEL_(gCurrentPowerBomb.xPosition - gBg1XPosition);
     yPosition = SUB_PIXEL_TO_PIXEL_(gCurrentPowerBomb.yPosition - gBg1YPosition);
 
-    // FIXME use symbol
-    dst = (u16*)0x2026d00; // gPreviousHazeValues
+    dst = gPreviousHazeValues;
     for (i = 0; i <= 53 * 3; i++, dst++)
         *dst = 0;
 
@@ -714,8 +767,7 @@ u32 Haze_PowerBombExpanding(void)
         i = 53 * 3;
     }
 
-    // FIXME use symbol
-    dst = (u16*)0x2026d00 + i; // gPreviousHazeValues
+    dst = &gPreviousHazeValues[i];
     for (; i < screenY; i++, subSlice++, dst++)
     {
         yPosition = (s16)(xPosition + src[subSlice * 2 + 1] * 2);
@@ -768,8 +820,7 @@ u32 Haze_PowerBombRetracting(void)
     xPosition = SUB_PIXEL_TO_PIXEL_(gCurrentPowerBomb.xPosition - gBg1XPosition);
     yPosition = SUB_PIXEL_TO_PIXEL_(gCurrentPowerBomb.yPosition - gBg1YPosition);
 
-    // FIXME use symbol
-    dst = (u16*)0x2026d00; // gPreviousHazeValues
+    dst = gPreviousHazeValues;
     for (i = 0; i <= 53 * 3; i++, dst++)
         *dst = 0;
 
@@ -790,9 +841,7 @@ u32 Haze_PowerBombRetracting(void)
     {
         i = 53 * 3;
     }
-
-    // FIXME use symbol
-    dst = (u16*)0x2026d00 + i; // gPreviousHazeValues
+    dst = &gPreviousHazeValues[i];
     for (; i < screenY; i++, subSlice++, dst++)
     {
         yPosition = (s16)(xPosition + src[subSlice * 2 + 1] * 2);

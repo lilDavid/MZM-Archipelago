@@ -9,20 +9,7 @@ extern const u16 sZebboGreenPal[16];
 extern const u32 sZebboYellowGfx[124];
 extern const u16 sZebboYellowPal[16];
 
-extern const u16 sZebboOAM_Idle_Frame0[4];
-
-extern const u16 sZebboOAM_Idle_Frame1[4];
-
-extern const u16 sZebboOAM_Idle_Frame2[4];
-
-extern const u16 sZebboOAM_Moving_Frame0[4];
-
-extern const u16 sZebboOAM_Moving_Frame1[4];
-
-extern const u16 sZebboOAM_Moving_Frame2[4];
-
-extern const struct FrameData sZebboOAM_Idle[5];
-
-extern const struct FrameData sZebboOAM_Moving[5];
+extern const struct FrameData sZebboOam_Idle[5];
+extern const struct FrameData sZebboOam_Moving[5];
 
 #endif /* ZEBBO_DATA_H */

@@ -17,6 +17,8 @@
 #include "structs/samus.h"
 #include "structs/sprite.h"
 
+#define BLACK_SPACE_PIRATE_POSE_INACTIVE 0x1
+
 /**
  * @brief 2cb68 | 268 | Handles black space pirate/projectile collision
  * 
@@ -49,9 +51,21 @@ void BlackSpacePirateProjectileCollision(void)
 
     for (pProj = gProjectileData; pProj < gProjectileData + MAX_AMOUNT_OF_PROJECTILES; pProj++)
     {
-        if (pProj->status & SPRITE_STATUS_EXISTS && pProj->status & PROJ_STATUS_CAN_AFFECT_ENVIRONMENT &&
-            pProj->movementStage > 1 && pProj->type < PROJ_TYPE_BOMB && pProj->xPosition > spriteLeft &&
-            pProj->xPosition < spriteRight && pProj->yPosition > spriteTop && pProj->yPosition < spriteBottom)
+        if (!(pProj->status & SPRITE_STATUS_EXISTS))
+            continue;
+
+        if (!(pProj->status & PROJ_STATUS_CAN_AFFECT_ENVIRONMENT))
+            continue;
+
+        if (pProj->movementStage <= PROJECTILE_STAGE_SPAWNING)
+            continue;
+
+        // Exclude bomb and power bomb
+        if (pProj->type >= PROJ_TYPE_BOMB)
+            continue;
+
+        if (pProj->xPosition > spriteLeft && pProj->xPosition < spriteRight &&
+            pProj->yPosition > spriteTop  && pProj->yPosition < spriteBottom)
         {
             projY = pProj->yPosition;
             projX = pProj->xPosition;
@@ -205,7 +219,7 @@ void BlackSpacePirateProjectileCollision(void)
  * @brief 2cdd0 | e0 | Checks if a black space pirate is colliding with a laser
  * 
  */
-void BlackSpacePirateCollidingWithLaser(void)
+static void BlackSpacePirateCollidingWithLaser(void)
 {
     u16 pirateY;
     u16 pirateX;
@@ -233,7 +247,7 @@ void BlackSpacePirateCollidingWithLaser(void)
     pirateLeft = pirateX + gCurrentSprite.hitboxLeft;
     pirateRight = pirateX + gCurrentSprite.hitboxRight;
 
-    laserSize = 4;
+    laserSize = PIXEL_SIZE;
 
     for (pSprite = gSpriteData; pSprite < gSpriteData + MAX_AMOUNT_OF_SPRITES; pSprite++)
     {
@@ -261,7 +275,7 @@ void BlackSpacePirateCollidingWithLaser(void)
  * @brief 2ceb0 | e4 | Initializes a black space pirate sprite
  * 
  */
-void BlackSpacePirateInit(void)
+static void BlackSpacePirateInit(void)
 {
     u16 health;
 
@@ -271,7 +285,7 @@ void BlackSpacePirateInit(void)
     gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(HALF_BLOCK_SIZE);
     gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(2 * BLOCK_SIZE + HALF_BLOCK_SIZE);
 
-    gCurrentSprite.hitboxTop = -(2 * BLOCK_SIZE + HALF_BLOCK_SIZE);
+    gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 2 + HALF_BLOCK_SIZE);
     gCurrentSprite.hitboxBottom = 0;
 
     health = GET_PSPRITE_HEALTH(gCurrentSprite.spriteId);
@@ -286,7 +300,7 @@ void BlackSpacePirateInit(void)
     gCurrentSprite.absolutePaletteRow = 2;
     gCurrentSprite.paletteRow = 2;
 
-    gCurrentSprite.pOam = sSpacePirateOAM_Standing;
+    gCurrentSprite.pOam = sSpacePirateOam_Standing;
     gCurrentSprite.currentAnimationFrame = 0;
     gCurrentSprite.animationDurationCounter = 0;
 
@@ -302,7 +316,9 @@ void BlackSpacePirateInit(void)
             gCurrentSprite.status |= SPRITE_STATUS_FACING_RIGHT;
     }
     else
+    {
         SpriteUtilMakeSpriteFaceSamusDirection();
+    }
 
     SpacePirateFlip();
 }
@@ -311,7 +327,7 @@ void BlackSpacePirateInit(void)
  * @brief 2cf94 | 20 | Checks if a black space pirate should start acting
  * 
  */
-void BlackSpacePirateCheckStartActing(void)
+static void BlackSpacePirateCheckStartActing(void)
 {
     if (gCurrentSprite.status & SPRITE_STATUS_ONSCREEN)
         gCurrentSprite.pose = SPACE_PIRATE_POSE_IDLE;
@@ -321,17 +337,17 @@ void BlackSpacePirateCheckStartActing(void)
  * @brief 2cfb4 | 50 | Initializes a black space pirate to be charging a laser
  * 
  */
-void BlackSpacePirateChargingLaserInit(void)
+static void BlackSpacePirateChargingLaserInit(void)
 {
     gCurrentSprite.pose = SPACE_PIRATE_POSE_CHARGING_LASER;
     gCurrentSprite.work0 = CONVERT_SECONDS(0.2f);
     
     if (gCurrentSprite.work1 == SPACE_PIRATE_AIM_DIAGONALLY_UP)
-        gCurrentSprite.pOam = sSpacePirateOAM_ChargingLaserDiagonallyUp;
+        gCurrentSprite.pOam = sSpacePirateOam_ChargingLaserDiagonallyUp;
     else if (gCurrentSprite.work1 == SPACE_PIRATE_AIM_DIAGONALLY_DOWN)
-        gCurrentSprite.pOam = sSpacePirateOAM_ChargingLaserDiagonallyDown;
+        gCurrentSprite.pOam = sSpacePirateOam_ChargingLaserDiagonallyDown;
     else
-        gCurrentSprite.pOam = sSpacePirateOAM_ChargingLaserForward;
+        gCurrentSprite.pOam = sSpacePirateOam_ChargingLaserForward;
 
     gCurrentSprite.animationDurationCounter = 0;
     gCurrentSprite.currentAnimationFrame = 0;
@@ -342,11 +358,11 @@ void BlackSpacePirateChargingLaserInit(void)
  * @brief 2d004 | 44 | Handles a black space pirate charging a laser
  * 
  */
-void BlackSpacePirateChargingLaser(void)
+static void BlackSpacePirateChargingLaser(void)
 {
     APPLY_DELTA_TIME_INC(gCurrentSprite.animationDurationCounter);
 
-    unk_f594();
+    SpriteUtilAlignYPositionOnSlopeAtOrigin();
 
     if (gPreviousVerticalCollisionCheck == COLLISION_AIR)
         gCurrentSprite.pose = SPACE_PIRATE_POSE_FALLING_INIT;
@@ -360,16 +376,16 @@ void BlackSpacePirateChargingLaser(void)
  * @brief 2d048 | 44 | Initializes a black space pirate to be shooting
  * 
  */
-void BlackSpacePirateShootingInit(void)
+static void BlackSpacePirateShootingInit(void)
 {
     gCurrentSprite.pose = SPACE_PIRATE_POSE_SHOOTING_LASER;
     
     if (gCurrentSprite.work1 == SPACE_PIRATE_AIM_DIAGONALLY_UP)
-        gCurrentSprite.pOam = sSpacePirateOAM_ShootingDiagonallyUp;
+        gCurrentSprite.pOam = sSpacePirateOam_ShootingDiagonallyUp;
     else if (gCurrentSprite.work1 == SPACE_PIRATE_AIM_DIAGONALLY_DOWN)
-        gCurrentSprite.pOam = sSpacePirateOAM_ShootingDiagonallyDown;
+        gCurrentSprite.pOam = sSpacePirateOam_ShootingDiagonallyDown;
     else
-        gCurrentSprite.pOam = sSpacePirateOAM_ShootingForward;
+        gCurrentSprite.pOam = sSpacePirateOam_ShootingForward;
 
     gCurrentSprite.animationDurationCounter = 0;
     gCurrentSprite.currentAnimationFrame = 0;
@@ -379,7 +395,7 @@ void BlackSpacePirateShootingInit(void)
  * @brief 2d08c | f4 | Handles a black space pirate shooting
  * 
  */
-void BlackSpacePirateShooting(void)
+static void BlackSpacePirateShooting(void)
 {
     u16 yRange;
     u16 xRange;
@@ -387,10 +403,13 @@ void BlackSpacePirateShooting(void)
 
     APPLY_DELTA_TIME_INC(gCurrentSprite.animationDurationCounter);
 
-    if (gCurrentSprite.currentAnimationFrame == 2 && gCurrentSprite.animationDurationCounter == 2 * DELTA_TIME)
+    if (gCurrentSprite.currentAnimationFrame == FRAME_DATA_NBR_OF_FRAMES(sSpacePirateOam_ShootingForward) / 2 &&
+        gCurrentSprite.animationDurationCounter == DELTA_TIME * 2)
+    {
         SpacePirateFireLaserGround();
+    }
 
-    unk_f594();
+    SpriteUtilAlignYPositionOnSlopeAtOrigin();
 
     if (gPreviousVerticalCollisionCheck == COLLISION_AIR)
     {
@@ -398,7 +417,7 @@ void BlackSpacePirateShooting(void)
         return;
     }
 
-    if (SpriteUtilCheckNearEndCurrentSpriteAnim())
+    if (SpriteUtilHasCurrentAnimationNearlyEnded())
     {
         if (gSpriteDrawOrder[2] == FALSE)
         {
@@ -452,7 +471,7 @@ void BlackSpacePirateShooting(void)
  * @brief 2d180 | 45c | Handles a black space pirate jumping
  * 
  */
-void BlackSpacePirateJumping(void)
+static void BlackSpacePirateJumping(void)
 {
     s32 speed;
     u8 collisions;
@@ -464,7 +483,7 @@ void BlackSpacePirateJumping(void)
 
     if (gCurrentSprite.status & SPRITE_STATUS_DOUBLE_SIZE)
     {
-        if (!SpriteUtilCheckNearEndCurrentSpriteAnim())
+        if (!SpriteUtilHasCurrentAnimationNearlyEnded())
             return;
 
         if (gCurrentSprite.status & SPRITE_STATUS_FACING_DOWN)
@@ -657,7 +676,7 @@ void BlackSpacePirateJumping(void)
                 }
                 else
                 {
-                    if (gSpriteRng & 1)
+                    if (MOD_AND(gSpriteRng, 2))
                         gCurrentSprite.pose = SPACE_PIRATE_POSE_CLIMBING_DOWN_INIT;
                     else
                         gCurrentSprite.pose = SPACE_PIRATE_POSE_CLIMBING_UP_INIT;
@@ -714,7 +733,7 @@ void BlackSpacePirateJumping(void)
 
             gCurrentSprite.status |= SPRITE_STATUS_DOUBLE_SIZE;
 
-            gCurrentSprite.pOam = sSpacePirateOAM_Landing;
+            gCurrentSprite.pOam = sSpacePirateOam_Landing;
             gCurrentSprite.animationDurationCounter = 0;
             gCurrentSprite.currentAnimationFrame = 0;
 
@@ -724,11 +743,11 @@ void BlackSpacePirateJumping(void)
     }
     else
     {
-        if (SpriteUtilGetCollisionAtPosition(gCurrentSprite.yPosition - (BLOCK_SIZE * 3 - QUARTER_BLOCK_SIZE + 4),
+        if (SpriteUtilGetCollisionAtPosition(gCurrentSprite.yPosition - (BLOCK_SIZE * 3 - QUARTER_BLOCK_SIZE + PIXEL_SIZE),
             gCurrentSprite.xPosition) != COLLISION_AIR)
         {
-            gCurrentSprite.yPosition = ((gCurrentSprite.yPosition - (BLOCK_SIZE * 3 - QUARTER_BLOCK_SIZE + 4)) & BLOCK_POSITION_FLAG) +
-                (BLOCK_SIZE * 4 - QUARTER_BLOCK_SIZE + 4);
+            gCurrentSprite.yPosition = ((gCurrentSprite.yPosition - (BLOCK_SIZE * 3 - QUARTER_BLOCK_SIZE + PIXEL_SIZE)) & BLOCK_POSITION_FLAG) +
+                (BLOCK_SIZE * 3 + THREE_QUARTER_BLOCK_SIZE + PIXEL_SIZE);
         }
     }
 }
@@ -737,7 +756,7 @@ void BlackSpacePirateJumping(void)
  * @brief 2d5dc | 17c | Handles a black space pirate moving while alerted
  * 
  */
-void BlackSpacePirateWalkingAlerted(void)
+static void BlackSpacePirateWalkingAlerted(void)
 {
     u32 flag;
 
@@ -765,7 +784,9 @@ void BlackSpacePirateWalkingAlerted(void)
             }
         }
         else if (gCurrentSprite.pose == SPACE_PIRATE_POSE_STARTING_TO_CRAWL_INIT)
+        {
             gCurrentSprite.pose = SPACE_PIRATE_POSE_TURNING_AROUND_ALERTED_INIT;
+        }
     }
     else
     {
@@ -774,7 +795,7 @@ void BlackSpacePirateWalkingAlerted(void)
 
         if (SpacePirateCheckCollidingWithPirateWhenWalking())
         {
-            if (SpriteUtilGetCollisionAtPosition(gCurrentSprite.yPosition - (BLOCK_SIZE * 4 + HALF_BLOCK_SIZE + 12),
+            if (SpriteUtilGetCollisionAtPosition(gCurrentSprite.yPosition - (BLOCK_SIZE * 4 + THREE_QUARTER_BLOCK_SIZE - PIXEL_SIZE),
                 gCurrentSprite.xPosition) == COLLISION_AIR)
             {
                 if (SpriteUtilGetCollisionAtPosition(gCurrentSprite.yPosition - (BLOCK_SIZE * 4 - QUARTER_BLOCK_SIZE),
@@ -783,7 +804,7 @@ void BlackSpacePirateWalkingAlerted(void)
                     if (flag)
                         gCurrentSprite.work2 = QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE;
                     else
-                        gCurrentSprite.work2 = 3 * QUARTER_BLOCK_SIZE;
+                        gCurrentSprite.work2 = THREE_QUARTER_BLOCK_SIZE;
 
                     gCurrentSprite.work1 = 4;
                     SpacePirateJumpingInit();
@@ -792,9 +813,9 @@ void BlackSpacePirateWalkingAlerted(void)
             }
             else
             {
-                if (gCurrentSprite.pOam == sSpacePirateOAM_Walking)
+                if (gCurrentSprite.pOam == sSpacePirateOam_Walking)
                 {
-                    gCurrentSprite.pOam = sSpacePirateOAM_Crouched;
+                    gCurrentSprite.pOam = sSpacePirateOam_Crouched;
                     gCurrentSprite.animationDurationCounter = 0;
                     gCurrentSprite.currentAnimationFrame = 0;
                 }
@@ -802,12 +823,12 @@ void BlackSpacePirateWalkingAlerted(void)
         }
         else
         {
-            if (gCurrentSprite.pOam == sSpacePirateOAM_Crouched)
+            if (gCurrentSprite.pOam == sSpacePirateOam_Crouched)
             {
-                if (!SpriteUtilCheckEndCurrentSpriteAnim())
+                if (!SpriteUtilHasCurrentAnimationEnded())
                     return;
 
-                gCurrentSprite.pOam = sSpacePirateOAM_Walking;
+                gCurrentSprite.pOam = sSpacePirateOam_Walking;
                 gCurrentSprite.animationDurationCounter = 0;
                 gCurrentSprite.currentAnimationFrame = 0;
                 gCurrentSprite.work2 = 0;
@@ -815,9 +836,9 @@ void BlackSpacePirateWalkingAlerted(void)
 
             if (gCurrentSprite.status & SPRITE_STATUS_FACING_DOWN)
             {
-                unk_f978(gCurrentSprite.work2 / 4);
+                SpriteUtilMoveHorizontallyForwardOnSlopeDirection(gCurrentSprite.work2 / 4);
 
-                if (gCurrentSprite.work2 < HALF_BLOCK_SIZE + QUARTER_BLOCK_SIZE + PIXEL_SIZE)
+                if (gCurrentSprite.work2 < THREE_QUARTER_BLOCK_SIZE + PIXEL_SIZE)
                     gCurrentSprite.work2 += 2;
             }
             else
@@ -836,7 +857,7 @@ void BlackSpacePirateWalkingAlerted(void)
  * 
  * @param playSound Play sound flag
  */
-void BlackSpacePirateDeath(u8 playSound)
+static void BlackSpacePirateDeath(u8 playSound)
 {
     if (playSound && gCurrentSprite.status & SPRITE_STATUS_ONSCREEN)
         SoundPlay(SOUND_SPACE_PIRATE_DYING);
@@ -849,7 +870,7 @@ void BlackSpacePirateDeath(u8 playSound)
  * @brief 2d794 | 48 | Initializes a black space pirate have been hit by a laser
  * 
  */
-void BlackSpacePirateHitByLaserInit(void)
+static void BlackSpacePirateHitByLaserInit(void)
 {
     if (gCurrentSprite.status & SPRITE_STATUS_ONSCREEN)
         SoundPlay(SOUND_SPACE_PIRATE_DYING);
@@ -859,14 +880,14 @@ void BlackSpacePirateHitByLaserInit(void)
 
     gCurrentSprite.status |= SPRITE_STATUS_IGNORE_PROJECTILES;
     gCurrentSprite.samusCollision = SSC_NONE;
-    gCurrentSprite.work0 = CONVERT_SECONDS(.5f) + 3 * DELTA_TIME;
+    gCurrentSprite.work0 = CONVERT_SECONDS(.55f);
 }
 
 /**
  * @brief 2d7dc | 64 | Handles a black space pirate to have been hit by a laser
  * 
  */
-void BlackSpacePirateHitByLaser(void)
+static void BlackSpacePirateHitByLaser(void)
 {
     u8 timer;
 
@@ -880,7 +901,7 @@ void BlackSpacePirateHitByLaser(void)
     {
         if (MOD_BLOCK_AND(timer, 4) != 0)
         {
-            gCurrentSprite.paletteRow = 14 - (gCurrentSprite.spritesetGfxSlot + gCurrentSprite.frozenPaletteRowOffset);
+            gCurrentSprite.paletteRow = SPRITE_GET_STUN_PALETTE(gCurrentSprite);
         }
         else
         {
@@ -906,7 +927,7 @@ void BlackSpacePirate(void)
     else
         alerted = FALSE;
 
-    if (gCurrentSprite.pose < 0x62)
+    if (gCurrentSprite.pose < SPRITE_POSE_DESTROYED)
     {
         SpacePirateSamusDetection();
 
@@ -928,7 +949,7 @@ void BlackSpacePirate(void)
 
     switch (gCurrentSprite.pose)
     {
-        case 0:
+        case SPRITE_POSE_UNINITIALIZED:
             BlackSpacePirateInit();
             break;
 

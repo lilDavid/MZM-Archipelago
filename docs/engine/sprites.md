@@ -31,7 +31,7 @@ Note :
 
 | Name    | Full name   | Type | Explanation |
 |---------|-------------|------|-------------|
-| **status** | Status | `u16` | A collection of bit flags that affect the behavior of sprite, or provide information on its current state. For more detail on each flag, view the [sprite status](#status) section.
+| **status** | Status | `u16` | A collection of bit flags that affect the behavior of a sprite, or provide information on its current state. For more detail on each flag, view the [sprite status](#status) section.
 | **yPosition** | Y Position | `u16` | Current Y position of the sprite.
 | **xPosition** | X Position | `u16` | Current X position of the sprite.
 | *yPositionSpawn* | Y Position Spawn | `u16` | The Y position of the sprite when it spawned.
@@ -77,11 +77,11 @@ Note :
 | SPRITE_STATUS_EXISTS | 1 << 0 | Whether the sprite exists or not.
 | SPRITE_STATUS_ONSCREEN | 1 << 1 | Whether the sprite is currently visible on screen.
 | SPRITE_STATUS_NOT_DRAWN | 1 << 2 | Whether the sprite should be drawn.
-| SPRITE_STATUS_ROTATION_SCALING | 1 << 3 | Enables affine transformation when drawing the sprite.
-| SPRITE_STATUS_UNKNOWN_10 | 1 << 4 | Unknown purpose, related to draw order.
+| SPRITE_STATUS_ROTATION_SCALING_WHOLE | 1 << 3 | Enables affine transformation when drawing the sprite, when enabled, SPRITE_STATUS_MOSAIC instead selects the matrix slot.
+| SPRITE_STATUS_HIGH_PRIORITY | 1 << 4 | Whether the sprite has a high OAM priority (e.g. above other sprites without this flag, projectiles and particles).
 | SPRITE_STATUS_MOSAIC | 1 << 5 | Whether mosaic is enabled, left over from fusion, doesn't seem to work properly.
 | SPRITE_STATUS_X_FLIP | 1 << 6 | Whether the sprite is X-flipped when drawn.
-| SPRITE_STATUS_UNKNOWN_80 | 1 << 7 | Unknown purpose, related to obj affine.
+| SPRITE_STATUS_ROTATION_SCALING_SINGLE | 1 << 7 | Enables affine transformation when drawing the sprite, only works when it has a single OAM object.
 | SPRITE_STATUS_Y_FLIP | 1 << 8 | Whether the sprite is Y-flipped when drawn.
 | SPRITE_STATUS_FACING_RIGHT | 1 << 9 | Whether the sprite is facing right, purely informative and only used in the engine in the movement functions.
 | SPRITE_STATUS_FACING_DOWN | 1 << 10 | Whether the sprite is facing down, purely informative and only used in the engine in the movement functions.
@@ -172,19 +172,21 @@ The main purpose of the secondary sprites is to complement a primary sprite, the
 
 # Creating a new sprite
 
-In order to create a new sprite, 3 components are necessary :
+In order to create a new sprite, 4 components are necessary :
 
-- A main AI, which should be have a signature like this : `void MySprite(void)`
+- A main AI, which should be have a signature like this : `void MySprite(void)`.
 - Graphics, LZ77 compressed.
 - Palette, raw 16-bit gba colors.
+- Stats, which determine health, weakness, damage and drop spawn rate.
 
 It's also necessary to create a sprite id, simply adding an entry to the already existing enum ([PrimarySprite](../../include/constants/sprite.h#L30) or [SecondaySprite](../../include/constants/sprite.h#L241)) works, though there is an upper limit of 255 due to sprite id being stored in an `u8`.
 
-Once created, the 3 components simply need to be added to their respective arrays, namely :
+Once created, the 4 components simply need to be added to their respective arrays, namely :
 
-- [sPrimarySpritesAIPointers](../../src/data/samus_sprites_pointers.c#237) or [sSecondarySpritesAIPointers](../../src/data/samus_sprites_pointers.c#832)
-- [sSpritesGraphicsPointers](../../src/data/samus_sprites_pointers.c#446)
-- [sSpritesPalettePointers](../../src/data/samus_sprites_pointers.c#639)
+- [sPrimarySpritesAIPointers](../../src/data/samus_sprites_pointers.c#237) or [sSecondarySpritesAIPointers](../../src/data/samus_sprites_pointers.c#832),
+- [sSpritesGraphicsPointers](../../src/data/samus_sprites_pointers.c#446),
+- [sSpritesPalettePointers](../../src/data/samus_sprites_pointers.c#639),
+- [sPrimarySpriteStats](../../src/data/sprite_data.c#65) or [sPrimarySpriteStats](../../src/data/sprite_data.c#2346)
 
 # Spawning a new sprite
 

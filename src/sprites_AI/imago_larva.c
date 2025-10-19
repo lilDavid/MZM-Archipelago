@@ -1,7 +1,6 @@
 #include "sprites_AI/imago_larva.h"
 #include "macros.h"
 
-#include "data/frame_data_pointers.h"
 #include "data/sprites/imago_larva.h"
 #include "data/sprite_data.h"
 
@@ -15,12 +14,70 @@
 #include "structs/sprite.h"
 #include "structs/samus.h"
 
+#define IMAGO_LARVA_POSE_IDLE_INIT 0x8
+#define IMAGO_LARVA_POSE_IDLE 0x9
+#define IMAGO_LARVA_POSE_DETECT_SAMUS 0xF
+#define IMAGO_LARVA_POSE_RETREATING_INIT 0x22
+#define IMAGO_LARVA_POSE_RETREATING 0x23
+#define IMAGO_LARVA_POSE_STUNNED_INIT 0x24
+#define IMAGO_LARVA_POSE_STUNNED 0x25
+#define IMAGO_LARVA_POSE_WARNING_INIT 0x26
+#define IMAGO_LARVA_POSE_WARNING 0x27
+#define IMAGO_LARVA_POSE_ATTACKING_INIT 0x28
+#define IMAGO_LARVA_POSE_ATTACKING 0x29
+#define IMAGO_LARVA_POSE_TAKING_DAMAGE_INIT 0x42
+#define IMAGO_LARVA_POSE_TAKING_DAMAGE 0x43
+#define IMAGO_LARVA_POSE_DYING_INIT 0x62
+#define IMAGO_LARVA_POSE_DYING 0x67
+#define IMAGO_LARVA_POSE_DEAD 0x68
+
+// Imago larva part
+
+#define IMAGO_LARVA_PART_POSE_DOT_IDLE 0x9
+#define IMAGO_LARVA_PART_POSE_DOT_REMOVING 0x23
+#define IMAGO_LARVA_PART_POSE_DOT_CHECK_REAPPEAR 0x25
+#define IMAGO_LARVA_PART_POSE_DOT_REAPPEARING 0x27
+#define IMAGO_LARVA_PART_POSE_SHELL_IDLE 0x42
+#define IMAGO_LARVA_PART_POSE_CLAWS_IDLE 0x60
+#define IMAGO_LARVA_PART_POSE_DEAD 0x67
+
+#define IMAGO_LARVA_TAIL_HITBOX (BLOCK_SIZE * 2 - EIGHTH_BLOCK_SIZE)
+#define IMAGO_LARVA_HEAD_HITBOX (BLOCK_SIZE + HALF_BLOCK_SIZE - EIGHTH_BLOCK_SIZE)
+#define IMAGO_LARVA_SHELL_TAIL_HITBOX (BLOCK_SIZE * 2 + HALF_BLOCK_SIZE + EIGHTH_BLOCK_SIZE)
+#define IMAGO_LARVA_SHELL_HEAD_HITBOX (BLOCK_SIZE * 2 + QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE)
+
+static const struct FrameData* sImagoLarvaFrameDataPointers[IMAGO_LARVA_OAM_END] = {
+    [IMAGO_LARVA_OAM_SHELL_ATTACKING] = sImagoLarvaPartOam_ShellAttacking,
+    [IMAGO_LARVA_OAM_SHELL_IDLE] = sImagoLarvaPartOam_ShellIdle,
+    [IMAGO_LARVA_OAM_SHELL_RETREATING] = sImagoLarvaPartOam_ShellRetreating,
+    [IMAGO_LARVA_OAM_SHELL_DYING] = sImagoLarvaPartOam_ShellDying,
+    [IMAGO_LARVA_OAM_CLAWS_ATTACKING] = sImagoLarvaPartOam_ClawsAttacking,
+    [IMAGO_LARVA_OAM_CLAWS_IDLE] = sImagoLarvaPartOam_ClawsIdle,
+    [IMAGO_LARVA_OAM_CLAWS_RETREATING] = sImagoLarvaPartOam_ClawsRetreating,
+    [IMAGO_LARVA_OAM_CLAWS_TAKING_DAMAGE] = sImagoLarvaPartOam_ClawsTakingDamage,
+    [IMAGO_LARVA_OAM_LEFT_DOT_APPEARING] = sImagoLarvaPartOam_LeftDotAppearing,
+    [IMAGO_LARVA_OAM_MIDDLE_DOT_APPEARING] = sImagoLarvaPartOam_MiddleDotAppearing,
+    [IMAGO_LARVA_OAM_RIGHT_DOT_APPEARING] = sImagoLarvaPartOam_RightDotAppearing,
+    [IMAGO_LARVA_OAM_LEFT_DOT_VISIBLE] = sImagoLarvaPartOam_LeftDotVisible,
+    [IMAGO_LARVA_OAM_MIDDLE_DOT_VISIBLE] = sImagoLarvaPartOam_MiddleDotVisible,
+    [IMAGO_LARVA_OAM_RIGHT_DOT_VISIBLE] = sImagoLarvaPartOam_RightDotVisible,
+    [IMAGO_LARVA_OAM_LEFT_DOT_DISAPPEARING] = sImagoLarvaPartOam_LeftDotDisappearing,
+    [IMAGO_LARVA_OAM_MIDDLE_DOT_DISAPPEARING] = sImagoLarvaPartOam_MiddleDotDisappearing,
+    [IMAGO_LARVA_OAM_RIGHT_DOT_DISAPPEARING] = sImagoLarvaPartOam_RightDotDisappearing,
+    [IMAGO_LARVA_OAM_SHELL_WARNING] = sImagoLarvaPartOam_ShellWarning,
+    [IMAGO_LARVA_OAM_IDLE] = sImagoLarvaOam_Idle,
+    [IMAGO_LARVA_OAM_CLAWS_WARNING_FIRST_PART] = sImagoLarvaPartOam_ClawsWarningFirstPart,
+    [IMAGO_LARVA_OAM_CLAWS_WARNING_SECOND_PART] = sImagoLarvaPartOam_ClawsWarningSecondPart,
+    [IMAGO_LARVA_OAM_WARNING] = sImagoLarvaOam_Warning,
+    [IMAGO_LARVA_OAM_SHELL_TAKING_DAMAGE] = sImagoLarvaPartOam_ShellTakingDamage
+};
+
 /**
  * @brief 259a0 | 84 | Synchronize the sub sprites of an Imago larva
  * 
  * @param pSub Sub sprite data pointer
  */
-void ImagoLarvaSyncSubSprites(struct SubSpriteData* pSub)
+static void ImagoLarvaSyncSubSprites(struct SubSpriteData* pSub)
 {
     MultiSpriteDataInfo_T pData;
     u16 oamIdx;
@@ -47,7 +104,7 @@ void ImagoLarvaSyncSubSprites(struct SubSpriteData* pSub)
  * @brief 25a24 | 5c | Updates the palette of an Imago larva
  * 
  */
-void ImagoLarvaUpdatePalette(void)
+static void ImagoLarvaUpdatePalette(void)
 {
     u8 timer;
     u8 timerLimit;
@@ -77,7 +134,7 @@ void ImagoLarvaUpdatePalette(void)
  * 
  * @param pSub Sub sprite data pointer
  */
-void ImagoLarvaInit(struct SubSpriteData* pSub)
+static void ImagoLarvaInit(struct SubSpriteData* pSub)
 {
     u8 spriteId;
     u16 health;
@@ -95,7 +152,7 @@ void ImagoLarvaInit(struct SubSpriteData* pSub)
         return;
     }
 
-    gCurrentSprite.yPosition += PIXEL_SIZE * 2;
+    gCurrentSprite.yPosition += EIGHTH_BLOCK_SIZE;
 
     pSub->yPosition = gCurrentSprite.yPosition;
     pSub->xPosition = gCurrentSprite.xPosition;
@@ -155,10 +212,10 @@ void ImagoLarvaInit(struct SubSpriteData* pSub)
     pSub->currentAnimationFrame = 0;
 
     // Immune to retreating flag
-    pSub->workVariable2 = FALSE;
+    pSub->work2 = FALSE;
 
     // Retreating counter
-    pSub->workVariable1 = 0;
+    pSub->work1 = 0;
 
     gCurrentSprite.drawOrder = 6;
     gCurrentSprite.frozenPaletteRowOffset = 2;
@@ -181,7 +238,7 @@ void ImagoLarvaInit(struct SubSpriteData* pSub)
  * 
  * @param pSub Sub sprite data pointer
  */
-void ImagoLarvaDetectSamus(struct SubSpriteData* pSub)
+static void ImagoLarvaDetectSamus(struct SubSpriteData* pSub)
 {
     ImagoLarvaUpdatePalette();
 
@@ -195,7 +252,7 @@ void ImagoLarvaDetectSamus(struct SubSpriteData* pSub)
  * 
  * @param pSub Sub sprite data pointer
  */
-void ImagoLarvaIdleInit(struct SubSpriteData* pSub)
+static void ImagoLarvaIdleInit(struct SubSpriteData* pSub)
 {
     pSub->pMultiOam = sImagoLarvaMultiSpriteData_Idle;
     pSub->animationDurationCounter = 0;
@@ -209,7 +266,7 @@ void ImagoLarvaIdleInit(struct SubSpriteData* pSub)
  * 
  * @param pSub Sub sprite data pointer
  */
-void ImagoLarvaIdle(struct SubSpriteData* pSub)
+static void ImagoLarvaIdle(struct SubSpriteData* pSub)
 {
     ImagoLarvaUpdatePalette();
 }
@@ -219,7 +276,7 @@ void ImagoLarvaIdle(struct SubSpriteData* pSub)
  * 
  * @param pSub Sub sprite data pointer
  */
-void ImagoLarvaRetreatingInit(struct SubSpriteData* pSub)
+static void ImagoLarvaRetreatingInit(struct SubSpriteData* pSub)
 {
     if (pSub->pMultiOam != sImagoLarvaMultiSpriteData_Retreating)
     {
@@ -236,7 +293,7 @@ void ImagoLarvaRetreatingInit(struct SubSpriteData* pSub)
  * 
  * @param pSub Sub sprite data pointer
  */
-void ImagoLarvaRetreating(struct SubSpriteData* pSub)
+static void ImagoLarvaRetreating(struct SubSpriteData* pSub)
 {
     ImagoLarvaUpdatePalette();
 
@@ -266,7 +323,7 @@ void ImagoLarvaRetreating(struct SubSpriteData* pSub)
  * 
  * @param pSub Sub sprite data pointer
  */
-void ImagoLarvaStunnedInit(struct SubSpriteData* pSub)
+static void ImagoLarvaStunnedInit(struct SubSpriteData* pSub)
 {
     pSub->pMultiOam = sImagoLarvaMultiSpriteData_Idle;
     pSub->animationDurationCounter = 0;
@@ -280,7 +337,7 @@ void ImagoLarvaStunnedInit(struct SubSpriteData* pSub)
  * 
  * @param pSub Sub sprite data pointer
  */
-void ImagoLarvaStunned(struct SubSpriteData* pSub)
+static void ImagoLarvaStunned(struct SubSpriteData* pSub)
 {
     ImagoLarvaUpdatePalette();
 
@@ -293,7 +350,7 @@ void ImagoLarvaStunned(struct SubSpriteData* pSub)
  * 
  * @param pSub Sub sprite data pointer
  */
-void ImagoLarvaWarningInit(struct SubSpriteData* pSub)
+static void ImagoLarvaWarningInit(struct SubSpriteData* pSub)
 {
     pSub->pMultiOam = sImagoLarvaMultiSpriteData_Warning;
     pSub->animationDurationCounter = 0;
@@ -301,7 +358,7 @@ void ImagoLarvaWarningInit(struct SubSpriteData* pSub)
 
     gCurrentSprite.pose = IMAGO_LARVA_POSE_WARNING;
     gCurrentSprite.work0 = 60;
-    pSub->workVariable1 = 0;
+    pSub->work1 = 0;
 
     SoundPlay(SOUND_IMAGO_LARVA_WARNING);
 }
@@ -311,11 +368,11 @@ void ImagoLarvaWarningInit(struct SubSpriteData* pSub)
  * 
  * @param pSub Sub sprite data pointer
  */
-void ImagoLarvaCheckWarningAnimEnded(struct SubSpriteData* pSub)
+static void ImagoLarvaCheckWarningAnimEnded(struct SubSpriteData* pSub)
 {
     ImagoLarvaUpdatePalette();
 
-    if (SpriteUtilCheckNearEndSubSpriteAnim(pSub))
+    if (SpriteUtilHasSubSpriteAnimationNearlyEnded(pSub))
         gCurrentSprite.pose = IMAGO_LARVA_POSE_ATTACKING_INIT;
 }
 
@@ -324,7 +381,7 @@ void ImagoLarvaCheckWarningAnimEnded(struct SubSpriteData* pSub)
  * 
  * @param pSub Sub sprite data pointer 
  */
-void ImagoLarvaAttackingInit(struct SubSpriteData* pSub)
+static void ImagoLarvaAttackingInit(struct SubSpriteData* pSub)
 {
     pSub->pMultiOam = sImagoLarvaMultiSpriteData_Attacking;
     pSub->animationDurationCounter = 0;
@@ -339,13 +396,13 @@ void ImagoLarvaAttackingInit(struct SubSpriteData* pSub)
  * 
  * @param pSub Sub sprite data pointer
  */
-void ImagoLarvaAttacking(struct SubSpriteData* pSub)
+static void ImagoLarvaAttacking(struct SubSpriteData* pSub)
 {
     ImagoLarvaUpdatePalette();
 
     if (gCurrentSprite.status & SPRITE_STATUS_X_FLIP)
     {
-        pSub->xPosition += PIXEL_SIZE * 2;
+        pSub->xPosition += EIGHTH_BLOCK_SIZE;
         if (pSub->xPosition >= gCurrentSprite.xPositionSpawn)
         {
             // Reached spawn position, set idle
@@ -356,7 +413,7 @@ void ImagoLarvaAttacking(struct SubSpriteData* pSub)
     }
     else
     {
-        pSub->xPosition -= PIXEL_SIZE * 2;
+        pSub->xPosition -= EIGHTH_BLOCK_SIZE;
         if (pSub->xPosition <= gCurrentSprite.xPositionSpawn)
         {
             // Reached spawn position, set idle
@@ -372,7 +429,7 @@ void ImagoLarvaAttacking(struct SubSpriteData* pSub)
  * 
  * @param pSub Sub sprite data pointer
  */
-void ImagoLarvaTakingDamageInit(struct SubSpriteData* pSub)
+static void ImagoLarvaTakingDamageInit(struct SubSpriteData* pSub)
 {
     pSub->pMultiOam = sImagoLarvaMultiSpriteData_TakingDamage;
     pSub->animationDurationCounter = 0;
@@ -382,7 +439,7 @@ void ImagoLarvaTakingDamageInit(struct SubSpriteData* pSub)
 
     // Delay before it automatically attacks
     gCurrentSprite.work0 = 47;
-    pSub->workVariable1 = 0;
+    pSub->work1 = 0;
 
     SoundFade(SOUND_IMAGO_LARVA_ATTACKING, CONVERT_SECONDS(1.f / 6));
 }
@@ -392,7 +449,7 @@ void ImagoLarvaTakingDamageInit(struct SubSpriteData* pSub)
  * 
  * @param pSub Sub sprite data pointer
  */
-void ImagoLarvaTakingDamage(struct SubSpriteData* pSub)
+static void ImagoLarvaTakingDamage(struct SubSpriteData* pSub)
 {
     gCurrentSprite.work0--;
     if (gCurrentSprite.work0 == 0)
@@ -404,7 +461,7 @@ void ImagoLarvaTakingDamage(struct SubSpriteData* pSub)
  * 
  * @param pSub Sub sprite data pointer
  */
-void ImagoLarvaDyingInit(struct SubSpriteData* pSub)
+static void ImagoLarvaDyingInit(struct SubSpriteData* pSub)
 {
     pSub->pMultiOam = sImagoLarvaMultiSpriteData_Dying;
     pSub->animationDurationCounter = 0;
@@ -431,7 +488,7 @@ void ImagoLarvaDyingInit(struct SubSpriteData* pSub)
  * 
  * @param pSub Sub sprite data pointer
  */
-void ImagoLarvaDying(struct SubSpriteData* pSub)
+static void ImagoLarvaDying(struct SubSpriteData* pSub)
 {
     gCurrentSprite.work0--;
     if (gCurrentSprite.work0 == 0)
@@ -448,7 +505,7 @@ void ImagoLarvaDying(struct SubSpriteData* pSub)
  * 
  * @param pSub Sub sprite data pointer
  */
-void ImagoLarvaDeath(struct SubSpriteData* pSub)
+static void ImagoLarvaDeath(struct SubSpriteData* pSub)
 {
     u16 yPosition;
     
@@ -478,7 +535,7 @@ void ImagoLarvaDeath(struct SubSpriteData* pSub)
  * 
  * @param pSub Sub sprite data pointer
  */
-void ImagoLarvaPartInit(struct SubSpriteData* pSub)
+static void ImagoLarvaPartInit(struct SubSpriteData* pSub)
 {
     gCurrentSprite.status &= ~SPRITE_STATUS_NOT_DRAWN;
     gCurrentSprite.health = 1;
@@ -597,7 +654,7 @@ void ImagoLarvaPartInit(struct SubSpriteData* pSub)
  * 
  * @param pSub Sub sprite data pointer
  */
-void ImagoLarvaPartShellIdle(struct SubSpriteData* pSub)
+static void ImagoLarvaPartShellIdle(struct SubSpriteData* pSub)
 {
     u8 ramSlot;
     u8 speed;
@@ -646,7 +703,7 @@ void ImagoLarvaPartShellIdle(struct SubSpriteData* pSub)
     else if (SPRITE_GET_ISFT(gCurrentSprite))
     {
         // Hit by something, check should retreat
-        if (!pSub->workVariable2)
+        if (!pSub->work2)
         {
             // Get speed
             health = UCHAR_MAX - gCurrentSprite.health;
@@ -663,14 +720,14 @@ void ImagoLarvaPartShellIdle(struct SubSpriteData* pSub)
                 SoundPlay(SOUND_IMAGO_LARVA_CRAWLING_SLOW);
 
             // Update retreating counter
-            if (pSub->workVariable1 < 8)
-                pSub->workVariable1++;
+            if (pSub->work1 < 8)
+                pSub->work1++;
 
             // Set retracting
             gSpriteData[ramSlot].work0 = 16;
 
             // Set stunned delay
-            gSpriteData[ramSlot].work1 = pSub->workVariable1 * 8;
+            gSpriteData[ramSlot].work1 = pSub->work1 * 8;
 
             // Set moving speed
             gSpriteData[ramSlot].yPositionSpawn = speed;
@@ -688,7 +745,7 @@ void ImagoLarvaPartShellIdle(struct SubSpriteData* pSub)
  * 
  * @param pSub Sub sprite data pointer
  */
-void ImagoLarvaPartDotIdle(struct SubSpriteData* pSub)
+static void ImagoLarvaPartDotIdle(struct SubSpriteData* pSub)
 {
     u8 ramSlot;
 
@@ -709,7 +766,7 @@ void ImagoLarvaPartDotIdle(struct SubSpriteData* pSub)
         gCurrentSprite.pose = IMAGO_LARVA_PART_POSE_DOT_REMOVING;
 
         // Set immune to retreat flag
-        pSub->workVariable2 = TRUE;
+        pSub->work2 = TRUE;
     }
 }
 
@@ -718,9 +775,9 @@ void ImagoLarvaPartDotIdle(struct SubSpriteData* pSub)
  * 
  * @param pSub Sub sprite data pointer
  */
-void ImagoLarvaPartDotCheckDisappearingAnimEnded(struct SubSpriteData* pSub)
+static void ImagoLarvaPartDotCheckDisappearingAnimEnded(struct SubSpriteData* pSub)
 {
-    if (SpriteUtilCheckEndCurrentSpriteAnim())
+    if (SpriteUtilHasCurrentAnimationEnded())
     {
         // Set visible, but won't be drawn
         if (gCurrentSprite.roomSlot == IMAGO_LARVA_PART_RIGHT_DOT)
@@ -740,11 +797,11 @@ void ImagoLarvaPartDotCheckDisappearingAnimEnded(struct SubSpriteData* pSub)
 }
 
 /**
- * @brief 2636c | 68 | Checks if an Imago larva dot should re-appear
+ * @brief 2636c | 68 | Checks if an Imago larva dot should reappear
  * 
  * @param pSub Sub sprite data pointer 
  */
-void ImagoLarvaPartDotCheckShouldReappear(struct SubSpriteData* pSub)
+static void ImagoLarvaPartDotCheckShouldReappear(struct SubSpriteData* pSub)
 {
     u8 ramSlot;
 
@@ -774,9 +831,9 @@ void ImagoLarvaPartDotCheckShouldReappear(struct SubSpriteData* pSub)
  * 
  * @param pSub Sub sprite data pointer 
  */
-void ImagoLarvaPartDotCheckAppearingAnimEnded(struct SubSpriteData* pSub)
+static void ImagoLarvaPartDotCheckAppearingAnimEnded(struct SubSpriteData* pSub)
 {
-    if (SpriteUtilCheckEndCurrentSpriteAnim())
+    if (SpriteUtilHasCurrentAnimationEnded())
     {
         // Set visible
         if (gCurrentSprite.roomSlot == IMAGO_LARVA_PART_RIGHT_DOT)
@@ -792,7 +849,7 @@ void ImagoLarvaPartDotCheckAppearingAnimEnded(struct SubSpriteData* pSub)
         gCurrentSprite.pose = IMAGO_LARVA_PART_POSE_DOT_IDLE;
 
         // Remove immune to retreat flag
-        pSub->workVariable2 = FALSE;
+        pSub->work2 = FALSE;
     }
 }
 
@@ -801,7 +858,7 @@ void ImagoLarvaPartDotCheckAppearingAnimEnded(struct SubSpriteData* pSub)
  * 
  * @param pSub Sub sprite data pointer
  */
-void ImagoLarvaPartDead(struct SubSpriteData* pSub)
+static void ImagoLarvaPartDead(struct SubSpriteData* pSub)
 {
     u8 ramSlot;
     u16 yPosition;
@@ -822,9 +879,9 @@ void ImagoLarvaPartDead(struct SubSpriteData* pSub)
             yPosition += QUARTER_BLOCK_SIZE;
 
             if (gCurrentSprite.status & SPRITE_STATUS_X_FLIP)
-                xPosition -= BLOCK_SIZE + PIXEL_SIZE * 2;
+                xPosition -= BLOCK_SIZE + EIGHTH_BLOCK_SIZE;
             else
-                xPosition += BLOCK_SIZE + PIXEL_SIZE * 2;
+                xPosition += BLOCK_SIZE + EIGHTH_BLOCK_SIZE;
             break;
 
         case IMAGO_LARVA_PART_MIDDLE_DOT:
@@ -839,9 +896,9 @@ void ImagoLarvaPartDead(struct SubSpriteData* pSub)
             yPosition -= BLOCK_SIZE;
 
             if (gCurrentSprite.status & SPRITE_STATUS_X_FLIP)
-                xPosition -= BLOCK_SIZE * 2 - PIXEL_SIZE * 2;
+                xPosition -= BLOCK_SIZE * 2 - EIGHTH_BLOCK_SIZE;
             else
-                xPosition += BLOCK_SIZE * 2 - PIXEL_SIZE * 2;
+                xPosition += BLOCK_SIZE * 2 - EIGHTH_BLOCK_SIZE;
             break;
 
         case IMAGO_LARVA_PART_CLAWS:
@@ -894,7 +951,7 @@ void ImagoLarva(void)
 
     switch (gCurrentSprite.pose)
     {
-        case 0:
+        case SPRITE_POSE_UNINITIALIZED:
             ImagoLarvaInit(pSub);
             break;
 
@@ -990,7 +1047,7 @@ void ImagoLarvaPart(void)
 
     switch (gCurrentSprite.pose)
     {
-        case 0:
+        case SPRITE_POSE_UNINITIALIZED:
             ImagoLarvaPartInit(pSub);
             break;
 

@@ -8,6 +8,7 @@
 #include "constants/samus.h"
 #include "constants/sprite.h"
 
+#include "structs/connection.h"
 #include "structs/escape.h"
 #include "structs/game_state.h"
 #include "structs/rando.h"
@@ -19,7 +20,7 @@
 
 
 static u32 RandoCanMultiworld() {
-    return gGameModeSub1 == SUB_GAME_MODE_PLAYING && !(gDisablePause || gPauseScreenFlag || gShipLandingFlag);
+    return gSubGameMode1 == SUB_GAME_MODE_PLAYING && !(gDisablePause || gPauseScreenFlag || gShipLandingFlag);
 }
 
 static u32 RandoCanDisplayMessage() {
@@ -44,7 +45,7 @@ static u32 RandoCanDisplayMessage() {
 
     // If the banner is already loaded, no need to worry about loading it
     for (i = 0; i < MAX_AMOUNT_OF_SPRITE_TYPES; i++) {
-        if (gSpritesetSpritesID[i] == PSPRITE_ITEM_BANNER)
+        if (gSpritesetSpritesID[i] == PSPRITE_MESSAGE_BANNER)
             return TRUE;
     }
 
@@ -96,7 +97,7 @@ static void RandoAcceptMessage() {
     gCollectingLocation = RC_MULTIWORLD;
 
     // (Hopefully) fix the bug where the item acquisition freezes Samus in place instead of showing the message
-    if (SpriteSpawnPrimary(PSPRITE_ITEM_BANNER, MESSAGE_DUMMY, 6, gSamusData.yPosition, gSamusData.xPosition, 0) == UCHAR_MAX) {
+    if (SpriteSpawnPrimary(PSPRITE_MESSAGE_BANNER, MESSAGE_DUMMY, 6, gSamusData.yPosition, gSamusData.xPosition, 0) == UCHAR_MAX) {
         gPreventMovementTimer = 0;
         gCollectingLocation = RC_NONE;
         return;

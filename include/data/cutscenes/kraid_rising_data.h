@@ -59,7 +59,7 @@ extern const u16 sKraidRisingRisingPal[7 * 16];
 extern const u32 sKraidRisingKraidCloseUpGfx[3087];
 extern const u32 sKraidRisingOamGfx[753];
 extern const u32 sKraidRisingKraidRisingGfx[1609];
-extern const u32 sKraidRisingCaveBackroundGfx[1327];
+extern const u32 sKraidRisingCaveBackgroundGfx[1327];
 extern const u32 sKraidRisingKraidCloseUpEyesClosedTileTable[368];
 extern const u32 sKraidRisingKraidCloseUpEyesBarelyOpenedTileTable[368];
 extern const u32 sKraidRisingKraidCloseUpEyesALittleOpenedTileTable[368];

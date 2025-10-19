@@ -1,12 +1,12 @@
 #include "cutscenes/enter_tourian.h"
 #include "cutscenes/cutscene_utils.h"
 #include "color_effects.h"
+#include "dma.h"
 #include "macros.h"
 
 #include "data/shortcut_pointers.h"
 #include "data/generic_data.h"
 #include "data/cutscenes/enter_tourian_data.h"
-#include "data/cutscenes/internal_enter_tourian_data.h"
 #include "data/sprites/metroid.h"
 
 #include "constants/audio.h"
@@ -16,12 +16,78 @@
 #include "structs/game_state.h"
 #include "structs/display.h"
 
+static void EnterTourianScrollBackground(void);
+static void EnterTourianUpdateMetroid(struct CutsceneOamData* pOam, u8 metroidId);
+static void EnterTourianSwitchMetroidPalette(struct CutscenePaletteData* pPalette, u8 grabbedPal);
+static void EnterTourianUpdatePirate(struct CutsceneOamData* pOam);
+static void EnterTourianProcessOAM(void);
+
+// (x, y) coordinates
+static u16 sEnterTourianMetroidsStartPosition[MAX_METROID_IDS * 2 + 1][2] = {
+    [0] = {
+        BLOCK_SIZE * 38 + QUARTER_BLOCK_SIZE,
+        BLOCK_SIZE * 39 - QUARTER_BLOCK_SIZE
+    },
+    [1] = {
+        BLOCK_SIZE * 37 + QUARTER_BLOCK_SIZE,
+        BLOCK_SIZE * 38 + QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE
+    },
+    [2] = {
+        BLOCK_SIZE * 39 - QUARTER_BLOCK_SIZE,
+        BLOCK_SIZE * 38 + HALF_BLOCK_SIZE
+    },
+    [3] = {
+        BLOCK_SIZE * 38,
+        BLOCK_SIZE * 38
+    },
+    [4] = {
+        BLOCK_SIZE * 38 + EIGHTH_BLOCK_SIZE,
+        BLOCK_SIZE * 39 + EIGHTH_BLOCK_SIZE
+    },
+    [5] = {
+        0,
+        0
+    },
+    [6] = {
+        0,
+        0
+    },
+    [7] = {
+        0,
+        0
+    },
+    [8] = {
+        0,
+        0
+    }
+};
+
+// (x, y) coordinates
+static s16 sEnterTourianMetroidsEndPosition[MAX_METROID_IDS][2] = {
+    [0] = {
+        BLOCK_SIZE * 38 + EIGHTH_BLOCK_SIZE + PIXEL_SIZE,
+        BLOCK_SIZE * 34 + HALF_BLOCK_SIZE
+    },
+    [1] = {
+        BLOCK_SIZE * 37 - QUARTER_BLOCK_SIZE,
+        BLOCK_SIZE * 37
+    },
+    [2] = {
+        BLOCK_SIZE * 42 - QUARTER_BLOCK_SIZE,
+        BLOCK_SIZE * 37 + QUARTER_BLOCK_SIZE
+    },
+    [3] = {
+        BLOCK_SIZE * 40,
+        BLOCK_SIZE * 36 + HALF_BLOCK_SIZE + EIGHTH_BLOCK_SIZE
+    }
+};
+
 /**
  * @brief 67080 | 310 | Handles the entire cutscene
  * 
  * @return u8 FALSE
  */
-u8 EnterTourianAnimation(void)
+static u8 EnterTourianAnimation(void)
 {
     s32 i;
     s32 movement;
@@ -170,6 +236,10 @@ u8 EnterTourianAnimation(void)
     CUTSCENE_DATA.oam[8].actions |= movement;
     EnterTourianUpdatePirate(&CUTSCENE_DATA.oam[8]);
 
+    #ifdef DEBUG
+    CutsceneCheckSkipStage(1);
+    #endif // DEBUG
+
     return FALSE;
 }
 
@@ -177,7 +247,7 @@ u8 EnterTourianAnimation(void)
  * @brief 67390 | 50 | Handles the movement of the backgrounds
  * 
  */
-void EnterTourianScrollBackground(void)
+static void EnterTourianScrollBackground(void)
 {
     u16* pPosition;
 
@@ -201,7 +271,7 @@ void EnterTourianScrollBackground(void)
  * @param pOam Cutscene oam data pointer
  * @param metroidId Metroid oam
  */
-void EnterTourianUpdateMetroid(struct CutsceneOamData* pOam, u8 metroidId)
+static void EnterTourianUpdateMetroid(struct CutsceneOamData* pOam, u8 metroidId)
 {
     u32 position;
     u32 notDrawn;
@@ -241,10 +311,10 @@ void EnterTourianUpdateMetroid(struct CutsceneOamData* pOam, u8 metroidId)
             }
             else
             {
-                pOam->xVelocity = sRandomNumberTable[(pOam->timer + metroidId) & 0xFF] & 1 ? -PIXEL_SIZE : PIXEL_SIZE;
+                pOam->xVelocity = MOD_AND(sRandomNumberTable[(pOam->timer + metroidId) & UCHAR_MAX], 2) ? -PIXEL_SIZE : PIXEL_SIZE;
                 pOam->xPosition += pOam->xVelocity;
             }
-            pOam->unk_16 = (sRandomNumberTable[(pOam->timer - metroidId) & 0xFF] & 0x1F) + 8;
+            pOam->unk_16 = MOD_AND(sRandomNumberTable[(pOam->timer - metroidId) & UCHAR_MAX], 0x20) + 8;
         }
 
         if (pOam->unk_18 != 0)
@@ -260,11 +330,11 @@ void EnterTourianUpdateMetroid(struct CutsceneOamData* pOam, u8 metroidId)
             }
             else
             {
-                pOam->yVelocity = sRandomNumberTable[(pOam->timer + metroidId) & 0xFF] & 2 ? -PIXEL_SIZE : PIXEL_SIZE;
+                pOam->yVelocity = MOD_BLOCK_AND(sRandomNumberTable[(pOam->timer + metroidId) & UCHAR_MAX], 2) ? -PIXEL_SIZE : PIXEL_SIZE;
                 pOam->yPosition += pOam->yVelocity;
             }
             
-            pOam->unk_18 = (sRandomNumberTable[(pOam->timer - metroidId) & 0xFF] & 0x3F) + 8;
+            pOam->unk_18 = MOD_AND(sRandomNumberTable[(pOam->timer - metroidId) & UCHAR_MAX], 0x40) + 8;
 
             if (pOam->unk_18 == pOam->unk_16)
                 pOam->unk_18 += 16;
@@ -294,7 +364,7 @@ void EnterTourianUpdateMetroid(struct CutsceneOamData* pOam, u8 metroidId)
         pOam->unk_16++;
         if (pOam->xVelocity == 0)
         {
-            pOam->xVelocity = sEnterTourian_7600b4[metroidId][0] - pOam->xPosition;
+            pOam->xVelocity = sEnterTourianMetroidsEndPosition[metroidId][0] - pOam->xPosition;
 
             var_2 = MOD_AND(sRandomNumberTable[LOW_BYTE(pOam->timer * metroidId)], 2) ? 1 : -1;
             var_2 *= MOD_AND(sRandomNumberTable[LOW_BYTE(pOam->timer + metroidId)], 4);
@@ -308,7 +378,7 @@ void EnterTourianUpdateMetroid(struct CutsceneOamData* pOam, u8 metroidId)
         {
             if (pOam->xVelocity > 0)
             {
-                if (sEnterTourian_7600b4[metroidId][0] <= pOam->xPosition)
+                if (sEnterTourianMetroidsEndPosition[metroidId][0] <= pOam->xPosition)
                     pOam->xVelocity -= 2;
 
                 var_2 = pOam->xVelocity / 12 + 1;
@@ -317,7 +387,7 @@ void EnterTourianUpdateMetroid(struct CutsceneOamData* pOam, u8 metroidId)
             }
             else
             {
-                if (sEnterTourian_7600b4[metroidId][0] >= pOam->xPosition)
+                if (sEnterTourianMetroidsEndPosition[metroidId][0] >= pOam->xPosition)
                     pOam->xVelocity += 2;
 
                 var_2 = pOam->xVelocity / 12 - 1;
@@ -332,14 +402,14 @@ void EnterTourianUpdateMetroid(struct CutsceneOamData* pOam, u8 metroidId)
         if (pOam->yVelocity == 0)
         {
             var_2 = sRandomNumberTable[LOW_BYTE(pOam->animationDurationCounter + pOam->currentAnimationFrame)] & 2 ? 1 : -1;
-            var_2 *= sRandomNumberTable[LOW_BYTE(pOam->timer + metroidId)] & 1;
+            var_2 *= MOD_AND(sRandomNumberTable[LOW_BYTE(pOam->timer + metroidId)], 2);
 
-            if (sEnterTourian_7600b4[metroidId][1] < pOam->yPosition)
-                pOam->yVelocity = sEnterTourian_7600b4[metroidId][1] - PIXEL_TO_SUB_PIXEL(var_2 + PIXEL_SIZE) - pOam->yPosition;
+            if (sEnterTourianMetroidsEndPosition[metroidId][1] < pOam->yPosition)
+                pOam->yVelocity = sEnterTourianMetroidsEndPosition[metroidId][1] - PIXEL_TO_SUB_PIXEL(var_2 + PIXEL_SIZE) - pOam->yPosition;
             else
-                pOam->yVelocity = sEnterTourian_7600b4[metroidId][1] + PIXEL_TO_SUB_PIXEL(var_2 + PIXEL_SIZE) - pOam->yPosition;
+                pOam->yVelocity = sEnterTourianMetroidsEndPosition[metroidId][1] + PIXEL_TO_SUB_PIXEL(var_2 + PIXEL_SIZE) - pOam->yPosition;
         }
-        else if (pOam->unk_18 & 1)
+        else if (MOD_AND(pOam->unk_18, 2))
         {
             if (pOam->yVelocity > 0)
                 pOam->yVelocity--;
@@ -376,7 +446,7 @@ void EnterTourianUpdateMetroid(struct CutsceneOamData* pOam, u8 metroidId)
  * @param pPalette Cutscene palette data pointer
  * @param grabbedPal bool, use grabbed pal
  */
-void EnterTourianSwitchMetroidPalette(struct CutscenePaletteData* pPalette, u8 grabbedPal)
+static void EnterTourianSwitchMetroidPalette(struct CutscenePaletteData* pPalette, u8 grabbedPal)
 {
     if (grabbedPal == TRUE)
     {
@@ -385,7 +455,7 @@ void EnterTourianSwitchMetroidPalette(struct CutscenePaletteData* pPalette, u8 g
             pPalette->active = TRUE;
             pPalette->timer = 0;
             pPalette->paletteRow = 0;
-            pPalette->maxTimer = CONVERT_SECONDS(.5f) + 2 * DELTA_TIME;
+            pPalette->maxTimer = CONVERT_SECONDS(.5f + (1.f / 30));
             return;
         }
 
@@ -408,7 +478,7 @@ void EnterTourianSwitchMetroidPalette(struct CutscenePaletteData* pPalette, u8 g
     if (pPalette->active)
     {
         pPalette->active = FALSE;
-        DmaTransfer(3, &sMetroidOAM_Moving_Frame10[8], PALRAM_OBJ + 12 * PAL_ROW_SIZE, 1 * PAL_ROW_SIZE, 16);
+        DmaTransfer(3, &sMetroidOam_Moving_Frame10[8], PALRAM_OBJ + 12 * PAL_ROW_SIZE, 1 * PAL_ROW_SIZE, 16);
     }
 }
 
@@ -417,7 +487,7 @@ void EnterTourianSwitchMetroidPalette(struct CutscenePaletteData* pPalette, u8 g
  * 
  * @param pOam Cutscene oam data pointer
  */
-void EnterTourianUpdatePirate(struct CutsceneOamData* pOam)
+static void EnterTourianUpdatePirate(struct CutsceneOamData* pOam)
 {
     u32 position;
     u32 notDrawn;
@@ -435,7 +505,7 @@ void EnterTourianUpdatePirate(struct CutsceneOamData* pOam)
             }
             else
             {
-                pOam->xVelocity = sRandomNumberTable[gFrameCounter8Bit] & 1 ? -PIXEL_SIZE : PIXEL_SIZE;
+                pOam->xVelocity = MOD_AND(sRandomNumberTable[gFrameCounter8Bit], 2) ? -PIXEL_SIZE : PIXEL_SIZE;
                 pOam->xPosition += pOam->xVelocity;
             }
 
@@ -457,7 +527,7 @@ void EnterTourianUpdatePirate(struct CutsceneOamData* pOam)
                 pOam->yPosition += pOam->yVelocity;
             }
 
-            pOam->unk_18 = (sRandomNumberTable[gFrameCounter8Bit] & 0x7F) + 8;
+            pOam->unk_18 = MOD_AND(sRandomNumberTable[gFrameCounter8Bit], 0x80) + 8;
 
             if (pOam->unk_18 == pOam->unk_16)
                 pOam->unk_18 += 16;
@@ -496,7 +566,7 @@ void EnterTourianUpdatePirate(struct CutsceneOamData* pOam)
  * 
  * @return u8 FALSE
  */
-u8 EnterTourianInit(void)
+static u8 EnterTourianInit(void)
 {
     s32 i;
 
@@ -560,19 +630,19 @@ u8 EnterTourianInit(void)
 
     for (i = 0; i < MAX_METROID_IDS * 2; i++)
     {
-        CUTSCENE_DATA.oam[i].xPosition = sEnterTourian_760090[i >> 1][0];
-        CUTSCENE_DATA.oam[i].yPosition = sEnterTourian_760090[i >> 1][1];
+        CUTSCENE_DATA.oam[i].xPosition = sEnterTourianMetroidsStartPosition[i >> 1][0];
+        CUTSCENE_DATA.oam[i].yPosition = sEnterTourianMetroidsStartPosition[i >> 1][1];
     }
 
     UpdateCutsceneOamDataID(&CUTSCENE_DATA.oam[MAX_METROID_IDS * 2], 1);
     CUTSCENE_DATA.oam[MAX_METROID_IDS * 2].boundBackground = 3;
     CUTSCENE_DATA.oam[MAX_METROID_IDS * 2].priority = sEnterTourianPageData[0].priority;
     CUTSCENE_DATA.oam[MAX_METROID_IDS * 2].actions = 1;
-    CUTSCENE_DATA.oam[MAX_METROID_IDS * 2].xPosition = sEnterTourian_760090[4][0];
-    CUTSCENE_DATA.oam[MAX_METROID_IDS * 2].yPosition = sEnterTourian_760090[4][1];
+    CUTSCENE_DATA.oam[MAX_METROID_IDS * 2].xPosition = sEnterTourianMetroidsStartPosition[4][0];
+    CUTSCENE_DATA.oam[MAX_METROID_IDS * 2].yPosition = sEnterTourianMetroidsStartPosition[4][1];
 
     CUTSCENE_DATA.bldcnt = BLDCNT_OBJ_FIRST_TARGET_PIXEL | BLDCNT_BRIGHTNESS_DECREASE_EFFECT;
-    gWrittenToBLDY_NonGameplay = BLDY_MAX_VALUE;
+    gWrittenToBldy_NonGameplay = BLDY_MAX_VALUE;
     CUTSCENE_DATA.unk_8.unk_2 = TRUE;
 
     PlayMusic(MUSIC_ENTERING_TOURIAN_CUTSCENE, 0);
@@ -586,6 +656,21 @@ u8 EnterTourianInit(void)
 
     return FALSE;
 }
+
+static struct CutsceneSubroutineData sEnterTourianSubroutineData[3] = {
+    [0] = {
+        .pFunction = EnterTourianInit,
+        .oamLength = 9
+    },
+    [1] = {
+        .pFunction = EnterTourianAnimation,
+        .oamLength = 9
+    },
+    [2] = {
+        .pFunction = CutsceneEndFunction,
+        .oamLength = 9
+    }
+};
 
 u8 EnterTourianSubroutine(void)
 {
@@ -603,7 +688,7 @@ u8 EnterTourianSubroutine(void)
  * @brief 67d40 | 4c | Processes the OAM for the cutscene
  * 
  */
-void EnterTourianProcessOAM(void)
+static void EnterTourianProcessOAM(void)
 {
     gNextOamSlot = 0;
     ProcessCutsceneOam(sEnterTourianSubroutineData[CUTSCENE_DATA.timeInfo.stage].oamLength,

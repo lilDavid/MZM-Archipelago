@@ -14,98 +14,98 @@ const s16 sDragonFireballOamRotation[40] = {
     52, 56, 60, 64, 64, 64, 64, 64, SHORT_MAX
 };
 
-const u32 sDragonGfx[512] = INCBIN_U32("data/sprites/Dragon.gfx.lz");
-const u16 sDragonPal[16 * 2] = INCBIN_U16("data/sprites/Dragon.pal");
+const u32 sDragonGfx[512] = INCBIN_U32("data/sprites/dragon.gfx.lz");
+const u16 sDragonPal[16 * 2] = INCBIN_U16("data/sprites/dragon.pal");
 
 static const u16 sDragonOam_Spitting_Frame0[OAM_DATA_SIZE(2)] = {
-    0x2,
-    0xe6, OBJ_SIZE_32x32 | 0x1f0, OBJ_SPRITE_OAM | 0x200,
-    OBJ_SHAPE_VERTICAL | 0x3, OBJ_SIZE_16x32 | 0x1f6, OBJ_SPRITE_OAM | 0x20d
+    2,
+    OAM_ENTRY(-16, -26, OAM_DIMS_32x32, OAM_NO_FLIP, 0x200, 8, 0),
+    OAM_ENTRY(-10, 3, OAM_DIMS_16x32, OAM_NO_FLIP, 0x20d, 8, 0),
 };
 
 static const u16 sDragonOam_Spitting_Frame1[OAM_DATA_SIZE(2)] = {
-    0x2,
-    0xe5, OBJ_SIZE_32x32 | 0x1f1, OBJ_SPRITE_OAM | 0x200,
-    OBJ_SHAPE_VERTICAL | 0x3, OBJ_SIZE_16x32 | 0x1f7, OBJ_SPRITE_OAM | 0x20d
+    2,
+    OAM_ENTRY(-15, -27, OAM_DIMS_32x32, OAM_NO_FLIP, 0x200, 8, 0),
+    OAM_ENTRY(-9, 3, OAM_DIMS_16x32, OAM_NO_FLIP, 0x20d, 8, 0),
 };
 
 static const u16 sDragonOam_Idle_Frame0[OAM_DATA_SIZE(2)] = {
-    0x2,
-    0x6, OBJ_SIZE_16x16 | 0x1f7, OBJ_SPRITE_OAM | 0x24b,
-    0xe9, OBJ_SIZE_32x32 | 0x1f8, OBJ_SPRITE_OAM | 0x204
+    2,
+    OAM_ENTRY(-9, 6, OAM_DIMS_16x16, OAM_NO_FLIP, 0x24b, 8, 0),
+    OAM_ENTRY(-8, -23, OAM_DIMS_32x32, OAM_NO_FLIP, 0x204, 8, 0),
 };
 
 static const u16 sDragonOam_Idle_Frame1[OAM_DATA_SIZE(2)] = {
-    0x2,
-    0xea, OBJ_SIZE_32x32 | 0x1f0, OBJ_SPRITE_OAM | 0x207,
-    0x4, OBJ_SIZE_16x16 | 0x1f7, OBJ_SPRITE_OAM | 0x24b
+    2,
+    OAM_ENTRY(-16, -22, OAM_DIMS_32x32, OAM_NO_FLIP, 0x207, 8, 0),
+    OAM_ENTRY(-9, 4, OAM_DIMS_16x16, OAM_NO_FLIP, 0x24b, 8, 0),
 };
 
 static const u16 sDragonOam_Idle_Frame2[OAM_DATA_SIZE(4)] = {
-    0x4,
-    0xe9, OBJ_SIZE_16x16 | 0x0, OBJ_SPRITE_OAM | 0x20b,
-    OBJ_SHAPE_VERTICAL | 0xe9, OBJ_SIZE_8x32 | 0x1f8, OBJ_SPRITE_OAM | 0x204,
-    0xf9, OBJ_SIZE_16x16 | 0x0, OBJ_SPRITE_OAM | 0x245,
-    0x5, OBJ_SIZE_16x16 | 0x1f7, OBJ_SPRITE_OAM | 0x24b
+    4,
+    OAM_ENTRY(0, -23, OAM_DIMS_16x16, OAM_NO_FLIP, 0x20b, 8, 0),
+    OAM_ENTRY(-8, -23, OAM_DIMS_8x32, OAM_NO_FLIP, 0x204, 8, 0),
+    OAM_ENTRY(0, -7, OAM_DIMS_16x16, OAM_NO_FLIP, 0x245, 8, 0),
+    OAM_ENTRY(-9, 5, OAM_DIMS_16x16, OAM_NO_FLIP, 0x24b, 8, 0),
 };
 
 static const u16 sDragonOam_TurningAround_Frame0[OAM_DATA_SIZE(2)] = {
-    0x2,
-    0xe9, OBJ_SIZE_32x32 | 0x1f8, OBJ_SPRITE_OAM | 0x20f,
-    0x5, OBJ_SIZE_16x16 | 0x1f9, OBJ_SPRITE_OAM | 0x215
+    2,
+    OAM_ENTRY(-8, -23, OAM_DIMS_32x32, OAM_NO_FLIP, 0x20f, 8, 0),
+    OAM_ENTRY(-7, 5, OAM_DIMS_16x16, OAM_NO_FLIP, 0x215, 8, 0),
 };
 
 static const u16 sDragonOam_TurningAround_Frame1[OAM_DATA_SIZE(2)] = {
-    0x2,
-    OBJ_SHAPE_VERTICAL | 0xea, OBJ_SIZE_16x32 | 0x1fa, OBJ_SPRITE_OAM | 0x213,
-    0x5, OBJ_SIZE_16x16 | 0x1f9, OBJ_SPRITE_OAM | 0x255
+    2,
+    OAM_ENTRY(-6, -22, OAM_DIMS_16x32, OAM_NO_FLIP, 0x213, 8, 0),
+    OAM_ENTRY(-7, 5, OAM_DIMS_16x16, OAM_NO_FLIP, 0x255, 8, 0),
 };
 
 static const u16 sDragonOam_Unused_0[OAM_DATA_SIZE(2)] = {
-    0x2,
-    OBJ_SHAPE_VERTICAL | 0xea, OBJ_X_FLIP | OBJ_SIZE_16x32 | 0x1fb, OBJ_SPRITE_OAM | 0x213,
-    0x5, OBJ_X_FLIP | OBJ_SIZE_16x16 | 0x1fc, OBJ_SPRITE_OAM | 0x255
+    2,
+    OAM_ENTRY(-5, -22, OAM_DIMS_16x32, OAM_X_FLIP, 0x213, 8, 0),
+    OAM_ENTRY(-4, 5, OAM_DIMS_16x16, OAM_X_FLIP, 0x255, 8, 0),
 };
 
 static const u16 sDragonOam_Unused_1[OAM_DATA_SIZE(2)] = {
-    0x2,
-    0xe9, OBJ_X_FLIP | OBJ_SIZE_32x32 | 0x1ec, OBJ_SPRITE_OAM | 0x20f,
-    0x5, OBJ_X_FLIP | OBJ_SIZE_16x16 | 0x1fb, OBJ_SPRITE_OAM | 0x215
+    2,
+    OAM_ENTRY(-20, -23, OAM_DIMS_32x32, OAM_X_FLIP, 0x20f, 8, 0),
+    OAM_ENTRY(-5, 5, OAM_DIMS_16x16, OAM_X_FLIP, 0x215, 8, 0),
 };
 
 static const u16 sDragonFireballOam_Moving_Frame0[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xf8, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x25a
+    1,
+    OAM_ENTRY(-8, -8, OAM_DIMS_16x16, OAM_NO_FLIP, 0x25a, 8, 0),
 };
 
 static const u16 sDragonFireballOam_Moving_Frame1[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xf8, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x25c
+    1,
+    OAM_ENTRY(-8, -8, OAM_DIMS_16x16, OAM_NO_FLIP, 0x25c, 8, 0),
 };
 
 static const u16 sDragonFireballOam_Moving_Frame2[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xf8, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x25e
+    1,
+    OAM_ENTRY(-8, -8, OAM_DIMS_16x16, OAM_NO_FLIP, 0x25e, 8, 0),
 };
 
 static const u16 sDragonFireballOam_Exploding_Frame0[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xf8, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x21a
+    1,
+    OAM_ENTRY(-8, -8, OAM_DIMS_16x16, OAM_NO_FLIP, 0x21a, 8, 0),
 };
 
 static const u16 sDragonFireballOam_Exploding_Frame1[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xf8, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x21c
+    1,
+    OAM_ENTRY(-8, -8, OAM_DIMS_16x16, OAM_NO_FLIP, 0x21c, 8, 0),
 };
 
 static const u16 sDragonFireballOam_Exploding_Frame2[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xf8, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x21e
+    1,
+    OAM_ENTRY(-8, -8, OAM_DIMS_16x16, OAM_NO_FLIP, 0x21e, 8, 0),
 };
 
 static const u16 sDragonFireballOam_Exploding_Frame3[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xf7, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x121e
+    1,
+    OAM_ENTRY(-8, -9, OAM_DIMS_16x16, OAM_NO_FLIP, 0x21e, 9, 0),
 };
 
 const struct FrameData sDragonOam_Idle[4] = {

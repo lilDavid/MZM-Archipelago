@@ -198,11 +198,15 @@ void CFile::TryConvertString()
 
     // printf("%c", m_buffer[m_pos]);
     std::string identifier("INCTEXT");
+    std::string shiftJisIdentifier("SHIFT_JIS");
 
-    if (!CheckIdentifier(identifier) || (m_pos > 0 && IsIdentifierChar(m_buffer[m_pos - 1])))
+    bool isShiftJis = CheckIdentifier(shiftJisIdentifier);
+    bool isText = CheckIdentifier(identifier);
+
+    if ((!isText && !isShiftJis) || (m_pos > 0 && IsIdentifierChar(m_buffer[m_pos - 1])))
         return;
 
-    m_pos += identifier.size();
+    m_pos += isText ? identifier.size() : shiftJisIdentifier.size();
 
     if (m_buffer[m_pos] == '_')
     {
@@ -237,7 +241,10 @@ void CFile::TryConvertString()
 
             try
             {
-                m_pos += stringParser.ParseString(m_pos, s, length);
+                if (isText)
+                    m_pos += stringParser.ParseString(m_pos, s, length);
+                else if (isShiftJis)
+                    m_pos += stringParser.ParseShiftJis(m_pos, s, length);
             }
             catch (std::runtime_error& e)
             {
@@ -264,7 +271,7 @@ void CFile::TryConvertString()
         }
     }
 
-    if (noTerminator)
+    if (noTerminator || isShiftJis)
         std::printf(" }");
     else
         std::printf("CHAR_TERMINATOR }");
@@ -286,7 +293,14 @@ std::unique_ptr<unsigned char[]> CFile::ReadWholeFile(const std::string& path, i
     FILE* fp = std::fopen(path.c_str(), "rb");
 
     if (fp == nullptr)
-        RaiseError("Failed to open \"%s\" for reading.\n", path.c_str());
+    {
+        // Some instances of INCBIN can be within #ifdef regions where the condition is not met,
+        // so it's reasonable that the file may not exist. Only raise a warning and return an empty
+        // file to continue parsing.
+        RaiseWarning("Failed to open \"%s\" for reading.\n", path.c_str());
+        size = 0;
+        return {};
+    }
 
     std::fseek(fp, 0, SEEK_END);
 

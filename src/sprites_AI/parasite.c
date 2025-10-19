@@ -1,5 +1,6 @@
-#include "sprites_AI/geron.h"
 #include "sprites_AI/parasite.h"
+#include "sprites_AI/geron.h"
+#include "gba/display.h"
 
 #include "data/sprites/parasite.h"
 #include "data/sprite_data.h"
@@ -29,7 +30,7 @@ u32 ParasiteCount(void)
     struct SpriteData* pSprite;
     u8 count;
 
-    count = 0x0;
+    count = 0;
 
     for (pSprite = gSpriteData; pSprite < gSpriteData + MAX_AMOUNT_OF_SPRITES; pSprite++)
     {
@@ -38,7 +39,7 @@ u32 ParasiteCount(void)
             if (pSprite->pose == PARASITE_POSE_SAMUS_GRABBED)
                 count++;
 
-            if (count > 0x3)
+            if (count > 3)
                 return TRUE;
         }
     }
@@ -49,9 +50,9 @@ u32 ParasiteCount(void)
 /**
  * @brief 2ff44 | 12c | Initializes a parasite sprite
  * 
- * @param pSprite Sprite Data Pointer
+ * @param pSprite Sprite data pointer
  */
-void ParasiteInit(struct SpriteData* pSprite)
+static void ParasiteInit(struct SpriteData* pSprite)
 {
     u8 spriteId;
     u8 gfxSlot;
@@ -59,23 +60,23 @@ void ParasiteInit(struct SpriteData* pSprite)
     u16 yPosition;
     u16 xPosition;
 
-    pSprite->hitboxTop = -0x4;
-    pSprite->hitboxBottom = 0x0;
-    pSprite->hitboxLeft = -0x4;
-    pSprite->hitboxRight = 0x4;
+    pSprite->hitboxTop = -PIXEL_SIZE;
+    pSprite->hitboxBottom = 0;
+    pSprite->hitboxLeft = -PIXEL_SIZE;
+    pSprite->hitboxRight = PIXEL_SIZE;
 
-    pSprite->drawDistanceTop = 0x8;
-    pSprite->drawDistanceBottom = 0x4;
-    pSprite->drawDistanceHorizontal = 0x8;
+    pSprite->drawDistanceTop = SUB_PIXEL_TO_PIXEL(HALF_BLOCK_SIZE);
+    pSprite->drawDistanceBottom = SUB_PIXEL_TO_PIXEL(QUARTER_BLOCK_SIZE);
+    pSprite->drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(HALF_BLOCK_SIZE);
 
-    pSprite->pOam = sParasiteOAM_Idle;
-    pSprite->animationDurationCounter = 0x0;
-    pSprite->currentAnimationFrame = 0x0;
+    pSprite->pOam = sParasiteOam_Idle;
+    pSprite->animationDurationCounter = 0;
+    pSprite->currentAnimationFrame = 0;
 
     pSprite->samusCollision = SSC_PARASITE;
-    pSprite->health = 0x1;
+    pSprite->health = 1;
 
-    gSubSpriteData1.workVariable2 = 0x0;
+    gSubSpriteData1.work2 = 0;
     SpriteUtilChooseRandomXFlip();
 
     pSprite->pose = PARASITE_POSE_IDLE_INIT;
@@ -86,7 +87,9 @@ void ParasiteInit(struct SpriteData* pSprite)
     {
         // Check lock doors
         if (gEquipment.beamBombs & BBF_BOMBS && !EventFunction(EVENT_ACTION_CHECKING, EVENT_BUGS_KILLED))
+        {
             LOCK_DOORS();
+        }
 
         // Check is main parasite (spawned via room data and not with SpriteSpawnPrimary since it adds the Not Drawn flag)
         if (pSprite->status & SPRITE_STATUS_NOT_DRAWN)
@@ -105,11 +108,11 @@ void ParasiteInit(struct SpriteData* pSprite)
             xPosition = pSprite->xPosition;
 
             // Spawn sub parasites
-            SpriteSpawnPrimary(spriteId, roomSlot, gfxSlot, yPosition, xPosition - 0x8, 0x0);
-            SpriteSpawnPrimary(spriteId, roomSlot, gfxSlot, yPosition, xPosition + 0xC, 0x0);
-            SpriteSpawnPrimary(spriteId, roomSlot, gfxSlot, yPosition, xPosition - 0xC, 0x0);
-            SpriteSpawnPrimary(spriteId, roomSlot, gfxSlot, yPosition, xPosition + 0x8, 0x0);
-            SpriteSpawnPrimary(spriteId, roomSlot, gfxSlot, yPosition, xPosition, 0x0);
+            SpriteSpawnPrimary(spriteId, roomSlot, gfxSlot, yPosition, xPosition - EIGHTH_BLOCK_SIZE, 0);
+            SpriteSpawnPrimary(spriteId, roomSlot, gfxSlot, yPosition, xPosition + EIGHTH_BLOCK_SIZE + PIXEL_SIZE, 0);
+            SpriteSpawnPrimary(spriteId, roomSlot, gfxSlot, yPosition, xPosition - (EIGHTH_BLOCK_SIZE + PIXEL_SIZE), 0);
+            SpriteSpawnPrimary(spriteId, roomSlot, gfxSlot, yPosition, xPosition + EIGHTH_BLOCK_SIZE, 0);
+            SpriteSpawnPrimary(spriteId, roomSlot, gfxSlot, yPosition, xPosition, 0);
         }
     }
 }
@@ -117,34 +120,34 @@ void ParasiteInit(struct SpriteData* pSprite)
 /**
  * @brief 30070 | 90 | Initializes a parasite to be grabbing Samus
  * 
- * @param pSprite Sprite Data Pointer
+ * @param pSprite Sprite data pointer
  */
-void ParasiteGrabSamus(struct SpriteData* pSprite)
+static void ParasiteGrabSamus(struct SpriteData* pSprite)
 {
     u16 samusY;
     u16 samusX;
 
     pSprite->pose = PARASITE_POSE_SAMUS_GRABBED;
 
-    pSprite->pOam = sParasiteOAM_Attached;
-    pSprite->currentAnimationFrame = 0x0;
-    pSprite->animationDurationCounter = 0x0;
+    pSprite->pOam = sParasiteOam_Attached;
+    pSprite->currentAnimationFrame = 0;
+    pSprite->animationDurationCounter = 0;
 
-    pSprite->work0 = 0x0;
+    pSprite->work0 = 0;
 
     // Get samus position
-    samusY = gSamusData.yPosition + gSamusPhysics.drawDistanceTop;
-    samusX = gSamusData.xPosition + gSamusPhysics.drawDistanceLeftOffset;
+    samusY = gSamusData.yPosition + gSamusPhysics.hitboxTop;
+    samusX = gSamusData.xPosition + gSamusPhysics.hitboxLeft;
 
     // Get Y offset
     if (pSprite->yPosition < samusY)
-        pSprite->yPositionSpawn = 0x0;
+        pSprite->yPositionSpawn = 0;
     else
         pSprite->yPositionSpawn = pSprite->yPosition - samusY;
 
     // Get X offset
     if (pSprite->xPosition < samusX)
-        pSprite->xPositionSpawn = 0x0;
+        pSprite->xPositionSpawn = 0;
     else
         pSprite->xPositionSpawn = pSprite->xPosition - samusX;
 
@@ -158,9 +161,9 @@ void ParasiteGrabSamus(struct SpriteData* pSprite)
 /**
  * @brief 30100 | 190 | Handles a parasite having samus grabbed
  * 
- * @param pSprite
+ * @param pSprite Sprite data pointer
  */
-void ParasiteSamusGrabbed(struct SpriteData* pSprite)
+static void ParasiteSamusGrabbed(struct SpriteData* pSprite)
 {
     u16 samusY;
     u16 samusX;
@@ -168,24 +171,24 @@ void ParasiteSamusGrabbed(struct SpriteData* pSprite)
     
     if (gSamusData.pose == SPOSE_SCREW_ATTACKING)
     {
-        // Set expulsed
+        // Set expelled
         pSprite->pose = PARASITE_POSE_EXPULSED_INIT;
         
         xVelocity = gSpriteRng;
-        if (gSpriteRng < 0x6)
-            xVelocity = 0x6;
+        if (gSpriteRng < SPRITE_RNG_PROB(0.375f))
+            xVelocity = PIXEL_SIZE + PIXEL_SIZE / 2;
 
         pSprite->work2 = xVelocity;
     }
     else
     {
-        if (gParasiteRelated == 0x0)
-            gParasiteRelated = 0x5A;
+        if (gParasiteRelated == 0)
+            gParasiteRelated = CONVERT_SECONDS(1.5f);
 
         // Check update vertical direction
         if (pSprite->status & SPRITE_STATUS_Y_FLIP)
         {
-            if (gSamusData.yPosition + gSamusPhysics.drawDistanceBottom < pSprite->yPosition + 0x8)
+            if (gSamusData.yPosition + gSamusPhysics.hitboxBottom < pSprite->yPosition + EIGHTH_BLOCK_SIZE)
             {
                 pSprite->status &= ~SPRITE_STATUS_Y_FLIP;
                 pSprite->work0 = gSpriteRng;
@@ -193,7 +196,7 @@ void ParasiteSamusGrabbed(struct SpriteData* pSprite)
         }
         else
         {
-            if (gSamusData.yPosition + gSamusPhysics.drawDistanceTop > pSprite->yPosition - 0x8)
+            if (gSamusData.yPosition + gSamusPhysics.hitboxTop > pSprite->yPosition - EIGHTH_BLOCK_SIZE)
             {
                 pSprite->status |= SPRITE_STATUS_Y_FLIP;
                 pSprite->work0 = gSpriteRng;
@@ -203,7 +206,7 @@ void ParasiteSamusGrabbed(struct SpriteData* pSprite)
         // Check update horizontal direction
         if (pSprite->status & SPRITE_STATUS_X_FLIP)
         {
-            if (gSamusData.xPosition + gSamusPhysics.drawDistanceRightOffset < pSprite->xPosition + 0x8)
+            if (gSamusData.xPosition + gSamusPhysics.hitboxRight < pSprite->xPosition + EIGHTH_BLOCK_SIZE)
             {
                 pSprite->status &= ~SPRITE_STATUS_X_FLIP;
                 pSprite->work0 = gSpriteRng;
@@ -211,7 +214,7 @@ void ParasiteSamusGrabbed(struct SpriteData* pSprite)
         }
         else
         {
-            if (gSamusData.xPosition + gSamusPhysics.drawDistanceLeftOffset > pSprite->xPosition - 0x8)
+            if (gSamusData.xPosition + gSamusPhysics.hitboxLeft > pSprite->xPosition - EIGHTH_BLOCK_SIZE)
             {
                 pSprite->status |= SPRITE_STATUS_X_FLIP;
                 pSprite->work0 = gSpriteRng;
@@ -219,38 +222,40 @@ void ParasiteSamusGrabbed(struct SpriteData* pSprite)
         }
 
         // Update position offsets
-        if (pSprite->work0 == 0x0)
+        if (pSprite->work0 == 0)
         {
             // Update Y offset
             if (pSprite->status & SPRITE_STATUS_Y_FLIP)
             {
-                if (gSpriteRng != 0x0)
-                    pSprite->yPositionSpawn++;
+                if (gSpriteRng != 0)
+                    pSprite->yPositionSpawn += ONE_SUB_PIXEL;
             }
             else
             {
-                if (gSpriteRng != 0x0)
-                    pSprite->yPositionSpawn--;
+                if (gSpriteRng != 0)
+                    pSprite->yPositionSpawn -= ONE_SUB_PIXEL;
             }
             
             // Update X offset
             if (pSprite->status & SPRITE_STATUS_X_FLIP)
             {
                 if (gSpriteRng != pSprite->primarySpriteRamSlot)
-                    pSprite->xPositionSpawn++;
+                    pSprite->xPositionSpawn += ONE_SUB_PIXEL;
             }
             else
             {
                 if (gSpriteRng != pSprite->primarySpriteRamSlot)
-                    pSprite->xPositionSpawn--;
+                    pSprite->xPositionSpawn -= ONE_SUB_PIXEL;
             }
         }
         else
-            pSprite->work0--;
+        {
+            APPLY_DELTA_TIME_DEC(pSprite->work0);
+        }
 
         // Get samus position
-        samusY = gSamusData.yPosition + gSamusPhysics.drawDistanceTop;
-        samusX = gSamusData.xPosition + gSamusPhysics.drawDistanceLeftOffset;
+        samusY = gSamusData.yPosition + gSamusPhysics.hitboxTop;
+        samusX = gSamusData.xPosition + gSamusPhysics.hitboxLeft;
         
         // Update position
         pSprite->yPosition = samusY + pSprite->yPositionSpawn;
@@ -259,28 +264,28 @@ void ParasiteSamusGrabbed(struct SpriteData* pSprite)
 }
 
 /**
- * @brief 30290 | 30 | Initializes a parasite to be expulsed
+ * @brief 30290 | 30 | Initializes a parasite to be expelled
  * 
- * @param pSprite Sprite Data Pointer
+ * @param pSprite Sprite data pointer
  */
-void ParasiteExpulsedInit(struct SpriteData* pSprite)
+static void ParasiteExpelledInit(struct SpriteData* pSprite)
 {
     pSprite->pose = PARASITE_POSE_EXPULSED_UP;
 
-    pSprite->pOam = sParasiteOAM_Expulsed;
-    pSprite->currentAnimationFrame = 0x0;
-    pSprite->animationDurationCounter = 0x0;
+    pSprite->pOam = sParasiteOam_Expelled;
+    pSprite->currentAnimationFrame = 0;
+    pSprite->animationDurationCounter = 0;
 
-    pSprite->work3 = 0x8;
+    pSprite->work3 = EIGHTH_BLOCK_SIZE;
     pSprite->status &= ~SPRITE_STATUS_Y_FLIP;
 }
 
 /**
- * @brief 302c0 | a0 | Handles a parasite being expulsed up
+ * @brief 302c0 | a0 | Handles a parasite being expelled up
  * 
- * @param pSprite Sprite Data Pointer
+ * @param pSprite Sprite data pointer
  */
-void ParasiteExpulsedUp(struct SpriteData* pSprite)
+static void ParasiteExpelledUp(struct SpriteData* pSprite)
 {
     u8 velocity;
     u16 yPosition;
@@ -288,11 +293,13 @@ void ParasiteExpulsedUp(struct SpriteData* pSprite)
 
     // Update Y position
     velocity = pSprite->work3--;
-    if (velocity != 0x0)
+    if (velocity != 0)
+    {
         pSprite->yPosition -= velocity;
+    }
     else
     {
-        pSprite->work3 = 0x0;
+        pSprite->work3 = 0;
         pSprite->pose = PARASITE_POSE_EXPULSED_DOWN;
     }
 
@@ -300,28 +307,28 @@ void ParasiteExpulsedUp(struct SpriteData* pSprite)
     xPosition = pSprite->xPosition;
 
     // Prevent going through ceiling
-    if (SpriteUtilGetCollisionAtPosition(yPosition - 0x14, xPosition) == COLLISION_SOLID)
+    if (SpriteUtilGetCollisionAtPosition(yPosition - (QUARTER_BLOCK_SIZE + PIXEL_SIZE), xPosition) == COLLISION_SOLID)
         pSprite->yPosition = (yPosition & BLOCK_POSITION_FLAG) + (BLOCK_SIZE + QUARTER_BLOCK_SIZE);
 
     // Update X position
     if (pSprite->status & SPRITE_STATUS_X_FLIP)
     {
-        if (!(SpriteUtilGetCollisionAtPosition(yPosition, xPosition + QUARTER_BLOCK_SIZE) & 0xF0))
+        if (!(SpriteUtilGetCollisionAtPosition(yPosition, xPosition + QUARTER_BLOCK_SIZE) & COLLISION_FLAGS_UNKNOWN_F0))
             pSprite->xPosition += pSprite->work2;
     }
     else
     {
-        if (!(SpriteUtilGetCollisionAtPosition(yPosition, xPosition - QUARTER_BLOCK_SIZE) & 0xF0))
+        if (!(SpriteUtilGetCollisionAtPosition(yPosition, xPosition - QUARTER_BLOCK_SIZE) & COLLISION_FLAGS_UNKNOWN_F0))
             pSprite->xPosition -= pSprite->work2;
     }
 }
 
 /**
- * @brief 30360 | a8 | Handles a parasite (multiple) being expulsed up
+ * @brief 30360 | a8 | Handles a parasite (multiple) being expelled up
  * 
- * @param pSprite Sprite Data Pointer
+ * @param pSprite Sprite data pointer
  */
-void ParasiteMultipleExpulsedUp(struct SpriteData* pSprite)
+static void ParasiteMultipleExpelledUp(struct SpriteData* pSprite)
 {
     u8 velocity;
     u16 yPosition;
@@ -329,11 +336,13 @@ void ParasiteMultipleExpulsedUp(struct SpriteData* pSprite)
 
     // Update Y position
     velocity = pSprite->work3--;
-    if (velocity != 0x0)
+    if (velocity != 0)
+    {
         pSprite->yPosition -= velocity;
+    }
     else
     {
-        pSprite->work3 = 0x0;
+        pSprite->work3 = 0;
         pSprite->pose = PARASITE_POSE_EXPULSED_DOWN;
     }
 
@@ -341,7 +350,7 @@ void ParasiteMultipleExpulsedUp(struct SpriteData* pSprite)
     xPosition = pSprite->xPosition;
 
     // Prevent going through ceiling
-    if (ClipdataProcess(yPosition - 0x14, xPosition) & CLIPDATA_TYPE_SOLID_FLAG)
+    if (ClipdataProcess(yPosition - (QUARTER_BLOCK_SIZE + PIXEL_SIZE), xPosition) & CLIPDATA_TYPE_SOLID_FLAG)
         pSprite->yPosition = (yPosition & BLOCK_POSITION_FLAG) + (BLOCK_SIZE + QUARTER_BLOCK_SIZE);
 
     // Update X position
@@ -358,11 +367,11 @@ void ParasiteMultipleExpulsedUp(struct SpriteData* pSprite)
 }
 
 /**
- * @brief 30408 | e8 | Handles a parasite being expulsed (going down)
+ * @brief 30408 | e8 | Handles a parasite being expelled (going down)
  * 
  * @param pSprite Sprite data pointer
  */
-void ParasiteExpulsedDown(struct SpriteData* pSprite)
+static void ParasiteExpelledDown(struct SpriteData* pSprite)
 {
     u16 oldY;
     u16 yPosition;
@@ -373,8 +382,8 @@ void ParasiteExpulsedDown(struct SpriteData* pSprite)
     oldY = pSprite->yPosition;
 
     velocity = pSprite->work3;
-    if (velocity < 0x14)
-        pSprite->work3 = velocity + 2;
+    if (velocity < QUARTER_BLOCK_SIZE + PIXEL_SIZE)
+        pSprite->work3 = velocity + PIXEL_SIZE / 2;
 
     pSprite->yPosition += velocity;
 
@@ -384,18 +393,18 @@ void ParasiteExpulsedDown(struct SpriteData* pSprite)
     blockTop = SpriteUtilCheckVerticalCollisionAtPositionSlopes(yPosition, xPosition);
     if (gPreviousVerticalCollisionCheck != COLLISION_AIR)
     {
-        if (gSpriteRng > 0x8)
+        if (gSpriteRng > SPRITE_RNG_PROB(.5f))
         {
-            pSprite->pOam = sParasiteOAM_Landing;
-            pSprite->currentAnimationFrame = 0x0;
-            pSprite->animationDurationCounter = 0x0;
+            pSprite->pOam = sParasiteOam_Landing;
+            pSprite->currentAnimationFrame = 0;
+            pSprite->animationDurationCounter = 0;
         }
         else
         {
-            pSprite->pOam = sParasiteOAM_Tumbling;
-            pSprite->currentAnimationFrame = 0x0;
-            pSprite->animationDurationCounter = 0x0;
-            pSprite->work0 = gSpriteRng * 2 + 0x20;
+            pSprite->pOam = sParasiteOam_Tumbling;
+            pSprite->currentAnimationFrame = 0;
+            pSprite->animationDurationCounter = 0;
+            pSprite->work0 = gSpriteRng * CONVERT_SECONDS(1.f / 30) + CONVERT_SECONDS(.5f + 1.f / 30);
         }
 
         pSprite->pose = PARASITE_POSE_LANDING;
@@ -405,12 +414,12 @@ void ParasiteExpulsedDown(struct SpriteData* pSprite)
     {
         if (pSprite->status & SPRITE_STATUS_X_FLIP)
         {
-            if (!(SpriteUtilGetCollisionAtPosition(yPosition, xPosition + QUARTER_BLOCK_SIZE) & 0xF0))
+            if (!(SpriteUtilGetCollisionAtPosition(yPosition, xPosition + QUARTER_BLOCK_SIZE) & COLLISION_FLAGS_UNKNOWN_F0))
                 pSprite->xPosition += pSprite->work2;
         }
         else
         {
-            if (!(SpriteUtilGetCollisionAtPosition(yPosition, xPosition - QUARTER_BLOCK_SIZE) & 0xF0))
+            if (!(SpriteUtilGetCollisionAtPosition(yPosition, xPosition - QUARTER_BLOCK_SIZE) & COLLISION_FLAGS_UNKNOWN_F0))
                 pSprite->xPosition -= pSprite->work2;
         }
 
@@ -419,18 +428,18 @@ void ParasiteExpulsedDown(struct SpriteData* pSprite)
 }
 
 /**
- * @brief 304f0 | dc | Handles a parasite (multiple) being expulsed (going down)
+ * @brief 304f0 | dc | Handles a parasite (multiple) being expelled (going down)
  * 
  * @param pSprite Sprite data pointer
  */
-void ParasiteMultipleExpulsedDown(struct SpriteData* pSprite)
+static void ParasiteMultipleExpelledDown(struct SpriteData* pSprite)
 {
     s16 velocity;
     u32 yPosition;
     s32 xPosition;
 
     velocity = pSprite->work3;
-    if (velocity < 20)
+    if (velocity < QUARTER_BLOCK_SIZE + PIXEL_SIZE)
         pSprite->work3 += 2;
     
     pSprite->yPosition += velocity;
@@ -443,18 +452,18 @@ void ParasiteMultipleExpulsedDown(struct SpriteData* pSprite)
         pSprite->yPosition = yPosition & BLOCK_POSITION_FLAG;
         pSprite->pose = PARASITE_POSE_LANDING;
 
-        if (gSpriteRng > 8)
+        if (gSpriteRng > SPRITE_RNG_PROB(.5f))
         {
-            pSprite->pOam = sParasiteOAM_Landing;
+            pSprite->pOam = sParasiteOam_Landing;
             pSprite->currentAnimationFrame = 0;
             pSprite->animationDurationCounter = 0;
         }
         else
         {
-            pSprite->pOam = sParasiteOAM_Tumbling;
+            pSprite->pOam = sParasiteOam_Tumbling;
             pSprite->currentAnimationFrame = 0;
             pSprite->animationDurationCounter = 0;
-            pSprite->work0 = gSpriteRng * 2 + 32;
+            pSprite->work0 = gSpriteRng * CONVERT_SECONDS(1.f / 30) + CONVERT_SECONDS(.5f + 1.f / 30);
         }
 
         return;
@@ -475,81 +484,201 @@ void ParasiteMultipleExpulsedDown(struct SpriteData* pSprite)
 /**
  * @brief 305cc | b8 | Handles a parasite jumping up
  * 
- * @param pSprite Sprite Data Pointer
+ * @param pSprite Sprite data pointer
  */
-void ParasiteJumpingUp(struct SpriteData* pSprite)
+static void ParasiteJumpingUp(struct SpriteData* pSprite)
 {
     u16 yPosition;
     u16 xPosition;
     u8 velocity;
 
     if (pSprite->status & SPRITE_STATUS_SAMUS_COLLIDING)
+    {
         pSprite->pose = PARASITE_POSE_SAMUS_GRABBED_INIT;
+        return;
+    }
+
+    // Update Y position
+    velocity = pSprite->work3--;
+    if (velocity != 0)
+    {
+        pSprite->yPosition -= velocity;
+    }
     else
     {
-        // Update Y position
-        velocity = pSprite->work3--;
-        if (velocity != 0x0)
-            pSprite->yPosition -= velocity;
-        else
-        {
-            pSprite->work3 = 0x0;
-            pSprite->pose = PARASITE_POSE_JUMPING_DOWN;
-        }
+        pSprite->work3 = 0;
+        pSprite->pose = PARASITE_POSE_JUMPING_DOWN;
+    }
 
-        yPosition = pSprite->yPosition;
-        xPosition = pSprite->xPosition;
+    yPosition = pSprite->yPosition;
+    xPosition = pSprite->xPosition;
 
-        // Prevent going through ceiling
-        if (SpriteUtilGetCollisionAtPosition(yPosition - 0x14, xPosition) == COLLISION_SOLID)
-            pSprite->yPosition = (yPosition & BLOCK_POSITION_FLAG) + BLOCK_SIZE + QUARTER_BLOCK_SIZE;
-        
-        // Update X position
-        if (pSprite->status & SPRITE_STATUS_X_FLIP)
-        {
-            if (!(SpriteUtilGetCollisionAtPosition(yPosition, xPosition + QUARTER_BLOCK_SIZE) & 0xF0))
-                pSprite->xPosition += pSprite->work2;
-        }
-        else
-        {
-            if (!(SpriteUtilGetCollisionAtPosition(yPosition, xPosition - QUARTER_BLOCK_SIZE) & 0xF0))
-                pSprite->xPosition -= pSprite->work2;
-        }
+    // Prevent going through ceiling
+    if (SpriteUtilGetCollisionAtPosition(yPosition - (QUARTER_BLOCK_SIZE + PIXEL_SIZE), xPosition) == COLLISION_SOLID)
+        pSprite->yPosition = (yPosition & BLOCK_POSITION_FLAG) + BLOCK_SIZE + QUARTER_BLOCK_SIZE;
+    
+    // Update X position
+    if (pSprite->status & SPRITE_STATUS_X_FLIP)
+    {
+        if (!(SpriteUtilGetCollisionAtPosition(yPosition, xPosition + QUARTER_BLOCK_SIZE) & COLLISION_FLAGS_UNKNOWN_F0))
+            pSprite->xPosition += pSprite->work2;
+    }
+    else
+    {
+        if (!(SpriteUtilGetCollisionAtPosition(yPosition, xPosition - QUARTER_BLOCK_SIZE) & COLLISION_FLAGS_UNKNOWN_F0))
+            pSprite->xPosition -= pSprite->work2;
     }
 }
 
 /**
  * @brief 30684 | bc | Handles a parasite (multiple) jumping up
  * 
- * @param pSprite Sprite Data Pointer
+ * @param pSprite Sprite data pointer
  */
-void ParasiteMultipleJumpingUp(struct SpriteData* pSprite)
+static void ParasiteMultipleJumpingUp(struct SpriteData* pSprite)
 {
     u16 yPosition;
     u16 xPosition;
     u8 velocity;
 
     if (pSprite->status & SPRITE_STATUS_SAMUS_COLLIDING)
+    {
         pSprite->pose = PARASITE_POSE_SAMUS_GRABBED_INIT;
+        return;
+    }
+
+    // Update Y position
+    velocity = pSprite->work3--;
+    if (velocity != 0)
+    {
+        pSprite->yPosition -= velocity;
+    }
     else
     {
-        // Update Y position
-        velocity = pSprite->work3--;
-        if (velocity != 0x0)
-            pSprite->yPosition -= velocity;
+        pSprite->work3 = 0;
+        pSprite->pose = PARASITE_POSE_JUMPING_DOWN;
+    }
+
+    yPosition = pSprite->yPosition;
+    xPosition = pSprite->xPosition;
+
+    // Prevent going through ceiling
+    if (ClipdataProcess(yPosition - (QUARTER_BLOCK_SIZE + PIXEL_SIZE), xPosition) & CLIPDATA_TYPE_SOLID_FLAG)
+        pSprite->yPosition = (yPosition & BLOCK_POSITION_FLAG) + BLOCK_SIZE + QUARTER_BLOCK_SIZE;
+    
+    // Update X position
+    if (pSprite->status & SPRITE_STATUS_X_FLIP)
+    {
+        if (!(ClipdataProcess(yPosition, xPosition + QUARTER_BLOCK_SIZE) & CLIPDATA_TYPE_SOLID_FLAG))
+            pSprite->xPosition += pSprite->work2;
+    }
+    else
+    {
+        if (!(ClipdataProcess(yPosition, xPosition - QUARTER_BLOCK_SIZE) & CLIPDATA_TYPE_SOLID_FLAG))
+            pSprite->xPosition -= pSprite->work2;
+    }
+}
+
+/**
+ * @brief 30740 | cc | Handles a parasite jumping down
+ * 
+ * @param pSprite Sprite data pointer
+ */
+static void ParasiteJumpingDown(struct SpriteData* pSprite)
+{
+    u16 oldY;
+    u16 yPosition;
+    u16 xPosition;
+    u32 topEdge;
+    s32 velocity;
+
+    oldY = pSprite->yPosition;
+
+    if (pSprite->status & SPRITE_STATUS_SAMUS_COLLIDING)
+    {
+        pSprite->pose = PARASITE_POSE_SAMUS_GRABBED_INIT;
+        return;
+    }
+
+    // Update Y position
+    velocity = pSprite->work3;
+    if (velocity < QUARTER_BLOCK_SIZE)
+        pSprite->work3 = velocity + PIXEL_SIZE / 2;
+
+    pSprite->yPosition += velocity;
+
+    yPosition = pSprite->yPosition;
+    xPosition = pSprite->xPosition;
+
+    // Check ground
+    topEdge = SpriteUtilCheckVerticalCollisionAtPositionSlopes(yPosition, xPosition);
+    if (gPreviousVerticalCollisionCheck != COLLISION_AIR)
+    {
+        pSprite->pOam = sParasiteOam_Landing;
+        pSprite->currentAnimationFrame = 0;
+        pSprite->animationDurationCounter = 0;
+
+        pSprite->pose = PARASITE_POSE_LANDING;
+        pSprite->yPosition = topEdge;
+    }
+    else
+    {
+        // Update X position
+        if (pSprite->status & SPRITE_STATUS_X_FLIP)
+        {
+            if (!(SpriteUtilGetCollisionAtPosition(yPosition, xPosition + QUARTER_BLOCK_SIZE) & COLLISION_FLAGS_UNKNOWN_F0))
+                pSprite->xPosition += pSprite->work2;
+        }
         else
         {
-            pSprite->work3 = 0x0;
-            pSprite->pose = PARASITE_POSE_JUMPING_DOWN;
+            if (!(SpriteUtilGetCollisionAtPosition(yPosition, xPosition - QUARTER_BLOCK_SIZE) & COLLISION_FLAGS_UNKNOWN_F0))
+                pSprite->xPosition -= pSprite->work2;
         }
 
-        yPosition = pSprite->yPosition;
-        xPosition = pSprite->xPosition;
+        SpriteUtilCheckInRoomEffect(oldY, yPosition, xPosition, SPLASH_SMALL);
+    }
+}
 
-        // Prevent going through ceiling
-        if (ClipdataProcess(yPosition - 0x14, xPosition) & CLIPDATA_TYPE_SOLID_FLAG)
-            pSprite->yPosition = (yPosition & BLOCK_POSITION_FLAG) + BLOCK_SIZE + QUARTER_BLOCK_SIZE;
-        
+/**
+ * @brief 3080c | c0 | Handles a parasite (multiple) jumping (going down)
+ * 
+ * @param pSprite Sprite data pointer
+ */
+static void ParasiteMultipleJumpingDown(struct SpriteData* pSprite)
+{
+    s32 yPosition;
+    u16 xPosition;
+    u32 topEdge;
+    s32 velocity;
+
+    if (pSprite->status & SPRITE_STATUS_SAMUS_COLLIDING)
+    {
+        pSprite->pose = PARASITE_POSE_SAMUS_GRABBED_INIT;
+        return;
+    }
+
+    // Update Y position
+    velocity = pSprite->work3;
+    if (velocity < QUARTER_BLOCK_SIZE)
+        pSprite->work3 = velocity + PIXEL_SIZE / 2;
+
+    pSprite->yPosition += velocity;
+
+    yPosition = pSprite->yPosition;
+    xPosition = pSprite->xPosition;
+
+    // Check ground
+    if (ClipdataProcess(yPosition, xPosition) & CLIPDATA_TYPE_SOLID_FLAG && yPosition >= (yPosition & BLOCK_POSITION_FLAG))
+    {
+        pSprite->pOam = sParasiteOam_Landing;
+        pSprite->currentAnimationFrame = 0;
+        pSprite->animationDurationCounter = 0;
+
+        pSprite->pose = PARASITE_POSE_LANDING;
+        pSprite->yPosition = (u16)yPosition & BLOCK_POSITION_FLAG;
+    }
+    else
+    {
         // Update X position
         if (pSprite->status & SPRITE_STATUS_X_FLIP)
         {
@@ -565,230 +694,129 @@ void ParasiteMultipleJumpingUp(struct SpriteData* pSprite)
 }
 
 /**
- * @brief 30740 | cc | Handles a parasite jumping down
- * 
- * @param pSprite Sprite Data Pointer
- */
-void ParasiteJumpingDown(struct SpriteData* pSprite)
-{
-    u16 oldY;
-    u16 yPosition;
-    u16 xPosition;
-    u32 topEdge;
-    s32 velocity;
-
-    oldY = pSprite->yPosition;
-
-    if (pSprite->status & SPRITE_STATUS_SAMUS_COLLIDING)
-        pSprite->pose = PARASITE_POSE_SAMUS_GRABBED_INIT;
-    else
-    {
-        // Update Y position
-        velocity = pSprite->work3;
-        if (velocity < 0x10)
-            pSprite->work3 = velocity + 0x2;
-
-        pSprite->yPosition += velocity;
-
-        yPosition = pSprite->yPosition;
-        xPosition = pSprite->xPosition;
-
-        // Check ground
-        topEdge = SpriteUtilCheckVerticalCollisionAtPositionSlopes(yPosition, xPosition);
-        if (gPreviousVerticalCollisionCheck != COLLISION_AIR)
-        {
-            pSprite->pOam = sParasiteOAM_Landing;
-            pSprite->currentAnimationFrame = 0x0;
-            pSprite->animationDurationCounter = 0x0;
-
-            pSprite->pose = PARASITE_POSE_LANDING;
-            pSprite->yPosition = topEdge;
-        }
-        else
-        {
-            // Update X position
-            if (pSprite->status & SPRITE_STATUS_X_FLIP)
-            {
-                if (!(SpriteUtilGetCollisionAtPosition(yPosition, xPosition + QUARTER_BLOCK_SIZE) & 0xF0))
-                    pSprite->xPosition += pSprite->work2;
-            }
-            else
-            {
-                if (!(SpriteUtilGetCollisionAtPosition(yPosition, xPosition - QUARTER_BLOCK_SIZE) & 0xF0))
-                    pSprite->xPosition -= pSprite->work2;
-            }
-
-            SpriteUtilCheckInRoomEffect(oldY, yPosition, xPosition, SPLASH_SMALL);
-        }
-    }
-}
-
-/**
- * @brief 3080c | c0 | Handles a parasite (multiple) jumping (going down)
+ * @brief 308cc | 50 | Initializes a parasite to be idle
  * 
  * @param pSprite Sprite data pointer
  */
-void ParasiteMultipleJumpingDown(struct SpriteData* pSprite)
-{
-    s32 yPosition;
-    u16 xPosition;
-    u32 topEdge;
-    s32 velocity;
-
-    if (pSprite->status & SPRITE_STATUS_SAMUS_COLLIDING)
-        pSprite->pose = PARASITE_POSE_SAMUS_GRABBED_INIT;
-    else
-    {
-        // Update Y position
-        velocity = pSprite->work3;
-        if (velocity < 0x10)
-            pSprite->work3 = velocity + 0x2;
-
-        pSprite->yPosition += velocity;
-
-        yPosition = pSprite->yPosition;
-        xPosition = pSprite->xPosition;
-
-        // Check ground
-        if (ClipdataProcess(yPosition, xPosition) & CLIPDATA_TYPE_SOLID_FLAG && yPosition >= (yPosition & BLOCK_POSITION_FLAG))
-        {
-            pSprite->pOam = sParasiteOAM_Landing;
-            pSprite->currentAnimationFrame = 0x0;
-            pSprite->animationDurationCounter = 0x0;
-
-            pSprite->pose = PARASITE_POSE_LANDING;
-            pSprite->yPosition = (u16)yPosition & BLOCK_POSITION_FLAG;
-        }
-        else
-        {
-            // Update X position
-            if (pSprite->status & SPRITE_STATUS_X_FLIP)
-            {
-                if (!(ClipdataProcess(yPosition, xPosition + QUARTER_BLOCK_SIZE) & CLIPDATA_TYPE_SOLID_FLAG))
-                    pSprite->xPosition += pSprite->work2;
-            }
-            else
-            {
-                if (!(ClipdataProcess(yPosition, xPosition - QUARTER_BLOCK_SIZE) & CLIPDATA_TYPE_SOLID_FLAG))
-                    pSprite->xPosition -= pSprite->work2;
-            }
-        }
-    }
-}
-
-/**
- * @brief 308cc | 50 | Initializes a parasite to be idle
- * 
- * @param pSprite Sprite Data Pointer
- */
-void ParasiteIdleInit(struct SpriteData* pSprite)
+static void ParasiteIdleInit(struct SpriteData* pSprite)
 {
     u8 velocity;
 
     pSprite->pose = PARASITE_POSE_IDLE;
 
-    pSprite->pOam = sParasiteOAM_Idle;
-    pSprite->currentAnimationFrame = 0x0;
-    pSprite->animationDurationCounter = 0x0;
+    pSprite->pOam = sParasiteOam_Idle;
+    pSprite->currentAnimationFrame = 0;
+    pSprite->animationDurationCounter = 0;
 
     velocity = gSpriteRng / 2;
-    if (velocity < 0x6)
-        velocity = 0x6;
+    if (velocity < PIXEL_SIZE + PIXEL_SIZE / 2)
+        velocity = PIXEL_SIZE + PIXEL_SIZE / 2;
 
     pSprite->work2 = velocity;
-    pSprite->work0 = (((pSprite->xPosition / 32) & 0xF) + gSpriteRng) & 0xF;
+    pSprite->work0 = MOD_AND((MOD_AND(pSprite->xPosition / HALF_BLOCK_SIZE, SPRITE_RNG_MAX) + gSpriteRng), SPRITE_RNG_MAX);
 }
 
 /**
- * @brief 3091c | 198 | Handles a parasite beingidle
+ * @brief 3091c | 198 | Handles a parasite being idle
  * 
- * @param pSprite Sprite Data Pointer
+ * @param pSprite Sprite data pointer
  */
-void ParasiteIdle(struct SpriteData* pSprite)
+static void ParasiteIdle(struct SpriteData* pSprite)
 {
     u32 timer;
     u16 velocity;
 
     if (pSprite->status & SPRITE_STATUS_SAMUS_COLLIDING)
+    {
         pSprite->pose = PARASITE_POSE_SAMUS_GRABBED_INIT;
+        return;
+    }
+
+    SpriteUtilAlignYPositionOnSlopeAtOrigin();
+
+    if (gPreviousVerticalCollisionCheck == COLLISION_AIR)
+    {
+        pSprite->pose = PARASITE_POSE_FALLING_INIT;
+        return;
+    }
+
+    if (SpriteUtilGetCollisionAtPosition(pSprite->yPosition - QUARTER_BLOCK_SIZE, pSprite->xPosition) == COLLISION_SOLID)
+    {
+        pSprite->pose = PARASITE_POSE_DYING_INIT;
+        return;
+    }
+
+    timer = pSprite->work0;
+    if (gFrameCounter8Bit / SPRITE_RNG_MAX == timer)
+    {
+        pSprite->pOam = sParasiteOam_LandingAfterFalling;
+        pSprite->currentAnimationFrame = 0;
+        pSprite->animationDurationCounter = 0;
+
+        pSprite->work0 = gSpriteRng * 3;
+        pSprite->pose = PARASITE_POSE_LANDING;
+    }
+    else if (gFrameCounter8Bit / SPRITE_RNG_MAX == timer + 1 || gFrameCounter8Bit / SPRITE_RNG_MAX == timer - 1)
+    {
+        pSprite->pose = PARASITE_POSE_JUMPING_UP;
+
+        pSprite->pOam = sParasiteOam_JumpingUp;
+        pSprite->currentAnimationFrame = 0;
+        pSprite->animationDurationCounter = 0;
+
+        if (gSpriteRng < SPRITE_RNG_PROB(.25f))
+            pSprite->work3 = SPRITE_RNG_PROB(.25f);
+        else
+            pSprite->work3 = gSpriteRng;
+
+        if (pSprite->status & SPRITE_STATUS_ONSCREEN)
+        {
+            timer = pSprite->work3;
+            if (timer < SPRITE_RNG_PROB(.5f))
+                SoundPlayNotAlreadyPlaying(SOUND_PARASITE_JUMPING_1);
+            else if (timer >= SPRITE_RNG_PROB(.75f))
+                SoundPlayNotAlreadyPlaying(SOUND_PARASITE_JUMPING_3);
+            else
+                SoundPlayNotAlreadyPlaying(SOUND_PARASITE_JUMPING_2);
+        }
+    }
     else
     {
-        unk_f594();
-
-        if (gPreviousVerticalCollisionCheck == COLLISION_AIR)
+        if (gParasiteRelated == 0)
         {
-            pSprite->pose = PARASITE_POSE_FALLING_INIT;
-            return;
+            if (SpriteUtilCheckSamusNearSpriteLeftRight(BLOCK_SIZE + HALF_BLOCK_SIZE, BLOCK_SIZE + EIGHTH_BLOCK_SIZE) != NSLR_OUT_OF_RANGE)
+                gParasiteRelated = CONVERT_SECONDS(1.5f);
+
+            timer = MOD_AND(timer, 2);
+            timer++;
         }
+        else
+            timer = pSprite->work2;
 
-        if (SpriteUtilGetCollisionAtPosition(pSprite->yPosition - QUARTER_BLOCK_SIZE, pSprite->xPosition) == COLLISION_SOLID)
+        velocity = timer;
+
+        if (pSprite->status & SPRITE_STATUS_X_FLIP)
         {
-            pSprite->pose = PARASITE_POSE_DYING_INIT;
-            return;
-        }
-
-        timer = pSprite->work0;
-        if (gFrameCounter8Bit / 16 == timer)
-        {
-            pSprite->pOam = sParasiteOAM_LandingAfterFalling;
-            pSprite->currentAnimationFrame = 0x0;
-            pSprite->animationDurationCounter = 0x0;
-
-            pSprite->work0 = gSpriteRng * 3;
-            pSprite->pose = PARASITE_POSE_LANDING;
-        }
-        else if (gFrameCounter8Bit / 16 == timer + 1 || gFrameCounter8Bit / 16 == timer - 1)
-        {
-            pSprite->pose = PARASITE_POSE_JUMPING_UP;
-
-            pSprite->pOam = sParasiteOAM_JumpingUp;
-            pSprite->currentAnimationFrame = 0x0;
-            pSprite->animationDurationCounter = 0x0;
-
-            if (gSpriteRng < 0x4)
-                pSprite->work3 = 0x4;
-            else
-                pSprite->work3 = gSpriteRng;
-
-            if (pSprite->status & SPRITE_STATUS_ONSCREEN)
+            if (gPreviousVerticalCollisionCheck & COLLISION_FLAGS_UNKNOWN_F0 &&
+                SpriteUtilGetCollisionAtPosition(pSprite->yPosition - QUARTER_BLOCK_SIZE, pSprite->xPosition + QUARTER_BLOCK_SIZE) == COLLISION_SOLID)
             {
-                timer = pSprite->work3;
-                if (timer < 0x8)
-                    SoundPlayNotAlreadyPlaying(SOUND_PARASITE_JUMPING_1);
-                else if (timer > 0xB)
-                    SoundPlayNotAlreadyPlaying(SOUND_PARASITE_JUMPING_3);
-                else
-                    SoundPlayNotAlreadyPlaying(SOUND_PARASITE_JUMPING_2);
+                pSprite->pose = PARASITE_POSE_TURNING_AROUND_INIT;
+            }
+            else
+            {
+                pSprite->xPosition += velocity;
             }
         }
         else
         {
-            if (gParasiteRelated == 0x0)
+            if (gPreviousVerticalCollisionCheck & COLLISION_FLAGS_UNKNOWN_F0 &&
+                SpriteUtilGetCollisionAtPosition(pSprite->yPosition - QUARTER_BLOCK_SIZE, pSprite->xPosition - QUARTER_BLOCK_SIZE) == COLLISION_SOLID)
             {
-                if (SpriteUtilCheckSamusNearSpriteLeftRight(BLOCK_SIZE + HALF_BLOCK_SIZE, BLOCK_SIZE + 0x8) != NSLR_OUT_OF_RANGE)
-                    gParasiteRelated = 0x5A;
-
-                timer &= 0x1;
-                timer++;
-            }
-            else
-                timer = pSprite->work2;
-
-            velocity = timer;
-
-            if (pSprite->status & SPRITE_STATUS_X_FLIP)
-            {
-                if (gPreviousVerticalCollisionCheck & 0xF0 && SpriteUtilGetCollisionAtPosition(pSprite->yPosition - QUARTER_BLOCK_SIZE, pSprite->xPosition + QUARTER_BLOCK_SIZE) == COLLISION_SOLID)
-                    pSprite->pose = PARASITE_POSE_TURNING_AROUND_INIT;
-                else
-                    pSprite->xPosition += velocity;
+                pSprite->pose = PARASITE_POSE_TURNING_AROUND_INIT;
             }
             else
             {
-                if (gPreviousVerticalCollisionCheck & 0xF0 && SpriteUtilGetCollisionAtPosition(pSprite->yPosition - QUARTER_BLOCK_SIZE, pSprite->xPosition - QUARTER_BLOCK_SIZE) == COLLISION_SOLID)
-                    pSprite->pose = PARASITE_POSE_TURNING_AROUND_INIT;
-                else
-                    pSprite->xPosition -= velocity;
+                pSprite->xPosition -= velocity;
             }
         }
     }
@@ -797,9 +825,9 @@ void ParasiteIdle(struct SpriteData* pSprite)
 /**
  * @brief 30ab4 | 1a4 | Handles a parasite (multiple) being idle
  * 
- * @param pSprite Sprite Data Pointer
+ * @param pSprite Sprite data pointer
  */
-void ParasiteMultipleIdle(struct SpriteData* pSprite)
+static void ParasiteMultipleIdle(struct SpriteData* pSprite)
 {
     u32 timer;
     u8 rng;
@@ -807,97 +835,98 @@ void ParasiteMultipleIdle(struct SpriteData* pSprite)
     u32 clipdata;
 
     if (pSprite->status & SPRITE_STATUS_SAMUS_COLLIDING)
+    {
         pSprite->pose = PARASITE_POSE_SAMUS_GRABBED_INIT;
+        return;
+    }
+
+    if (MOD_AND(pSprite->primarySpriteRamSlot, 2))
+    {
+        if (MOD_AND(gFrameCounter8Bit, 2))
+        {
+            clipdata = ClipdataProcess(pSprite->yPosition, pSprite->xPosition);
+            if (!(clipdata & CLIPDATA_TYPE_SOLID_FLAG))
+            {
+                pSprite->pose = PARASITE_POSE_FALLING_INIT;
+                return;
+            }
+        }
+    }
     else
     {
-        if (pSprite->primarySpriteRamSlot & 0x1)
+        if (MOD_AND(gFrameCounter8Bit, 2) == 0)
         {
-            if (gFrameCounter8Bit & 0x1)
+            clipdata = ClipdataProcess(pSprite->yPosition, pSprite->xPosition);
+            if (!(clipdata & CLIPDATA_TYPE_SOLID_FLAG))
             {
-                clipdata = ClipdataProcess(pSprite->yPosition, pSprite->xPosition);
-                if (!(clipdata & CLIPDATA_TYPE_SOLID_FLAG))
-                {
-                    pSprite->pose = PARASITE_POSE_FALLING_INIT;
-                    return;
-                }
+                pSprite->pose = PARASITE_POSE_FALLING_INIT;
+                return;
             }
+        }
+    }
+
+    timer = pSprite->work0;
+    rng = gFrameCounter8Bit / SPRITE_RNG_MAX;
+    if (rng == timer)
+    {
+        pSprite->pOam = sParasiteOam_LandingAfterFalling;
+        pSprite->currentAnimationFrame = 0;
+        pSprite->animationDurationCounter = 0;
+
+        pSprite->work0 = gSpriteRng * 3;
+        pSprite->pose = PARASITE_POSE_LANDING;
+    }
+    else if (rng == timer + 1 || rng == timer - 1)
+    {
+        pSprite->pose = PARASITE_POSE_JUMPING_UP;
+
+        pSprite->pOam = sParasiteOam_JumpingUp;
+        pSprite->currentAnimationFrame = 0;
+        pSprite->animationDurationCounter = 0;
+
+        if (gSpriteRng < SPRITE_RNG_PROB(.25f))
+            pSprite->work3 = SPRITE_RNG_PROB(.25f);
+        else
+            pSprite->work3 = gSpriteRng;
+
+        if (pSprite->status & SPRITE_STATUS_ONSCREEN)
+        {
+            timer = pSprite->work3;
+            if (timer < SPRITE_RNG_PROB(.5f))
+                SoundPlayNotAlreadyPlaying(SOUND_PARASITE_JUMPING_1);
+            else if (timer >= SPRITE_RNG_PROB(.75f))
+                SoundPlayNotAlreadyPlaying(SOUND_PARASITE_JUMPING_3);
+            else
+                SoundPlayNotAlreadyPlaying(SOUND_PARASITE_JUMPING_2);
+        }
+    }
+    else
+    {
+        if (gParasiteRelated == 0)
+        {
+            if (SpriteUtilCheckSamusNearSpriteLeftRight(BLOCK_SIZE + HALF_BLOCK_SIZE, BLOCK_SIZE + NSLR_RIGHT) != NSLR_OUT_OF_RANGE)
+                gParasiteRelated = CONVERT_SECONDS(1.5f);
+
+            velocity = MOD_AND(timer, 2) + 1;
+        }
+        else
+            velocity = pSprite->work2;
+
+        if (pSprite->status & SPRITE_STATUS_X_FLIP)
+        {
+            clipdata = ClipdataProcess(pSprite->yPosition - QUARTER_BLOCK_SIZE, pSprite->xPosition + QUARTER_BLOCK_SIZE);
+            if (clipdata & CLIPDATA_TYPE_SOLID_FLAG)
+                pSprite->pose = PARASITE_POSE_TURNING_AROUND_INIT;
+            else
+                pSprite->xPosition += velocity;
         }
         else
         {
-            if (!(gFrameCounter8Bit & 0x1))
-            {
-                clipdata = ClipdataProcess(pSprite->yPosition, pSprite->xPosition);
-                if (!(clipdata & CLIPDATA_TYPE_SOLID_FLAG))
-                {
-                    pSprite->pose = PARASITE_POSE_FALLING_INIT;
-                    return;
-                }
-            }
-        }
-
-        timer = pSprite->work0;
-        rng = gFrameCounter8Bit / 16;
-        if (rng == timer)
-        {
-            pSprite->pOam = sParasiteOAM_LandingAfterFalling;
-            pSprite->currentAnimationFrame = 0x0;
-            pSprite->animationDurationCounter = 0x0;
-
-            pSprite->work0 = gSpriteRng * 3;
-            pSprite->pose = PARASITE_POSE_LANDING;
-        }
-        else if (rng == timer + 1 || rng == timer - 1)
-        {
-            pSprite->pose = PARASITE_POSE_JUMPING_UP;
-
-            pSprite->pOam = sParasiteOAM_JumpingUp;
-            pSprite->currentAnimationFrame = 0x0;
-            pSprite->animationDurationCounter = 0x0;
-
-            if (gSpriteRng < 0x4)
-                pSprite->work3 = 0x4;
+            clipdata = ClipdataProcess(pSprite->yPosition - QUARTER_BLOCK_SIZE, pSprite->xPosition - QUARTER_BLOCK_SIZE);
+            if (clipdata & CLIPDATA_TYPE_SOLID_FLAG)
+                pSprite->pose = PARASITE_POSE_TURNING_AROUND_INIT;
             else
-                pSprite->work3 = gSpriteRng;
-
-            if (pSprite->status & SPRITE_STATUS_ONSCREEN)
-            {
-                timer = pSprite->work3;
-                if (timer < 0x8)
-                    SoundPlayNotAlreadyPlaying(SOUND_PARASITE_JUMPING_1);
-                else if (timer > 0xB)
-                    SoundPlayNotAlreadyPlaying(SOUND_PARASITE_JUMPING_3);
-                else
-                    SoundPlayNotAlreadyPlaying(SOUND_PARASITE_JUMPING_2);
-            }
-        }
-        else
-        {
-            if (gParasiteRelated == 0x0)
-            {
-                if (SpriteUtilCheckSamusNearSpriteLeftRight(BLOCK_SIZE + HALF_BLOCK_SIZE, BLOCK_SIZE + 0x8) != NSLR_OUT_OF_RANGE)
-                    gParasiteRelated = 0x5A;
-
-                velocity = (timer & 0x1) + 0x1;
-            }
-            else
-                velocity = pSprite->work2;
-
-            if (pSprite->status & SPRITE_STATUS_X_FLIP)
-            {
-                clipdata = ClipdataProcess(pSprite->yPosition - QUARTER_BLOCK_SIZE, pSprite->xPosition + QUARTER_BLOCK_SIZE);
-                if (clipdata & CLIPDATA_TYPE_SOLID_FLAG)
-                    pSprite->pose = PARASITE_POSE_TURNING_AROUND_INIT;
-                else
-                    pSprite->xPosition += velocity;
-            }
-            else
-            {
-                clipdata = ClipdataProcess(pSprite->yPosition - QUARTER_BLOCK_SIZE, pSprite->xPosition - QUARTER_BLOCK_SIZE);
-                if (clipdata & CLIPDATA_TYPE_SOLID_FLAG)
-                    pSprite->pose = PARASITE_POSE_TURNING_AROUND_INIT;
-                else
-                    pSprite->xPosition -= velocity;
-            }
+                pSprite->xPosition -= velocity;
         }
     }
 }
@@ -905,25 +934,25 @@ void ParasiteMultipleIdle(struct SpriteData* pSprite)
 /**
  * @brief 30c58 | 1c | Initializes a parasite to turn around
  * 
- * @param pSprite 
+ * @param pSprite Sprite data pointer
  */
-void ParasiteTurningAroundInit(struct SpriteData* pSprite)
+static void ParasiteTurningAroundInit(struct SpriteData* pSprite)
 {
     pSprite->pose = PARASITE_POSE_TURNING_AROUND_FIRST_PART;
 
-    pSprite->pOam = sParasiteOAM_TurningAround;
-    pSprite->currentAnimationFrame = 0x0;
-    pSprite->animationDurationCounter = 0x0;
+    pSprite->pOam = sParasiteOam_TurningAround;
+    pSprite->currentAnimationFrame = 0;
+    pSprite->animationDurationCounter = 0;
 }
 
 /**
  * @brief 30c74 | 24 | Handles the first part of a parasite turning around
  * 
- * @param pSprite Sprite Data Pointer
+ * @param pSprite Sprite data pointer
  */
-void ParasiteTurningAroundFirstPart(struct SpriteData* pSprite)
+static void ParasiteTurningAroundFirstPart(struct SpriteData* pSprite)
 {
-    if (SpriteUtilCheckEndCurrentSpriteAnim())
+    if (SpriteUtilHasCurrentAnimationEnded())
     {
         pSprite->status ^= SPRITE_STATUS_X_FLIP;
         pSprite->pose = PARASITE_POSE_TURNING_AROUND_SECOND_PART;
@@ -933,94 +962,97 @@ void ParasiteTurningAroundFirstPart(struct SpriteData* pSprite)
 /**
  * @brief 30c98 | 1c | Handles the second part of a parasite turning around
  * 
- * @param pSprite Sprite Data Pointer
+ * @param pSprite Sprite data pointer
  */
-void ParasiteTurningAroundSecondPart(struct SpriteData* pSprite)
+static void ParasiteTurningAroundSecondPart(struct SpriteData* pSprite)
 {
-    if (SpriteUtilCheckNearEndCurrentSpriteAnim())
+    if (SpriteUtilHasCurrentAnimationNearlyEnded())
         pSprite->pose = PARASITE_POSE_IDLE_INIT;
 }
 
 /**
  * @brief 30cb4 | 20 | Initializes a parasite to be landing
  * 
- * @param pSprite Sprite Data Pointer
+ * @param pSprite Sprite data pointer
  */
-void ParasiteLandingInit(struct SpriteData* pSprite)
+static void ParasiteLandingInit(struct SpriteData* pSprite)
 {
     pSprite->pose = PARASITE_POSE_LANDING;
 
-    pSprite->pOam = sParasiteOAM_LandingAfterFalling;
-    pSprite->currentAnimationFrame = 0x0;
-    pSprite->animationDurationCounter = 0x0;
+    pSprite->pOam = sParasiteOam_LandingAfterFalling;
+    pSprite->currentAnimationFrame = 0;
+    pSprite->animationDurationCounter = 0;
 
-    pSprite->work0 = 0x1E;
+    pSprite->work0 = CONVERT_SECONDS(.5f);
 }
 
 /**
- * @brief 30cd4 | a0 | Handlse a parasite landing
+ * @brief 30cd4 | a0 | Handles a parasite landing
  * 
- * @param pSprite Sprite Data Pointer
+ * @param pSprite Sprite data pointer
  */
-void ParasiteLanding(struct SpriteData* pSprite)
+static void ParasiteLanding(struct SpriteData* pSprite)
 {
     u8 setPose;
 
     if (!(ClipdataProcess(pSprite->yPosition, pSprite->xPosition) & CLIPDATA_TYPE_SOLID_FLAG))
-        pSprite->pose = PARASITE_POSE_FALLING_INIT;
-    else
     {
-        setPose = FALSE;
+        pSprite->pose = PARASITE_POSE_FALLING_INIT;
+        return;
+    }
 
-        if (pSprite->pOam == sParasiteOAM_LandingAfterFalling)
-        {
-            // Landing after falling
-            pSprite->work0--;
-            if (pSprite->work0 == 0x0)
-                setPose++;
-        }
-        else if (pSprite->pOam == sParasiteOAM_Tumbling)
-        {
-            // Check set back on feet
-            pSprite->work0--;
-            if (pSprite->work0 == 0x0)
-            {
-                pSprite->pOam = sParasiteOAM_TurningBackOnFeet;
-                pSprite->currentAnimationFrame = 0x0;
-                pSprite->animationDurationCounter = 0x0;
-            }
-        }
-        else if (SpriteUtilCheckNearEndCurrentSpriteAnim())
-            setPose++; // Anim ended, set pose
+    setPose = FALSE;
 
-        if (setPose)
+    if (pSprite->pOam == sParasiteOam_LandingAfterFalling)
+    {
+        // Landing after falling
+        APPLY_DELTA_TIME_DEC(pSprite->work0);
+        if (pSprite->work0 == 0)
+            setPose++;
+    }
+    else if (pSprite->pOam == sParasiteOam_Tumbling)
+    {
+        // Check set back on feet
+        APPLY_DELTA_TIME_DEC(pSprite->work0);
+        if (pSprite->work0 == 0)
         {
-            // Set random pose
-            if (gSpriteRng > 0x6)
-                pSprite->pose = PARASITE_POSE_IDLE_INIT;
-            else
-                pSprite->pose = PARASITE_POSE_TURNING_AROUND_INIT;
+            pSprite->pOam = sParasiteOam_TurningBackOnFeet;
+            pSprite->currentAnimationFrame = 0;
+            pSprite->animationDurationCounter = 0;
         }
+    }
+    else if (SpriteUtilHasCurrentAnimationNearlyEnded())
+    {
+        setPose++; // Anim ended, set pose
+    }
+
+    if (setPose)
+    {
+        // Set random pose
+        if (gSpriteRng > SPRITE_RNG_PROB(.375f))
+            pSprite->pose = PARASITE_POSE_IDLE_INIT;
+        else
+            pSprite->pose = PARASITE_POSE_TURNING_AROUND_INIT;
     }
 }
 
 /**
  * @brief 30d74 | 10 | Initializes a parasite to be falling
  * 
- * @param pSprite Sprite Data Pointer
+ * @param pSprite Sprite data pointer
  */
-void ParasiteFallingInit(struct SpriteData* pSprite)
+static void ParasiteFallingInit(struct SpriteData* pSprite)
 {
     pSprite->pose = PARASITE_POSE_FALLING;
-    pSprite->work3 = 0x0;
+    pSprite->work3 = 0;
 }
 
 /**
  * @brief 30d84 | 74 | Handles a parasite falling
  * 
- * @param pSprite Sprite Data Pointer
+ * @param pSprite Sprite data pointer
  */
-void ParasiteFalling(struct SpriteData* pSprite)
+static void ParasiteFalling(struct SpriteData* pSprite)
 {
     s32 offset;
     s32 movement;
@@ -1050,54 +1082,56 @@ void ParasiteFalling(struct SpriteData* pSprite)
         pSprite->pose = PARASITE_POSE_LANDING_INIT;
     }
     else
+    {
         SpriteUtilCheckInRoomEffect(oldY, pSprite->yPosition, pSprite->xPosition, SPLASH_SMALL);
+    }
 }
 
 /**
  * @brief 30df8 | 3c | Initializes a parasite to be dying
  * 
- * @param pSprite Sprite Data Pointer
+ * @param pSprite Sprite data pointer
  */
-void ParasiteDyingInit(struct SpriteData* pSprite)
+static void ParasiteDyingInit(struct SpriteData* pSprite)
 {
-    pSprite->status &= ~(SPRITE_STATUS_UNKNOWN_80 | SPRITE_STATUS_Y_FLIP);
+    pSprite->status &= ~(SPRITE_STATUS_ROTATION_SCALING_SINGLE | SPRITE_STATUS_Y_FLIP);
     pSprite->pose = PARASITE_POSE_DYING;
 
-    pSprite->pOam = sParasiteOAM_Dying;
-    pSprite->currentAnimationFrame = 0x0;
-    pSprite->animationDurationCounter = 0x0;
+    pSprite->pOam = sParasiteOam_Dying;
+    pSprite->currentAnimationFrame = 0;
+    pSprite->animationDurationCounter = 0;
 
-    pSprite->bgPriority = gIoRegistersBackup.BG1CNT & 0x3;
+    pSprite->bgPriority = BGCNT_GET_PRIORITY(gIoRegistersBackup.BG1CNT);
 }
 
 /**
  * @brief 30e34 | 20 | Handles a parasite dying
  * 
- * @param pSprite Sprite Data Pointer
+ * @param pSprite Sprite data pointer
  */
-void ParasiteDying(struct SpriteData* pSprite)
+static void ParasiteDying(struct SpriteData* pSprite)
 {
-    pSprite->ignoreSamusCollisionTimer = 0x1;
+    pSprite->ignoreSamusCollisionTimer = DELTA_TIME;
 
-    if (SpriteUtilCheckEndCurrentSpriteAnim())
-        pSprite->status = 0x0;
+    if (SpriteUtilHasCurrentAnimationEnded())
+        pSprite->status = 0;
 }
 
 /**
  * @brief 30e54 | 60 | Handles a parasite (multiple) dying
  * 
- * @param pSprite Sprite Data Pointer
+ * @param pSprite Sprite data pointer
  */
-void ParasiteMultipleDying(struct SpriteData* pSprite)
+static void ParasiteMultipleDying(struct SpriteData* pSprite)
 {
-    pSprite->ignoreSamusCollisionTimer = 0x1;
+    pSprite->ignoreSamusCollisionTimer = DELTA_TIME;
 
-    if (SpriteUtilCheckEndCurrentSpriteAnim())
+    if (SpriteUtilHasCurrentAnimationEnded())
     {
-        pSprite->status = 0x0;
-        gSpriteData[pSprite->primarySpriteRamSlot].status = 0x0;
+        pSprite->status = 0;
+        gSpriteData[pSprite->primarySpriteRamSlot].status = 0;
 
-        if (!EventFunction(EVENT_ACTION_CHECKING, EVENT_BUGS_KILLED) && SpriteUtilCountPrimarySprites(PSPRITE_PARASITE_MULTIPLE) == 0x0)
+        if (!EventFunction(EVENT_ACTION_CHECKING, EVENT_BUGS_KILLED) && SpriteUtilCountPrimarySprites(PSPRITE_PARASITE_MULTIPLE) == 0)
         {
             EventFunction(EVENT_ACTION_SETTING, EVENT_BUGS_KILLED);
             gDoorUnlockTimer = -ONE_THIRD_SECOND;
@@ -1108,9 +1142,9 @@ void ParasiteMultipleDying(struct SpriteData* pSprite)
 /**
  * @brief 30eb4 | 98 | Initializes a parasite to be grabbing a Geron
  * 
- * @param pSprite Sprite Data Pointer
+ * @param pSprite Sprite data pointer
  */
-void ParasiteGrabGeron(struct SpriteData* pSprite)
+static void ParasiteGrabGeron(struct SpriteData* pSprite)
 {
     u16 geronY;
     u16 geronX;
@@ -1118,11 +1152,11 @@ void ParasiteGrabGeron(struct SpriteData* pSprite)
 
     pSprite->pose = PARASITE_POSE_GERON_GRABBED;
 
-    pSprite->pOam = sParasiteOAM_Attached;
-    pSprite->currentAnimationFrame = 0x0;
-    pSprite->animationDurationCounter = 0x0;
+    pSprite->pOam = sParasiteOam_Attached;
+    pSprite->currentAnimationFrame = 0;
+    pSprite->animationDurationCounter = 0;
 
-    pSprite->work0 = 0x0;
+    pSprite->work0 = 0;
 
     ramSlot = pSprite->work1;
 
@@ -1132,13 +1166,13 @@ void ParasiteGrabGeron(struct SpriteData* pSprite)
 
     // Get Y offset
     if (pSprite->yPosition < geronY)
-        pSprite->yPositionSpawn = 0x0;
+        pSprite->yPositionSpawn = 0;
     else
         pSprite->yPositionSpawn = pSprite->yPosition - geronY;
 
     // Get X offset
     if (pSprite->xPosition < geronX)
-        pSprite->xPositionSpawn = 0x0;
+        pSprite->xPositionSpawn = 0;
     else
         pSprite->xPositionSpawn = pSprite->xPosition - geronX;
 
@@ -1152,9 +1186,9 @@ void ParasiteGrabGeron(struct SpriteData* pSprite)
 /**
  * @brief 30f4c | 19c | Handles a parasite having a Geron grabbed 
  * 
- * @param pSprite Sprite Data Pointer
+ * @param pSprite Sprite data pointer
  */
-void ParasiteGeronGrabbed(struct SpriteData* pSprite)
+static void ParasiteGeronGrabbed(struct SpriteData* pSprite)
 {
     u8 ramSlot;
     u16 geronY;
@@ -1165,12 +1199,12 @@ void ParasiteGeronGrabbed(struct SpriteData* pSprite)
 
     if (gSpriteData[ramSlot].pose == GERON_POSE_DELAY_BEFORE_DESTROYED)
     {
-        // Set expulsed
+        // Set expelled
         pSprite->pose = PARASITE_POSE_EXPULSED_INIT;
         
         xVelocity = gSpriteRng;
-        if (gSpriteRng < 0x6)
-            xVelocity = 0x6;
+        if (gSpriteRng < SPRITE_RNG_PROB(.375f))
+            xVelocity = PIXEL_SIZE + PIXEL_SIZE / 2;
 
         pSprite->work2 = xVelocity;
         pSprite->samusCollision = SSC_PARASITE;
@@ -1178,13 +1212,13 @@ void ParasiteGeronGrabbed(struct SpriteData* pSprite)
     }
     else
     {
-        if (gParasiteRelated == 0x0)
-            gParasiteRelated = 0x5A;
+        if (gParasiteRelated == 0)
+            gParasiteRelated = CONVERT_SECONDS(1.5f);
 
         // Check update vertical direction
         if (pSprite->status & SPRITE_STATUS_Y_FLIP)
         {
-            if (gSpriteData[ramSlot].yPosition < pSprite->yPosition + 0x8)
+            if (gSpriteData[ramSlot].yPosition < pSprite->yPosition + EIGHTH_BLOCK_SIZE)
             {
                 pSprite->status &= ~SPRITE_STATUS_Y_FLIP;
                 pSprite->work0 = gSpriteRng;
@@ -1192,7 +1226,7 @@ void ParasiteGeronGrabbed(struct SpriteData* pSprite)
         }
         else
         {
-            if (gSpriteData[ramSlot].yPosition + gSpriteData[ramSlot].hitboxTop > pSprite->yPosition - 0x8)
+            if (gSpriteData[ramSlot].yPosition + gSpriteData[ramSlot].hitboxTop > pSprite->yPosition - EIGHTH_BLOCK_SIZE)
             {
                 pSprite->status |= SPRITE_STATUS_Y_FLIP;
                 pSprite->work0 = gSpriteRng;
@@ -1202,7 +1236,7 @@ void ParasiteGeronGrabbed(struct SpriteData* pSprite)
         // Check update horizontal direction
         if (pSprite->status & SPRITE_STATUS_X_FLIP)
         {
-            if (gSpriteData[ramSlot].xPosition + gSpriteData[ramSlot].hitboxRight < pSprite->xPosition + 0x8)
+            if (gSpriteData[ramSlot].xPosition + gSpriteData[ramSlot].hitboxRight < pSprite->xPosition + EIGHTH_BLOCK_SIZE)
             {
                 pSprite->status &= ~SPRITE_STATUS_X_FLIP;
                 pSprite->work0 = gSpriteRng;
@@ -1210,7 +1244,7 @@ void ParasiteGeronGrabbed(struct SpriteData* pSprite)
         }
         else
         {
-            if (gSpriteData[ramSlot].xPosition + gSpriteData[ramSlot].hitboxLeft > pSprite->xPosition - 0x8)
+            if (gSpriteData[ramSlot].xPosition + gSpriteData[ramSlot].hitboxLeft > pSprite->xPosition - EIGHTH_BLOCK_SIZE)
             {
                 pSprite->status |= SPRITE_STATUS_X_FLIP;
                 pSprite->work0 = gSpriteRng;
@@ -1218,30 +1252,30 @@ void ParasiteGeronGrabbed(struct SpriteData* pSprite)
         }
 
         // Update position offsets
-        if (pSprite->work0 == 0x0)
+        if (pSprite->work0 == 0)
         {
             // Update Y offset
             if (pSprite->status & SPRITE_STATUS_Y_FLIP)
             {
-                if (gSpriteRng != 0x0)
-                    pSprite->yPositionSpawn++;
+                if (gSpriteRng != 0)
+                    pSprite->yPositionSpawn += ONE_SUB_PIXEL;
             }
             else
             {
-                if (gSpriteRng != 0x0)
-                    pSprite->yPositionSpawn--;
+                if (gSpriteRng != 0)
+                    pSprite->yPositionSpawn -= ONE_SUB_PIXEL;
             }
             
             // Update X offset
             if (pSprite->status & SPRITE_STATUS_X_FLIP)
             {
                 if (gSpriteRng != pSprite->primarySpriteRamSlot)
-                    pSprite->xPositionSpawn++;
+                    pSprite->xPositionSpawn += ONE_SUB_PIXEL;
             }
             else
             {
                 if (gSpriteRng != pSprite->primarySpriteRamSlot)
-                    pSprite->xPositionSpawn--;
+                    pSprite->xPositionSpawn -= ONE_SUB_PIXEL;
             }
         }
         else
@@ -1260,9 +1294,9 @@ void ParasiteGeronGrabbed(struct SpriteData* pSprite)
 /**
  * @brief 310e8 | 118 | Handles the collision with the projectiles
  *
- * @param pSprite Sprite Data Pointer
+ * @param pSprite Sprite data pointer
  */
-void ParasiteBombCollision(struct SpriteData* pSprite)
+static void ParasiteBombCollision(struct SpriteData* pSprite)
 {
     struct ProjectileData* pProj;
     u8 status;
@@ -1279,7 +1313,7 @@ void ParasiteBombCollision(struct SpriteData* pSprite)
 
     u16 yPos, hitboxBottom;
 
-    if (pSprite->invincibilityStunFlashTimer & 0x80)
+    if (pSprite->invincibilityStunFlashTimer & SPRITE_ISFT_POWER_BOMB_STUNNED)
     {
         pSprite->pose = PARASITE_POSE_DYING_INIT;
         return;
@@ -1326,8 +1360,8 @@ void ParasiteBombCollision(struct SpriteData* pSprite)
     pSprite->pose = PARASITE_POSE_EXPULSED_INIT;
 
     kill = gSpriteRng / 2;
-    if (kill < 9)
-        kill = 9;
+    if (kill < SPRITE_RNG_PROB(.5625f))
+        kill = SPRITE_RNG_PROB(.5625f);
 
     pSprite->work2 = kill;
 
@@ -1344,12 +1378,12 @@ void ParasiteMultiple(void)
 
     pSprite = &gCurrentSprite;
 
-    if (pSprite->invincibilityStunFlashTimer & 0x7F && pSprite->pose < PARASITE_POSE_DYING)
+    if (SPRITE_GET_ISFT(*pSprite) != 0 && pSprite->pose < PARASITE_POSE_DYING)
         ParasiteBombCollision(pSprite);
 
     switch (pSprite->pose)
     {
-        case 0x0:
+        case SPRITE_POSE_UNINITIALIZED:
             ParasiteInit(pSprite);
             break;
 
@@ -1394,14 +1428,14 @@ void ParasiteMultiple(void)
             break;
 
         case PARASITE_POSE_EXPULSED_INIT:
-            ParasiteExpulsedInit(pSprite);
+            ParasiteExpelledInit(pSprite);
         
         case PARASITE_POSE_EXPULSED_UP:
-            ParasiteMultipleExpulsedUp(pSprite);
+            ParasiteMultipleExpelledUp(pSprite);
             break;
 
         case PARASITE_POSE_EXPULSED_DOWN:
-            ParasiteMultipleExpulsedDown(pSprite);
+            ParasiteMultipleExpelledDown(pSprite);
             break;
 
         case PARASITE_POSE_JUMPING_UP:
@@ -1432,12 +1466,12 @@ void Parasite(void)
 
     pSprite = &gCurrentSprite;
 
-    if (pSprite->invincibilityStunFlashTimer & 0x7F && pSprite->pose < PARASITE_POSE_DYING)
+    if (SPRITE_GET_ISFT(*pSprite) != 0 && pSprite->pose < PARASITE_POSE_DYING)
         ParasiteBombCollision(pSprite);
 
     switch (pSprite->pose)
     {
-        case 0x0:
+        case SPRITE_POSE_UNINITIALIZED:
             ParasiteInit(pSprite);
             break;
 
@@ -1481,14 +1515,14 @@ void Parasite(void)
             break;
 
         case PARASITE_POSE_EXPULSED_INIT:
-            ParasiteExpulsedInit(pSprite);
+            ParasiteExpelledInit(pSprite);
         
         case PARASITE_POSE_EXPULSED_UP:
-            ParasiteExpulsedUp(pSprite);
+            ParasiteExpelledUp(pSprite);
             break;
 
         case PARASITE_POSE_EXPULSED_DOWN:
-            ParasiteExpulsedDown(pSprite);
+            ParasiteExpelledDown(pSprite);
             break;
 
         case PARASITE_POSE_JUMPING_UP:

@@ -5,4 +5,4 @@
 
 extern u8 gMonochromeBgFading;
 
-#endif
+#endif /* VISUAL_EFFECTS_STRUCT_H */

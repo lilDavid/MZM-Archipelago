@@ -103,7 +103,7 @@ const u16 sClipdataAffectingActionDamageTypes[CAA_COUNT] = {
     [CAA_BOMB_CHAIN] =             CAA_DAMAGE_TYPE_BOMB_CHAIN,
 };
 
-const struct BlockBehavior sBlockBehaviors[MAX_AMOUNT_OF_BLOCKS] = {
+const struct BlockBehavior sBlockBehaviors[BEHAVIOR_BLOCK_AMOUNT] = {
     [BEHAVIOR_TO_BLOCK(CLIP_BEHAVIOR_SHOT_BLOCK_NEVER_REFORM)] = {
         .lifeType = BLOCK_LIFE_TYPE_NO_NEVER_REFORM,
         .subType = BLOCK_SUB_TYPE_NO_REFORM,
@@ -321,7 +321,41 @@ const struct BlockBehavior sBlockBehaviors[MAX_AMOUNT_OF_BLOCKS] = {
         .isSpeedboost = FALSE,
         .isBombChain = FALSE
     },
-    // Empty space, 31-35 (5 blocks)
+    [BEHAVIOR_TO_BLOCK(CLIP_BEHAVIOR_BLOCK_UNUSED_1)] = {
+        .lifeType = BLOCK_LIFE_TYPE_NONE,
+        .subType = BLOCK_SUB_TYPE_REFORM,
+        .type = BLOCK_TYPE_NONE,
+        .isSpeedboost = FALSE,
+        .isBombChain = FALSE
+    },
+    [BEHAVIOR_TO_BLOCK(CLIP_BEHAVIOR_BLOCK_UNUSED_2)] = {
+        .lifeType = BLOCK_LIFE_TYPE_NONE,
+        .subType = BLOCK_SUB_TYPE_REFORM,
+        .type = BLOCK_TYPE_NONE,
+        .isSpeedboost = FALSE,
+        .isBombChain = FALSE
+    },
+    [BEHAVIOR_TO_BLOCK(CLIP_BEHAVIOR_BLOCK_UNUSED_3)] = {
+        .lifeType = BLOCK_LIFE_TYPE_NONE,
+        .subType = BLOCK_SUB_TYPE_REFORM,
+        .type = BLOCK_TYPE_NONE,
+        .isSpeedboost = FALSE,
+        .isBombChain = FALSE
+    },
+    [BEHAVIOR_TO_BLOCK(CLIP_BEHAVIOR_BLOCK_UNUSED_4)] = {
+        .lifeType = BLOCK_LIFE_TYPE_NONE,
+        .subType = BLOCK_SUB_TYPE_REFORM,
+        .type = BLOCK_TYPE_NONE,
+        .isSpeedboost = FALSE,
+        .isBombChain = FALSE
+    },
+    [BEHAVIOR_TO_BLOCK(CLIP_BEHAVIOR_BLOCK_UNUSED_5)] = {
+        .lifeType = BLOCK_LIFE_TYPE_NONE,
+        .subType = BLOCK_SUB_TYPE_REFORM,
+        .type = BLOCK_TYPE_NONE,
+        .isSpeedboost = FALSE,
+        .isBombChain = FALSE
+    },
     [BEHAVIOR_TO_BLOCK(CLIP_BEHAVIOR_HIDDEN_ENERGY_TANK)] = {
         .lifeType = BLOCK_LIFE_TYPE_TANK,
         .subType = BLOCK_SUB_TYPE_REFORM,
@@ -460,109 +494,373 @@ const u16 sReformingBlocksTilemapValue[BLOCK_TYPE_COUNT] = {
 
 const u8 sBrokenBlocksTimers[BLOCK_TYPE_COUNT][13] = {
     [BLOCK_TYPE_NONE] = {
-        0, 0, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0
+        0,
+        0,
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
     },
     [BLOCK_TYPE_SHOT_BLOCK_REFORM] = {
-        0, 0, 4, 4, 4, 4, 4, UCHAR_MAX, 4, 4, 4, 4, 4
+        0,
+        0,
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(4.25f),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15)
     },
     [BLOCK_TYPE_BOMB_BLOCK_REFORM] = {
-        0, 0, 4, 4, 4, 4, 4, UCHAR_MAX, 4, 4, 4, 4, 4
+        0,
+        0,
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(4.25f),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15)
     },
     [BLOCK_TYPE_SPEEDBOOSTER_BLOCK_REFORM] = {
-        0, 0, 4, 4, 4, 4, 4, ONE_THIRD_SECOND, 4, 4, 4, 4, 4
+        0,
+        0,
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        ONE_THIRD_SECOND,
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15)
     },
     [BLOCK_TYPE_CRUMBLE] = {
-        0, 5, 4, 4, 4, 4, 4, CONVERT_SECONDS(.25f), 4, 4, 4, 4, 4
+        0,
+        5,
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(.25f),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15)
     },
     [BLOCK_TYPE_SLOW_CRUMBLE] = {
-        0, CONVERT_SECONDS(1.f), 4, 4, 4, 4, 4, CONVERT_SECONDS(.5f), 4, 4, 4, 4, 4
+        0,
+        CONVERT_SECONDS(1.f),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(.5f),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15)
     },
     [BLOCK_TYPE_MISSILE_NEVER_REFORM] = {
-        0, 0, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0
+        0,
+        0,
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
     },
     [BLOCK_TYPE_MISSILE_NO_REFORM] = {
-        0, 0, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0
+        0,
+        0,
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
     },
     [BLOCK_TYPE_SUPER_MISSILE_NEVER_REFORM] = {
-        0, 0, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0
+        0,
+        0,
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
     },
     [BLOCK_TYPE_SUPER_MISSILE_NO_REFORM] = {
-        0, 0, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0
+        0,
+        0,
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
     },
     [BLOCK_TYPE_POWER_BOMB_NEVER_REFORM] = {
-        0, 0, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0
+        0,
+        0,
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
     },
     [BLOCK_TYPE_SCREW_NO_REFORM] = {
-        0, 0, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0
+        0,
+        0,
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
     },
     [BLOCK_TYPE_SPEEDBOOSTER_BLOCK_NO_REFORM] = {
-        0, 0, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0
+        0,
+        0,
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
     },
     [BLOCK_TYPE_BOMB_BLOCK_NEVER_REFORM] = {
-        0, 0, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0
+        0,
+        0,
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
     },
     [BLOCK_TYPE_VERTICAL_BOMB_CHAIN1] = {
-        0, 0, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0
+        0,
+        0,
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
     },
     [BLOCK_TYPE_VERTICAL_BOMB_CHAIN2] = {
-        0, 0, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0
+        0,
+        0,
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
     },
     [BLOCK_TYPE_VERTICAL_BOMB_CHAIN3] = {
-        0, 0, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0
+        0,
+        0,
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
     },
     [BLOCK_TYPE_VERTICAL_BOMB_CHAIN4] = {
-        0, 0, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0
+        0,
+        0,
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
     },
     [BLOCK_TYPE_HORIZONTAL_BOMB_CHAIN1] = {
-        0, 0, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0
+        0,
+        0,
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
     },
     [BLOCK_TYPE_HORIZONTAL_BOMB_CHAIN2] = {
-        0, 0, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0
+        0,
+        0,
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
     },
     [BLOCK_TYPE_HORIZONTAL_BOMB_CHAIN3] = {
-        0, 0, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0
+        0,
+        0,
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
     },
     [BLOCK_TYPE_HORIZONTAL_BOMB_CHAIN4] = {
-        0, 0, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0
+        0,
+        0,
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        CONVERT_SECONDS(1.f / 15),
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
     }
 };
 
 const struct BombChainReverseData sBombChainReverseData[BOMB_CHAIN_TYPE_END] = {
     [BOMB_CHAIN_TYPE_VERTICAL1] = {
-        .typeFlag = BOMB_CHAIN_TYPE_TO_FLAG(BOMB_CHAIN_TYPE_VERTICAL1),
+        .typeFlag = 1 << BOMB_CHAIN_TYPE_VERTICAL1,
         .behavior = CLIP_BEHAVIOR_VERTICAL_BOMB_CHAIN1
     },
     [BOMB_CHAIN_TYPE_VERTICAL2] = {
-        .typeFlag = BOMB_CHAIN_TYPE_TO_FLAG(BOMB_CHAIN_TYPE_VERTICAL2),
+        .typeFlag = 1 << BOMB_CHAIN_TYPE_VERTICAL2,
         .behavior = CLIP_BEHAVIOR_VERTICAL_BOMB_CHAIN2
     },
     [BOMB_CHAIN_TYPE_VERTICAL3] = {
-        .typeFlag = BOMB_CHAIN_TYPE_TO_FLAG(BOMB_CHAIN_TYPE_VERTICAL3),
+        .typeFlag = 1 << BOMB_CHAIN_TYPE_VERTICAL3,
         .behavior = CLIP_BEHAVIOR_VERTICAL_BOMB_CHAIN3
     },
     [BOMB_CHAIN_TYPE_VERTICAL4] = {
-        .typeFlag = BOMB_CHAIN_TYPE_TO_FLAG(BOMB_CHAIN_TYPE_VERTICAL4),
+        .typeFlag = 1 << BOMB_CHAIN_TYPE_VERTICAL4,
         .behavior = CLIP_BEHAVIOR_VERTICAL_BOMB_CHAIN4
     },
     [BOMB_CHAIN_TYPE_HORIZONTAL1] = {
-        .typeFlag = BOMB_CHAIN_TYPE_TO_FLAG(BOMB_CHAIN_TYPE_HORIZONTAL1),
+        .typeFlag = 1 << BOMB_CHAIN_TYPE_HORIZONTAL1,
         .behavior = CLIP_BEHAVIOR_HORIZONTAL_BOMB_CHAIN1
     },
     [BOMB_CHAIN_TYPE_HORIZONTAL2] = {
-        .typeFlag = BOMB_CHAIN_TYPE_TO_FLAG(BOMB_CHAIN_TYPE_HORIZONTAL2),
+        .typeFlag = 1 << BOMB_CHAIN_TYPE_HORIZONTAL2,
         .behavior = CLIP_BEHAVIOR_HORIZONTAL_BOMB_CHAIN2
     },
     [BOMB_CHAIN_TYPE_HORIZONTAL3] = {
-        .typeFlag = BOMB_CHAIN_TYPE_TO_FLAG(BOMB_CHAIN_TYPE_HORIZONTAL3),
+        .typeFlag = 1 << BOMB_CHAIN_TYPE_HORIZONTAL3,
         .behavior = CLIP_BEHAVIOR_HORIZONTAL_BOMB_CHAIN3
     },
     [BOMB_CHAIN_TYPE_HORIZONTAL4] = {
-        .typeFlag = BOMB_CHAIN_TYPE_TO_FLAG(BOMB_CHAIN_TYPE_HORIZONTAL4),
+        .typeFlag = 1 << BOMB_CHAIN_TYPE_HORIZONTAL4,
         .behavior = CLIP_BEHAVIOR_HORIZONTAL_BOMB_CHAIN4
     },
 };
 
-const struct TankBehavior sTankBehaviors[MAX_AMOUNT_OF_TANK_TYPES] = {
+const struct TankBehavior sTankBehaviors[BEHAVIOR_TANK_AMOUNT] = {
     [BEHAVIOR_TO_TANK(CLIP_BEHAVIOR_HIDDEN_ENERGY_TANK)] = {
         .itemType = ITEM_TYPE_NONE,
         .underwater = FALSE,
@@ -674,18 +972,18 @@ const u16 sHatchBehaviors[HATCH_COUNT][2] = {
     },
 };
 
-const u16 sBldalphaValuesForClipdata[BEHAVIOR_TO_BLDALPHA(CLIP_BEHAVIOR_BG0_TRIGGER_BRIGHTER_LEVEL4) + 1] = {
-    [BEHAVIOR_TO_BLDALPHA(CLIP_BEHAVIOR_BG0_TRIGGER_OPAQUE)] = 0x10,
-    [BEHAVIOR_TO_BLDALPHA(CLIP_BEHAVIOR_BG0_TRIGGER_TRANSPARENT_LEVEL1)] = 0x30D,
-    [BEHAVIOR_TO_BLDALPHA(CLIP_BEHAVIOR_BG0_TRIGGER_TRANSPARENT_LEVEL2)] = 0x60A,
-    [BEHAVIOR_TO_BLDALPHA(CLIP_BEHAVIOR_BG0_TRIGGER_TRANSPARENT_LEVEL3)] = 0x907,
-    [BEHAVIOR_TO_BLDALPHA(CLIP_BEHAVIOR_BG0_TRIGGER_TRANSPARENT_LEVEL4)] = 0xB05,
-    [BEHAVIOR_TO_BLDALPHA(CLIP_BEHAVIOR_BG0_TRIGGER_TRANSPARENT_LEVEL5)] = 0xD03,
-    [BEHAVIOR_TO_BLDALPHA(CLIP_BEHAVIOR_BG0_TRIGGER_TRANSPARENT_FULL)] = 0x1000,
-    [BEHAVIOR_TO_BLDALPHA(CLIP_BEHAVIOR_BG0_TRIGGER_BRIGHTER_LEVEL1)] = 0x1007,
-    [BEHAVIOR_TO_BLDALPHA(CLIP_BEHAVIOR_BG0_TRIGGER_BRIGHTER_LEVEL2)] = 0x100A,
-    [BEHAVIOR_TO_BLDALPHA(CLIP_BEHAVIOR_BG0_TRIGGER_BRIGHTER_LEVEL3)] = 0x100D,
-    [BEHAVIOR_TO_BLDALPHA(CLIP_BEHAVIOR_BG0_TRIGGER_BRIGHTER_LEVEL4)] = 0x1010,
+const u16 sBldalphaValuesForClipdata[BEHAVIOR_BLDALPHA_AMOUNT] = {
+    [BEHAVIOR_TO_BLDALPHA(CLIP_BEHAVIOR_BG0_TRIGGER_OPAQUE)] =              C_16_2_8(0x0,  0x10),
+    [BEHAVIOR_TO_BLDALPHA(CLIP_BEHAVIOR_BG0_TRIGGER_TRANSPARENT_LEVEL1)] =  C_16_2_8(0x3,  0x0D),
+    [BEHAVIOR_TO_BLDALPHA(CLIP_BEHAVIOR_BG0_TRIGGER_TRANSPARENT_LEVEL2)] =  C_16_2_8(0x6,  0x0A),
+    [BEHAVIOR_TO_BLDALPHA(CLIP_BEHAVIOR_BG0_TRIGGER_TRANSPARENT_LEVEL3)] =  C_16_2_8(0x9,  0x07),
+    [BEHAVIOR_TO_BLDALPHA(CLIP_BEHAVIOR_BG0_TRIGGER_TRANSPARENT_LEVEL4)] =  C_16_2_8(0xB,  0x05),
+    [BEHAVIOR_TO_BLDALPHA(CLIP_BEHAVIOR_BG0_TRIGGER_TRANSPARENT_LEVEL5)] =  C_16_2_8(0xD,  0x03),
+    [BEHAVIOR_TO_BLDALPHA(CLIP_BEHAVIOR_BG0_TRIGGER_TRANSPARENT_FULL)] =    C_16_2_8(0x10, 0x00),
+    [BEHAVIOR_TO_BLDALPHA(CLIP_BEHAVIOR_BG0_TRIGGER_BRIGHTER_LEVEL1)] =     C_16_2_8(0x10, 0x07),
+    [BEHAVIOR_TO_BLDALPHA(CLIP_BEHAVIOR_BG0_TRIGGER_BRIGHTER_LEVEL2)] =     C_16_2_8(0x10, 0x0A),
+    [BEHAVIOR_TO_BLDALPHA(CLIP_BEHAVIOR_BG0_TRIGGER_BRIGHTER_LEVEL3)] =     C_16_2_8(0x10, 0x0D),
+    [BEHAVIOR_TO_BLDALPHA(CLIP_BEHAVIOR_BG0_TRIGGER_BRIGHTER_LEVEL4)] =     C_16_2_8(0x10, 0x10),
 };
 
 // Pairs of (x, y) coordinates

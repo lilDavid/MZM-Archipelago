@@ -8,7 +8,9 @@
 #include "constants/rando.h"
 
 #include "structs/animated_graphics.h"
+#include "structs/bg_clip.h"
 #include "structs/clipdata.h"
+#include "structs/connection.h"
 #include "structs/rando.h"
 #include "structs/room.h"
 

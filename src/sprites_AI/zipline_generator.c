@@ -14,12 +14,28 @@
 #include "structs/samus.h"
 #include "structs/animated_graphics.h"
 
+#define ZIPLINE_GENERATOR_POSE_DETECT_SAMUS 0x9
+#define ZIPLINE_GENERATOR_POSE_ACTIVATING 0xB
+#define ZIPLINE_GENERATOR_POSE_ACTIVATED 0xc
+#define ZIPLINE_GENERATOR_POSE_ALREADY_ACTIVATED 0xF
+
+// Zipline generator part
+
+#define ZIPLINE_GENERATOR_PART_POSE_MORPH_SYMBOL_ACTIVATING 0xB
+#define ZIPLINE_GENERATOR_PART_POSE_IDLE 0x61
+
+enum ZiplineGeneratorPart {
+    ZIPLINE_GENERATOR_PART_CONDUCTOR,
+    ZIPLINE_GENERATOR_PART_MORPH_SYMBOL,
+    ZIPLINE_GENERATOR_PART_ELECTRICITY
+};
+
 /**
  * @brief 2e1f0 | 64 | Updates the clipdata of the zipline generator
  * 
  * @param caa Clipdata affecting action
  */
-void ZiplineGeneratorChangeCcaa(u8 caa)
+static void ZiplineGeneratorChangeClipdata(u8 caa)
 {
     u16 yPosition;
     u16 xPosition;
@@ -28,23 +44,23 @@ void ZiplineGeneratorChangeCcaa(u8 caa)
     xPosition = gCurrentSprite.xPosition;
 
     gCurrentClipdataAffectingAction = caa;
-    ClipdataProcess(yPosition, xPosition);
+    ClipdataProcess(yPosition - BLOCK_SIZE * 0, xPosition + BLOCK_SIZE * 0);
 
     gCurrentClipdataAffectingAction = caa;
-    ClipdataProcess(yPosition - BLOCK_SIZE, xPosition);
+    ClipdataProcess(yPosition - BLOCK_SIZE * 1, xPosition - BLOCK_SIZE * 0);
 
     gCurrentClipdataAffectingAction = caa;
-    ClipdataProcess(yPosition - BLOCK_SIZE * 2, xPosition + BLOCK_SIZE);
+    ClipdataProcess(yPosition - BLOCK_SIZE * 2, xPosition + BLOCK_SIZE * 1);
 
     gCurrentClipdataAffectingAction = caa;
-    ClipdataProcess(yPosition - BLOCK_SIZE * 2, xPosition - BLOCK_SIZE);
+    ClipdataProcess(yPosition - BLOCK_SIZE * 2, xPosition - BLOCK_SIZE * 1);
 }
 
 /**
  * @brief 2e254 | e0 | Initializes a zipline generator sprite
  * 
  */
-void ZiplineGeneratorInit(void)
+static void ZiplineGeneratorInit(void)
 {
     u8 ramSlot;
 
@@ -89,20 +105,20 @@ void ZiplineGeneratorInit(void)
     }
     else
     {
-        // Set de-activated
+        // Set deactivated
         gCurrentSprite.pOam = sZiplineGeneratorOam_Deactivated;
         gCurrentSprite.pose = ZIPLINE_GENERATOR_POSE_DETECT_SAMUS;
         gSpriteData[ramSlot].pOam = sZiplineGeneratorPartOam_ConductorDeactivated;
     }
 
-    ZiplineGeneratorChangeCcaa(CAA_MAKE_SOLID_GRIPPABLE);
+    ZiplineGeneratorChangeClipdata(CAA_MAKE_SOLID_GRIPPABLE);
 }
 
 /**
  * @brief 2e334 | bc | Detects if Samus is activating the ziplines
  * 
  */
-void ZiplineGeneratorDetectSamus(void)
+static void ZiplineGeneratorDetectSamus(void)
 {
     u8 ramSlot;
     u8 newRamSlot;
@@ -140,7 +156,7 @@ void ZiplineGeneratorDetectSamus(void)
         // Spawn morph symbol
         newRamSlot = SpriteSpawnSecondary(SSPRITE_ZIPLINE_GENERATOR_PART, ZIPLINE_GENERATOR_PART_MORPH_SYMBOL,
             gCurrentSprite.spritesetGfxSlot, gCurrentSprite.primarySpriteRamSlot,
-            gSamusData.yPosition - (QUARTER_BLOCK_SIZE + PIXEL_SIZE * 2), gSamusData.xPosition, 0);
+            gSamusData.yPosition - (QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE), gSamusData.xPosition, 0);
 
         if (newRamSlot < MAX_AMOUNT_OF_SPRITES)
             gCurrentSprite.work2 = newRamSlot;
@@ -155,11 +171,11 @@ void ZiplineGeneratorDetectSamus(void)
  * @brief 2e3f0 | fc | Handles the zipline generator activating the ziplines
  * 
  */
-void ZiplineGeneratorActivating(void)
+static void ZiplineGeneratorActivating(void)
 {
     u8 ramSlot;
 
-    if (--gCurrentSprite.work0 == 0)
+    if (APPLY_DELTA_TIME_DEC(gCurrentSprite.work0) == 0)
     {
         // Set activated
         gCurrentSprite.pOam = sZiplineGeneratorOam_Activated;
@@ -195,7 +211,7 @@ void ZiplineGeneratorActivating(void)
         else
             gCurrentSprite.status = 0;
     }
-    else if (gCurrentSprite.work0 == (CONVERT_SECONDS(.25f) + DELTA_TIME))
+    else if (gCurrentSprite.work0 == CONVERT_SECONDS(.25f + 1.f / 60))
     {
         // Set morph symbol activated
         ramSlot = gCurrentSprite.work2;
@@ -282,11 +298,13 @@ void ZiplineGeneratorPart(void)
                 gCurrentSprite.bgPriority = 1;
             }
             else
+            {
                 gCurrentSprite.status = 0;
+            }
             break;
 
         case ZIPLINE_GENERATOR_PART_POSE_MORPH_SYMBOL_ACTIVATING:
-            if (SpriteUtilCheckEndCurrentSpriteAnim())
+            if (SpriteUtilHasCurrentAnimationEnded())
                 gCurrentSprite.status = 0;
     }
 }

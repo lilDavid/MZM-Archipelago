@@ -12,11 +12,17 @@
 
 #include "structs/sprite.h"
 
+#define SQUEEPT_POSE_IDLE_INIT 0xE
+#define SQUEEPT_POSE_IDLE 0xF
+#define SQUEEPT_POSE_GOING_UP 0x35
+#define SQUEEPT_POSE_TURNING_AROUND 0x37
+#define SQUEEPT_POSE_GOING_DOWN 0x39
+
 /**
  * @brief 1eff4 | 24 | Initializes a squeept to be going up
  * 
  */
-void SqueeptGoingUpInit(void)
+static void SqueeptGoingUpInit(void)
 {
     gCurrentSprite.hitboxTop = -(HALF_BLOCK_SIZE + PIXEL_SIZE * 3);
     gCurrentSprite.hitboxBottom = HALF_BLOCK_SIZE;
@@ -30,7 +36,7 @@ void SqueeptGoingUpInit(void)
  * @brief 1f018 | 24 | Initializes a squeept to be turning around
  * 
  */
-void SqueeptTurningAroundInit(void)
+static void SqueeptTurningAroundInit(void)
 {
     gCurrentSprite.hitboxTop = -QUARTER_BLOCK_SIZE;
     gCurrentSprite.hitboxBottom = HALF_BLOCK_SIZE;
@@ -44,10 +50,10 @@ void SqueeptTurningAroundInit(void)
  * @brief 1f03c | 20 | Initializes a squeept to be going down
  * 
  */
-void SqueeptGoingDownInit(void)
+static void SqueeptGoingDownInit(void)
 {
     gCurrentSprite.hitboxTop = 0;
-    gCurrentSprite.hitboxBottom = HALF_BLOCK_SIZE + PIXEL_SIZE * 2;
+    gCurrentSprite.hitboxBottom = HALF_BLOCK_SIZE + EIGHTH_BLOCK_SIZE;
 
     gCurrentSprite.pOam = sSqueeptOam_GoingDown;
     gCurrentSprite.animationDurationCounter = 0;
@@ -58,7 +64,7 @@ void SqueeptGoingDownInit(void)
  * @brief 1f05c | 4c | Initializes a squeept sprite
  * 
  */
-void SqueeptInit(void)
+static void SqueeptInit(void)
 {
     gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE + QUARTER_BLOCK_SIZE);
     gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE + QUARTER_BLOCK_SIZE);
@@ -79,27 +85,27 @@ void SqueeptInit(void)
  * @brief 1f0a8 | 28 | Initializes a squeept to be idle
  * 
  */
-void SqueeptIdleInit(void)
+static void SqueeptIdleInit(void)
 {
     gCurrentSprite.status |= SPRITE_STATUS_NOT_DRAWN;
     gCurrentSprite.pose = SQUEEPT_POSE_IDLE;
     SqueeptGoingUpInit();
 
     // Timer before it checks for samus
-    gCurrentSprite.work0 = 30;
+    gCurrentSprite.work0 = CONVERT_SECONDS(.5f);
 }
 
 /**
  * @brief 1f0d0 | 50 | Handles a squeept being idle
  * 
  */
-void SqueeptIdle(void)
+static void SqueeptIdle(void)
 {
     u8 nsab;
 
     if (gCurrentSprite.work0 != 0)
     {
-        gCurrentSprite.work0--;
+        APPLY_DELTA_TIME_DEC(gCurrentSprite.work0);
         return;
     }
 
@@ -118,7 +124,7 @@ void SqueeptIdle(void)
  * @brief 1f120 | bc | Handles a squeept going up
  * 
  */
-void SqueeptGoUp(void)
+static void SqueeptGoUp(void)
 {
     u16 oldY;
     s32 movement;
@@ -177,9 +183,9 @@ void SqueeptGoUp(void)
  * @brief 1f1dc | 28 | Handles a squeept turning around
  * 
  */
-void SqueeptTurningAround(void)
+static void SqueeptTurningAround(void)
 {
-    if (SpriteUtilCheckEndCurrentSpriteAnim())
+    if (SpriteUtilHasCurrentAnimationEnded())
     {
         // Set going down
         SqueeptGoingDownInit();
@@ -192,7 +198,7 @@ void SqueeptTurningAround(void)
  * @brief 1f204 | 84 | Handles a squeept going down
  * 
  */
-void SqueeptGoDown(void)
+static void SqueeptGoDown(void)
 {
     u16 oldY;
     s32 movement;

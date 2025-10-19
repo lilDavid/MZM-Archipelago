@@ -2,13 +2,9 @@
 #define LOCATION_TEXT_H
 
 #include "types.h"
+#include "macros.h"
 
-// Globals
-
-
-// Defines
-
-enum LocationTextId {
+MAKE_ENUM(u8, LocationTextId) {
     LT_BRINSTAR,
     LT_KRAID,
     LT_NORFAIR,
@@ -37,21 +33,11 @@ enum LocationTextId {
     LT_UNUSED_17,
     LT_UNUSED_18,
 
-    LT_END,
+    LT_COUNT,
 
     LT_INVALID = UCHAR_MAX
 };
 
-// Functions
-
-u8 LocationTextGetBrinstar(void);
-u8 LocationTextGetKraid(void);
-u8 LocationTextGetCrateria(void);
-u8 LocationTextGetNorfair(void);
-u8 LocationTextGetRidley(void);
-u8 LocationTextGetChozodia(void);
-u8 LocationTextGetTourian(void);
-u8 LocationTextLoadAreaBannerGfx(void);
 u8 LocationTextGetGfxSlot(void);
 
 #endif /* LOCATION_TEXT_H */

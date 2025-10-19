@@ -13,12 +13,36 @@
 #include "structs/samus.h"
 #include "structs/sprite.h"
 
+#define ESCAPE_SHIP_POSE_CHECK_OPEN 0x8
+#define ESCAPE_SHIP_POSE_OPENING 0x9
+#define ESCAPE_SHIP_POSE_OPENED 0x22
+#define ESCAPE_SHIP_POSE_DELAY_BEFORE_CLOSING 0x23
+#define ESCAPE_SHIP_POSE_CLOSING 0x24
+#define ESCAPE_SHIP_POSE_CLOSED 0x25
+#define ESCAPE_SHIP_POSE_HOVERING 0x26
+#define ESCAPE_SHIP_POSE_ESCAPING 0x27
+#define ESCAPE_SHIP_POSE_ESCAPED 0x28
+
+// Escape ship part
+
+enum EscapeShipPart {
+    ESCAPE_SHIP_PART_TOP,
+    ESCAPE_SHIP_PART_BODY,
+    ESCAPE_SHIP_PART_TAIL,
+    ESCAPE_SHIP_PART_FLAMES,
+};
+
+#define ESCAPE_SHIP_PART_POSE_WAIT_FOR_MOVING_TAIL 0x8
+#define ESCAPE_SHIP_PART_POSE_UPDATE_PALETTE 0x9
+#define ESCAPE_SHIP_PART_POSE_UPDATE_TOP 0xE
+#define ESCAPE_SHIP_PART_POSE_UPDATE_FLAMES 0x32
+
 /**
  * @brief 4ac00 | 94 | Updates the palette of the escape ship
  * 
  * @param delay Delay before next update
  */
-void EscapeShipPartUpdatePalette(u8 delay)
+static void EscapeShipPartUpdatePalette(u8 delay)
 {
     u32 timer;
     u8 flag;
@@ -49,7 +73,7 @@ void EscapeShipPartUpdatePalette(u8 delay)
         }
 
         offset = MOD_AND(gCurrentSprite.work1, 128);
-        DMA_SET(3, (sEscapeShipFlashingPal + offset * 16), (PALRAM_OBJ + 9 * PAL_ROW_SIZE + (gCurrentSprite.spritesetGfxSlot * PAL_ROW_SIZE)), C_32_2_16(DMA_ENABLE, 0x10));
+        DMA_SET(3, &sEscapeShipFlashingPal[offset * 16], (PALRAM_OBJ + 9 * PAL_ROW_SIZE + (gCurrentSprite.spritesetGfxSlot * PAL_ROW_SIZE)), C_32_2_16(DMA_ENABLE, 0x10));
     }
 }
 
@@ -57,7 +81,7 @@ void EscapeShipPartUpdatePalette(u8 delay)
  * @brief 4ac94 | 34 | Sets the ignore samus collision timer of every currently alive sprite to 0xF
  * 
  */
-void EscapeShipSetIgnoreSamus(void)
+static void EscapeShipSetIgnoreSamus(void)
 {
     struct SpriteData* pSprite;
 
@@ -72,7 +96,7 @@ void EscapeShipSetIgnoreSamus(void)
  * @brief 4acc8 | 40 | Sets the draw order of all the space pirates to 2
  * 
  */
-void EscapeShipSetPirateDrawOrder(void)
+static void EscapeShipSetPirateDrawOrder(void)
 {
     struct SpriteData* pSprite;
     u8 collision;
@@ -90,7 +114,7 @@ void EscapeShipSetPirateDrawOrder(void)
  * @brief 4ad08 | c4 | Checks if the escape ship is colliding with a space pirate
  * 
  */
-void EscapeShipPirateCollision(void)
+static void EscapeShipPirateCollision(void)
 {
     u16 spriteY;
     u16 spriteX;
@@ -139,7 +163,7 @@ void EscapeShipPirateCollision(void)
  * @brief 4adcc | c4 | Checks if the escape ship is colliding with a space pirate laser
  * 
  */
-void EscapeShipCheckCollidingWithLaser(void)
+static void EscapeShipCheckCollidingWithLaser(void)
 {
     u16 spriteY;
     u16 spriteX;
@@ -199,25 +223,25 @@ void EscapeShip(void)
 
     switch (gCurrentSprite.pose)
     {
-        case 0:
+        case SPRITE_POSE_UNINITIALIZED:
             gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(3 * BLOCK_SIZE);
             gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(0);
             gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(5 * BLOCK_SIZE + HALF_BLOCK_SIZE);
 
             gCurrentSprite.hitboxTop = -(HALF_BLOCK_SIZE + EIGHTH_BLOCK_SIZE + PIXEL_SIZE);
             gCurrentSprite.hitboxBottom = 0;
-            gCurrentSprite.hitboxLeft = HALF_BLOCK_SIZE + QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = THREE_QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE;
             gCurrentSprite.hitboxRight = BLOCK_SIZE + HALF_BLOCK_SIZE + EIGHTH_BLOCK_SIZE;
 
             gCurrentSprite.samusCollision = SSC_NONE;
             gCurrentSprite.drawOrder = 11;
 
-            gCurrentSprite.pOam = sEscapeShipOAM_Idle;
+            gCurrentSprite.pOam = sEscapeShipOam_Idle;
             gCurrentSprite.currentAnimationFrame = 0;
             gCurrentSprite.animationDurationCounter = 0;
 
             gCurrentSprite.pose = ESCAPE_SHIP_POSE_CHECK_OPEN;
-            gSubSpriteData1.workVariable3 = 0;
+            gSubSpriteData1.work3 = 0;
 
             SpriteSpawnSecondary(SSPRITE_ESCAPE_SHIP_PART, ESCAPE_SHIP_PART_TOP, gCurrentSprite.spritesetGfxSlot,
                 gCurrentSprite.primarySpriteRamSlot, yPosition, xPosition, 0);
@@ -231,7 +255,7 @@ void EscapeShip(void)
                 gSamusData.xPosition < xPosition && (xPosition - gSamusData.xPosition) < BLOCK_SIZE * 4)
             {
                 gCurrentSprite.pose = ESCAPE_SHIP_POSE_OPENING;
-                gCurrentSprite.pOam = sEscapeShipOAM_Opening;
+                gCurrentSprite.pOam = sEscapeShipOam_Opening;
                 gCurrentSprite.currentAnimationFrame = 0;
                 gCurrentSprite.animationDurationCounter = 0;
 
@@ -281,7 +305,7 @@ void EscapeShip(void)
             if (gCurrentSprite.work0 == 0)
             {
                 gCurrentSprite.pose = ESCAPE_SHIP_POSE_CLOSING;
-                gCurrentSprite.pOam = sEscapeShipOAM_Closing;
+                gCurrentSprite.pOam = sEscapeShipOam_Closing;
                 gCurrentSprite.currentAnimationFrame = 0;
                 gCurrentSprite.animationDurationCounter = 0;
                 SoundPlay(SOUND_ESCAPE_SHIP_CLOSING);
@@ -289,9 +313,9 @@ void EscapeShip(void)
             break;
 
         case ESCAPE_SHIP_POSE_CLOSING:
-            if (SpriteUtilCheckEndCurrentSpriteAnim())
+            if (SpriteUtilHasCurrentAnimationEnded())
             {
-                gCurrentSprite.pOam = sEscapeShipOAM_Idle;
+                gCurrentSprite.pOam = sEscapeShipOam_Idle;
                 gCurrentSprite.currentAnimationFrame = 0;
                 gCurrentSprite.animationDurationCounter = 0;
 
@@ -302,7 +326,7 @@ void EscapeShip(void)
                 gCurrentSprite.work2 = 0;
                 gCurrentSprite.work3 = 0;
 
-                gSubSpriteData1.workVariable3 = 1;
+                gSubSpriteData1.work3 = 1;
             }
             break;
 
@@ -377,13 +401,13 @@ void EscapeShip(void)
             {
                 if (APPLY_DELTA_TIME_DEC(gCurrentSprite.work0) == 0)
                 {
-                    gCurrentSprite.pOam = sEscapeShipOAM_Flying;
+                    gCurrentSprite.pOam = sEscapeShipOam_Flying;
                     gCurrentSprite.currentAnimationFrame = 0;
                     gCurrentSprite.animationDurationCounter = 0;
                     SoundPlay(SOUND_ESCAPE_SHIP_SHUTTER_OPENING);
                 }
                 else if (gCurrentSprite.work0 == CONVERT_SECONDS(1.f) + TWO_THIRD_SECOND)
-                    gSubSpriteData1.workVariable3 = 2;
+                    gSubSpriteData1.work3 = 2;
 
                 gCurrentSprite.yPosition -= PIXEL_SIZE / 2;
             }
@@ -490,7 +514,7 @@ void EscapeShipPart(void)
                 gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(5 * BLOCK_SIZE + HALF_BLOCK_SIZE);
 
                 gCurrentSprite.drawOrder = 10;
-                gCurrentSprite.pOam = sEscapeShipPartOAM_Top;
+                gCurrentSprite.pOam = sEscapeShipPartOam_Top;
                 gCurrentSprite.pose = ESCAPE_SHIP_PART_POSE_UPDATE_TOP;
             }
             else if (roomSlot == ESCAPE_SHIP_PART_TAIL)
@@ -500,7 +524,7 @@ void EscapeShipPart(void)
                 gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(7 * BLOCK_SIZE);
 
                 gCurrentSprite.drawOrder = 13;
-                gCurrentSprite.pOam = sEscapeShipPartOAM_Tail;
+                gCurrentSprite.pOam = sEscapeShipPartOam_Tail;
                 gCurrentSprite.pose = ESCAPE_SHIP_PART_POSE_WAIT_FOR_MOVING_TAIL;
                 gCurrentSprite.work1 = 0;
                 gCurrentSprite.work2 = CONVERT_SECONDS(1.f / 15);
@@ -512,7 +536,7 @@ void EscapeShipPart(void)
                 gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(6 * BLOCK_SIZE);
 
                 gCurrentSprite.drawOrder = 14;
-                gCurrentSprite.pOam = sEscapeShipPartOAM_Flames;
+                gCurrentSprite.pOam = sEscapeShipPartOam_Flames;
                 gCurrentSprite.pose = ESCAPE_SHIP_PART_POSE_UPDATE_FLAMES;
             }
             break;
@@ -527,7 +551,7 @@ void EscapeShipPart(void)
         case ESCAPE_SHIP_PART_POSE_WAIT_FOR_MOVING_TAIL:
             if (gSpriteData[ramSlot].pose == ESCAPE_SHIP_POSE_CLOSED && gSpriteData[ramSlot].work0 == 1)
             {
-                gCurrentSprite.pOam = sEscapeShipPartOAM_TailMoving;
+                gCurrentSprite.pOam = sEscapeShipPartOam_TailMoving;
                 gCurrentSprite.currentAnimationFrame = 0;
                 gCurrentSprite.animationDurationCounter = 0;
                 gCurrentSprite.pose = ESCAPE_SHIP_PART_POSE_UPDATE_PALETTE;

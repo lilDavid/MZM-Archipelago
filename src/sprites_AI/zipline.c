@@ -13,11 +13,32 @@
 #include "structs/sprite.h"
 #include "structs/samus.h"
 
+// Zipline
+
+#define ZIPLINE_BLOCK_X_RANGE (HALF_BLOCK_SIZE + PIXEL_SIZE * 3)
+
+#define ZIPLINE_HEALTH_NOT_MOVING 0x1
+#define ZIPLINE_HEALTH_MOVING 0x2
+
+#define ZIPLINE_ANIMATION_STATE_RELEASED 0x0
+#define ZIPLINE_ANIMATION_STATE_GRABBING 0x1
+#define ZIPLINE_ANIMATION_STATE_GRABBED 0x2
+#define ZIPLINE_ANIMATION_STATE_RELEASING 0x3
+
+#define ZIPLINE_POSE_IDLE 0x9
+
+// Zipline button
+
+#define ZIPLINE_BUTTON_POSE_BIND_ZIPLINE 0x1
+#define ZIPLINE_BUTTON_POSE_IDLE 0x9
+#define ZIPLINE_BUTTON_POSE_OFF 0xF
+#define ZIPLINE_BUTTON_POSE_ACTIVATED 0x23
+
 /**
  * @brief 1d318 | 8c | Checks the collision for a stop block
  * 
  */
-void ZiplineCheckColliding(void)
+static void ZiplineCheckColliding(void)
 {
     u16 yPosition;
     u16 xPosition;
@@ -53,7 +74,7 @@ void ZiplineCheckColliding(void)
  * 
  * @return u8 1 if releasing, 0 otherwise
  */
-u8 ZiplineMoving(void)
+static u8 ZiplineMoving(void)
 {
     u8 releasing;
     u16 velocity;
@@ -66,10 +87,12 @@ u8 ZiplineMoving(void)
     if (gCurrentSprite.status & SPRITE_STATUS_SAMUS_COLLIDING)
     {
         samusGrabbing = TRUE;
-        velocity = PIXEL_SIZE * 3;
+        velocity = QUARTER_BLOCK_SIZE - PIXEL_SIZE;
     }
     else
+    {
         velocity = QUARTER_BLOCK_SIZE;
+    }
 
     ZiplineCheckColliding();
     if (gCurrentAffectingClipdata.movement == CLIPDATA_MOVEMENT_STOP_ENEMY_BLOCK_SOLID)
@@ -87,13 +110,23 @@ u8 ZiplineMoving(void)
         {
             gCurrentSprite.xPosition += velocity;
             if (samusGrabbing)
+            {
                 gSamusData.xPosition += velocity;
+                #ifdef REGION_EU
+                gSamusPhysics.horizontalMovingDirection = HDMOVING_RIGHT;
+                #endif // REGION_EU
+            }
         }
         else
         {
             gCurrentSprite.xPosition -= velocity;
             if (samusGrabbing)
+            {
                 gSamusData.xPosition -= velocity;
+                #ifdef REGION_EU
+                gSamusPhysics.horizontalMovingDirection = HDMOVING_LEFT;
+                #endif // REGION_EU
+            }
         }
     }
 
@@ -114,7 +147,7 @@ u8 ZiplineMoving(void)
  * @brief 1d46c | 1dc | Updates the OAM of the zipline
  * 
  */
-void ZiplineUpdateOAM(void)
+static void ZiplineUpdateOAM(void)
 {
     if (gCurrentSprite.status & SPRITE_STATUS_SAMUS_COLLIDING)
     {
@@ -131,7 +164,7 @@ void ZiplineUpdateOAM(void)
                     break;
 
                 case ZIPLINE_ANIMATION_STATE_GRABBING:
-                    if (SpriteUtilCheckEndCurrentSpriteAnim())
+                    if (SpriteUtilHasCurrentAnimationEnded())
                     {
                         gCurrentSprite.pOam = sZiplineOam_OnSamusGrabbed;
                         gCurrentSprite.animationDurationCounter = 0;
@@ -143,7 +176,7 @@ void ZiplineUpdateOAM(void)
                     break;
 
                 case ZIPLINE_ANIMATION_STATE_RELEASING:
-                    if (SpriteUtilCheckEndCurrentSpriteAnim())
+                    if (SpriteUtilHasCurrentAnimationEnded())
                     {
                         gCurrentSprite.pOam = sZiplineOam_OnSamusGrabbed;
                         gCurrentSprite.animationDurationCounter = 0;
@@ -175,7 +208,7 @@ void ZiplineUpdateOAM(void)
                     break;
 
                 case ZIPLINE_ANIMATION_STATE_GRABBING:
-                    if (SpriteUtilCheckEndCurrentSpriteAnim())
+                    if (SpriteUtilHasCurrentAnimationEnded())
                     {
                         gCurrentSprite.pOam = sZiplineOam_OffSamusGrabbed;
                         gCurrentSprite.animationDurationCounter = 0;
@@ -186,7 +219,7 @@ void ZiplineUpdateOAM(void)
                     break;
                 
                 case ZIPLINE_ANIMATION_STATE_RELEASING:
-                    if (SpriteUtilCheckEndCurrentSpriteAnim())
+                    if (SpriteUtilHasCurrentAnimationEnded())
                     {
                         gCurrentSprite.pOam = sZiplineOam_OffSamusGrabbed;
                         gCurrentSprite.animationDurationCounter = 0;
@@ -221,7 +254,7 @@ void ZiplineUpdateOAM(void)
                     break;
 
                 case ZIPLINE_ANIMATION_STATE_GRABBING:
-                    if (SpriteUtilCheckEndCurrentSpriteAnim())
+                    if (SpriteUtilHasCurrentAnimationEnded())
                     {
                         gCurrentSprite.pOam = sZiplineOam_OnIdle;
                         gCurrentSprite.animationDurationCounter = 0;
@@ -232,7 +265,7 @@ void ZiplineUpdateOAM(void)
                     break;
                 
                 case ZIPLINE_ANIMATION_STATE_RELEASING:
-                    if (SpriteUtilCheckEndCurrentSpriteAnim())
+                    if (SpriteUtilHasCurrentAnimationEnded())
                     {
                         gCurrentSprite.pOam = sZiplineOam_OnIdle;
                         gCurrentSprite.animationDurationCounter = 0;
@@ -264,7 +297,7 @@ void ZiplineUpdateOAM(void)
                     break;
 
                 case ZIPLINE_ANIMATION_STATE_GRABBING:
-                    if (SpriteUtilCheckEndCurrentSpriteAnim())
+                    if (SpriteUtilHasCurrentAnimationEnded())
                     {
                         gCurrentSprite.pOam = sZiplineOam_OffIdle;
                         gCurrentSprite.animationDurationCounter = 0;
@@ -275,7 +308,7 @@ void ZiplineUpdateOAM(void)
                     break;
                 
                 case ZIPLINE_ANIMATION_STATE_RELEASING:
-                    if (SpriteUtilCheckEndCurrentSpriteAnim())
+                    if (SpriteUtilHasCurrentAnimationEnded())
                     {
                         gCurrentSprite.pOam = sZiplineOam_OffIdle;
                         gCurrentSprite.animationDurationCounter = 0;
@@ -301,7 +334,7 @@ void ZiplineUpdateOAM(void)
  * @brief 1d648 | a4 | Initializes a zipline sprite
  * 
  */
-void ZiplineInit(void)
+static void ZiplineInit(void)
 {
     gCurrentSprite.hitboxTop = -BLOCK_SIZE;
     gCurrentSprite.hitboxBottom = QUARTER_BLOCK_SIZE;
@@ -341,7 +374,7 @@ void ZiplineInit(void)
  * @brief 1d6ec | 84 | Handles a zipline being idle
  * 
  */
-void ZiplineUpdate(void)
+static void ZiplineUpdate(void)
 {
     if (!SpriteUtilCheckOnZipline() && gCurrentSprite.status & SPRITE_STATUS_SAMUS_COLLIDING)
     {
@@ -357,7 +390,7 @@ void ZiplineUpdate(void)
         if (MOD_AND(gCurrentSprite.work0, 16) == 0)
             SoundPlay(SOUND_ZIPLING_MOVING);
 
-        gCurrentSprite.work0++;
+        APPLY_DELTA_TIME_INC(gCurrentSprite.work0);
 
         if (ZiplineMoving())
         {
@@ -373,12 +406,12 @@ void ZiplineUpdate(void)
  * @brief 1d770 | 98 | Initializes a zipline button sprite
  * 
  */
-void ZiplineButtonInit(void)
+static void ZiplineButtonInit(void)
 {
     if (EventFunction(EVENT_ACTION_CHECKING, EVENT_ZIPLINES_ACTIVATED))
-        gCurrentSprite.pOam = sZiplineButtonOAM_OnIdle;
+        gCurrentSprite.pOam = sZiplineButtonOam_OnIdle;
     else
-        gCurrentSprite.pOam = sZiplineButtonOAM_OffIdle;
+        gCurrentSprite.pOam = sZiplineButtonOam_OffIdle;
 
     gCurrentSprite.yPosition -= BLOCK_SIZE * 2;
 
@@ -389,7 +422,7 @@ void ZiplineButtonInit(void)
     gCurrentSprite.hitboxTop = 0;
     gCurrentSprite.hitboxBottom = BLOCK_SIZE + QUARTER_BLOCK_SIZE;
     gCurrentSprite.hitboxLeft = -(QUARTER_BLOCK_SIZE + PIXEL_SIZE);
-    gCurrentSprite.hitboxRight = (QUARTER_BLOCK_SIZE + PIXEL_SIZE);
+    gCurrentSprite.hitboxRight = QUARTER_BLOCK_SIZE + PIXEL_SIZE;
 
     gCurrentSprite.animationDurationCounter = 0;
     gCurrentSprite.currentAnimationFrame = 0;
@@ -407,20 +440,20 @@ void ZiplineButtonInit(void)
  * @brief 1d808 | 20 | Initializes a zipline button to be idle
  * 
  */
-void ZiplineButtonIdleInit(void)
+static void ZiplineButtonIdleInit(void)
 {
     gCurrentSprite.pose = ZIPLINE_BUTTON_POSE_IDLE;
 
     gCurrentSprite.animationDurationCounter = 0;
     gCurrentSprite.currentAnimationFrame = 0;
-    gCurrentSprite.pOam = sZiplineButtonOAM_OnIdle;
+    gCurrentSprite.pOam = sZiplineButtonOam_OnIdle;
 }
 
 /**
  * @brief 1d828 | 4c | Binds the zipline of the room to the button
  * 
  */
-void ZiplineButtonBindZipline(void)
+static void ZiplineButtonBindZipline(void)
 {
     u8 ramSlot;
 
@@ -447,7 +480,7 @@ void ZiplineButtonBindZipline(void)
  * @brief 1d874 | 18 | Handles a zipline button being off
  * 
  */
-void ZiplineButtonOff(void)
+static void ZiplineButtonOff(void)
 {
     if (EventFunction(EVENT_ACTION_CHECKING, EVENT_ZIPLINES_ACTIVATED))
         ZiplineButtonIdleInit(); // Set on
@@ -457,7 +490,7 @@ void ZiplineButtonOff(void)
  * @brief 1d88c | 78 | Handles a zipline button being idle
  * 
  */
-void ZiplineButtonIdle(void)
+static void ZiplineButtonIdle(void)
 {
     u8 moving;
     u8 ramSlot;
@@ -473,14 +506,16 @@ void ZiplineButtonIdle(void)
         SoundPlay(SOUND_ZIPLING_CALLED);
     }
     else if (gSpriteData[ramSlot].health == ZIPLINE_HEALTH_MOVING)
+    {
         moving = TRUE; // Already moving
+    }
 
     if (moving)
     {
         gCurrentSprite.pose = ZIPLINE_BUTTON_POSE_ACTIVATED;
         gCurrentSprite.animationDurationCounter = 0;
         gCurrentSprite.currentAnimationFrame = 0;
-        gCurrentSprite.pOam = sZiplineButtonOAM_Active;
+        gCurrentSprite.pOam = sZiplineButtonOam_Active;
     }
 }
 
@@ -488,7 +523,7 @@ void ZiplineButtonIdle(void)
  * @brief 1d904 | 28 | Handles a zipline button being active
  * 
  */
-void ZiplineButtonZiplineMoving(void)
+static void ZiplineButtonZiplineMoving(void)
 {
     u8 ramSlot;
 

@@ -17,7 +17,7 @@ s16 FixedMultiplication(s16 a, s16 b)
     res = x;
     res *= y;
 
-    res = Q_8_8_TO_INT(res);
+    res = Q_8_8_TO_S32(res);
 
     return res;
 }

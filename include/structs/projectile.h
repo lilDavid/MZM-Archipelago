@@ -1,19 +1,20 @@
 #ifndef PROJECTILE_STRUCT_H
 #define PROJECTILE_STRUCT_H
 
-
 #include "types.h"
+
+#include "constants/projectile.h"
 
 // Structs
 
 struct ProjectileData {
-    u8 status;
+    ProjectileStatus status;
     const struct FrameData* pOam;
     u16 yPosition;
     u16 xPosition;
     u16 currentAnimationFrame;
     u8 animationDurationCounter;
-    u8 type;
+    ProjectileType type;
     u8 direction;
     u8 movementStage;
     u8 drawDistanceOffset;

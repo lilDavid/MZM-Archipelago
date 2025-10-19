@@ -1,10 +1,10 @@
-#include "gba.h"
 #include "projectile_util.h"
+#include "gba.h"
+#include "projectile.h"
 #include "clipdata.h"
 
 #include "data/projectile_data.h"
 #include "data/sprite_data.h"
-#include "data/engine_pointers.h"
 
 #include "constants/audio.h"
 #include "constants/clipdata.h"
@@ -21,8 +21,27 @@
 #include "structs/game_state.h"
 #include "structs/samus.h"
 #include "structs/sprite.h"
+#include "structs/particle.h"
 #include "structs/power_bomb_explosion.h"
 
+static ProjFunc_T sProcessProjectileFunctionPointers[PROJ_TYPE_COUNT] = {
+    [PROJ_TYPE_BEAM] = ProjectileProcessNormalBeam,
+    [PROJ_TYPE_LONG_BEAM] = ProjectileProcessLongBeam,
+    [PROJ_TYPE_ICE_BEAM] = ProjectileProcessIceBeam,
+    [PROJ_TYPE_WAVE_BEAM] = ProjectileProcessWaveBeam,
+    [PROJ_TYPE_PLASMA_BEAM] = ProjectileProcessPlasmaBeam,
+    [PROJ_TYPE_PISTOL] = ProjectileProcessPistol,
+    [PROJ_TYPE_CHARGED_BEAM] = ProjectileProcessChargedNormalBeam,
+    [PROJ_TYPE_CHARGED_LONG_BEAM] = ProjectileProcessChargedLongBeam,
+    [PROJ_TYPE_CHARGED_ICE_BEAM] = ProjectileProcessChargedIceBeam,
+    [PROJ_TYPE_CHARGED_WAVE_BEAM] = ProjectileProcessChargedWaveBeam,
+    [PROJ_TYPE_CHARGED_PLASMA_BEAM] = ProjectileProcessChargedPlasmaBeam,
+    [PROJ_TYPE_CHARGED_PISTOL] = ProjectileProcessChargedPistol,
+    [PROJ_TYPE_MISSILE] = ProjectileProcessMissile,
+    [PROJ_TYPE_SUPER_MISSILE] = ProjectileProcessSuperMissile,
+    [PROJ_TYPE_BOMB] = ProjectileProcessBomb,
+    [PROJ_TYPE_POWER_BOMB] = ProjectileProcessPowerBomb
+};
 
 /**
  * @brief 4ed08 | 8c | Sets a particle effect when shooting
@@ -32,7 +51,7 @@ void ProjectileSetBeamParticleEffect(void)
 {
     u16 yPosition;
     u16 xPosition;
-    u8 effect;
+    ParticleEffectId effect;
     u16 direction;
 
     yPosition = gArmCannonY;
@@ -86,9 +105,9 @@ void ProjectileSetBeamParticleEffect(void)
  * 
  * @param type Projectile type
  * @param limit Limit
- * @return u8 bool (under limit)
+ * @return boolu8 Under limit
  */
-u8 ProjectileCheckNumberOfProjectiles(u8 type, u8 limit)
+boolu8 ProjectileCheckNumberOfProjectiles(ProjectileType type, u8 limit)
 {
     u8 count;
     struct ProjectileData* pProj;
@@ -111,16 +130,16 @@ u8 ProjectileCheckNumberOfProjectiles(u8 type, u8 limit)
 /**
  * @brief 4ede4 | a4 | Tries to initialize a projectile with the given parameters
  * 
- * @param type Proectile Type
+ * @param type Projectile Type
  * @param yPosition Y Position
  * @param xPosition X Position
- * @return u8 1 if could init, 0 otherwise
+ * @return boolu8 Could spawn
  */
-u8 ProjectileInit(u8 type, u16 yPosition, u16 xPosition)
+boolu8 ProjectileInit(ProjectileType type, u16 yPosition, u16 xPosition)
 {
     struct ProjectileData* pProj;
     struct SamusData* pData;
-    u8 status;
+    ProjectileStatus status;
     u8 hitbox;
 
     for (pProj = gProjectileData; pProj < gProjectileData + MAX_AMOUNT_OF_PROJECTILES; pProj++)
@@ -166,21 +185,21 @@ u8 ProjectileInit(u8 type, u16 yPosition, u16 xPosition)
 void ProjectileUpdate(void)
 {
     s32 i;
-    u8 checks;
-    u8 projType;
-    u16 beamSound;
-    u16 beams;
+    boolu8 checks;
+    ProjectileType projType;
+    Sound beamSound;
+    BeamBombFlags beams;
     struct ProjectileData* pProj;
 
-    if (gGameModeSub1 != SUB_GAME_MODE_PLAYING)
+    if (gSubGameMode1 != SUB_GAME_MODE_PLAYING)
         return;
 
     // Update the arm cannon position offset fields
     SamusCallUpdateArmCannonPositionOffset();
 
     // Samus position is in sub pixels, the offsets are in pixel, and the final result is in sub pixels
-    gArmCannonY = PIXEL_TO_SUB_PIXEL(SUB_PIXEL_TO_PIXEL(gSamusData.yPosition) + gSamusPhysics.armCannonYPositionOffset);
-    gArmCannonX = PIXEL_TO_SUB_PIXEL(SUB_PIXEL_TO_PIXEL(gSamusData.xPosition) + gSamusPhysics.armCannonXPositionOffset);
+    gArmCannonY = PIXEL_TO_SUB_PIXEL(SUB_PIXEL_TO_PIXEL(gSamusData.yPosition) + gSamusPhysics.armCannonYOffset);
+    gArmCannonX = PIXEL_TO_SUB_PIXEL(SUB_PIXEL_TO_PIXEL(gSamusData.xPosition) + gSamusPhysics.armCannonXOffset);
 
     // Check spawn the charging beam particle effect
     if (gSamusWeaponInfo.chargeCounter == CHARGE_BEAM_START_THRESHOLD && gEquipment.suitType != SUIT_SUITLESS)
@@ -211,7 +230,7 @@ void ProjectileUpdate(void)
                 if (ProjectileCheckNumberOfProjectiles(PROJ_TYPE_CHARGED_PISTOL, PROJ_LIMIT_CHARGED_PISTOL) &&
                     ProjectileInit(PROJ_TYPE_CHARGED_PISTOL, gArmCannonY, gArmCannonX))
                 {
-                    gSamusWeaponInfo.cooldown = CONVERT_SECONDS(.1f) + 1 * DELTA_TIME;
+                    gSamusWeaponInfo.cooldown = CONVERT_SECONDS(.1f + 1.f / 60);
                     ProjectileSetBeamParticleEffect();
                     gSamusWeaponInfo.beamReleasePaletteTimer = CONVERT_SECONDS(1.f / 15);
                     SoundPlay(SOUND_CHARGED_PISTOL_SHOT);
@@ -308,7 +327,7 @@ void ProjectileUpdate(void)
                 if (ProjectileCheckNumberOfProjectiles(projType, PROJ_LIMIT_CHARGED_BEAM) &&
                     ProjectileInit(projType, gArmCannonY, gArmCannonX))
                 {
-                    gSamusWeaponInfo.cooldown = CONVERT_SECONDS(.1f) + 1 * DELTA_TIME;
+                    gSamusWeaponInfo.cooldown = CONVERT_SECONDS(.1f + 1.f / 60);
                     ProjectileSetBeamParticleEffect();
                     gSamusWeaponInfo.beamReleasePaletteTimer = CONVERT_SECONDS(1.f / 15);
                     SoundPlay(beamSound);
@@ -324,7 +343,7 @@ void ProjectileUpdate(void)
                 if (ProjectileCheckNumberOfProjectiles(PROJ_TYPE_PISTOL, PROJ_LIMIT_PISTOL) &&
                     ProjectileInit(PROJ_TYPE_PISTOL, gArmCannonY, gArmCannonX))
                 {
-                    gSamusWeaponInfo.cooldown = CONVERT_SECONDS(.1f) + 1 * DELTA_TIME;
+                    gSamusWeaponInfo.cooldown = CONVERT_SECONDS(.1f + 1.f / 60);
                     ProjectileSetBeamParticleEffect();
                     gSamusWeaponInfo.beamReleasePaletteTimer = CONVERT_SECONDS(1.f / 15);
                     SoundPlay(SOUND_PISTOL_SHOT);
@@ -420,7 +439,7 @@ void ProjectileUpdate(void)
 
                 if (ProjectileCheckNumberOfProjectiles(projType, PROJ_LIMIT_BEAM) && ProjectileInit(projType, gArmCannonY, gArmCannonX))
                 {
-                    gSamusWeaponInfo.cooldown = CONVERT_SECONDS(.1f) + 1 * DELTA_TIME;
+                    gSamusWeaponInfo.cooldown = CONVERT_SECONDS(.1f + 1.f / 60);
                     ProjectileSetBeamParticleEffect();
                     gSamusWeaponInfo.beamReleasePaletteTimer = CONVERT_SECONDS(1.f / 15);
                     SoundPlay(beamSound);
@@ -447,7 +466,7 @@ void ProjectileUpdate(void)
             if (ProjectileCheckNumberOfProjectiles(PROJ_TYPE_SUPER_MISSILE, PROJ_LIMIT_SUPER_MISSILE) &&
                 ProjectileInit(PROJ_TYPE_SUPER_MISSILE, gArmCannonY, gArmCannonX))
             {
-                gSamusWeaponInfo.cooldown = CONVERT_SECONDS(1.f / 6) + 1 * DELTA_TIME;
+                gSamusWeaponInfo.cooldown = CONVERT_SECONDS(1.f / 6 + 1.f / 60);
 
                 SoundPlay(SOUND_SUPER_MISSILE_SHOT);
                 SoundPlay(SOUND_SUPER_MISSILE_THRUST);
@@ -460,7 +479,7 @@ void ProjectileUpdate(void)
             if (ProjectileCheckNumberOfProjectiles(PROJ_TYPE_BOMB, PROJ_LIMIT_BOMB) &&
                 ProjectileInit(PROJ_TYPE_BOMB, gSamusData.yPosition, gSamusData.xPosition))
             {
-                gSamusWeaponInfo.cooldown = CONVERT_SECONDS(.1f) + 1 * DELTA_TIME;
+                gSamusWeaponInfo.cooldown = CONVERT_SECONDS(.1f + 1.f / 60);
             }
 
             gSamusWeaponInfo.newProjectile = PROJECTILE_CATEGORY_NONE;
@@ -516,19 +535,19 @@ void ProjectileUpdateAnimation(struct ProjectileData* pProj)
 }
 
 /**
- * @brief 4f33c | 44 | Draws every projectile if the status flag 80 isn't set
+ * @brief 4f33c | 44 | Draws every projectile with high OAM priority
  * 
  */
-void ProjectileDrawAllStatusFalse(void)
+void ProjectileDrawAll_HighPriority(void)
 {
     struct ProjectileData* pProj;
 
-    if (gGameModeSub1 != SUB_GAME_MODE_PLAYING)
+    if (gSubGameMode1 != SUB_GAME_MODE_PLAYING)
         return;
 
     for (pProj = gProjectileData; pProj < gProjectileData + MAX_AMOUNT_OF_PROJECTILES; pProj++)
     {
-        if ((pProj->status & (PROJ_STATUS_EXISTS | PROJ_STATUS_ON_SCREEN | PROJ_STATUS_NOT_DRAWN | PROJ_STATUS_UNKNOWN_80)) ==
+        if ((pProj->status & (PROJ_STATUS_EXISTS | PROJ_STATUS_ON_SCREEN | PROJ_STATUS_NOT_DRAWN | PROJ_STATUS_LOW_OAM_PRIORITY)) ==
             (PROJ_STATUS_EXISTS | PROJ_STATUS_ON_SCREEN))
         {
             ProjectileDraw(pProj);
@@ -537,20 +556,20 @@ void ProjectileDrawAllStatusFalse(void)
 }
 
 /**
- * @brief 4f380 | 44 | Draws every projectile if the status flag 80 is set
+ * @brief 4f380 | 44 | Draws every projectile with low OAM priority
  * 
  */
-void ProjectileDrawAllStatusTrue(void)
+void ProjectileDrawAll_LowPriority(void)
 {
     struct ProjectileData* pProj;
 
-    if (gGameModeSub1 != SUB_GAME_MODE_PLAYING)
+    if (gSubGameMode1 != SUB_GAME_MODE_PLAYING)
         return;
 
     for (pProj = gProjectileData; pProj < gProjectileData + MAX_AMOUNT_OF_PROJECTILES; pProj++)
     {
-        if ((pProj->status & (PROJ_STATUS_EXISTS | PROJ_STATUS_ON_SCREEN | PROJ_STATUS_NOT_DRAWN | PROJ_STATUS_UNKNOWN_80)) ==
-            (PROJ_STATUS_EXISTS | PROJ_STATUS_ON_SCREEN | PROJ_STATUS_UNKNOWN_80))
+        if ((pProj->status & (PROJ_STATUS_EXISTS | PROJ_STATUS_ON_SCREEN | PROJ_STATUS_NOT_DRAWN | PROJ_STATUS_LOW_OAM_PRIORITY)) ==
+            (PROJ_STATUS_EXISTS | PROJ_STATUS_ON_SCREEN | PROJ_STATUS_LOW_OAM_PRIORITY))
         {
             ProjectileDraw(pProj);
         }
@@ -597,7 +616,7 @@ void ProjectileDraw(struct ProjectileData* pProj)
         yFlip = pProj->status & PROJ_STATUS_Y_FLIP;
 
         bgPriority = BGCNT_GET_PRIORITY(gIoRegistersBackup.BG1CNT);
-        if (pProj->status & PROJ_STATUS_HIGH_PRIORITY)
+        if (pProj->status & PROJ_STATUS_ABOVE_BG1)
             bgPriority = 0;
         else
             bgPriority++;
@@ -715,7 +734,7 @@ void ProjectileCheckDespawn(struct ProjectileData* pProj)
                 xDistance = xDistance - xPosition;
 
             if (yDistance > BLOCK_SIZE * 12 || xDistance > BLOCK_SIZE * 10) // todo: screen size?
-                pProj->status = 0;
+                pProj->status = PROJ_STATUS_NONE;
         }
     }
 }
@@ -732,10 +751,10 @@ void ProjectileLoadGraphics(void)
     if (gEquipment.suitType == SUIT_SUITLESS)
     {
         // Only transfer beam section (ignore CHARGE GAUGE)
-        DMA_SET(3, sPistolGfx_Top, VRAM_BASE + 0x11000, C_32_2_16(DMA_ENABLE, sizeof(sPistolGfx_Top) / 2 / sizeof(u16)));
-        DMA_SET(3, sPistolGfx_Bottom, VRAM_BASE + 0x11400, C_32_2_16(DMA_ENABLE, sizeof(sPistolGfx_Bottom) / sizeof(u16)));
-        DMA_SET(3, sPistolGfx_Charged_Top, VRAM_BASE + 0x11800, C_32_2_16(DMA_ENABLE, sizeof(sPistolGfx_Charged_Top) / sizeof(u16)));
-        DMA_SET(3, sPistolGfx_Charged_Bottom, VRAM_BASE + 0x11C00, C_32_2_16(DMA_ENABLE, sizeof(sPistolGfx_Charged_Bottom) / sizeof(u16)));
+        DMA_SET(3, sPistolGfx_Top, VRAM_BASE + 0x11000, C_32_2_16(DMA_ENABLE, sizeof(sPistolGfx_Top) / 2 / 2));
+        DMA_SET(3, sPistolGfx_Bottom, VRAM_BASE + 0x11400, C_32_2_16(DMA_ENABLE, sizeof(sPistolGfx_Bottom) / 2));
+        DMA_SET(3, sPistolGfx_Charged_Top, VRAM_BASE + 0x11800, C_32_2_16(DMA_ENABLE, sizeof(sPistolGfx_Charged_Top) / 2));
+        DMA_SET(3, sPistolGfx_Charged_Bottom, VRAM_BASE + 0x11C00, C_32_2_16(DMA_ENABLE, sizeof(sPistolGfx_Charged_Bottom) / 2));
 
         HudDrawSuitless();
         palOffset = 5 * PAL_ROW;
@@ -745,10 +764,10 @@ void ProjectileLoadGraphics(void)
         bba = gEquipment.beamBombsActivation;
         if (bba & BBF_PLASMA_BEAM)
         {
-            DMA_SET(3, sPlasmaBeamGfx_Top, VRAM_BASE + 0x11000, C_32_2_16(DMA_ENABLE, sizeof(sPlasmaBeamGfx_Top) / sizeof(u16)));
-            DMA_SET(3, sPlasmaBeamGfx_Bottom, VRAM_BASE + 0x11400, C_32_2_16(DMA_ENABLE, sizeof(sPlasmaBeamGfx_Bottom) / sizeof(u16)));
-            DMA_SET(3, sPlasmaBeamGfx_Charged_Top, VRAM_BASE + 0x11800, C_32_2_16(DMA_ENABLE, sizeof(sPlasmaBeamGfx_Charged_Top) / sizeof(u16)));
-            DMA_SET(3, sPlasmaBeamGfx_Charged_Bottom, VRAM_BASE + 0x11C00, C_32_2_16(DMA_ENABLE, sizeof(sPlasmaBeamGfx_Charged_Bottom) / sizeof(u16)));
+            DMA_SET(3, sPlasmaBeamGfx_Top, VRAM_BASE + 0x11000, C_32_2_16(DMA_ENABLE, sizeof(sPlasmaBeamGfx_Top) / 2));
+            DMA_SET(3, sPlasmaBeamGfx_Bottom, VRAM_BASE + 0x11400, C_32_2_16(DMA_ENABLE, sizeof(sPlasmaBeamGfx_Bottom) / 2));
+            DMA_SET(3, sPlasmaBeamGfx_Charged_Top, VRAM_BASE + 0x11800, C_32_2_16(DMA_ENABLE, sizeof(sPlasmaBeamGfx_Charged_Top) / 2));
+            DMA_SET(3, sPlasmaBeamGfx_Charged_Bottom, VRAM_BASE + 0x11C00, C_32_2_16(DMA_ENABLE, sizeof(sPlasmaBeamGfx_Charged_Bottom) / 2));
 
             if (bba & BBF_ICE_BEAM)
                 palOffset = 2 * PAL_ROW;
@@ -757,10 +776,10 @@ void ProjectileLoadGraphics(void)
         }
         else if (bba & BBF_WAVE_BEAM)
         {
-            DMA_SET(3, sWaveBeamGfx_Top, VRAM_BASE + 0x11000, C_32_2_16(DMA_ENABLE, sizeof(sWaveBeamGfx_Top) / sizeof(u16)));
-            DMA_SET(3, sWaveBeamGfx_Bottom, VRAM_BASE + 0x11400, C_32_2_16(DMA_ENABLE, sizeof(sWaveBeamGfx_Bottom) / sizeof(u16)));
-            DMA_SET(3, sWaveBeamGfx_Charged_Top, VRAM_BASE + 0x11800, C_32_2_16(DMA_ENABLE, sizeof(sWaveBeamGfx_Charged_Top) / sizeof(u16)));
-            DMA_SET(3, sWaveBeamGfx_Charged_Bottom, VRAM_BASE + 0x11C00, C_32_2_16(DMA_ENABLE, sizeof(sWaveBeamGfx_Charged_Bottom) / sizeof(u16)));
+            DMA_SET(3, sWaveBeamGfx_Top, VRAM_BASE + 0x11000, C_32_2_16(DMA_ENABLE, sizeof(sWaveBeamGfx_Top) / 2));
+            DMA_SET(3, sWaveBeamGfx_Bottom, VRAM_BASE + 0x11400, C_32_2_16(DMA_ENABLE, sizeof(sWaveBeamGfx_Bottom) / 2));
+            DMA_SET(3, sWaveBeamGfx_Charged_Top, VRAM_BASE + 0x11800, C_32_2_16(DMA_ENABLE, sizeof(sWaveBeamGfx_Charged_Top) / 2));
+            DMA_SET(3, sWaveBeamGfx_Charged_Bottom, VRAM_BASE + 0x11C00, C_32_2_16(DMA_ENABLE, sizeof(sWaveBeamGfx_Charged_Bottom) / 2));
 
             if (bba & BBF_ICE_BEAM)
                 palOffset = 2 * PAL_ROW;
@@ -769,34 +788,34 @@ void ProjectileLoadGraphics(void)
         }
         else if (bba & BBF_ICE_BEAM)
         {
-            DMA_SET(3, sIceBeamGfx_Top, VRAM_BASE + 0x11000, C_32_2_16(DMA_ENABLE, sizeof(sIceBeamGfx_Top) / sizeof(u16)));
-            DMA_SET(3, sIceBeamGfx_Bottom, VRAM_BASE + 0x11400, C_32_2_16(DMA_ENABLE, sizeof(sIceBeamGfx_Bottom) / sizeof(u16)));
-            DMA_SET(3, sIceBeamGfx_Charged_Top, VRAM_BASE + 0x11800, C_32_2_16(DMA_ENABLE, sizeof(sIceBeamGfx_Charged_Top) / sizeof(u16)));
-            DMA_SET(3, sIceBeamGfx_Charged_Bottom, VRAM_BASE + 0x11C00, C_32_2_16(DMA_ENABLE, sizeof(sIceBeamGfx_Charged_Bottom) / sizeof(u16)));
+            DMA_SET(3, sIceBeamGfx_Top, VRAM_BASE + 0x11000, C_32_2_16(DMA_ENABLE, sizeof(sIceBeamGfx_Top) / 2));
+            DMA_SET(3, sIceBeamGfx_Bottom, VRAM_BASE + 0x11400, C_32_2_16(DMA_ENABLE, sizeof(sIceBeamGfx_Bottom) / 2));
+            DMA_SET(3, sIceBeamGfx_Charged_Top, VRAM_BASE + 0x11800, C_32_2_16(DMA_ENABLE, sizeof(sIceBeamGfx_Charged_Top) / 2));
+            DMA_SET(3, sIceBeamGfx_Charged_Bottom, VRAM_BASE + 0x11C00, C_32_2_16(DMA_ENABLE, sizeof(sIceBeamGfx_Charged_Bottom) / 2));
 
             palOffset = 2 * PAL_ROW;
         }
         else if (bba & BBF_LONG_BEAM)
         {
-            DMA_SET(3, sLongBeamGfx_Top, VRAM_BASE + 0x11000, C_32_2_16(DMA_ENABLE, sizeof(sLongBeamGfx_Top) / sizeof(u16)));
-            DMA_SET(3, sLongBeamGfx_Bottom, VRAM_BASE + 0x11400, C_32_2_16(DMA_ENABLE, sizeof(sLongBeamGfx_Bottom) / sizeof(u16)));
-            DMA_SET(3, sLongBeamGfx_Charged_Top, VRAM_BASE + 0x11800, C_32_2_16(DMA_ENABLE, sizeof(sLongBeamGfx_Charged_Top) / sizeof(u16)));
-            DMA_SET(3, sLongBeamGfx_Charged_Bottom, VRAM_BASE + 0x11C00, C_32_2_16(DMA_ENABLE, sizeof(sLongBeamGfx_Charged_Bottom) / sizeof(u16)));
+            DMA_SET(3, sLongBeamGfx_Top, VRAM_BASE + 0x11000, C_32_2_16(DMA_ENABLE, sizeof(sLongBeamGfx_Top) / 2));
+            DMA_SET(3, sLongBeamGfx_Bottom, VRAM_BASE + 0x11400, C_32_2_16(DMA_ENABLE, sizeof(sLongBeamGfx_Bottom) / 2));
+            DMA_SET(3, sLongBeamGfx_Charged_Top, VRAM_BASE + 0x11800, C_32_2_16(DMA_ENABLE, sizeof(sLongBeamGfx_Charged_Top) / 2));
+            DMA_SET(3, sLongBeamGfx_Charged_Bottom, VRAM_BASE + 0x11C00, C_32_2_16(DMA_ENABLE, sizeof(sLongBeamGfx_Charged_Bottom) / 2));
 
             palOffset = 1 * PAL_ROW;
         }
         else
         {
-            DMA_SET(3, sNormalBeamGfx_Top, VRAM_BASE + 0x11000, C_32_2_16(DMA_ENABLE, sizeof(sNormalBeamGfx_Top) / sizeof(u16)));
-            DMA_SET(3, sNormalBeamGfx_Bottom, VRAM_BASE + 0x11400, C_32_2_16(DMA_ENABLE, sizeof(sNormalBeamGfx_Bottom) / sizeof(u16)));
-            DMA_SET(3, sNormalBeamGfx_Charged_Top, VRAM_BASE + 0x11800, C_32_2_16(DMA_ENABLE, sizeof(sNormalBeamGfx_Charged_Top) / sizeof(u16)));
-            DMA_SET(3, sNormalBeamGfx_Charged_Bottom, VRAM_BASE + 0x11C00, C_32_2_16(DMA_ENABLE, sizeof(sNormalBeamGfx_Charged_Bottom) / sizeof(u16)));
+            DMA_SET(3, sNormalBeamGfx_Top, VRAM_BASE + 0x11000, C_32_2_16(DMA_ENABLE, sizeof(sNormalBeamGfx_Top) / 2));
+            DMA_SET(3, sNormalBeamGfx_Bottom, VRAM_BASE + 0x11400, C_32_2_16(DMA_ENABLE, sizeof(sNormalBeamGfx_Bottom) / 2));
+            DMA_SET(3, sNormalBeamGfx_Charged_Top, VRAM_BASE + 0x11800, C_32_2_16(DMA_ENABLE, sizeof(sNormalBeamGfx_Charged_Top) / 2));
+            DMA_SET(3, sNormalBeamGfx_Charged_Bottom, VRAM_BASE + 0x11C00, C_32_2_16(DMA_ENABLE, sizeof(sNormalBeamGfx_Charged_Bottom) / 2));
 
             palOffset = 0 * PAL_ROW;
         }
     }
     
-    DMA_SET(3, (sBeamPal + palOffset), PALRAM_OBJ + 2 * PAL_ROW_SIZE, DMA_ENABLE << 16 | 6);
+    DMA_SET(3, (sBeamPal + palOffset), PALRAM_OBJ + 2 * PAL_ROW_SIZE, C_32_2_16(DMA_ENABLE, 6));
 }
 
 /**
@@ -812,7 +831,7 @@ void ProjectileCallLoadGraphicsAndClearProjectiles(void)
     if (gPauseScreenFlag == PAUSE_SCREEN_NONE)
     {
         for (pProj = gProjectileData; pProj < gProjectileData + MAX_AMOUNT_OF_PROJECTILES; pProj++)
-            pProj->status = 0;
+            pProj->status = PROJ_STATUS_NONE;
     }
 }
 
@@ -867,7 +886,7 @@ void ProjectileMove(struct ProjectileData* pProj, u8 distance)
                 pProj->xPosition -= distance;
     }
 
-    // Check add samus' velocity if moving in the same direction
+    // Check add Samus's velocity if moving in the same direction
     samusVelocity = gSamusData.xVelocity;
     leftVelocity = VELOCITY_TO_SUB_PIXEL(gSamusData.xVelocity);
     rightVelocity = leftVelocity;
@@ -889,9 +908,9 @@ void ProjectileMove(struct ProjectileData* pProj, u8 distance)
  * 
  * @param yPosition Y Position
  * @param xPosition X Position
- * @return u32 bool, hitting solid block
+ * @return boolu32 Hitting solid block
  */
-u32 ProjectileCheckHittingSolidBlock(u32 yPosition, u32 xPosition)
+boolu32 ProjectileCheckHittingSolidBlock(u32 yPosition, u32 xPosition)
 {
     u32 collision;
     
@@ -1027,7 +1046,9 @@ u32 ProjectileCheckVerticalCollisionAtPosition(struct ProjectileData* pProj)
                 }
             }
             else
+            {
                 result = COLLISION_AIR;
+            }
             break;
     }
 
@@ -1041,7 +1062,7 @@ u32 ProjectileCheckVerticalCollisionAtPosition(struct ProjectileData* pProj)
  * @param effect Particle effect
  * @param delay Delay between each particle
  */
-void ProjectileSetTrail(struct ProjectileData* pProj, u8 effect, u8 delay)
+void ProjectileSetTrail(struct ProjectileData* pProj, ParticleEffectId effect, u8 delay)
 {
     u16 xPosition;
     u16 yPosition;
@@ -1106,7 +1127,7 @@ void ProjectileMoveTumbling(struct ProjectileData* pProj)
 
     if (!(pProj->status & PROJ_STATUS_ON_SCREEN))
     {
-        pProj->status = 0;
+        pProj->status = PROJ_STATUS_NONE;
         return;
     }
 
@@ -1137,7 +1158,7 @@ void ProjectileMoveTumbling(struct ProjectileData* pProj)
  * @param caa Clipdata Affecting Action
  * @param effect Particle effect
  */
-void ProjectileCheckHitBlock(struct ProjectileData* pProj, u8 caa, u8 effect)
+void ProjectileCheckHitBlock(struct ProjectileData* pProj, u8 caa, ParticleEffectId effect)
 {
     u16 yPosition;
     u16 xPosition;
@@ -1155,7 +1176,7 @@ void ProjectileCheckHitBlock(struct ProjectileData* pProj, u8 caa, u8 effect)
 
     if (ProjectileCheckHittingSolidBlock(yPosition, xPosition))
     {
-        pProj->status = 0;
+        pProj->status = PROJ_STATUS_NONE;
         ParticleSet(pProj->yPosition, pProj->xPosition, effect);
     }
 }
@@ -1267,13 +1288,13 @@ void ProjectileCheckHittingSprite(void)
                         case PROJ_TYPE_BEAM:
                             ProjectileHitSprite(pSprite, o2y, o2x,
                                 NORMAL_BEAM_DAMAGE, PE_HITTING_SOMETHING_WITH_NORMAL_BEAM);
-                            pProj->status = 0;
+                            pProj->status = PROJ_STATUS_NONE;
                             break;
 
                         case PROJ_TYPE_LONG_BEAM:
                             ProjectileHitSprite(pSprite, o2y, o2x,
                                 LONG_BEAM_DAMAGE, PE_HITTING_SOMETHING_WITH_LONG_BEAM);
-                            pProj->status = 0;
+                            pProj->status = PROJ_STATUS_NONE;
                             break;
 
                         case PROJ_TYPE_ICE_BEAM:
@@ -1287,7 +1308,7 @@ void ProjectileCheckHittingSprite(void)
                                 ProjectileIceBeamHittingSprite(pSprite, o2y, o2x,
                                     ICE_BEAM_DAMAGE, PE_HITTING_SOMETHING_WITH_ICE_BEAM);
                             }
-                            pProj->status = 0;
+                            pProj->status = PROJ_STATUS_NONE;
                             break;
 
                         case PROJ_TYPE_WAVE_BEAM:
@@ -1317,7 +1338,7 @@ void ProjectileCheckHittingSprite(void)
                                         WAVE_BEAM_DAMAGE, PE_HITTING_SOMETHING_WITH_WAVE_BEAM);
                                 }
                             }
-                            pProj->status = 0;
+                            pProj->status = PROJ_STATUS_NONE;
                             break;
 
                         case PROJ_TYPE_PLASMA_BEAM:
@@ -1384,17 +1405,17 @@ void ProjectileCheckHittingSprite(void)
                         case PROJ_TYPE_PISTOL:
                             ProjectileHitSpriteImmuneToProjectiles(pSprite);
                             ParticleSet(o2y, o2x, PE_HITTING_SOMETHING_INVINCIBLE);
-                            pProj->status = 0;
+                            pProj->status = PROJ_STATUS_NONE;
                             break;
 
                         case PROJ_TYPE_CHARGED_BEAM:
                             ProjectileNonIceChargedHitSprite(pSprite, o2y, o2x, CHARGED_NORMAL_BEAM_DAMAGE, PE_HITTING_SOMETHING_WITH_NORMAL_BEAM);
-                            pProj->status = 0;
+                            pProj->status = PROJ_STATUS_NONE;
                             break;
 
                         case PROJ_TYPE_CHARGED_LONG_BEAM:
                             ProjectileNonIceChargedHitSprite(pSprite, o2y, o2x, CHARGED_LONG_BEAM_DAMAGE, PE_HITTING_SOMETHING_WITH_LONG_BEAM);
-                            pProj->status = 0;
+                            pProj->status = PROJ_STATUS_NONE;
                             break;
 
                         case PROJ_TYPE_CHARGED_ICE_BEAM:
@@ -1408,7 +1429,7 @@ void ProjectileCheckHittingSprite(void)
                                 ProjectileChargedIceBeamHittingSprite(pSprite, o2y, o2x,
                                     CHARGED_ICE_BEAM_DAMAGE, PE_HITTING_SOMETHING_WITH_ICE_BEAM);
                             }
-                            pProj->status = 0;
+                            pProj->status = PROJ_STATUS_NONE;
                             break;
 
                         case PROJ_TYPE_CHARGED_WAVE_BEAM:
@@ -1438,7 +1459,7 @@ void ProjectileCheckHittingSprite(void)
                                         CHARGED_WAVE_BEAM_DAMAGE, PE_HITTING_SOMETHING_WITH_WAVE_BEAM);
                                 }
                             }
-                            pProj->status = 0;
+                            pProj->status = PROJ_STATUS_NONE;
                             break;
 
                         case PROJ_TYPE_CHARGED_PLASMA_BEAM:
@@ -1517,7 +1538,7 @@ void ProjectileCheckHittingSprite(void)
                                     CHARGED_PISTOL_DAMAGE, PE_HITTING_SOMETHING_WITH_LONG_BEAM);
                             }
                             
-                            pProj->status = 0;
+                            pProj->status = PROJ_STATUS_NONE;
                             break;
 
                         case PROJ_TYPE_MISSILE:
@@ -1546,7 +1567,7 @@ void ProjectileCheckHittingSprite(void)
  * @param pSprite Sprite data pointer
  * @return The weakness of the sprite
  */
-u16 ProjectileGetSpriteWeakness(struct SpriteData* pSprite)
+SpriteWeakness ProjectileGetSpriteWeakness(struct SpriteData* pSprite)
 {
     // Check whether secondary or primary
     if (!(pSprite->properties & SP_SECONDARY_SPRITE))
@@ -1588,8 +1609,8 @@ u8 ProjectileIceBeamDealDamage(struct SpriteData* pSprite, u16 damage)
         pSprite->pose = SPRITE_POSE_DESTROYED;
         pSprite->ignoreSamusCollisionTimer = DELTA_TIME;
     }
-    // .25f + 2 * DELTA_TIME
-    SPRITE_CLEAR_AND_SET_ISFT(*pSprite, CONVERT_SECONDS(17.f / 60));
+
+    SPRITE_CLEAR_AND_SET_ISFT(*pSprite, CONVERT_SECONDS(.25f + 1.f / 30));
     pSprite->properties |= SP_DAMAGED;
 
     return freezeTimer;
@@ -1600,11 +1621,11 @@ u8 ProjectileIceBeamDealDamage(struct SpriteData* pSprite, u16 damage)
  * 
  * @param pSprite Sprite data pointer
  * @param damage Damage to inflict 
- * @return bool, dead
+ * @return boolu8, dead
  */
-u8 ProjectileDealDamage(struct SpriteData* pSprite, u16 damage)
+boolu8 ProjectileDealDamage(struct SpriteData* pSprite, u16 damage)
 {
-    u8 isDead;
+    boolu8 isDead;
 
     isDead = FALSE;
     if (pSprite->health > damage)
@@ -1737,9 +1758,9 @@ void ProjectilePowerBombDealDamage(struct SpriteData* pSprite)
  * @param damage Damage inflicted
  * @param effect Particle effect to play
  */
-void ProjectileHitSprite(struct SpriteData* pSprite, u16 yPosition, u16 xPosition, u16 damage, u8 effect)
+void ProjectileHitSprite(struct SpriteData* pSprite, u16 yPosition, u16 xPosition, u16 damage, ParticleEffectId effect)
 {
-    u16 weakness;
+    SpriteWeakness weakness;
 
     if (pSprite->properties & SP_SOLID_FOR_PROJECTILES)
     {
@@ -1777,9 +1798,9 @@ void ProjectileHitSprite(struct SpriteData* pSprite, u16 yPosition, u16 xPositio
  * @param damage Damage inflicted
  * @param effect Particle effect to play
  */
-void ProjectileNonIceChargedHitSprite(struct SpriteData* pSprite, u16 yPosition, u16 xPosition, u16 damage, u8 effect)
+void ProjectileNonIceChargedHitSprite(struct SpriteData* pSprite, u16 yPosition, u16 xPosition, u16 damage, ParticleEffectId effect)
 {
-    u16 weakness;
+    SpriteWeakness weakness;
 
     if (pSprite->properties & SP_SOLID_FOR_PROJECTILES)
     {
@@ -1830,10 +1851,10 @@ void ProjectileFreezeSprite(struct SpriteData* pSprite, u8 freezeTimer)
  * @param damage Projectile damage
  * @param effect Particle effect
  */
-void ProjectileIceBeamHittingSprite(struct SpriteData* pSprite, u16 yPosition, u16 xPosition, u16 damage, u8 effect)
+void ProjectileIceBeamHittingSprite(struct SpriteData* pSprite, u16 yPosition, u16 xPosition, u16 damage, ParticleEffectId effect)
 {
     u8 freezeTimer;
-    u16 weakness;
+    SpriteWeakness weakness;
     u16 freezeFlag;
 
     freezeTimer = 0;
@@ -1864,7 +1885,9 @@ void ProjectileIceBeamHittingSprite(struct SpriteData* pSprite, u16 yPosition, u
                 ProjectileDealDamage(pSprite, damage);
         }
         else
+        {
             ProjectileDealDamage(pSprite, damage);
+        }
 
         ParticleSet(yPosition, xPosition, effect);
     }
@@ -1898,10 +1921,10 @@ void ProjectileIceBeamHittingSprite(struct SpriteData* pSprite, u16 yPosition, u
  * @param damage Projectile damage
  * @param effect Particle effect
  */
-void ProjectileChargedIceBeamHittingSprite(struct SpriteData* pSprite, u16 yPosition, u16 xPosition, u16 damage, u8 effect)
+void ProjectileChargedIceBeamHittingSprite(struct SpriteData* pSprite, u16 yPosition, u16 xPosition, u16 damage, ParticleEffectId effect)
 {
     u8 freezeTimer;
-    u16 weakness;
+    SpriteWeakness weakness;
 
     freezeTimer = 0;
 
@@ -1963,7 +1986,7 @@ void ProjectileStartTumblingMissile(struct SpriteData* pSprite, struct Projectil
     pProj->timer = 0;
 
     pProj->status &= ~PROJ_STATUS_CAN_AFFECT_ENVIRONMENT;
-    pProj->status |= PROJ_STATUS_HIGH_PRIORITY;
+    pProj->status |= PROJ_STATUS_ABOVE_BG1;
 
     pProj->animationDurationCounter = 0;
     pProj->currentAnimationFrame = 0;
@@ -1997,7 +2020,7 @@ void ProjectileStartTumblingMissileCurrentSprite(struct ProjectileData* pProj, u
     pProj->timer = 0;
 
     pProj->status &= ~PROJ_STATUS_CAN_AFFECT_ENVIRONMENT;
-    pProj->status |= PROJ_STATUS_HIGH_PRIORITY;
+    pProj->status |= PROJ_STATUS_ABOVE_BG1;
 
     pProj->animationDurationCounter = 0;
     pProj->currentAnimationFrame = 0;
@@ -2057,7 +2080,7 @@ void ProjectileMissileHitSprite(struct SpriteData* pSprite, struct ProjectileDat
     if (pProj->movementStage == 0)
         ProjectileDecrementMissileCounter(pProj);
 
-    pProj->status = 0;
+    pProj->status = PROJ_STATUS_NONE;
 }
 
 /**
@@ -2098,7 +2121,7 @@ void ProjectileSuperMissileHitSprite(struct SpriteData* pSprite, struct Projecti
     if (pProj->movementStage == 0)
         ProjectileDecrementSuperMissileCounter(pProj);
 
-    pProj->status = 0;
+    pProj->status = PROJ_STATUS_NONE;
 }
 
 /**

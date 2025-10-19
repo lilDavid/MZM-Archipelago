@@ -1,7 +1,10 @@
 #include "gba.h"
 #include "power_bomb_explosion.h"
-
-#include "data/engine_pointers.h"
+#include "audio_wrappers.h"
+#include "haze.h"
+#include "screen_shake.h"
+#include "fixed_point.h"
+#include "macros.h"
 
 #include "constants/audio.h"
 #include "constants/clipdata.h"
@@ -19,6 +22,13 @@
 #include "structs/power_bomb_explosion.h"
 #include "temp_globals.h"
 
+static void PowerBombExplosion(void);
+static void PowerBombExplosionSet0x12To0(void);
+static void PowerBombExplosionBegin(void);
+static void PowerBombExplosionEnd(void);
+
+extern u8 sHazeData[EFFECT_HAZE_END][4];
+
 /**
  * 5745c | 48 | Subroutine for the power bomb explosion
  */
@@ -33,7 +43,7 @@ void PowerBombExplosionProcess(void)
                 PowerBombExplosionBegin();
             else if (gCurrentPowerBomb.animationState == PB_STATE_ENDING)
                 PowerBombExplosionEnd();
-            else if (gGameModeSub1 == SUB_GAME_MODE_PLAYING)
+            else if (gSubGameMode1 == SUB_GAME_MODE_PLAYING)
                 PowerBombExplosion();
         }
     }
@@ -43,7 +53,7 @@ void PowerBombExplosionProcess(void)
  * @brief 574a4 | 248 | Updates the power bomb explosion, handles interacting with blocks
  * 
  */
-void PowerBombExplosion(void)
+static void PowerBombExplosion(void)
 {
     s32 verticalAxis;
     s32 horizontalAxis;
@@ -61,8 +71,13 @@ void PowerBombExplosion(void)
     
     verticalAxis = gCurrentPowerBomb.semiMinorAxis * 4;
     horizontalAxis = gCurrentPowerBomb.semiMinorAxis * 8;
+    #ifdef BUGFIX
+    verticalAxis = FixedMultiplication(verticalAxis, Q_8_8(0.95));
+    horizontalAxis = FixedMultiplication(horizontalAxis, Q_8_8(0.95));
+    #else // !BUGFIX
     verticalAxis *= 0.95;
     horizontalAxis *= 0.95;
+    #endif // BUGFIX
 
     hitboxLeft = (s16)-horizontalAxis;
     hitboxRight = (s16)horizontalAxis;
@@ -202,11 +217,12 @@ void PowerBombExplosion(void)
  */
 void PowerBombExplosionStart(u16 xPosition, u16 yPosition, u8 owner)
 {
-    if (gGameModeSub1 != SUB_GAME_MODE_PLAYING)
+    if (gSubGameMode1 != SUB_GAME_MODE_PLAYING)
         return;
 
     PowerBombExplosionSet0x12To0();
-    if (gCurrentPowerBomb.animationState == PB_STATE_NONE) // Check if there isn't already an explosion
+    // Check if there isn't already an explosion
+    if (gCurrentPowerBomb.animationState == PB_STATE_NONE)
     {
         gCurrentPowerBomb.xPosition = xPosition;
         gCurrentPowerBomb.yPosition = yPosition;
@@ -223,7 +239,7 @@ void PowerBombExplosionStart(u16 xPosition, u16 yPosition, u8 owner)
  * 57734 | c | Sets the field at offset 0x12 of the current power bomb to 0x0, purpose is unknown 
  * 
  */
-void PowerBombExplosionSet0x12To0(void)
+static void PowerBombExplosionSet0x12To0(void)
 {
     gCurrentPowerBomb.unk_12 = 0;
 }
@@ -232,16 +248,16 @@ void PowerBombExplosionSet0x12To0(void)
  * @brief 57740 | 78 | Begins a power bomb explosion
  * 
  */
-void PowerBombExplosionBegin(void)
+static void PowerBombExplosionBegin(void)
 {
-    if (gGameModeSub1 != SUB_GAME_MODE_PLAYING)
+    if (gSubGameMode1 != SUB_GAME_MODE_PLAYING)
         return;
 
     gCurrentPowerBomb.animationState = PB_STATE_EXPLODING;
     gCurrentPowerBomb.powerBombPlaced = FALSE;
 
     DMA_SET(3, PALRAM_BASE, EWRAM_BASE + 0x9000, C_32_2_16(DMA_ENABLE, PAL_SIZE / 2));
-    unk_02035400 = 0;
+    gUnk_02035400 = 0;
 
     HazeSetupCode(HAZE_VALUE_POWER_BOMB_EXPANDING);
 
@@ -265,7 +281,7 @@ void PowerBombExplosionBegin(void)
  * @brief 577b8 | 154 | Handles ending a power bomb explosion
  * 
  */
-void PowerBombExplosionEnd(void)
+static void PowerBombExplosionEnd(void)
 {
     u8 eva;
     u8 evb;
@@ -273,39 +289,39 @@ void PowerBombExplosionEnd(void)
 
     if (gCurrentPowerBomb.stage == 0)
     {
-        write16(REG_BLDY, 0);
-        gWrittenToBLDCNT = gIoRegistersBackup.Bldcnt_NonGameplay;
+        WRITE_16(REG_BLDY, 0);
+        gWrittenToBldcnt = gIoRegistersBackup.Bldcnt_NonGameplay;
 
         if (sHazeData[gCurrentRoomEntry.visualEffect][3] == 2)
-            gWrittenToBLDALPHA = C_16_2_8(0, 16);
+            gWrittenToBldalpha = C_16_2_8(0, 16);
         else
-            gWrittenToBLDALPHA = C_16_2_8(16, 0);
+            gWrittenToBldalpha = C_16_2_8(16, 0);
 
-        gWrittenToDISPCNT = write16(REG_DISPCNT, read16(REG_DISPCNT) | DCNT_WIN1);
+        gWrittenToDispcnt = WRITE_16(REG_DISPCNT, READ_16(REG_DISPCNT) | DCNT_WIN1);
 
-        gWrittenToWIN1H = C_16_2_8(gSuitFlashEffect.left, gSuitFlashEffect.right);
-        gWrittenToWIN1V = C_16_2_8(gSuitFlashEffect.top, gSuitFlashEffect.bottom);
+        gWrittenToWin1H = C_16_2_8(gSuitFlashEffect.left, gSuitFlashEffect.right);
+        gWrittenToWin1V = C_16_2_8(gSuitFlashEffect.top, gSuitFlashEffect.bottom);
 
         // Set transparent color
         SET_BACKDROP_COLOR(COLOR_BLACK);
 
-        gWrittenToWININ_H = gIoRegistersBackup.WININ_H;
-        gWrittenToWINOUT_L = gIoRegistersBackup.WINOUT_L;
+        gWrittenToWinIn_H = gIoRegistersBackup.WININ_H;
+        gWrittenToWinOut_L = gIoRegistersBackup.WINOUT_L;
 
         // Get BGCNT backups
-        write16(REG_BG0CNT, gIoRegistersBackup.BG0CNT);
-        write16(REG_BG1CNT, gIoRegistersBackup.BG1CNT);
-        write16(REG_BG2CNT, gIoRegistersBackup.BG2CNT);
-        write16(REG_BG3CNT, gIoRegistersBackup.BG3CNT);
+        WRITE_16(REG_BG0CNT, gIoRegistersBackup.BG0CNT);
+        WRITE_16(REG_BG1CNT, gIoRegistersBackup.BG1CNT);
+        WRITE_16(REG_BG2CNT, gIoRegistersBackup.BG2CNT);
+        WRITE_16(REG_BG3CNT, gIoRegistersBackup.BG3CNT);
 
-        gWrittenToDISPCNT = gIoRegistersBackup.Dispcnt_NonGameplay;
+        gWrittenToDispcnt = gIoRegistersBackup.Dispcnt_NonGameplay;
         gCurrentPowerBomb.stage = 1;
     }
     else if (gCurrentPowerBomb.stage == 1)
     {
         // Fade BLDALPHA until it was the same as before the power bomb
-        eva = LOW_BYTE(read16(REG_BLDALPHA));
-        evb = HIGH_BYTE(read16(REG_BLDALPHA));
+        eva = LOW_BYTE(READ_16(REG_BLDALPHA));
+        evb = HIGH_BYTE(READ_16(REG_BLDALPHA));
         done = TRUE;
 
         if (gIoRegistersBackup.BLDALPHA_NonGameplay_EVB != evb)
@@ -328,7 +344,7 @@ void PowerBombExplosionEnd(void)
             done = FALSE;
         }
 
-        gWrittenToBLDALPHA = C_16_2_8(evb, eva);
+        gWrittenToBldalpha = C_16_2_8(evb, eva);
 
         if (done)
             gCurrentPowerBomb.stage = 2;

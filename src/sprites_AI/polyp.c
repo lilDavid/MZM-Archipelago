@@ -1,10 +1,12 @@
 #include "sprites_AI/polyp.h"
 #include "macros.h"
+#include "gba/display.h"
 
 #include "data/sprites/polyp.h"
 #include "data/sprite_data.h"
 
 #include "constants/audio.h"
+#include "constants/clipdata.h"
 #include "constants/particle.h"
 #include "constants/sprite.h"
 #include "constants/sprite_util.h"
@@ -12,16 +14,30 @@
 #include "structs/display.h"
 #include "structs/sprite.h"
 
+#define POLYP_POSE_IDLE_INIT 0x8
+#define POLYP_POSE_IDLE 0x9
+#define POLYP_POSE_WARNING 0x23
+#define POLYP_POSE_SPITTING 0x25
+#define POLYP_POSE_AFTER_SPITTING 0x27
+#define POLYP_POSE_RETRACTING 0x29
+
+#define POLYP_PROJECTILE_POSE_SPAWN 0x8
+#define POLYP_PROJECTILE_POSE_MOVING 0x9
+#define POLYP_PROJECTILE_POSE_EXPLODING 0x43
+
+#define POLYP_SHOOT_DELAY (CONVERT_SECONDS(2.f))
+#define POLYP_SPIT_DURATION (ONE_THIRD_SECOND)
+
 /**
  * @brief 36ec4 | 4c | Initializes a polyp sprite
  * 
  */
-void PolypInit(void)
+static void PolypInit(void)
 {
-    gCurrentSprite.hitboxTop = -(QUARTER_BLOCK_SIZE + PIXEL_SIZE * 2);
+    gCurrentSprite.hitboxTop = -(QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE);
     gCurrentSprite.hitboxBottom = 0;
-    gCurrentSprite.hitboxLeft = -(BLOCK_SIZE - PIXEL_SIZE * 2);
-    gCurrentSprite.hitboxRight = (BLOCK_SIZE - PIXEL_SIZE * 2);
+    gCurrentSprite.hitboxLeft = -(BLOCK_SIZE - EIGHTH_BLOCK_SIZE);
+    gCurrentSprite.hitboxRight = BLOCK_SIZE - EIGHTH_BLOCK_SIZE;
 
     gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(HALF_BLOCK_SIZE);
     gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(HALF_BLOCK_SIZE);
@@ -35,7 +51,7 @@ void PolypInit(void)
  * @brief 36f10 | 24 | Initializes a polyp to be idle
  * 
  */
-void PolypIdleInit(void)
+static void PolypIdleInit(void)
 {
     gCurrentSprite.pose = POLYP_POSE_IDLE;
 
@@ -51,15 +67,15 @@ void PolypIdleInit(void)
  * @brief 36f34 | 74 | Checks if the polyp should be shooting a projectile
  * 
  */
-void PolypCheckSpawnProjectile(void)
+static void PolypCheckSpawnProjectile(void)
 {
-    gCurrentSprite.work0--;
+    APPLY_DELTA_TIME_DEC(gCurrentSprite.work0);
     if (gCurrentSprite.work0 != 0)
         return;
 
     // Shoot if on screen, not already shooted and projectile doesn't have an active drop
     if (gCurrentSprite.status & SPRITE_STATUS_ONSCREEN &&
-        SpriteUtilCountSecondarySpritesWithCurrentSpriteRAMSlot(SSPRITE_POLYP_PROJECTILE) == 0 &&
+        SpriteUtilCountChildSecondarySprites(SSPRITE_POLYP_PROJECTILE) == 0 &&
         !SpriteUtilCheckHasDrops())
     {
         // Set warning behavior
@@ -83,9 +99,9 @@ void PolypCheckSpawnProjectile(void)
  * @brief 36fa8 | 30 | Checks if the warning animation has ended
  * 
  */
-void PolypCheckWarningEnded(void)
+static void PolypCheckWarningEnded(void)
 {
-    if (SpriteUtilCheckEndCurrentSpriteAnim())
+    if (SpriteUtilHasCurrentAnimationEnded())
     {
         // Set spitting behavior
         gCurrentSprite.pose = POLYP_POSE_SPITTING;
@@ -102,9 +118,9 @@ void PolypCheckWarningEnded(void)
  * @brief 36fd8 | 64 | Handles the polyp spitting
  * 
  */
-void PolypSpawnProjectile(void)
+static void PolypSpawnProjectile(void)
 {
-    if (--gCurrentSprite.work0 == 0)
+    if (APPLY_DELTA_TIME_DEC(gCurrentSprite.work0) == 0)
     {
         // Set after spitting behavior
         gCurrentSprite.pose = POLYP_POSE_AFTER_SPITTING;
@@ -126,9 +142,9 @@ void PolypSpawnProjectile(void)
  * @brief 3703c | 2c | Checks if the after spitting animation ended
  * 
  */
-void PolypCheckAfterSpittingAnimEnded(void)
+static void PolypCheckAfterSpittingAnimEnded(void)
 {
-    if (SpriteUtilCheckEndCurrentSpriteAnim())
+    if (SpriteUtilHasCurrentAnimationEnded())
     {
         // Set retracting behavior
         gCurrentSprite.pose = POLYP_POSE_RETRACTING;
@@ -143,9 +159,9 @@ void PolypCheckAfterSpittingAnimEnded(void)
  * @brief 37068 | 1c | Checks if the retracting animation ended
  * 
  */
-void PolypCheckRetractingAnimEnded(void)
+static void PolypCheckRetractingAnimEnded(void)
 {
-    if (SpriteUtilCheckNearEndCurrentSpriteAnim())
+    if (SpriteUtilHasCurrentAnimationNearlyEnded())
         gCurrentSprite.pose = POLYP_POSE_IDLE_INIT; // Set idle
 }
 
@@ -153,7 +169,7 @@ void PolypCheckRetractingAnimEnded(void)
  * @brief 37084 | e0 | Initializes a polyp projectile
  * 
  */
-void PolypProjectileInit(void)
+static void PolypProjectileInit(void)
 {
     u8 nslr;
 
@@ -190,7 +206,7 @@ void PolypProjectileInit(void)
     else
         gCurrentSprite.pOam = sPolypProjectileOam_Left;
 
-    gCurrentSprite.work0 = 4;
+    gCurrentSprite.work0 = CONVERT_SECONDS(1.f / 15);
     gCurrentSprite.work3 = 0;
 }
 
@@ -198,9 +214,9 @@ void PolypProjectileInit(void)
  * @brief 37164 | 48 | Handles the spawning of a polyp projectile
  * 
  */
-void PolypProjectileSpawn(void)
+static void PolypProjectileSpawn(void)
 {
-    gCurrentSprite.work0--;
+    APPLY_DELTA_TIME_DEC(gCurrentSprite.work0);
     if (gCurrentSprite.work0 == 0)
     {
         gCurrentSprite.pose = POLYP_PROJECTILE_POSE_MOVING;
@@ -216,7 +232,7 @@ void PolypProjectileSpawn(void)
  * @brief 371ac | 88 | Handles the movement of a polyp projectile
  * 
  */
-void PolypProjectileMove(void)
+static void PolypProjectileMove(void)
 {
     u16 xMovement;
     s32 yMovement;
@@ -246,7 +262,7 @@ void PolypProjectileMove(void)
 
     // Check colliding with solid
     SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition, gCurrentSprite.xPosition);
-    if (gPreviousCollisionCheck & 0xF0)
+    if (gPreviousCollisionCheck & COLLISION_FLAGS_UNKNOWN_F0)
         gCurrentSprite.pose = SPRITE_POSE_STOPPED;
 }
 
@@ -254,14 +270,14 @@ void PolypProjectileMove(void)
  * @brief 37234 | 50 | Initializes a polyp projectile to be exploding
  * 
  */
-void PolypProjectileExplodingInit(void)
+static void PolypProjectileExplodingInit(void)
 {
     gCurrentSprite.pOam = sPolypProjectileOam_Exploding;
     gCurrentSprite.animationDurationCounter = 0;
     gCurrentSprite.currentAnimationFrame = 0;
 
     gCurrentSprite.pose = POLYP_PROJECTILE_POSE_EXPLODING;
-    gCurrentSprite.bgPriority = MOD_AND(gIoRegistersBackup.BG1CNT, 4);
+    gCurrentSprite.bgPriority = BGCNT_GET_PRIORITY(gIoRegistersBackup.BG1CNT);
     gCurrentSprite.status |= SPRITE_STATUS_IGNORE_PROJECTILES;
 
     if (gCurrentSprite.status & SPRITE_STATUS_ONSCREEN)
@@ -272,11 +288,11 @@ void PolypProjectileExplodingInit(void)
  * @brief 37284 | 24 | Checks if the exploding animation ended
  * 
  */
-void PolypProjectileCheckExplodingAnimEnded(void)
+static void PolypProjectileCheckExplodingAnimEnded(void)
 {
     gCurrentSprite.ignoreSamusCollisionTimer = DELTA_TIME;
 
-    if (SpriteUtilCheckEndCurrentSpriteAnim())
+    if (SpriteUtilHasCurrentAnimationEnded())
         gCurrentSprite.status = 0; // Kill sprite
 }
 

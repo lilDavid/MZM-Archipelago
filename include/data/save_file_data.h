@@ -13,6 +13,14 @@ extern const u8 sJpnVer_Text[20];
 extern const u8 sEurVer_Text[20];
 extern const u8 sUsaVer_Text[20];
 
+#if defined(REGION_EU)
+#define SAVE_FILE_GAME_VER_TEXT sEurVer_Text
+#elif defined(REGION_JP)
+#define SAVE_FILE_GAME_VER_TEXT sJpnVer_Text
+#else // Default to US
+#define SAVE_FILE_GAME_VER_TEXT sUsaVer_Text
+#endif
+
 extern const struct FileScreenOptionsUnlocked sFileScreenOptionsUnlocked_Empty;
 
 extern const u8 sMostRecentFileSave_Text[2][SRAM_TEXT_SIZE];
@@ -26,6 +34,6 @@ extern const struct InGameTimer sInGameTimer_Empty;
 extern const struct InGameTimer sBestCompletionTime_Empty;
 extern const u8 sUnk_411520[4];
 
-extern const struct StartingInfo sStartingInfo;
+extern const struct SectionInfo sSectionInfo;
 
 #endif /* SAVE_FILE_DATA_H */

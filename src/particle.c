@@ -2,7 +2,6 @@
 #include "sprites_AI/ruins_test.h"
 #include "escape.h" // Required
 
-#include "data/engine_pointers.h"
 #include "data/projectile_data.h"
 #include "data/sprite_data.h"
 #include "data/particle_data.h"
@@ -20,8 +19,73 @@
 #include "structs/clipdata.h"
 #include "structs/escape.h"
 #include "structs/game_state.h"
+#include "structs/projectile.h"
 #include "structs/samus.h"
 #include "structs/sprite.h"
+
+static ParticleFunc_T sProcessParticleFunctionPointers[PE_END] = {
+    [PE_SPRITE_SPLASH_WATER_SMALL] = ParticleSpriteSplashWaterSmall,
+    [PE_SPRITE_SPLASH_WATER_BIG] = ParticleSpriteSplashWaterBig,
+    [PE_SPRITE_SPLASH_WATER_HUGE] = ParticleSpriteSplashWaterHuge,
+    [PE_SPRITE_SPLASH_LAVA_SMALL] = ParticleSpriteSplashLavaSmall,
+    [PE_SPRITE_SPLASH_LAVA_BIG] = ParticleSpriteSplashLavaBig,
+    [PE_SPRITE_SPLASH_LAVA_HUGE] = ParticleSpriteSplashLavaHuge,
+    [PE_SPRITE_SPLASH_ACID_SMALL] = ParticleSpriteSplashAcidSmall,
+    [PE_SPRITE_SPLASH_ACID_BIG] = ParticleSpriteSplashAcidBig,
+    [PE_SPRITE_SPLASH_ACID_HUGE] = ParticleSpriteSplashAcidHuge,
+    [PE_SHOOTING_BEAM_LEFT] = ParticleShootingBeamLeft,
+    [PE_SHOOTING_BEAM_DIAG_UP_LEFT] = ParticleShootingBeamDiagUpLeft,
+    [PE_SHOOTING_BEAM_DIAG_DOWN_LEFT] = ParticleShootingBeamDiagDownLeft,
+    [PE_SHOOTING_BEAM_UP_LEFT] = ParticleShootingBeamUpLeft,
+    [PE_SHOOTING_BEAM_DOWN_LEFT] = ParticleShootingBeamDownLeft,
+    [PE_SHOOTING_BEAM_RIGHT] = ParticleShootingBeamRight,
+    [PE_SHOOTING_BEAM_DIAG_UP_RIGHT] = ParticleShootingBeamDiagUpRight,
+    [PE_SHOOTING_BEAM_DIAG_DOWN_RIGHT] = ParticleShootingBeamDiagDownRight,
+    [PE_SHOOTING_BEAM_UP_RIGHT] = ParticleShootingBeamUpRight,
+    [PE_SHOOTING_BEAM_DOWN_RIGHT] = ParticleShootingBeamDownRight,
+    [PE_BOMB] = ParticleBomb,
+    [PE_MISSILE_TRAIL] = ParticleMissileTrail,
+    [PE_SUPER_MISSILE_TRAIL] = ParticleSuperMissileTrail,
+    [PE_BEAM_TRAILING_RIGHT] = ParticleBeamTrailingRight,
+    [PE_BEAM_TRAILING_LEFT] = ParticleBeamTrailingLeft,
+    [PE_CHARGED_LONG_BEAM_TRAIL] = ParticleChargedLongBeamTrail,
+    [PE_CHARGED_ICE_BEAM_TRAIL] = ParticleChargedIceBeamTrail,
+    [PE_CHARGED_WAVE_BEAM_TRAIL] = ParticleChargedWaveBeamTrail,
+    [PE_CHARGED_PLASMA_BEAM_TRAIL] = ParticleChargedPlasmaBeamTrail,
+    [PE_CHARGED_FULL_BEAM_TRAIL] = ParticleChargedFullBeamTrail,
+    [PE_CHARGED_PISTOL_TRAIL] = ParticleChargedPistolTrail,
+    [PE_SPRITE_EXPLOSION_HUGE] = ParticleSpriteExplosionHuge,
+    [PE_SPRITE_EXPLOSION_SMALL] = ParticleSpriteExplosionSmall,
+    [PE_SPRITE_EXPLOSION_MEDIUM] = ParticleSpriteExplosionMedium,
+    [PE_SPRITE_EXPLOSION_BIG] = ParticleSpriteExplosionBig,
+    [PE_SPRITE_EXPLOSION_SINGLE_THEN_BIG] = ParticleSpriteExplosionSingleThenBig,
+    [PE_SCREW_ATTACK_DESTROYED] = ParticleScrewAttackDestroyed,
+    [PE_SHINESPARK_DESTROYED] = ParticleShinesparkDestroyed,
+    [PE_PSEUDO_SCREW_DESTROYED] = ParticlePseudoScrewDestroyed,
+    [PE_SPEEDBOOSTER_DESTROYED] = ParticleSpeedboosterDestroyed,
+    [PE_MAIN_BOSS_DEATH] = ParticleMainBossDeath,
+    [PE_FREEZING_SPRITE_WITH_ICE] = ParticleFreezingSpriteWithIce,
+    [PE_FREEZING_SPRITE_WITH_CHARGED_ICE] = ParticleFreezingSpriteWithChargedIce,
+    [PE_HITTING_SOMETHING_WITH_NORMAL_BEAM] = ParticleHittingSomethingWithNormalBeam,
+    [PE_HITTING_SOMETHING_WITH_LONG_BEAM] = ParticleHittingSomethingWithLongBeam,
+    [PE_HITTING_SOMETHING_WITH_ICE_BEAM] = ParticleHittingSomethingWithIceBeam,
+    [PE_HITTING_SOMETHING_WITH_WAVE_BEAM] = ParticleHittingSomethingWithWaveBeam,
+    [PE_HITTING_SOMETHING_WITH_PLASMA_BEAM] = ParticleHittingSomethingWithPlasmaBeam,
+    [PE_HITTING_SOMETHING_INVINCIBLE] = ParticleHittingSomethingInvincible,
+    [PE_HITTING_SOMETHING_WITH_MISSILE] = ParticleHittingSomethingWithMissile,
+    [PE_HITTING_SOMETHING_WITH_SUPER_MISSILE] = ParticleHittingSomethingWithSuperMissile,
+    [PE_HITTING_SOMETHING_WITH_FULL_BEAM_NO_PLASMA] = ParticleHittingSomethingWithFullBeamNoPlasma,
+    [PE_HITTING_SOMETHING_WITH_FULL_BEAM] = ParticleHittingSomethingWithFullBeam,
+    [PE_SMALL_DUST] = ParticleSmallDust,
+    [PE_MEDIUM_DUST] = ParticleMediumDust,
+    [PE_TWO_MEDIUM_DUST] = ParticleTwoMediumDust,
+    [PE_SECOND_SMALL_DUST] = ParticleSecondSmallDust,
+    [PE_SECOND_MEDIUM_DUST] = ParticleSecondMediumDust,
+    [PE_SECOND_TWO_MEDIUM_DUST] = ParticleSecondTwoMediumDust,
+    [PE_SAMUS_REFLECTION] = ParticleSamusReflection,
+    [PE_CHARGING_BEAM] = ParticleChargingBeam,
+    [PE_ESCAPE] = ParticleEscape,
+};
 
 /**
  * 53dd0 | 98 | Checks if a particle effect is on screen
@@ -66,7 +130,7 @@ void ParticleCheckOnScreen(struct ParticleEffect* pParticle)
         if (pParticle->status & PARTICLE_STATUS_LIVE_OFF_SCREEN)
             pParticle->status &= ~PARTICLE_STATUS_ONSCREEN;
         else
-            pParticle->status = 0;
+            pParticle->status = PARTICLE_STATUS_NONE;
     }
 }
 
@@ -113,7 +177,7 @@ void ParticleDraw(struct ParticleEffect* pParticle)
             xPosition = SUB_PIXEL_TO_PIXEL(pParticle->xPosition) - SUB_PIXEL_TO_PIXEL(gBg1XPosition);
         }
 
-        if (pParticle->status & PARTICLE_STATUS_LOW_PRIORITY)
+        if (pParticle->status & PARTICLE_STATUS_LOW_BG_PRIORITY)
         {
             if (gSamusOnTopOfBackgrounds)
                 bgPriority = 1;
@@ -160,11 +224,11 @@ void ParticleDraw(struct ParticleEffect* pParticle)
 void ParticleProcessAll(void)
 {
     struct ParticleEffect* pParticle;
-    u8 status;
+    ParticleStatus status;
 
-    if (gGameModeSub1 != SUB_GAME_MODE_PLAYING)
+    if (gSubGameMode1 != SUB_GAME_MODE_PLAYING)
     {
-        if (gGameModeSub1 != SUB_GAME_MODE_DOOR_TRANSITION && gGameModeSub1 != SUB_GAME_MODE_LOADING_ROOM)
+        if (gSubGameMode1 != SUB_GAME_MODE_DOOR_TRANSITION && gSubGameMode1 != SUB_GAME_MODE_LOADING_ROOM)
             return;
 
         for (pParticle = gParticleEffects; pParticle < gParticleEffects + MAX_AMOUNT_OF_PARTICLES; pParticle++)
@@ -182,7 +246,7 @@ void ParticleProcessAll(void)
     {
         for (pParticle = gParticleEffects; pParticle < gParticleEffects + MAX_AMOUNT_OF_PARTICLES; pParticle++)
         {
-            if ((pParticle->status & (PARTICLE_STATUS_EXISTS | PARTICLE_STATUS_EXPLOSION)) == (PARTICLE_STATUS_EXISTS | PARTICLE_STATUS_EXPLOSION))
+            if ((pParticle->status & (PARTICLE_STATUS_EXISTS | PARTICLE_STATUS_HIGH_OAM_PRIORITY)) == (PARTICLE_STATUS_EXISTS | PARTICLE_STATUS_HIGH_OAM_PRIORITY))
             {
                 sProcessParticleFunctionPointers[pParticle->effect](pParticle); // Call subroutine
 
@@ -198,7 +262,7 @@ void ParticleProcessAll(void)
 
         for (pParticle = gParticleEffects; pParticle < gParticleEffects + MAX_AMOUNT_OF_PARTICLES; pParticle++)
         {
-            if ((pParticle->status & (PARTICLE_STATUS_EXISTS | PARTICLE_STATUS_EXPLOSION)) == PARTICLE_STATUS_EXISTS)
+            if ((pParticle->status & (PARTICLE_STATUS_EXISTS | PARTICLE_STATUS_HIGH_OAM_PRIORITY)) == PARTICLE_STATUS_EXISTS)
             {
                 sProcessParticleFunctionPointers[pParticle->effect](pParticle); // Call subroutine
 
@@ -212,7 +276,7 @@ void ParticleProcessAll(void)
             }
         }
 
-        EscaepUpdateTimer();
+        EscapeUpdateTimer();
     }
 }
 
@@ -223,7 +287,7 @@ void ParticleProcessAll(void)
  * @param xPosition X Position
  * @param effect Particle effect ID
  */
-void ParticleSet(u16 yPosition, u16 xPosition, u8 effect)
+void ParticleSet(u16 yPosition, u16 xPosition, ParticleEffectId effect)
 {
     struct ParticleEffect* pParticle;
     struct ParticleEffect* pLow;
@@ -302,11 +366,11 @@ void ParticleSet(u16 yPosition, u16 xPosition, u8 effect)
  * 
  * @param pParticle Particle effect pointer
  * @param pOam Oam pointer of the particle
- * @return 1 if ended, 0 otherwise
+ * @return boolu8, ended
  */
-u8 ParticleUpdateAnimation(struct ParticleEffect* pParticle, const struct FrameData* pOam)
+boolu8 ParticleUpdateAnimation(struct ParticleEffect* pParticle, const struct FrameData* pOam)
 {
-    u8 ended;
+    boolu8 ended;
 
     ended = FALSE;
     APPLY_DELTA_TIME_INC(pParticle->animationDurationCounter);
@@ -352,7 +416,7 @@ void ParticleSpriteSplashWaterSmall(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleSpriteSplashWaterSmallOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
 
@@ -362,7 +426,7 @@ void ParticleSpriteSplashWaterSmall(struct ParticleEffect* pParticle)
     if (pParticle->stage == 0)
     {
         pParticle->stage++;
-        pParticle->status |= PARTICLE_STATUS_LOW_PRIORITY;
+        pParticle->status |= PARTICLE_STATUS_LOW_BG_PRIORITY;
     }
 }
 
@@ -377,7 +441,7 @@ void ParticleSpriteSplashWaterBig(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleSpriteSplashWaterBigOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
 
@@ -387,7 +451,7 @@ void ParticleSpriteSplashWaterBig(struct ParticleEffect* pParticle)
     if (pParticle->stage == 0)
     {
         pParticle->stage++;
-        pParticle->status |= PARTICLE_STATUS_LOW_PRIORITY;
+        pParticle->status |= PARTICLE_STATUS_LOW_BG_PRIORITY;
     }
 }
 
@@ -402,7 +466,7 @@ void ParticleSpriteSplashWaterHuge(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleSpriteSplashWaterHugeOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
 
@@ -412,7 +476,7 @@ void ParticleSpriteSplashWaterHuge(struct ParticleEffect* pParticle)
     if (pParticle->stage == 0)
     {
         pParticle->stage++;
-        pParticle->status |= PARTICLE_STATUS_LOW_PRIORITY;
+        pParticle->status |= PARTICLE_STATUS_LOW_BG_PRIORITY;
     }
 }
 
@@ -426,7 +490,7 @@ void ParticleSpriteSplashLavaSmall(struct ParticleEffect* pParticle)
     APPLY_DELTA_TIME_INC(pParticle->frameCounter);
     if (ParticleUpdateAnimation(pParticle, sParticleSpriteSplashLavaSmallOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
 
@@ -436,7 +500,7 @@ void ParticleSpriteSplashLavaSmall(struct ParticleEffect* pParticle)
     if (pParticle->stage == 0)
     {
         pParticle->stage++;
-        pParticle->status |= PARTICLE_STATUS_LOW_PRIORITY;
+        pParticle->status |= PARTICLE_STATUS_LOW_BG_PRIORITY;
     }
 }
 
@@ -451,7 +515,7 @@ void ParticleSpriteSplashLavaBig(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleSpriteSplashLavaBigOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
 
@@ -461,7 +525,7 @@ void ParticleSpriteSplashLavaBig(struct ParticleEffect* pParticle)
     if (pParticle->stage == 0)
     {
         pParticle->stage++;
-        pParticle->status |= PARTICLE_STATUS_LOW_PRIORITY;
+        pParticle->status |= PARTICLE_STATUS_LOW_BG_PRIORITY;
     }
 }
 
@@ -476,7 +540,7 @@ void ParticleSpriteSplashLavaHuge(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleSpriteSplashLavaHugeOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
 
@@ -486,7 +550,7 @@ void ParticleSpriteSplashLavaHuge(struct ParticleEffect* pParticle)
     if (pParticle->stage == 0)
     {
         pParticle->stage++;
-        pParticle->status |= PARTICLE_STATUS_LOW_PRIORITY;
+        pParticle->status |= PARTICLE_STATUS_LOW_BG_PRIORITY;
     }
 }
 
@@ -501,7 +565,7 @@ void ParticleSpriteSplashAcidSmall(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleSpriteSplashAcidSmallOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
 
@@ -511,7 +575,7 @@ void ParticleSpriteSplashAcidSmall(struct ParticleEffect* pParticle)
     if (pParticle->stage == 0)
     {
         pParticle->stage++;
-        pParticle->status |= PARTICLE_STATUS_LOW_PRIORITY;
+        pParticle->status |= PARTICLE_STATUS_LOW_BG_PRIORITY;
     }
 }
 
@@ -526,7 +590,7 @@ void ParticleSpriteSplashAcidBig(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleSpriteSplashAcidBigOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
 
@@ -536,7 +600,7 @@ void ParticleSpriteSplashAcidBig(struct ParticleEffect* pParticle)
     if (pParticle->stage == 0)
     {
         pParticle->stage++;
-        pParticle->status |= PARTICLE_STATUS_LOW_PRIORITY;
+        pParticle->status |= PARTICLE_STATUS_LOW_BG_PRIORITY;
     }
 }
 
@@ -551,7 +615,7 @@ void ParticleSpriteSplashAcidHuge(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleSpriteSplashAcidHugeOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
 
@@ -561,7 +625,7 @@ void ParticleSpriteSplashAcidHuge(struct ParticleEffect* pParticle)
     if (pParticle->stage == 0)
     {
         pParticle->stage++;
-        pParticle->status |= PARTICLE_STATUS_LOW_PRIORITY;
+        pParticle->status |= PARTICLE_STATUS_LOW_BG_PRIORITY;
     }
 }
 
@@ -576,14 +640,14 @@ void ParticleShootingBeamLeft(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleShootingBeamHorizontalOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
 
     if (pParticle->stage == 0)
     {
         pParticle->stage++;
-        pParticle->status |= PARTICLE_STATUS_LOW_PRIORITY;
+        pParticle->status |= PARTICLE_STATUS_LOW_BG_PRIORITY;
     }
 }
 
@@ -598,14 +662,14 @@ void ParticleShootingBeamRight(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleShootingBeamHorizontalOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
 
     if (pParticle->stage == 0)
     {
         pParticle->stage++;
-        pParticle->status |= PARTICLE_STATUS_X_FLIP | PARTICLE_STATUS_LOW_PRIORITY;
+        pParticle->status |= PARTICLE_STATUS_X_FLIP | PARTICLE_STATUS_LOW_BG_PRIORITY;
     }
 }
 
@@ -620,14 +684,14 @@ void ParticleShootingBeamDiagUpLeft(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleShootingBeamDiagonallyUpOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
 
     if (pParticle->stage == 0)
     {
         pParticle->stage++;
-        pParticle->status |= PARTICLE_STATUS_LOW_PRIORITY;
+        pParticle->status |= PARTICLE_STATUS_LOW_BG_PRIORITY;
     }
 }
 
@@ -642,14 +706,14 @@ void ParticleShootingBeamDiagUpRight(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleShootingBeamDiagonallyUpOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
 
     if (pParticle->stage == 0)
     {
         pParticle->stage++;
-        pParticle->status |= PARTICLE_STATUS_X_FLIP | PARTICLE_STATUS_LOW_PRIORITY;
+        pParticle->status |= PARTICLE_STATUS_X_FLIP | PARTICLE_STATUS_LOW_BG_PRIORITY;
     }
 }
 
@@ -664,14 +728,14 @@ void ParticleShootingBeamDiagDownLeft(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleShootingBeamDiagonallyDownOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
 
     if (pParticle->stage == 0)
     {
         pParticle->stage++;
-        pParticle->status |= PARTICLE_STATUS_LOW_PRIORITY;
+        pParticle->status |= PARTICLE_STATUS_LOW_BG_PRIORITY;
     }
 }
 
@@ -686,14 +750,14 @@ void ParticleShootingBeamDiagDownRight(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleShootingBeamDiagonallyDownOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
 
     if (pParticle->stage == 0)
     {
         pParticle->stage++;
-        pParticle->status |= (PARTICLE_STATUS_X_FLIP | PARTICLE_STATUS_LOW_PRIORITY);
+        pParticle->status |= (PARTICLE_STATUS_X_FLIP | PARTICLE_STATUS_LOW_BG_PRIORITY);
     }
 }
 
@@ -708,14 +772,14 @@ void ParticleShootingBeamUpLeft(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleShootingBeamUpOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
 
     if (pParticle->stage == 0)
     {
         pParticle->stage++;
-        pParticle->status |= PARTICLE_STATUS_LOW_PRIORITY;
+        pParticle->status |= PARTICLE_STATUS_LOW_BG_PRIORITY;
     }
 }
 
@@ -730,14 +794,14 @@ void ParticleShootingBeamUpRight(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleShootingBeamUpOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
 
     if (pParticle->stage == 0)
     {
         pParticle->stage++;
-        pParticle->status |= (PARTICLE_STATUS_X_FLIP | PARTICLE_STATUS_LOW_PRIORITY);
+        pParticle->status |= (PARTICLE_STATUS_X_FLIP | PARTICLE_STATUS_LOW_BG_PRIORITY);
     }
 }
 
@@ -752,14 +816,14 @@ void ParticleShootingBeamDownLeft(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleShootingBeamDownOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
 
     if (pParticle->stage == 0)
     {
         pParticle->stage++;
-        pParticle->status |= PARTICLE_STATUS_LOW_PRIORITY;
+        pParticle->status |= PARTICLE_STATUS_LOW_BG_PRIORITY;
     }
 }
 
@@ -774,14 +838,14 @@ void ParticleShootingBeamDownRight(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleShootingBeamDownOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
 
     if (pParticle->stage == 0)
     {
         pParticle->stage++;
-        pParticle->status |= (PARTICLE_STATUS_X_FLIP | PARTICLE_STATUS_LOW_PRIORITY);
+        pParticle->status |= (PARTICLE_STATUS_X_FLIP | PARTICLE_STATUS_LOW_BG_PRIORITY);
     }
 }
 
@@ -796,14 +860,14 @@ void ParticleBomb(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleBombOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
 
     if (pParticle->stage == 0)
     {
         pParticle->stage++;
-        pParticle->status |= PARTICLE_STATUS_EXPLOSION;
+        pParticle->status |= PARTICLE_STATUS_HIGH_OAM_PRIORITY;
         SoundPlay(SOUND_BOMB_EXPLOSION);
     }
 }
@@ -819,14 +883,14 @@ void ParticleMissileTrail(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleMissileTrailOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
 
     if (pParticle->stage == 0)
     {
         pParticle->stage++;
-        pParticle->status |= PARTICLE_STATUS_LOW_PRIORITY;
+        pParticle->status |= PARTICLE_STATUS_LOW_BG_PRIORITY;
     }
 }
 
@@ -841,14 +905,14 @@ void ParticleSuperMissileTrail(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleSuperMissileTrailOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
 
     if (pParticle->stage == 0)
     {
         pParticle->stage++;
-        pParticle->status |= PARTICLE_STATUS_LOW_PRIORITY;
+        pParticle->status |= PARTICLE_STATUS_LOW_BG_PRIORITY;
     }
 }
 
@@ -863,7 +927,7 @@ void ParticleBeamTrailingRight(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleBeamTrailingOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
 
@@ -875,7 +939,7 @@ void ParticleBeamTrailingRight(struct ParticleEffect* pParticle)
     else
     {
         pParticle->stage++;
-        pParticle->status |= PARTICLE_STATUS_LOW_PRIORITY;
+        pParticle->status |= PARTICLE_STATUS_LOW_BG_PRIORITY;
     }
 }
 
@@ -890,7 +954,7 @@ void ParticleBeamTrailingLeft(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleBeamTrailingOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
 
@@ -902,7 +966,7 @@ void ParticleBeamTrailingLeft(struct ParticleEffect* pParticle)
     else
     {
         pParticle->stage++;
-        pParticle->status |= PARTICLE_STATUS_LOW_PRIORITY;
+        pParticle->status |= PARTICLE_STATUS_LOW_BG_PRIORITY;
     }
 }
 
@@ -917,7 +981,7 @@ void ParticleChargedLongBeamTrail(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleChargedLongBeamTrailOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
 
@@ -936,7 +1000,7 @@ void ParticleChargedIceBeamTrail(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleChargedIceBeamTrailOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
 
@@ -955,7 +1019,7 @@ void ParticleChargedWaveBeamTrail(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleChargedWaveBeamTrailOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
 
@@ -974,7 +1038,7 @@ void ParticleChargedPlasmaBeamTrail(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleChargedPlasmaBeamTrailOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
 
@@ -993,7 +1057,7 @@ void ParticleChargedFullBeamTrail(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleChargedFullBeamTrailOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
 
@@ -1012,7 +1076,7 @@ void ParticleChargedPistolTrail(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleChargedPistolTrailOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
 
@@ -1031,14 +1095,14 @@ void ParticleSpriteExplosionHuge(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleSpriteExplosionHugeOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
     
     if (pParticle->stage == 0)
     {
         pParticle->stage++;
-        pParticle->status |= PARTICLE_STATUS_EXPLOSION;
+        pParticle->status |= PARTICLE_STATUS_HIGH_OAM_PRIORITY;
     }
 }
 
@@ -1053,14 +1117,14 @@ void ParticleSpriteExplosionSmall(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleSpriteExplosionSmallOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
     
     if (pParticle->stage == 0)
     {
         pParticle->stage++;
-        pParticle->status |= PARTICLE_STATUS_EXPLOSION;
+        pParticle->status |= PARTICLE_STATUS_HIGH_OAM_PRIORITY;
     }
 }
 
@@ -1075,14 +1139,14 @@ void ParticleSpriteExplosionMedium(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleSpriteExplosionMediumOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
     
     if (pParticle->stage == 0)
     {
         pParticle->stage++;
-        pParticle->status |= PARTICLE_STATUS_EXPLOSION;
+        pParticle->status |= PARTICLE_STATUS_HIGH_OAM_PRIORITY;
     }
 }
 
@@ -1097,14 +1161,14 @@ void ParticleSpriteExplosionBig(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleSpriteExplosionBigOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
     
     if (pParticle->stage == 0)
     {
         pParticle->stage++;
-        pParticle->status |= PARTICLE_STATUS_EXPLOSION;
+        pParticle->status |= PARTICLE_STATUS_HIGH_OAM_PRIORITY;
     }
 }
 
@@ -1119,14 +1183,14 @@ void ParticleSpriteExplosionSingleThenBig(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleSpriteExplosionSingleThenBigOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
     
     if (pParticle->stage == 0)
     {
         pParticle->stage++;
-        pParticle->status |= PARTICLE_STATUS_EXPLOSION;
+        pParticle->status |= PARTICLE_STATUS_HIGH_OAM_PRIORITY;
     }
 }
 
@@ -1141,14 +1205,14 @@ void ParticleScrewAttackDestroyed(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleScrewAttackDestroyedOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
     
     if (pParticle->stage == 0)
     {
         pParticle->stage++;
-        pParticle->status |= PARTICLE_STATUS_EXPLOSION;
+        pParticle->status |= PARTICLE_STATUS_HIGH_OAM_PRIORITY;
     }
 }
 
@@ -1163,36 +1227,36 @@ void ParticleShinesparkDestroyed(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleShinesparkDestroyedOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
     
     if (pParticle->stage == 0)
     {
         pParticle->stage++;
-        pParticle->status |= PARTICLE_STATUS_EXPLOSION;
+        pParticle->status |= PARTICLE_STATUS_HIGH_OAM_PRIORITY;
     }
 }
 
 /**
- * 54a88 | 38 | Subroutine for the sudo attack destroyed particle effect
+ * 54a88 | 38 | Subroutine for the pseudo attack destroyed particle effect
  * 
  * @param pParticle Particle effect pointer
  */
-void ParticleSudoScrewDestroyed(struct ParticleEffect* pParticle)
+void ParticlePseudoScrewDestroyed(struct ParticleEffect* pParticle)
 {
     APPLY_DELTA_TIME_INC(pParticle->frameCounter);
 
-    if (ParticleUpdateAnimation(pParticle, sParticleSudoScrewDestroyedOam))
+    if (ParticleUpdateAnimation(pParticle, sParticlePseudoScrewDestroyedOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
     
     if (pParticle->stage == 0)
     {
         pParticle->stage++;
-        pParticle->status |= PARTICLE_STATUS_EXPLOSION;
+        pParticle->status |= PARTICLE_STATUS_HIGH_OAM_PRIORITY;
     }
 }
 
@@ -1207,14 +1271,14 @@ void ParticleSpeedboosterDestroyed(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleSpeedboosterDestroyedOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
     
     if (pParticle->stage == 0)
     {
         pParticle->stage++;
-        pParticle->status |= PARTICLE_STATUS_EXPLOSION;
+        pParticle->status |= PARTICLE_STATUS_HIGH_OAM_PRIORITY;
     }
 }
 
@@ -1229,14 +1293,14 @@ void ParticleMainBossDeath(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleMainBossDeathOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
     
     if (pParticle->stage == 0)
     {
         pParticle->stage++;
-        pParticle->status |= PARTICLE_STATUS_EXPLOSION;
+        pParticle->status |= PARTICLE_STATUS_HIGH_OAM_PRIORITY;
     }
 }
 
@@ -1252,14 +1316,14 @@ void ParticleFreezingSpriteWithIce(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleFreezingSpriteWithIceOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
     
     if (pParticle->stage == 0)
     {
         pParticle->stage++;
-        pParticle->status |= PARTICLE_STATUS_EXPLOSION;
+        pParticle->status |= PARTICLE_STATUS_HIGH_OAM_PRIORITY;
     }
 }
 
@@ -1273,16 +1337,16 @@ void ParticleFreezingSpriteWithChargedIce(struct ParticleEffect* pParticle)
     pParticle->status ^= PARTICLE_STATUS_NOT_DRAWN;
     APPLY_DELTA_TIME_INC(pParticle->frameCounter);
 
-    if (ParticleUpdateAnimation(pParticle, sParticleFreezingSpritewithChargedIceBeamOam))
+    if (ParticleUpdateAnimation(pParticle, sParticleFreezingSpriteWithChargedIceBeamOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
     
     if (pParticle->stage == 0)
     {
         pParticle->stage++;
-        pParticle->status |= PARTICLE_STATUS_EXPLOSION;
+        pParticle->status |= PARTICLE_STATUS_HIGH_OAM_PRIORITY;
     }
 }
 
@@ -1297,7 +1361,7 @@ void ParticleHittingSomethingWithNormalBeam(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleHittingSomethingWithNormalBeamOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
 
@@ -1319,7 +1383,7 @@ void ParticleHittingSomethingWithLongBeam(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleHittingSomethingWithLongBeamOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
 
@@ -1341,7 +1405,7 @@ void ParticleHittingSomethingWithIceBeam(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleHittingSomethingWithIceBeamOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
 
@@ -1363,7 +1427,7 @@ void ParticleHittingSomethingWithWaveBeam(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleHittingSomethingWithWaveBeamOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
 
@@ -1385,7 +1449,7 @@ void ParticleHittingSomethingWithFullBeamNoPlasma(struct ParticleEffect* pPartic
 
     if (ParticleUpdateAnimation(pParticle, sParticleHittingSomethingWithWaveBeamOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
 
@@ -1407,7 +1471,7 @@ void ParticleHittingSomethingWithPlasmaBeam(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleHittingSomethingWithPlasmaBeamOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
 
@@ -1429,7 +1493,7 @@ void ParticleHittingSomethingWithFullBeam(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleHittingSomethingWithPlasmaBeamOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
 
@@ -1451,7 +1515,7 @@ void ParticleHittingSomethingInvincible(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleHittingSomethingInvincibleOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
 
@@ -1473,7 +1537,7 @@ void ParticleHittingSomethingWithMissile(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleHittingSomethingWithMissileOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
 
@@ -1496,7 +1560,7 @@ void ParticleHittingSomethingWithSuperMissile(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleHittingSomethingWithSuperMissileOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
 
@@ -1522,7 +1586,7 @@ void ParticleSmallDust(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleSmallDustOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
 
@@ -1541,7 +1605,7 @@ void ParticleMediumDust(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleMediumDustOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
 
@@ -1560,7 +1624,7 @@ void ParticleTwoMediumDust(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleTwoMediumDustOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
 
@@ -1579,14 +1643,14 @@ void ParticleSecondSmallDust(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleSmallDustOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
 
     if (pParticle->stage == 0)
     {
         pParticle->stage++;
-        pParticle->status |= PARTICLE_STATUS_LOW_PRIORITY;
+        pParticle->status |= PARTICLE_STATUS_LOW_BG_PRIORITY;
     }
 }
 
@@ -1601,14 +1665,14 @@ void ParticleSecondMediumDust(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleMediumDustOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
 
     if (pParticle->stage == 0)
     {
         pParticle->stage++;
-        pParticle->status |= PARTICLE_STATUS_LOW_PRIORITY;
+        pParticle->status |= PARTICLE_STATUS_LOW_BG_PRIORITY;
     }
 }
 
@@ -1623,14 +1687,14 @@ void ParticleSecondTwoMediumDust(struct ParticleEffect* pParticle)
 
     if (ParticleUpdateAnimation(pParticle, sParticleTwoMediumDustOam))
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         return;
     }
 
     if (pParticle->stage == 0)
     {
         pParticle->stage++;
-        pParticle->status |= PARTICLE_STATUS_LOW_PRIORITY;
+        pParticle->status |= PARTICLE_STATUS_LOW_BG_PRIORITY;
     }
 }
 
@@ -1680,7 +1744,7 @@ void ParticlePlayBeginToChargeSound(void)
  */
 void ParticleStopBeginToChargeSound(void)
 {
-    u16 bbf;
+    BeamBombFlags bbf;
 
     bbf = gEquipment.beamBombsActivation;
 
@@ -1720,7 +1784,7 @@ void ParticleStopBeginToChargeSound(void)
  */
 void ParticlePlayBeamFullChargedSound(void)
 {
-    u16 bbf;
+    BeamBombFlags bbf;
 
     bbf = gEquipment.beamBombsActivation;
 
@@ -1766,7 +1830,7 @@ void ParticleChargingBeam(struct ParticleEffect* pParticle)
 
     if (gSamusWeaponInfo.chargeCounter < CHARGE_BEAM_START_THRESHOLD)
     {
-        pParticle->status = 0;
+        pParticle->status = PARTICLE_STATUS_NONE;
         ParticleStopBeginToChargeSound();
         return;
     }
@@ -1823,8 +1887,7 @@ void ParticleChargingBeam(struct ParticleEffect* pParticle)
             }
 
             ParticleUpdateAnimation(pParticle, sParticleChargingBeamChargedOAM);
-            // CONVERT_SECONDS(.25f) + 1 * DELTA_TIME
-            if (MOD_AND(pParticle->frameCounter, 16) == 0)
+            if (MOD_AND(pParticle->frameCounter, CONVERT_SECONDS(.25f + 1.f / 60)) == 0)
                 ParticlePlayBeamFullChargedSound();
 
             APPLY_DELTA_TIME_INC(pParticle->frameCounter);
@@ -1842,7 +1905,7 @@ void ParticleEscape(struct ParticleEffect* pParticle)
     {
         case 0:
             pParticle->stage = 1;
-            pParticle->status |= PARTICLE_STATUS_EXPLOSION | PARTICLE_STATUS_LIVE_OFF_SCREEN | PARTICLE_STATUS_ABSOLUTE_POSITION;
+            pParticle->status |= PARTICLE_STATUS_HIGH_OAM_PRIORITY | PARTICLE_STATUS_LIVE_OFF_SCREEN | PARTICLE_STATUS_ABSOLUTE_POSITION;
 
             EscapeSetTimer();
             gCurrentEscapeStatus = ESCAPE_STATUS_HAPPENNING;
@@ -1861,7 +1924,7 @@ void ParticleEscape(struct ParticleEffect* pParticle)
             else if (gCurrentEscapeStatus == ESCAPE_STATUS_HAPPENNING && EscapeCheckHasEscaped())
             {
                 pParticle->stage = 2;
-                pParticle->frameCounter = CONVERT_SECONDS(.5f) + 2 * DELTA_TIME;
+                pParticle->frameCounter = CONVERT_SECONDS(.5f + 1.f / 30);
             }
             break;
 
@@ -1870,7 +1933,7 @@ void ParticleEscape(struct ParticleEffect* pParticle)
             APPLY_DELTA_TIME_DEC(pParticle->frameCounter);
 
             if (pParticle->frameCounter == 0)
-                pParticle->status = 0;
+                pParticle->status = PARTICLE_STATUS_NONE;
     }
 
     EscapeUpdateOam();
@@ -1886,14 +1949,15 @@ void ParticleEscape(struct ParticleEffect* pParticle)
 void ParticleSamusReflection(struct ParticleEffect* pParticle)
 {
     u16 partCount;
-    u16 count;
+    u16 i;
     const u16* src;
     u16* dst;
 
     if (pParticle->stage == 0)
     {
         pParticle->stage = 1;
-        pParticle->status |= PARTICLE_STATUS_LIVE_OFF_SCREEN | PARTICLE_STATUS_LOW_PRIORITY | PARTICLE_STATUS_X_FLIP; // Init status
+        // Init status
+        pParticle->status |= PARTICLE_STATUS_LIVE_OFF_SCREEN | PARTICLE_STATUS_LOW_BG_PRIORITY | PARTICLE_STATUS_X_FLIP;
     }
 
     // Copy the main samus body oam
@@ -1910,7 +1974,7 @@ void ParticleSamusReflection(struct ParticleEffect* pParticle)
     // Correct number for the loop
     partCount *= OAM_PART_SIZE;
 
-    for (count = 0; count < partCount; count++)
+    for (i = 0; i < partCount; i++)
         *dst++ = *src++; // Copy
 
     // Set for draw
@@ -1919,7 +1983,7 @@ void ParticleSamusReflection(struct ParticleEffect* pParticle)
     pParticle->yPosition = gSubSpriteData1.yPosition + (BLOCK_SIZE + HALF_BLOCK_SIZE - PIXEL_SIZE);
     pParticle->xPosition = gSubSpriteData1.xPosition;
 
-    if (gSubSpriteData1.workVariable1 == 0)
+    if (gSubSpriteData1.work1 == 0)
     {
         // Timer for shootable symbol, if it's 0 then there's no shootable symbol
         pParticle->status &= ~PARTICLE_STATUS_NOT_DRAWN;
@@ -1929,10 +1993,10 @@ void ParticleSamusReflection(struct ParticleEffect* pParticle)
         // There's a shootable symbol, don't draw
         pParticle->status |= PARTICLE_STATUS_NOT_DRAWN;
 
-        if (gSubSpriteData1.workVariable3 == RUINS_TEST_FIGHT_STAGE_LAST_SYMBOL_HIT)
+        if (gSubSpriteData1.work3 == RUINS_TEST_FIGHT_STAGE_LAST_SYMBOL_HIT)
         {
             // Fight has ended, destroy
-            pParticle->status = 0;
+            pParticle->status = PARTICLE_STATUS_NONE;
         }
     }
 }

@@ -15,7 +15,7 @@ void ColorFadingStart(u8 type);
 void ColorFadingHideScreenDuringLoad(void);
 void ColorFadingSetBg3Position(void);
 void ColorFadingStartDefault(void);
-void ColorFadingStartDoorTransition(void);
+void unk_5c220(void);
 void ColorFadingGradients(u8 delay);
 void ColorFadingFinishDoorFade(void);
 u32 ColorFadingFinishDoorTransition(void);

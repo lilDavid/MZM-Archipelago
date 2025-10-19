@@ -8,14 +8,6 @@
 extern const u32 sFakePowerBombGfx[115];
 extern const u16 sFakePowerBombPal[16];
 
-extern const u16 sFakePowerBombOAM_Idle_Frame0[4];
+extern const struct FrameData sFakePowerBombOam_Idle[5];
 
-extern const u16 sFakePowerBombOAM_Idle_Frame1[4];
-
-extern const u16 sFakePowerBombOAM_Idle_Frame2[4];
-
-extern const u16 sFakePowerBombOAM_Idle_Frame3[4];
-
-extern const struct FrameData sFakePowerBombOAM_Idle[5];
-
-#endif
+#endif /* SPACE_PIRATE_CARRYING_POWER_BOMB_DATA_H */

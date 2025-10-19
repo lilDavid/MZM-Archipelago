@@ -254,7 +254,7 @@ void SpriteDebrisProcessAll(void)
     u32 adc;
     u32 timer;
 
-    if (gGameModeSub1 == SUB_GAME_MODE_PLAYING)
+    if (gSubGameMode1 == SUB_GAME_MODE_PLAYING)
     {
         for (pDebris = gSpriteDebris; pDebris < gSpriteDebris + MAX_AMOUNT_OF_SPRITE_DEBRIS; pDebris++)
         {
@@ -348,7 +348,7 @@ void SpriteDebrisDrawAll(void)
 {
     struct SpriteDebris* pDebris;
 
-    if (gGameModeSub1 != SUB_GAME_MODE_PLAYING)
+    if (gSubGameMode1 != SUB_GAME_MODE_PLAYING)
         return;
 
     for (pDebris = gSpriteDebris; pDebris < gSpriteDebris + MAX_AMOUNT_OF_SPRITE_DEBRIS; pDebris++)

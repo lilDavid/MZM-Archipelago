@@ -1,7 +1,7 @@
 #include "sprites_AI/imago_cocoon.h"
+#include "fixed_point.h"
 #include "macros.h"
 
-#include "data/frame_data_pointers.h"
 #include "data/sprites/imago_cocoon.h"
 #include "data/sprites/enemy_drop.h"
 #include "data/sprite_data.h"
@@ -23,11 +23,86 @@
 #include "structs/samus.h"
 #include "structs/clipdata.h"
 
+#define IMAGO_COCOON_POSE_IDLE 0x8
+#define IMAGO_COCOON_POSE_FALLING_BEFORE_BLOCKS 0x9
+#define IMAGO_COCOON_POSE_FALLING_AFTER_BLOCKS 0x23
+#define IMAGO_COCOON_POSE_UNLOCK_PASSAGE 0x25
+#define IMAGO_COCOON_POSE_IN_GROUND 0x27
+
+#define IMAGO_COCOON_MUSIC_STAGE_STARTED_MUSIC 0x0 
+#define IMAGO_COCOON_MUSIC_STAGE_STARTED_FADING 0x1
+#define IMAGO_COCOON_MUSIC_STAGE_WAITING_TO_FADE 0x2
+
+#define IMAGO_COCOON_SIZE 0xE8
+
+// Imago cocoon vine
+
+#define IMAGO_COCOON_VINE_POSE_IDLE 0x8
+#define IMAGO_COCOON_VINE_POSE_SPAWN_SPORES 0xE
+#define IMAGO_COCOON_VINE_POSE_CEILING_VINE_IDLE 0x42
+#define IMAGO_COCOON_VINE_POSE_CEILING_VINE_DEATH 0x43
+
+// Imago cocoon spore
+
+#define IMAGO_COCOON_SPORE_POSE_SPAWNING 0x9
+#define IMAGO_COCOON_SPORE_POSE_NEST 0x23
+#define IMAGO_COCOON_SPORE_POSE_MOVING 0x25
+#define IMAGO_COCOON_SPORE_POSE_EXPLODING_INIT 0x42
+#define IMAGO_COCOON_SPORE_POSE_EXPLODING 0x43
+
+#define IMAGO_COCOON_SPORE_LEFT_Y_OFFSET 0x60
+#define IMAGO_COCOON_SPORE_LEFT_X_OFFSET 0x46
+#define IMAGO_COCOON_SPORE_RIGHT_Y_OFFSET 0x90
+#define IMAGO_COCOON_SPORE_RIGHT_X_OFFSET 0x64
+
+#define IMAGO_COCOON_SPORE_PART_DOWN 0x0
+#define IMAGO_COCOON_SPORE_PART_DIAG_RIGHT_UP 0x1
+#define IMAGO_COCOON_SPORE_PART_RIGHT 0x2
+#define IMAGO_COCOON_SPORE_PART_DIAG_RIGHT_DOWN 0x3
+#define IMAGO_COCOON_SPORE_PART_UP 0x4
+#define IMAGO_COCOON_SPORE_PART_DIAG_LEFT_DOWN 0x5
+#define IMAGO_COCOON_SPORE_PART_LEFT 0x6
+#define IMAGO_COCOON_SPORE_PART_DIAG_LEFT_UP 0x7
+
+// Winged ripper
+
+#define WINGED_RIPPER_POSE_MOVING_INIT 0x8
+#define WINGED_RIPPER_POSE_MOVING 0x9
+
+#define DEFEATED_IMAGO_COCOON_POSE_IDLE 0x9
+#define IMAGO_COCOON_CEILING_VINE_POSE_IDLE 0x9
+#define EVENT_TRIGGER_DISCOVERED_IMAGO_PASSAGE_POSE_IDLE 0x8
+#define IMAGO_COCOON_AFTER_FIGHT_POSE_IDLE 0x9
+
+static const struct FrameData* sImagoCocoonFrameDataPointers[IMAGO_COCOON_OAM_END] = {
+    [IMAGO_COCOON_OAM_CEILING_VINE_MOTIONLESS] = sImagoCocoonOam_CeilingVineMotionless,
+    [IMAGO_COCOON_OAM_CEILING_VINE_MOVING] = sImagoCocoonOam_CeilingVineMoving,
+    [IMAGO_COCOON_OAM_CEILING_VINE_BROKEN] = sImagoCocoonOam_CeilingVineBroken,
+    [IMAGO_COCOON_OAM_DECORATIVE_VINE_LEFT] = sImagoCocoonOam_DecorativeVinesLeft,
+    [IMAGO_COCOON_OAM_DECORATIVE_VINE_RIGHT] = sImagoCocoonOam_DecorativeVinesRight,
+    [IMAGO_COCOON_OAM_VINE_LEFT_MIDDLE] = sImagoCocoonVineOam_LeftMiddle,
+    [IMAGO_COCOON_OAM_VINE_RIGHT_MIDDLE] = sImagoCocoonVineOam_RightMiddle,
+    [IMAGO_COCOON_OAM_VINE_LEFT_RIGHT] = sImagoCocoonVineOam_LeftRight,
+    [IMAGO_COCOON_OAM_VINE_RIGT_RIGHT] = sImagoCocoonVineOam_RightRight,
+    [IMAGO_COCOON_OAM_VINE_LEFT_LEFT] = sImagoCocoonVineOam_LeftLeft,
+    [IMAGO_COCOON_OAM_VINE_RIGHT_LEFT] = sImagoCocoonVineOam_RightLeft,
+    [IMAGO_COCOON_OAM_IDLE] = sImagoCocoonOam_Idle,
+    [IMAGO_COCOON_OAM_2e0bb0] = sImagoCocoonOam_2e0bb0,
+    [IMAGO_COCOON_OAM_STATIC] = sImagoCocoonOam_Static,
+    [IMAGO_COCOON_OAM_SPORE_SPAWNING] = sImagoCocoonSporeOam_Spawning,
+    [IMAGO_COCOON_OAM_SPORE_NEST] = sImagoCocoonSporeOam_Nest,
+    [IMAGO_COCOON_OAM_SPORE_MOVING] = sImagoCocoonSporeOam_Moving,
+    [IMAGO_COCOON_OAM_SPORE_EXPLODING] = sImagoCocoonSporeOam_Exploding,
+    [IMAGO_COCOON_OAM_WINGED_RIPPER_MOVING] = sWingedRipperOam_Moving,
+    [IMAGO_COCOON_OAM_WINGED_RIPPER_TURNING_AROUND] = sWingedRipperOam_TurningAround,
+    [IMAGO_COCOON_OAM_DEFEATED_COCOON] = sDefeatedImagoCocoonOam
+};
+
 /**
  * @brief 26c38 | 68 | Sync the sub sprites of Imago cocoon
  * 
  */
-void ImagoCocoonSyncSprites(void)
+static void ImagoCocoonSyncSprites(void)
 {
     MultiSpriteDataInfo_T pData;
     u16 oamIdx;
@@ -51,7 +126,7 @@ void ImagoCocoonSyncSprites(void)
  * 
  * @param caa Clipdata Affecting Action
  */
-void ImagoCocoonChangeOneCcaa(u8 caa)
+static void ImagoCocoonChangeOneCcaa(u8 caa)
 {
     u16 yPosition;
     u16 xPosition;
@@ -69,7 +144,7 @@ void ImagoCocoonChangeOneCcaa(u8 caa)
  * 
  * @param caa Clipdata Affecting Action
  */
-void ImagoCocoonChangeTwoMiddleCcaa(u8 caa)
+static void ImagoCocoonChangeTwoMiddleCcaa(u8 caa)
 {
     u16 yPosition;
     u16 xPosition;
@@ -94,7 +169,7 @@ void ImagoCocoonChangeTwoMiddleCcaa(u8 caa)
  * 
  * @param caa Clipdata Affecting Action
  */
-void ImagoCocoonChangeTwoAroundCcaa(u8 caa)
+static void ImagoCocoonChangeTwoAroundCcaa(u8 caa)
 {
     u16 yPosition;
     u16 xPosition;
@@ -119,7 +194,7 @@ void ImagoCocoonChangeTwoAroundCcaa(u8 caa)
  * 
  * @param caa Clipdata Affecting Action
  */
-void ImagoCocoonChangeTwoBlockingCcaa(u8 caa)
+static void ImagoCocoonChangeTwoBlockingCcaa(u8 caa)
 {
     u16 yPosition;
     u16 xPosition;
@@ -142,18 +217,18 @@ void ImagoCocoonChangeTwoBlockingCcaa(u8 caa)
  * @param limit The limit of the scaling
  * @param value The value to increment/decrement the scaling
  */
-void ImagoCocoonChangeOAMScaling(u16 limit, u16 value)
+static void ImagoCocoonChangeOAMScaling(u16 limit, u16 value)
 {
     if (gCurrentSprite.work2) // Check growing/shrinking
     {
-        if (gCurrentSprite.scaling > (Q_8_8(1.f) - limit))
+        if (gCurrentSprite.scaling > Q_8_8(1.f) - limit)
             gCurrentSprite.scaling -= value;
         else
             gCurrentSprite.work2 = FALSE; // Set growing
     }
     else
     {
-        if (gCurrentSprite.scaling < (Q_8_8(1.f) + limit))
+        if (gCurrentSprite.scaling < Q_8_8(1.f) + limit)
             gCurrentSprite.scaling += value;
         else
             gCurrentSprite.work2 = TRUE; // Set shrinking
@@ -164,7 +239,7 @@ void ImagoCocoonChangeOAMScaling(u16 limit, u16 value)
  * @brief 26e7c | 2ac | Initializes an Imago cocoon sprite
  * 
  */
-void ImagoCocoonInit(void)
+static void ImagoCocoonInit(void)
 {
     u16 yPosition;
     u16 xPosition;
@@ -181,40 +256,41 @@ void ImagoCocoonInit(void)
             gCurrentSprite.primarySpriteRamSlot, gSubSpriteData1.yPosition, gSubSpriteData1.xPosition, 0);
 
         if (EventFunction(EVENT_ACTION_CHECKING, EVENT_ENTER_RIDLEY_DEMO_PLAYED))
-            gCurrentSprite.status = 0;
-        else
         {
-            // Set in tunnel
-
-            gCurrentSprite.status |= SPRITE_STATUS_IGNORE_PROJECTILES;
-            gCurrentSprite.samusCollision = SSC_NONE;
-
-            gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(3 * BLOCK_SIZE + HALF_BLOCK_SIZE);
-            gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE + HALF_BLOCK_SIZE);
-            gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(2 * BLOCK_SIZE + HALF_BLOCK_SIZE);
-
-            gCurrentSprite.hitboxTop = 0;
-            gCurrentSprite.hitboxBottom = 0;
-            gCurrentSprite.hitboxLeft = 0;
-            gCurrentSprite.hitboxRight = 0;
-
-            gCurrentSprite.drawOrder = 4;
-            gCurrentSprite.status |= SPRITE_STATUS_ROTATION_SCALING;
-            gCurrentSprite.scaling = Q_8_8(1.f);
-            gCurrentSprite.rotation = 0;
-            gCurrentSprite.roomSlot = IMAGO_COCOON_PART_IMAGO_COCOON;
-
-            gSubSpriteData1.pMultiOam = sImagoCocoonMultiSpriteData_Idle;
-            gSubSpriteData1.animationDurationCounter = 0;
-            gSubSpriteData1.currentAnimationFrame = 0;
-
-            gCurrentSprite.pOam = sImagoCocoonOam_Static;
-            gCurrentSprite.animationDurationCounter = 0;
-            gCurrentSprite.currentAnimationFrame = 0;
-
-            gCurrentSprite.pose = IMAGO_COCOON_POSE_IN_GROUND;
-            gSubSpriteData1.yPosition += BLOCK_SIZE * 15;
+            gCurrentSprite.status = 0;
+            return;
         }
+
+        // Set in tunnel
+
+        gCurrentSprite.status |= SPRITE_STATUS_IGNORE_PROJECTILES;
+        gCurrentSprite.samusCollision = SSC_NONE;
+
+        gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(3 * BLOCK_SIZE + HALF_BLOCK_SIZE);
+        gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE + HALF_BLOCK_SIZE);
+        gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(2 * BLOCK_SIZE + HALF_BLOCK_SIZE);
+
+        gCurrentSprite.hitboxTop = 0;
+        gCurrentSprite.hitboxBottom = 0;
+        gCurrentSprite.hitboxLeft = 0;
+        gCurrentSprite.hitboxRight = 0;
+
+        gCurrentSprite.drawOrder = 4;
+        gCurrentSprite.status |= SPRITE_STATUS_ROTATION_SCALING_WHOLE;
+        gCurrentSprite.scaling = Q_8_8(1.f);
+        gCurrentSprite.rotation = 0;
+        gCurrentSprite.roomSlot = IMAGO_COCOON_PART_IMAGO_COCOON;
+
+        gSubSpriteData1.pMultiOam = sImagoCocoonMultiSpriteData_Idle;
+        gSubSpriteData1.animationDurationCounter = 0;
+        gSubSpriteData1.currentAnimationFrame = 0;
+
+        gCurrentSprite.pOam = sImagoCocoonOam_Static;
+        gCurrentSprite.animationDurationCounter = 0;
+        gCurrentSprite.currentAnimationFrame = 0;
+
+        gCurrentSprite.pose = IMAGO_COCOON_POSE_IN_GROUND;
+        gSubSpriteData1.yPosition += BLOCK_SIZE * 15;
     }
     else
     {
@@ -234,7 +310,7 @@ void ImagoCocoonInit(void)
         gCurrentSprite.drawOrder = 6;
         gCurrentSprite.samusCollision = SSC_HURTS_SAMUS;
         gCurrentSprite.health = GET_PSPRITE_HEALTH(gCurrentSprite.spriteId);
-        gCurrentSprite.status |= SPRITE_STATUS_ROTATION_SCALING;
+        gCurrentSprite.status |= SPRITE_STATUS_ROTATION_SCALING_WHOLE;
 
         gCurrentSprite.scaling = Q_8_8(1.f);
         gCurrentSprite.rotation = 0;
@@ -244,8 +320,8 @@ void ImagoCocoonInit(void)
         gSubSpriteData1.animationDurationCounter = 0;
         gSubSpriteData1.currentAnimationFrame = 0;
         
-        gSubSpriteData1.workVariable2 = 0;
-        gSubSpriteData1.workVariable1 = 0;
+        gSubSpriteData1.work2 = 0;
+        gSubSpriteData1.work1 = 0;
         // Number of vines alive
         gSubSpriteData1.health = 6;
 
@@ -286,7 +362,7 @@ void ImagoCocoonInit(void)
  * 27128 | 2c | Handles the movement of the Imago cocoon falling
  * 
  */
-void ImagoCocoonFallingMovement(void)
+static void ImagoCocoonFallingMovement(void)
 {
     u32 increment;
 
@@ -303,7 +379,7 @@ void ImagoCocoonFallingMovement(void)
  * @brief 27154 | 130 | Handles the Imago cocoon being idle
  * 
  */
-void ImagoCocoonIdle(void)
+static void ImagoCocoonIdle(void)
 {
     u16 caf;
     
@@ -379,7 +455,7 @@ void ImagoCocoonIdle(void)
  * 27284 | 174 | Handles imago cocoon falling before the blocks are destroyed
  * 
  */
-void ImagoCocoonFallingBeforeBlocks(void)
+static void ImagoCocoonFallingBeforeBlocks(void)
 {
     u16 yPosition;
     u32 xPosition;
@@ -395,7 +471,9 @@ void ImagoCocoonFallingBeforeBlocks(void)
         ImagoCocoonFallingMovement();
         yPosition = gSubSpriteData1.yPosition + BLOCK_SIZE * 6;
         xPosition = gSubSpriteData1.xPosition;
+
         SpriteUtilCheckCollisionAtPosition(yPosition, xPosition);
+
         if (gPreviousCollisionCheck & COLLISION_FLAGS_UNKNOWN_F0) // Check for solid collision
         {
             ImagoCocoonChangeOneCcaa(CAA_REMOVE_SOLID); // Remove middle block
@@ -409,7 +487,7 @@ void ImagoCocoonFallingBeforeBlocks(void)
     }
     else
     {
-        if (gSubSpriteData1.currentAnimationFrame == 7 && gSubSpriteData1.animationDurationCounter == 6 * DELTA_TIME)
+        if (gSubSpriteData1.currentAnimationFrame == 7 && gSubSpriteData1.animationDurationCounter == CONVERT_SECONDS(.1f))
         {
             SpriteSpawnSecondary(SSPRITE_IMAGO_CEILING_VINE, 0, gCurrentSprite.spritesetGfxSlot,
                 gCurrentSprite.primarySpriteRamSlot, gSubSpriteData1.yPosition, gSubSpriteData1.xPosition, 0);
@@ -424,9 +502,9 @@ void ImagoCocoonFallingBeforeBlocks(void)
         if (MOD_AND(timer, 32) == 0)
         {
             if (timer & 32)
-                SpriteDebrisInit(0, 5, yPosition, xPosition + (BLOCK_SIZE + HALF_BLOCK_SIZE - PIXEL_SIZE - PIXEL_SIZE / 2) - (rng * 8));
+                SpriteDebrisInit(0, 5, yPosition, xPosition + (BLOCK_SIZE + HALF_BLOCK_SIZE - PIXEL_SIZE - PIXEL_SIZE / 2) - rng * 8);
             else
-                SpriteDebrisInit(0, 7, yPosition, xPosition - (BLOCK_SIZE + PIXEL_SIZE + PIXEL_SIZE / 2) + (rng * 8));
+                SpriteDebrisInit(0, 7, yPosition, xPosition - (BLOCK_SIZE + PIXEL_SIZE + PIXEL_SIZE / 2) + rng * 8);
         }
 
         // 2 * DELTA_TIME
@@ -434,12 +512,12 @@ void ImagoCocoonFallingBeforeBlocks(void)
         {
             if (rng > 7)
             {
-                SpriteDebrisInit(0, 8, yPosition, xPosition - (2 * BLOCK_SIZE + QUARTER_BLOCK_SIZE + PIXEL_SIZE + PIXEL_SIZE / 2) + (rng * 4));
+                SpriteDebrisInit(0, 8, yPosition, xPosition - (BLOCK_SIZE * 2 + QUARTER_BLOCK_SIZE + PIXEL_SIZE + PIXEL_SIZE / 2) + (rng * 4));
                 SpriteDebrisInit(0, 6, yPosition, xPosition + HALF_BLOCK_SIZE - (rng * 4));
             }
             else
             {
-                SpriteDebrisInit(0, 6, yPosition, xPosition + (2 * BLOCK_SIZE + PIXEL_SIZE / 2) - (rng * 4));
+                SpriteDebrisInit(0, 6, yPosition, xPosition + (BLOCK_SIZE * 2 + PIXEL_SIZE / 2) - (rng * 4));
                 SpriteDebrisInit(0, 8, yPosition, xPosition - HALF_BLOCK_SIZE + (rng * 4));
             }
         }
@@ -450,7 +528,7 @@ void ImagoCocoonFallingBeforeBlocks(void)
  * @brief 273f8 | fc | Handles imago cocoon falling after the blocks are destroyed
  * 
  */
-void ImagoCocoonFallingAfterBlocks(void)
+static void ImagoCocoonFallingAfterBlocks(void)
 {
     u16 yPosition;
     u16 xPosition;
@@ -473,9 +551,9 @@ void ImagoCocoonFallingAfterBlocks(void)
         ImagoCocoonChangeTwoAroundCcaa(CAA_REMOVE_SOLID);
     else if (gCurrentSprite.work0 == CONVERT_SECONDS(.25f))
     {
-        ParticleSet(yPosition + (3 * BLOCK_SIZE), xPosition + (BLOCK_SIZE + HALF_BLOCK_SIZE + PIXEL_SIZE), PE_TWO_MEDIUM_DUST);
-        ParticleSet(yPosition + (3 * BLOCK_SIZE), xPosition - (BLOCK_SIZE + HALF_BLOCK_SIZE + PIXEL_SIZE), PE_TWO_MEDIUM_DUST);
-        ParticleSet(yPosition + (3 * BLOCK_SIZE), xPosition, PE_SPRITE_EXPLOSION_HUGE);
+        ParticleSet(yPosition + BLOCK_SIZE * 3, xPosition + (BLOCK_SIZE + HALF_BLOCK_SIZE + PIXEL_SIZE), PE_TWO_MEDIUM_DUST);
+        ParticleSet(yPosition + BLOCK_SIZE * 3, xPosition - (BLOCK_SIZE + HALF_BLOCK_SIZE + PIXEL_SIZE), PE_TWO_MEDIUM_DUST);
+        ParticleSet(yPosition + BLOCK_SIZE * 3, xPosition, PE_SPRITE_EXPLOSION_HUGE);
     }
 
     topEdge = SpriteUtilCheckVerticalCollisionAtPositionSlopes(yPosition, xPosition);
@@ -499,7 +577,7 @@ void ImagoCocoonFallingAfterBlocks(void)
         gCurrentSprite.scaling = Q_8_8(1.f);
         gCurrentSprite.work2 = FALSE;
 
-        FadeMusic(CONVERT_SECONDS(1.f) + CONVERT_SECONDS(5.f / 12)); // 1.4 + 1 * DELTA_TIME
+        FadeMusic(CONVERT_SECONDS(1.4f + 1.f / 60));
     }
 }
 
@@ -507,7 +585,7 @@ void ImagoCocoonFallingAfterBlocks(void)
  * 274f4 | 48 | Checks if the passage should be unlocked, and unlocks it if yes
  * 
  */
-void ImagoCocoonUnlockPassage(void)
+static void ImagoCocoonUnlockPassage(void)
 {
     if (gCurrentSprite.status & SPRITE_STATUS_ONSCREEN)
     {
@@ -527,7 +605,7 @@ void ImagoCocoonUnlockPassage(void)
  * @brief 2753c | 70 | Handles Imago cocoon being in the ground
  * 
  */
-void ImagoCocoonInGround(void)
+static void ImagoCocoonInGround(void)
 {
     // 4 * DELTA_TIME
     if (MOD_AND(gFrameCounter8Bit, 4) == 0)
@@ -555,7 +633,9 @@ void ImagoCocoonInGround(void)
                 gSubSpriteData1.yPosition += ONE_SUB_PIXEL;
             }
             else
+            {
                 gCurrentSprite.work2 = TRUE;
+            }
         }
     }
 }
@@ -564,7 +644,7 @@ void ImagoCocoonInGround(void)
  * @brief 275ac | 320 | Initializes an Imago cocoon vine sprite
  * 
  */
-void ImagoCocoonVineInit(void)
+static void ImagoCocoonVineInit(void)
 {
     gCurrentSprite.status &= ~SPRITE_STATUS_NOT_DRAWN;
 
@@ -727,7 +807,7 @@ void ImagoCocoonVineInit(void)
  * @brief 278cc | 38 | Checks if the damaged sound should play
  * 
  */
-void ImagoCocoonVineCheckPlayDamagedSound(void)
+static void ImagoCocoonVineCheckPlayDamagedSound(void)
 {
     if (gCurrentSprite.properties & SP_DAMAGED)
     {
@@ -741,7 +821,7 @@ void ImagoCocoonVineCheckPlayDamagedSound(void)
  * 27904 | 88 | Called when a vine dies, plays a particle effect and decrements the health of the boss 
  * 
  */
-void ImagoCocoonVineDeath(void)
+static void ImagoCocoonVineDeath(void)
 {
     u16 yPosition;
     u16 xPosition;
@@ -775,6 +855,7 @@ void ImagoCocoonVineDeath(void)
     // Decrement number of vines alive
     if (gSubSpriteData1.health != 0)
         gSubSpriteData1.health--;
+
     gCurrentSprite.status = 0;
 }
 
@@ -782,7 +863,7 @@ void ImagoCocoonVineDeath(void)
  * 2798c | 160 | Handles the vines spawning the spores
  * 
  */
-void ImagoCocoonVineSpawnSpore(void)
+static void ImagoCocoonVineSpawnSpore(void)
 {
     u8 slot;
     u8 ramSlot;
@@ -849,10 +930,10 @@ void ImagoCocoonVineSpawnSpore(void)
 }
 
 /**
- * 27aec | 44 | Handles the Imago cocoon ceilig vine being idle
+ * 27aec | 44 | Handles the Imago cocoon ceiling vine being idle
  * 
  */
-void ImagoCocoonCeilingVineIdle(void)
+static void ImagoCocoonCeilingVineIdle(void)
 {
     if (gSubSpriteData1.health == 0 && gSubSpriteData1.currentAnimationFrame > 7)
     {
@@ -867,7 +948,7 @@ void ImagoCocoonCeilingVineIdle(void)
  * 27b30 | 44 | Handles the animation of the removal of the hanging vine when imago cocoon dies
  * 
  */
-void ImagoCocoonCeilingVineDeath(void)
+static void ImagoCocoonCeilingVineDeath(void)
 {
     u8 ramSlot;
 
@@ -885,7 +966,7 @@ void ImagoCocoonCeilingVineDeath(void)
  * 27b74 | 54 | Synchronizes the spore position with the imago cocoon position
  * 
  */
-void ImagoCocoonSporeSyncPosition(void)
+static void ImagoCocoonSporeSyncPosition(void)
 {
     u8 ramSlot;
 
@@ -906,15 +987,15 @@ void ImagoCocoonSporeSyncPosition(void)
  * 27bc8 | a8 | Initialize an imago cocoon spore sprite
  * 
  */
-void ImagoCocoonSporeInit(void)
+static void ImagoCocoonSporeInit(void)
 {
     // Only display the first spore for the nest
     if (gCurrentSprite.roomSlot == IMAGO_COCOON_SPORE_PART_DOWN)
         gCurrentSprite.status &= ~SPRITE_STATUS_NOT_DRAWN;
 
-    gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(HALF_BLOCK_SIZE + QUARTER_BLOCK_SIZE);
-    gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(HALF_BLOCK_SIZE + QUARTER_BLOCK_SIZE);
-    gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(HALF_BLOCK_SIZE + QUARTER_BLOCK_SIZE);
+    gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(THREE_QUARTER_BLOCK_SIZE);
+    gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(THREE_QUARTER_BLOCK_SIZE);
+    gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(THREE_QUARTER_BLOCK_SIZE);
 
     gCurrentSprite.hitboxTop = -EIGHTH_BLOCK_SIZE;
     gCurrentSprite.hitboxBottom = EIGHTH_BLOCK_SIZE;
@@ -940,26 +1021,30 @@ void ImagoCocoonSporeInit(void)
  * 27c70 | 74 | Handles an imago cocoon spore spawning
  * 
  */
-void ImagoCocoonSporeSpawning(void)
+static void ImagoCocoonSporeSpawning(void)
 {
     ImagoCocoonSporeSyncPosition();
     if (gSubSpriteData1.health == 0)
-        gCurrentSprite.pose = IMAGO_COCOON_SPORE_POSE_EXPLODING_INIT; // If imago cocoon is dead, kill the spores
-    else
     {
-        if (gCurrentSprite.roomSlot == 0 && gCurrentSprite.status & SPRITE_STATUS_ONSCREEN &&
-            gCurrentSprite.currentAnimationFrame == 0 && gCurrentSprite.animationDurationCounter == 1 * DELTA_TIME)
-            SoundPlay(SOUND_IMAGO_COCOON_SPORE_SPAWNING);
+        // If imago cocoon is dead, kill the spores
+        gCurrentSprite.pose = IMAGO_COCOON_SPORE_POSE_EXPLODING_INIT;
+        return;
+    }
 
-        if (SpriteUtilCheckEndCurrentSpriteAnim())
-        {
-            // Set nest
-            gCurrentSprite.pOam = sImagoCocoonSpore_Nest;
-            gCurrentSprite.animationDurationCounter = 0;
-            gCurrentSprite.currentAnimationFrame = 0;
-            gCurrentSprite.pose = IMAGO_COCOON_SPORE_POSE_NEST;
-            gCurrentSprite.work0 = CONVERT_SECONDS(1.f);
-        }
+    if (gCurrentSprite.roomSlot == 0 && gCurrentSprite.status & SPRITE_STATUS_ONSCREEN &&
+        gCurrentSprite.currentAnimationFrame == 0 && gCurrentSprite.animationDurationCounter == DELTA_TIME)
+    {
+        SoundPlay(SOUND_IMAGO_COCOON_SPORE_SPAWNING);
+    }
+
+    if (SpriteUtilHasCurrentAnimationEnded())
+    {
+        // Set nest
+        gCurrentSprite.pOam = sImagoCocoonSporeOam_Nest;
+        gCurrentSprite.animationDurationCounter = 0;
+        gCurrentSprite.currentAnimationFrame = 0;
+        gCurrentSprite.pose = IMAGO_COCOON_SPORE_POSE_NEST;
+        gCurrentSprite.work0 = CONVERT_SECONDS(1.f);
     }
 }
 
@@ -967,29 +1052,31 @@ void ImagoCocoonSporeSpawning(void)
  * 27ce4 | 8c | Handles an Imago cocoon spore being a nest 
  * 
  */
-void ImagoCocoonSporeNest(void)
+static void ImagoCocoonSporeNest(void)
 {
     ImagoCocoonSporeSyncPosition();
     if (gSubSpriteData1.health == 0)
-        gCurrentSprite.pose = IMAGO_COCOON_SPORE_POSE_EXPLODING_INIT; // If imago cocoon is dead, kill the spores
-    else
     {
-        APPLY_DELTA_TIME_DEC(gCurrentSprite.work0);
-        if (gCurrentSprite.work0 == 0)
-        {
-            gCurrentSprite.status &= ~(SPRITE_STATUS_NOT_DRAWN | SPRITE_STATUS_IGNORE_PROJECTILES);
+        // If imago cocoon is dead, kill the spores
+        gCurrentSprite.pose = IMAGO_COCOON_SPORE_POSE_EXPLODING_INIT;
+        return;
+    }
 
-            gCurrentSprite.pOam = sImagoCocoonSpore_Moving;
-            gCurrentSprite.animationDurationCounter = 0;
-            gCurrentSprite.currentAnimationFrame = 0;
+    APPLY_DELTA_TIME_DEC(gCurrentSprite.work0);
+    if (gCurrentSprite.work0 == 0)
+    {
+        gCurrentSprite.status &= ~(SPRITE_STATUS_NOT_DRAWN | SPRITE_STATUS_IGNORE_PROJECTILES);
 
-            gCurrentSprite.properties |= SP_KILL_OFF_SCREEN;
-            gCurrentSprite.samusCollision = SSC_HURTS_SAMUS_STOP_DIES_WHEN_HIT;
-            gCurrentSprite.pose = IMAGO_COCOON_SPORE_POSE_MOVING;
+        gCurrentSprite.pOam = sImagoCocoonSporeOam_Moving;
+        gCurrentSprite.animationDurationCounter = 0;
+        gCurrentSprite.currentAnimationFrame = 0;
 
-            if (gCurrentSprite.roomSlot == IMAGO_COCOON_SPORE_PART_DOWN && gCurrentSprite.status & SPRITE_STATUS_ONSCREEN)
-                SoundPlay(SOUND_IMAGO_COCOON_SPORE_NEST_SPAWNING);
-        }
+        gCurrentSprite.properties |= SP_KILL_OFF_SCREEN;
+        gCurrentSprite.samusCollision = SSC_HURTS_SAMUS_STOP_DIES_WHEN_HIT;
+        gCurrentSprite.pose = IMAGO_COCOON_SPORE_POSE_MOVING;
+
+        if (gCurrentSprite.roomSlot == IMAGO_COCOON_SPORE_PART_DOWN && gCurrentSprite.status & SPRITE_STATUS_ONSCREEN)
+            SoundPlay(SOUND_IMAGO_COCOON_SPORE_NEST_SPAWNING);
     }
 }
 
@@ -997,7 +1084,7 @@ void ImagoCocoonSporeNest(void)
  * @brief 27d70 | 114 | Handles the movement of an Imago cocoon spore
  * 
  */
-void ImagoCocoonSporeMove(void)
+static void ImagoCocoonSporeMove(void)
 {
     u16 movement;
 
@@ -1005,13 +1092,21 @@ void ImagoCocoonSporeMove(void)
     switch (gCurrentSprite.roomSlot)
     {
         case IMAGO_COCOON_SPORE_PART_DIAG_RIGHT_UP:
+            #ifdef BUGFIX
+            movement = FixedMultiplication(movement, Q_8_8(0.8));
+            #else // !BUGFIX
             movement *= 0.8; // 4 * 0.8 = 3.2
+            #endif // BUGFIX
             gCurrentSprite.yPosition -= movement;
             gCurrentSprite.xPosition += movement;
             break;
         
         case IMAGO_COCOON_SPORE_PART_DIAG_RIGHT_DOWN:
+            #ifdef BUGFIX
+            movement = FixedMultiplication(movement, Q_8_8(0.8));
+            #else // !BUGFIX
             movement *= 0.8;
+            #endif // BUGFIX
             gCurrentSprite.yPosition += movement;
             gCurrentSprite.xPosition += movement;
             break;
@@ -1025,13 +1120,21 @@ void ImagoCocoonSporeMove(void)
             break;
         
         case IMAGO_COCOON_SPORE_PART_DIAG_LEFT_DOWN:
+            #ifdef BUGFIX
+            movement = FixedMultiplication(movement, Q_8_8(0.8));
+            #else // !BUGFIX
             movement *= 0.8;
+            #endif // BUGFIX
             gCurrentSprite.yPosition += movement;
             gCurrentSprite.xPosition -= movement;
             break;
         
         case IMAGO_COCOON_SPORE_PART_DIAG_LEFT_UP:
+            #ifdef BUGFIX
+            movement = FixedMultiplication(movement, Q_8_8(0.8));
+            #else // !BUGFIX
             movement *= 0.8;
+            #endif // BUGFIX
             gCurrentSprite.yPosition -= movement;
             gCurrentSprite.xPosition -= movement;
             break;
@@ -1053,11 +1156,11 @@ void ImagoCocoonSporeMove(void)
  * 27e84 | 34 | Initializes an Imago cocoon spore to b exploding
  * 
  */
-void ImagoCocoonSporeExplodingInit(void)
+static void ImagoCocoonSporeExplodingInit(void)
 {
     gCurrentSprite.ignoreSamusCollisionTimer = DELTA_TIME;
     
-    gCurrentSprite.pOam = sImagoCocoonSpore_Exploding;
+    gCurrentSprite.pOam = sImagoCocoonSporeOam_Exploding;
     gCurrentSprite.animationDurationCounter = 0;
     gCurrentSprite.currentAnimationFrame = 0;
 
@@ -1069,10 +1172,10 @@ void ImagoCocoonSporeExplodingInit(void)
  * 27eb8 | 24 | Checks if the explosion animation has ended, if yes kills the sprite
  * 
  */
-void ImagoCocoonSporeCheckExplodingAnimEnded(void)
+static void ImagoCocoonSporeCheckExplodingAnimEnded(void)
 {
     gCurrentSprite.ignoreSamusCollisionTimer = DELTA_TIME;
-    if (SpriteUtilCheckEndCurrentSpriteAnim())
+    if (SpriteUtilHasCurrentAnimationEnded())
         gCurrentSprite.status = 0;
 }
 
@@ -1081,7 +1184,7 @@ void ImagoCocoonSporeCheckExplodingAnimEnded(void)
  * 
  * @return u8 1 if colliding, 0 otherwise
  */
-u8 WingedRipperImagoCollision(void)
+static u8 WingedRipperImagoCollision(void)
 {
     u8 colliding;
     u8 ramSlot;
@@ -1118,7 +1221,7 @@ u8 WingedRipperImagoCollision(void)
 
         if (SpriteUtilCheckObjectsTouching(spriteTop, spriteBottom, spriteLeft, spriteRight, imagoTop, imagoBottom, imagoLeft, imagoRight))
         {
-            gCurrentSprite.pose = 0x62;
+            gCurrentSprite.pose = SPRITE_POSE_DESTROYED;
             colliding = TRUE;
         }
     }
@@ -1131,7 +1234,7 @@ u8 WingedRipperImagoCollision(void)
  * 
  * @return * void 
  */
-void WingedRipperInit(void)
+static void WingedRipperInit(void)
 {
     gCurrentSprite.status &= ~SPRITE_STATUS_NOT_DRAWN;
 
@@ -1140,7 +1243,7 @@ void WingedRipperInit(void)
     gCurrentSprite.hitboxLeft = -HALF_BLOCK_SIZE;
     gCurrentSprite.hitboxRight = HALF_BLOCK_SIZE;
 
-    gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(HALF_BLOCK_SIZE + QUARTER_BLOCK_SIZE);
+    gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(THREE_QUARTER_BLOCK_SIZE);
     gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(HALF_BLOCK_SIZE);
     gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE);
 
@@ -1165,7 +1268,7 @@ void WingedRipperInit(void)
  * @brief 28040 | 20 | Initializes a winged ripper to be moving
  * 
  */
-void WingedRipperMovingInit(void)
+static void WingedRipperMovingInit(void)
 {
     gCurrentSprite.pose = WINGED_RIPPER_POSE_MOVING;
     gCurrentSprite.pOam = sWingedRipperOam_Moving;
@@ -1177,7 +1280,7 @@ void WingedRipperMovingInit(void)
  * @brief 28060 | 224 | Handles the movement of a winged ripper
  * 
  */
-void WingedRipperMove(void)
+static void WingedRipperMove(void)
 {
     s32 radius;
     u8 angle;
@@ -1204,7 +1307,7 @@ void WingedRipperMove(void)
                 gCurrentSprite.animationDurationCounter = 0;
             }
         }
-        else if (gCurrentSprite.pOam == sWingedRipperOam_TurningAround && SpriteUtilCheckEndCurrentSpriteAnim())
+        else if (gCurrentSprite.pOam == sWingedRipperOam_TurningAround && SpriteUtilHasCurrentAnimationEnded())
         {
             if (gCurrentSprite.status & SPRITE_STATUS_X_FLIP)
             {
@@ -1233,10 +1336,12 @@ void WingedRipperMove(void)
                 gCurrentSprite.animationDurationCounter = 0;
             }
         }
-        else if (gCurrentSprite.pOam == sWingedRipperOam_TurningAround && SpriteUtilCheckEndCurrentSpriteAnim())
+        else if (gCurrentSprite.pOam == sWingedRipperOam_TurningAround && SpriteUtilHasCurrentAnimationEnded())
         {
             if (gCurrentSprite.status & SPRITE_STATUS_X_FLIP)
+            {
                 gCurrentSprite.status &= ~SPRITE_STATUS_X_FLIP;
+            }
             else
             {
                 gCurrentSprite.pOam = sWingedRipperOam_Moving;
@@ -1260,7 +1365,7 @@ void WingedRipperMove(void)
     angle = gCurrentSprite.work1;
 
     // Update Y position
-    s = sin(angle);
+    s = SIN(angle);
     previousY = (s16)gCurrentSprite.yPosition;
 
     if (s < 0)
@@ -1275,7 +1380,7 @@ void WingedRipperMove(void)
     }
 
     // Update X position
-    c = cos(angle);
+    c = COS(angle);
     previousX = (s16)gCurrentSprite.xPosition;
 
     if (c < 0)
@@ -1324,7 +1429,7 @@ void WingedRipperMove(void)
  * @brief 28284 | 44 | Handles the winged ripper death
  * 
  */
-void WingedRipperDeath(void)
+static void WingedRipperDeath(void)
 {
     if (gCurrentSprite.standingOnSprite != SAMUS_STANDING_ON_SPRITE_OFF)
     {
@@ -1344,7 +1449,7 @@ void ImagoCocoon(void)
 {
     switch (gCurrentSprite.pose)
     {
-        case 0x0:
+        case SPRITE_POSE_UNINITIALIZED:
             ImagoCocoonInit();
             break;
 
@@ -1383,11 +1488,11 @@ void ImagoCocoonVine(void)
 {
     switch (gCurrentSprite.pose)
     {
-        case 0x0:
+        case SPRITE_POSE_UNINITIALIZED:
             ImagoCocoonVineInit();
             break;
 
-        case 0x62:
+        case SPRITE_POSE_DESTROYED:
             ImagoCocoonVineDeath();
 
         case IMAGO_COCOON_VINE_POSE_IDLE:
@@ -1420,7 +1525,7 @@ void ImagoCocoonSpore(void)
 {
     switch (gCurrentSprite.pose)
     {
-        case 0x0:
+        case SPRITE_POSE_UNINITIALIZED:
             ImagoCocoonSporeInit();
             break;
 
@@ -1470,7 +1575,7 @@ void WingedRipper(void)
 
     switch (gCurrentSprite.pose)
     {
-        case 0x0:
+        case SPRITE_POSE_UNINITIALIZED:
             WingedRipperInit();
             break;
 
@@ -1496,12 +1601,12 @@ void WingedRipper(void)
 void DefeatedImagoCocoon(void)
 {
     gCurrentSprite.ignoreSamusCollisionTimer = DELTA_TIME;
-    if (gCurrentSprite.pose == 0)
+    if (gCurrentSprite.pose == SPRITE_POSE_UNINITIALIZED)
     {
         gCurrentSprite.status &= ~SPRITE_STATUS_NOT_DRAWN;
         gCurrentSprite.status |= SPRITE_STATUS_IGNORE_PROJECTILES;
 
-        gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(HALF_BLOCK_SIZE + QUARTER_BLOCK_SIZE);
+        gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(THREE_QUARTER_BLOCK_SIZE);
         gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(2 * BLOCK_SIZE + HALF_BLOCK_SIZE);
         gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(3 * BLOCK_SIZE);
 
@@ -1515,7 +1620,7 @@ void DefeatedImagoCocoon(void)
         gCurrentSprite.currentAnimationFrame = 0;
 
         gCurrentSprite.samusCollision = SSC_NONE;
-        gCurrentSprite.pose = 0x9;
+        gCurrentSprite.pose = DEFEATED_IMAGO_COCOON_POSE_IDLE;
         gCurrentSprite.frozenPaletteRowOffset = 5;
     }
 }
@@ -1527,12 +1632,12 @@ void DefeatedImagoCocoon(void)
 void ImagoCocoonCeilingVine(void)
 {
     gCurrentSprite.ignoreSamusCollisionTimer = DELTA_TIME;
-    if (gCurrentSprite.pose == 0)
+    if (gCurrentSprite.pose == SPRITE_POSE_UNINITIALIZED)
     {
         gCurrentSprite.status &= ~SPRITE_STATUS_NOT_DRAWN;
         gCurrentSprite.status |= SPRITE_STATUS_IGNORE_PROJECTILES;
 
-        gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(HALF_BLOCK_SIZE + QUARTER_BLOCK_SIZE);
+        gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(THREE_QUARTER_BLOCK_SIZE);
         gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(2 * BLOCK_SIZE + HALF_BLOCK_SIZE);
         gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(3 * BLOCK_SIZE);
 
@@ -1547,7 +1652,7 @@ void ImagoCocoonCeilingVine(void)
 
         gCurrentSprite.samusCollision = SSC_NONE;
         gCurrentSprite.drawOrder = 5;
-        gCurrentSprite.pose = 0x9;
+        gCurrentSprite.pose = IMAGO_COCOON_CEILING_VINE_POSE_IDLE;
         gCurrentSprite.frozenPaletteRowOffset = 5;
     }
 }
@@ -1558,7 +1663,7 @@ void ImagoCocoonCeilingVine(void)
  */
 void EventTriggerDiscoveredImagoPassage(void)
 {
-    if (gCurrentSprite.pose == 0x0)
+    if (gCurrentSprite.pose == SPRITE_POSE_UNINITIALIZED)
     {
         if (EventFunction(EVENT_ACTION_CHECKING, EVENT_IMAGO_TUNNEL_DISCOVERED))
         {
@@ -1577,8 +1682,8 @@ void EventTriggerDiscoveredImagoPassage(void)
         gCurrentSprite.hitboxLeft = -HALF_BLOCK_SIZE;
         gCurrentSprite.hitboxRight = HALF_BLOCK_SIZE;
 
-        gCurrentSprite.pose = 0x8;
-        gCurrentSprite.pOam = sEnemyDropOAM_LargeEnergy;
+        gCurrentSprite.pose = EVENT_TRIGGER_DISCOVERED_IMAGO_PASSAGE_POSE_IDLE;
+        gCurrentSprite.pOam = sEnemyDropOam_LargeEnergy;
         gCurrentSprite.animationDurationCounter = 0;
         gCurrentSprite.currentAnimationFrame = 0;
     }
@@ -1598,7 +1703,7 @@ void EventTriggerDiscoveredImagoPassage(void)
 void ImagoCocoonAfterFight(void)
 {
     gCurrentSprite.ignoreSamusCollisionTimer = DELTA_TIME;
-    if (gCurrentSprite.pose == 0x0)
+    if (gCurrentSprite.pose == SPRITE_POSE_UNINITIALIZED)
     {
         gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(3 * BLOCK_SIZE);
         gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE);
@@ -1614,15 +1719,15 @@ void ImagoCocoonAfterFight(void)
         gCurrentSprite.currentAnimationFrame = 0;
 
         gCurrentSprite.samusCollision = SSC_NONE;
-        gCurrentSprite.pose = 0x9;
+        gCurrentSprite.pose = IMAGO_COCOON_AFTER_FIGHT_POSE_IDLE;
     }
 
-    if (gCurrentSprite.animationDurationCounter == 1 * DELTA_TIME)
+    if (gCurrentSprite.animationDurationCounter == DELTA_TIME)
     {
         switch (gCurrentSprite.currentAnimationFrame)
         {
             case 0:
-            case 4:
+            case FRAME_DATA_NBR_OF_FRAMES(sDefeatedImagoCocoonOam) / 2:
                 SoundPlay(SOUND_IMAGO_COCOON_IN_GROUND_IDLE);
         }
     }

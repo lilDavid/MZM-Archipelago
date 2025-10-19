@@ -2,12 +2,31 @@
 #include "macros.h"
 
 #include "data/intro_data.h"
-#include "data/time_attack_data.h"
 
 #include "constants/ending_and_gallery.h"
+#include "constants/game_region.h"
 
 #include "structs/in_game_timer.h"
 #include "structs/game_state.h"
+
+static TimeAttackFunc_T sTimeAttackSeedShuffleFunctionPointers[16] = {
+    [0]  = TimeAttackSeedShuffleFunc1,
+    [1]  = TimeAttackSeedShuffleFunc2,
+    [2]  = TimeAttackSeedShuffleFunc3,
+    [3]  = TimeAttackSeedShuffleFunc4,
+    [4]  = TimeAttackSeedShuffleFunc5,
+    [5]  = TimeAttackSeedShuffleFunc6,
+    [6]  = TimeAttackSeedShuffleFunc7,
+    [7]  = TimeAttackSeedShuffleFunc8,
+    [8]  = TimeAttackSeedShuffleFunc1,
+    [9]  = TimeAttackSeedShuffleFunc2,
+    [10] = TimeAttackSeedShuffleFunc3,
+    [11] = TimeAttackSeedShuffleFunc4,
+    [12] = TimeAttackSeedShuffleFunc5,
+    [13] = TimeAttackSeedShuffleFunc6,
+    [14] = TimeAttackSeedShuffleFunc7,
+    [15] = TimeAttackSeedShuffleFunc8
+};
 
 /**
  * @brief 7f120 | 28 | Performs an exclusive or on all the values of the seed with the value param
@@ -292,13 +311,13 @@ void CheckUnlockTimeAttack(void)
     u32 superMissilesNbr;
     u32 powerBombNbr;
     u32 abilityCount;
-    u8 tmp1;
+    u8 region;
+
+    region = GAME_REGION;
 
     // Already unlocked or save file invalid
     if (gFileScreenOptionsUnlocked.timeAttack & 1 || !TimeAttackCheckSaveFileValidity())
         return;
-
-    tmp1 = 2;
 
     // Get each item count
     value = ChozodiaEscapeGetItemCountAndEndingNumber();
@@ -361,8 +380,8 @@ void CheckUnlockTimeAttack(void)
     flags[26] = (igt[1] >> 6) & 1;
     flags[27] = (igt[0] >> 4) & 1;
     flags[28] = (igt[1] >> 5) & 1;
-    flags[29] = (tmp1 >> 1) & 1;
-    flags[30] = (tmp1 >> 0) & 1;
+    flags[29] = (region >> 1) & 1;
+    flags[30] = (region >> 0) & 1;
     flags[31] = 1;
 
     // Weird maths
@@ -755,7 +774,7 @@ u8 TimeAttackCheckSetNewRecord(void)
     u32 abilityCount;
     u32 pen;
     u32 completionPercentage;
-    u32 records;
+    u8 records;
     u8 validFile;
     struct TimeAttackData* pTimeAttack;
     u32 igtBoss1;
@@ -793,7 +812,13 @@ u8 TimeAttackCheckSetNewRecord(void)
 
     // Check current IGT is faster than previous 100% record
     if (completionPercentage >= 100 && convertedIgt < converted100RecordIgt)
+    {
+        #ifdef REGION_US_BETA
+        records += 2;
+        #else // !REGION_US_BETA
         records |= 2;
+        #endif // REGION_US_BETA
+    }
 
     // No records set, abort
     if (records == 0)
@@ -848,7 +873,11 @@ u8 TimeAttackCheckSetNewRecord(void)
     }
 
     // Update 100% record
+    #ifdef REGION_US_BETA
+    if (records & 0x20)
+    #else // !REGION_US_BETA
     if (records & 2)
+    #endif // REGION_US_BETA
     {
         for (i = 0; i < sizeof(gTimeAttackRecord.password100); i++)
             gTimeAttackRecord.password100[i] = pTimeAttack->password[i];

@@ -2,7 +2,6 @@
 #define RIDLEY_LANDING_CUTSCENE
 
 #include "types.h"
-#include "structs/cutscene.h"
 
 enum RidleyLandingOamId {
     RIDLEY_LANDING_OAM_ID_MOTHER_SHIP_IN_SPACE = 1, 
@@ -19,13 +18,6 @@ enum RidleyLandingOamId {
     RIDLEY_LANDING_OAM_ID_END
 };
 
-u8 RidleyLandingRidleyFlying(void);
-void RidleyLandingUpdateRidley(struct CutsceneOamData* pOam);
-u8 RidleyLandingShipLanding(void);
-struct CutsceneOamData* RidleyLandingUpdateShipLanding(struct CutsceneOamData* pOam);
-u8 RidleyLandingShipInSpace(void);
-u8 RidleyLandingInit(void);
 u8 RidleyLandingSubroutine(void);
-void RidleyLandingProcessOAM(void);
 
 #endif /* RIDLEY_LANDING_CUTSCENE */

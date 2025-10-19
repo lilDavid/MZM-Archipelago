@@ -21,12 +21,16 @@
 #include "structs/projectile.h"
 #include "structs/game_state.h"
 
+#define BOSS_STATUE_POSE_CHECK_START_OPEN 0x9
+#define BOSS_STATUE_POSE_OPENING 0xB
+#define BOSS_STATUE_POSE_IDLE 0xF
+
 /**
  * @brief 49184 | 80 | Sets the collision of the wall behind Samus to lock here in the screen
  * 
  * @param caa Clipdata Affecting Action
  */
-void BossStatusSetWallBehindSamusCollision(u8 caa)
+static void BossStatusSetWallBehindSamusCollision(u8 caa)
 {
     u16 yPosition;
     u16 xPosition;
@@ -58,7 +62,7 @@ void BossStatusSetWallBehindSamusCollision(u8 caa)
  * 
  * @param caa Clipdata Affecting Action 
  */
-void KraidStatueHorizontalLignThreeChangeCcaa(u8 caa)
+static void KraidStatueHorizontalLignThreeChangeCcaa(u8 caa)
 {
     u16 yPosition;
     u16 xPosition;
@@ -81,7 +85,7 @@ void KraidStatueHorizontalLignThreeChangeCcaa(u8 caa)
  * 
  * @param caa Clipdata Affecting Action
  */
-void KraidStatueInsideChangeCcaa(u8 caa)
+static void KraidStatueInsideChangeCcaa(u8 caa)
 {
     u16 yPosition;
     u16 xPosition;
@@ -118,7 +122,7 @@ void KraidStatueInsideChangeCcaa(u8 caa)
  * @brief 49314 | 28 | Initializes the kraid statue to be opened
  * 
  */
-void KraidStatueOpenedInit(void)
+static void KraidStatueOpenedInit(void)
 {
     gCurrentSprite.pOam = sKraidStatueOam_Opened;
     gCurrentSprite.currentAnimationFrame = 0;
@@ -132,7 +136,7 @@ void KraidStatueOpenedInit(void)
  * @brief 4933c | c8 | Initializes a kraid statue sprite
  * 
  */
-void KraidStatueInit(void)
+static void KraidStatueInit(void)
 {
     gCurrentSprite.xPosition -= HALF_BLOCK_SIZE;
 
@@ -187,7 +191,7 @@ void KraidStatueInit(void)
  * @brief 49404 | 70 | Checks if the background is locked
  * 
  */
-void KraidStatueCheckBackgroundLocked(void)
+static void KraidStatueCheckBackgroundLocked(void)
 {
     u16 spriteX;
     u16 bgX;
@@ -225,7 +229,7 @@ void KraidStatueCheckBackgroundLocked(void)
  * @brief 49474 | 1b8 | Handles the Kraid statue opening
  * 
  */
-void KraidStatueOpening(void)
+static void KraidStatueOpening(void)
 {
     u8 rngParam1;
     u8 rngParam2;
@@ -239,7 +243,7 @@ void KraidStatueOpening(void)
     if (gCurrentSprite.currentAnimationFrame == 29 && gCurrentSprite.animationDurationCounter == 1 * DELTA_TIME)
         KraidStatueInsideChangeCcaa(CAA_REMOVE_SOLID);
 
-    if (SpriteUtilCheckEndCurrentSpriteAnim())
+    if (SpriteUtilHasCurrentAnimationEnded())
     {
         // Set opened
         KraidStatueOpenedInit();
@@ -274,7 +278,7 @@ void KraidStatueOpening(void)
 
         if (MOD_AND(rngParam2, 32) == 0)
         {
-            if (rngParam2 & 0x20)
+            if (rngParam2 & 32)
             {
                 SpriteDebrisInit(0, 5, yPosition, xPosition + (2 * BLOCK_SIZE - EIGHTH_BLOCK_SIZE) - rngParam3 * QUARTER_BLOCK_SIZE);
                 SpriteDebrisInit(0, 8, yPosition, xPosition - (6 * BLOCK_SIZE + QUARTER_BLOCK_SIZE) + rngParam3 * EIGHTH_BLOCK_SIZE);
@@ -307,7 +311,7 @@ void KraidStatueOpening(void)
  * 
  * @param caa Clipdata Affecting Action
  */
-void RidleyStatueChangeThreeCcaa(u8 caa)
+static void RidleyStatueChangeThreeCcaa(u8 caa)
 {
     u16 yPosition;
     u16 xPosition;
@@ -328,7 +332,7 @@ void RidleyStatueChangeThreeCcaa(u8 caa)
  * 
  * @param caa Clipdata affecting action
  */
-void RidleyStatueInsideChangeCcaa(u8 caa)
+static void RidleyStatueInsideChangeCcaa(u8 caa)
 {
     u16 yPosition;
     u16 xPosition;
@@ -351,7 +355,7 @@ void RidleyStatueInsideChangeCcaa(u8 caa)
  * @brief 49714 | 28 | Initializes the ridley statue to be opened
  * 
  */
-void RidleyStatueOpenedInit(void)
+static void RidleyStatueOpenedInit(void)
 {
     gCurrentSprite.pOam = sRidleyStatueOam_Opened;
     gCurrentSprite.currentAnimationFrame = 0;
@@ -365,7 +369,7 @@ void RidleyStatueOpenedInit(void)
  * @brief 4973c | b4 | Initializes a ridley statue sprite
  * 
  */
-void RidleyStatueInit(void)
+static void RidleyStatueInit(void)
 {
     gCurrentSprite.xPosition += HALF_BLOCK_SIZE;
 
@@ -414,7 +418,7 @@ void RidleyStatueInit(void)
  * @brief 497f0 | 54 | Checks if the background is locked
  * 
  */
-void RidleyStatueCheckBackgroundLocked(void)
+static void RidleyStatueCheckBackgroundLocked(void)
 {
     u16 spriteX;
     u16 bgX;
@@ -444,7 +448,7 @@ void RidleyStatueCheckBackgroundLocked(void)
  * @brief 49844 | 1f4 | Handles the Ridley statue opening
  * 
  */
-void RidleyStatueOpening(void)
+static void RidleyStatueOpening(void)
 {
     u8 rngParam1;
     u8 rngParam2;
@@ -478,7 +482,7 @@ void RidleyStatueOpening(void)
         if (gCurrentSprite.currentAnimationFrame == 29 && gCurrentSprite.animationDurationCounter == 1 * DELTA_TIME)
             RidleyStatueInsideChangeCcaa(CAA_REMOVE_SOLID);
 
-        if (SpriteUtilCheckEndCurrentSpriteAnim())
+        if (SpriteUtilHasCurrentAnimationEnded())
         {
             // Set opened
             RidleyStatueOpenedInit();
@@ -507,7 +511,7 @@ void RidleyStatueOpening(void)
 
             if (MOD_AND(rngParam2, 32) == 0)
             {
-                if (rngParam2 & 0x20)
+                if (rngParam2 & 32)
                 {
                     SpriteDebrisInit(0, 5, yPosition, xPosition + (2 * BLOCK_SIZE - EIGHTH_BLOCK_SIZE) - rngParam3 * QUARTER_BLOCK_SIZE);
                     SpriteDebrisInit(0, 8, yPosition, xPosition - (6 * BLOCK_SIZE + QUARTER_BLOCK_SIZE) + rngParam3 * EIGHTH_BLOCK_SIZE);
@@ -561,18 +565,18 @@ void KraidStatue(void)
             break;
     }
 
-    if (gGameModeSub1 == SUB_GAME_MODE_PLAYING)
+    if (gSubGameMode1 == SUB_GAME_MODE_PLAYING)
     {
         if (SpriteUtilCheckSamusNearSpriteLeftRight(BLOCK_SIZE * 10, BLOCK_SIZE * 13) != NSLR_OUT_OF_RANGE)
-            gCurrentSprite.status |= SPRITE_STATUS_UNKNOWN_10;
+            gCurrentSprite.status |= SPRITE_STATUS_HIGH_PRIORITY;
         else
-            gCurrentSprite.status &= ~SPRITE_STATUS_UNKNOWN_10;
+            gCurrentSprite.status &= ~SPRITE_STATUS_HIGH_PRIORITY;
     }
 
     for (pProj = gProjectileData; pProj < gProjectileData + MAX_AMOUNT_OF_PROJECTILES; pProj++)
     {
         if (pProj->status & PROJ_STATUS_EXISTS)
-            pProj->status |= PROJ_STATUS_UNKNOWN_80;
+            pProj->status |= PROJ_STATUS_LOW_OAM_PRIORITY;
     }
 
     if (EventFunction(EVENT_ACTION_CHECKING, EVENT_KRAID_STATUE_OPENED) && EventFunction(EVENT_ACTION_CHECKING, EVENT_RIDLEY_STATUE_OPENED))
@@ -626,11 +630,11 @@ void RidleyStatue(void)
             break;
     }
 
-    if (gGameModeSub1 == SUB_GAME_MODE_PLAYING)
+    if (gSubGameMode1 == SUB_GAME_MODE_PLAYING)
     {
         if (SpriteUtilCheckSamusNearSpriteLeftRight(BLOCK_SIZE * 10, BLOCK_SIZE * 13) != NSLR_OUT_OF_RANGE)
-            gCurrentSprite.status |= SPRITE_STATUS_UNKNOWN_10;
+            gCurrentSprite.status |= SPRITE_STATUS_HIGH_PRIORITY;
         else
-            gCurrentSprite.status &= ~SPRITE_STATUS_UNKNOWN_10;
+            gCurrentSprite.status &= ~SPRITE_STATUS_HIGH_PRIORITY;
     }
 }

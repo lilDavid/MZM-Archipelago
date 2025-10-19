@@ -8,14 +8,17 @@
 #include "constants/samus.h"
 
 #include "structs/audio.h"
+#include "structs/bg_clip.h"
 #include "structs/color_effects.h"
+#include "structs/game_state.h"
 #include "structs/samus.h"
 #include "structs/rando.h"
 #include "structs/room.h"
 
-#include "data/engine_pointers.h"
 #include "data/rando_data.h"
 
+
+extern const struct RoomEntryRom* sAreaRoomEntryPointers[AREA_ENTRY_COUNT];
 
 static void WarpToStartSetSamusLocation(void) {
     // If in stealth, give power suit back and un-kill Mother Brain
@@ -54,7 +57,7 @@ static void WarpToStartSetSamusLocation(void) {
 }
 
 void RandoWarpToStart(void) {
-    StopAllMusicsAndSounds();
+    StopAllMusicAndSounds();
     ResetMusicVolume();
 
     unk_75c04(FALSE);  // Reload last save

@@ -1,33 +1,40 @@
 #ifndef SPRITE_CONSTANTS_H
 #define SPRITE_CONSTANTS_H
 
-#define SPRITE_STATUS_EXISTS             (1 << 0)
-#define SPRITE_STATUS_ONSCREEN           (1 << 1)
-#define SPRITE_STATUS_NOT_DRAWN          (1 << 2)
-#define SPRITE_STATUS_ROTATION_SCALING   (1 << 3)
-#define SPRITE_STATUS_UNKNOWN_10         (1 << 4)
-#define SPRITE_STATUS_MOSAIC             (1 << 5)
-#define SPRITE_STATUS_X_FLIP             (1 << 6)
-#define SPRITE_STATUS_UNKNOWN_80         (1 << 7)
-#define SPRITE_STATUS_Y_FLIP             (1 << 8)
-#define SPRITE_STATUS_FACING_RIGHT       (1 << 9)
-#define SPRITE_STATUS_FACING_DOWN        (1 << 10)
-#define SPRITE_STATUS_SAMUS_COLLIDING    (1 << 11)
-#define SPRITE_STATUS_SAMUS_ON_TOP       (1 << 12)
-#define SPRITE_STATUS_ALPHA_BLENDING     (1 << 13)
-#define SPRITE_STATUS_DOUBLE_SIZE        (1 << 14)
-#define SPRITE_STATUS_IGNORE_PROJECTILES (1 << 15)
+#include "types.h"
+#include "macros.h"
 
-#define SP_ALWAYS_ACTIVE         (1 << 0)
-#define SP_DAMAGED               (1 << 1)
-#define SP_KILL_OFF_SCREEN       (1 << 2)
-#define SP_SOLID_FOR_PROJECTILES (1 << 3)
-#define SP_DESTROYED             (1 << 4)
-#define SP_ABSOLUTE_POSITION     (1 << 5)
-#define SP_IMMUNE_TO_PROJECTILES (1 << 6)
-#define SP_SECONDARY_SPRITE      (1 << 7)
+MAKE_ENUM(u16, SpriteStatus) ENUM_FLAG {
+    SPRITE_STATUS_EXISTS             = 1 << 0,
+    SPRITE_STATUS_ONSCREEN           = 1 << 1,
+    SPRITE_STATUS_NOT_DRAWN          = 1 << 2,
+    SPRITE_STATUS_ROTATION_SCALING_WHOLE   = 1 << 3,
+    SPRITE_STATUS_HIGH_PRIORITY      = 1 << 4,
+    SPRITE_STATUS_MOSAIC             = 1 << 5,
+    SPRITE_STATUS_X_FLIP             = 1 << 6,
+    SPRITE_STATUS_ROTATION_SCALING_SINGLE         = 1 << 7,
+    SPRITE_STATUS_Y_FLIP             = 1 << 8,
+    SPRITE_STATUS_FACING_RIGHT       = 1 << 9,
+    SPRITE_STATUS_FACING_DOWN        = 1 << 10,
+    SPRITE_STATUS_SAMUS_COLLIDING    = 1 << 11,
+    SPRITE_STATUS_SAMUS_ON_TOP       = 1 << 12,
+    SPRITE_STATUS_ALPHA_BLENDING     = 1 << 13,
+    SPRITE_STATUS_DOUBLE_SIZE        = 1 << 14,
+    SPRITE_STATUS_IGNORE_PROJECTILES = 1 << 15,
+};
 
-enum PrimarySprite {
+MAKE_ENUM(u8, SpritePropery) ENUM_FLAG {
+    SP_ALWAYS_ACTIVE         = 1 << 0,
+    SP_DAMAGED               = 1 << 1,
+    SP_KILL_OFF_SCREEN       = 1 << 2,
+    SP_SOLID_FOR_PROJECTILES = 1 << 3,
+    SP_DESTROYED             = 1 << 4,
+    SP_ABSOLUTE_POSITION     = 1 << 5,
+    SP_IMMUNE_TO_PROJECTILES = 1 << 6,
+    SP_SECONDARY_SPRITE      = 1 << 7,
+};
+
+MAKE_ENUM(u8, PrimarySprite) {
     PSPRITE_UNUSED0,
     PSPRITE_UNUSED1,
     PSPRITE_UNUSED2,
@@ -45,7 +52,7 @@ enum PrimarySprite {
     PSPRITE_UNUSED14,
     PSPRITE_UNUSED15,
     PSPRITE_UNUSED16,
-    PSPRITE_ITEM_BANNER,
+    PSPRITE_MESSAGE_BANNER,
     PSPRITE_ZOOMER_YELLOW,
     PSPRITE_ZOOMER_RED,
     PSPRITE_ZEELA,
@@ -94,7 +101,7 @@ enum PrimarySprite {
     PSPRITE_REO_GREEN_WINGS,
     PSPRITE_REO_PURPLE_WINGS,
     PSPRITE_GUNSHIP,
-    PSPRITE_DEOREM,
+    PSPRITE_DEOREM_FIRST_LOCATION,
     PSPRITE_DEOREM_SECOND_LOCATION,
     PSPRITE_CHARGE_BEAM,
     PSPRITE_SKULTERA,
@@ -235,10 +242,10 @@ enum PrimarySprite {
     PSPRITE_RINKA_MOTHER_BRAIN5,
     PSPRITE_RINKA_MOTHER_BRAIN6,
 
-    PSPRITE_END
+    PSPRITE_COUNT
 };
 
-enum SecondarySprite {
+MAKE_ENUM(u8, SecondarySprite) {
     SSPRITE_CHOZO_BALL,
     SSPRITE_CHOZO_STATUE_PART,
     SSPRITE_CHOZO_STATUE_REFILL,
@@ -276,7 +283,7 @@ enum SecondarySprite {
     SSPRITE_UNKNOWN_ITEM_CHOZO_STATUE_PART,
     SSPRITE_UNKNOWN_ITEM_CHOZO_STATUE_REFILL,
     SSPRITE_MORPH_BALL_LAUNCHER_PART,
-    SSPRITE_ACID_WORM_BODY,
+    SSPRITE_ACID_WORM_PART,
     SSPRITE_ACID_WORM_SPIT,
     SSPRITE_CANNON_BULLET,
     SSPRITE_CROCOMIRE_PART,
@@ -317,10 +324,10 @@ enum SecondarySprite {
     SSPRITE_MOTHER_BRAIN_BLOCK,
     SSPRITE_MOTHER_BRAIN_GLASS_BREAKING,
 
-    SSPRITE_END
+    SSPRITE_COUNT
 };
 
-enum SamusSpriteCollision {
+MAKE_ENUM(u8, SamusSpriteCollision) {
     SSC_NONE,
     SSC_SOLID,
     SSC_CAN_STAND_ON_TOP,
@@ -359,10 +366,10 @@ enum SamusSpriteCollision {
     SSC_POWER_BOMB_DROP,
     SSC_MULTIPLE_LARGE_ENERGY_DROP,
 
-    SSC_END
+    SSC_COUNT
 };
 
-enum SamusStandingOnSpriteStatus {
+MAKE_ENUM(u8, SamusStandingOnSpriteStatus) {
     SAMUS_STANDING_ON_SPRITE_OFF,
     SAMUS_STANDING_ON_SPRITE_RELEASING,
     SAMUS_STANDING_ON_SPRITE_ON,
@@ -370,15 +377,16 @@ enum SamusStandingOnSpriteStatus {
     SAMUS_STANDING_ON_SPRITE_END
 };
 
-
-#define WEAKNESS_NONE                      0
-#define WEAKNESS_CHARGE_BEAM_PISTOL        (1 << 0)
-#define WEAKNESS_BEAM_BOMBS                (1 << 1)
-#define WEAKNESS_SUPER_MISSILES            (1 << 2)
-#define WEAKNESS_MISSILES                  (1 << 3)
-#define WEAKNESS_POWER_BOMB                (1 << 4)
-#define WEAKNESS_SPEEDBOOSTER_SCREW_ATTACK (1 << 5)
-#define WEAKNESS_CAN_BE_FROZEN             (1 << 6)
+MAKE_ENUM(u16, SpriteWeakness) {
+    WEAKNESS_NONE                      = 0 << 0,
+    WEAKNESS_CHARGE_BEAM_PISTOL        = 1 << 0,
+    WEAKNESS_BEAM_BOMBS                = 1 << 1,
+    WEAKNESS_SUPER_MISSILES            = 1 << 2,
+    WEAKNESS_MISSILES                  = 1 << 3,
+    WEAKNESS_POWER_BOMB                = 1 << 4,
+    WEAKNESS_SPEEDBOOSTER_SCREW_ATTACK = 1 << 5,
+    WEAKNESS_CAN_BE_FROZEN             = 1 << 6,
+};
 
 #define SPRITE_POSE_UNINITIALIZED 0
 #define SPRITE_POSE_STOPPED 0x42
@@ -386,7 +394,7 @@ enum SamusStandingOnSpriteStatus {
 #define SPRITE_POSE_SHINESPARK_DESTROYED 0x63
 #define SPRITE_POSE_SPEEDBOOSTER_DESTROYED 0x64
 #define SPRITE_POSE_SCREW_ATTACK_DESTROYED 0x65
-#define SPRITE_POSE_SUDO_SCREW_DESTROYED 0x66
+#define SPRITE_POSE_PSEUDO_SCREW_DESTROYED 0x66
 
 #define PSPRITE_OFFSET_FOR_GRAPHICS(id) ((id) - PSPRITE_UNUSED16)
 
@@ -407,6 +415,20 @@ enum SamusStandingOnSpriteStatus {
 #define SPRITE_FREEZE_PALETTE_OFFSET 0
 #define SPRITE_STUN_PALETTE_OFFSET 1
 
+#define SPRITE_GET_STUN_PALETTE(sprite) (NBR_OF_PALETTE_ROWS - ((sprite).spritesetGfxSlot + (sprite).frozenPaletteRowOffset) - SPRITE_STUN_PALETTE_OFFSET)
+
+// The maximum number of gfx slots for sprites
+#define SPRITE_GFX_SLOT_MAX 8
+// A special gfx slot, used to spawn generic sprites such as the message banner
+#define SPRITE_GFX_SLOT_SPECIAL 6
+
 #define SPRITE_FREEZE_TIMER (CONVERT_SECONDS(4.f))
+
+// Maximum value for a sprite rng
+#define SPRITE_RNG_MAX (16)
+// Computes a probability for the sprite rng value [0;16[
+#define SPRITE_RNG_PROB(prob) ((s32)((prob) * SPRITE_RNG_MAX))
+
+#define SPRITESET_IDX(idx) (16 + idx + 1)
 
 #endif /* SPRITE_CONSTANTS_H */

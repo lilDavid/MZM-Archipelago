@@ -3,7 +3,7 @@
 
 #include "types.h"
 
-struct IORegistersBackup {
+struct IoRegistersBackup {
     u16 Dispcnt_NonGameplay;
     u16 Bldcnt_NonGameplay;
     u8 BLDALPHA_NonGameplay_EVA;
@@ -18,26 +18,26 @@ struct IORegistersBackup {
     u16 unk_12; // Used alongside BG0CNT
 };
 
-extern u16 gWrittenToWIN1H;
-extern u16 gWrittenToWIN1V;
-extern u16 gWrittenToBLDCNT;
-extern u16 gWrittenToBLDCNT_Internal;
+extern u16 gWrittenToWin1H;
+extern u16 gWrittenToWin1V;
+extern u16 gWrittenToBldcnt;
+extern u16 gWrittenToBldcnt_Internal;
 
 extern u16 gBackdropColor;
 
-extern u16 gWrittenToBLDALPHA;
-extern u16 gWrittenToBLDALPHA_H;
-extern u16 gWrittenToBLDALPHA_L;
-extern s8 gWrittenToBLDY;
-extern u16 gWrittenToBLDY_NonGameplay;
+extern u16 gWrittenToBldalpha;
+extern u16 gWrittenToBldalpha_L;
+extern u16 gWrittenToBldalpha_H;
+extern s8 gWrittenToBldy;
+extern u16 gWrittenToBldy_NonGameplay;
 
-extern u16 gWrittenToMOSAIC_H;
-extern u16 gWrittenToMOSAIC_L;
+extern u16 gWrittenToMosaic_H;
+extern u16 gWrittenToMosaic_L;
 
-extern u16 gDISPCNTBackup;
-extern u16 gWrittenToDISPCNT;
-extern u8 gWrittenToWININ_H;
-extern u8 gWrittenToWINOUT_L;
-extern struct IORegistersBackup gIoRegistersBackup;
+extern u16 gDispcntBackup;
+extern u16 gWrittenToDispcnt;
+extern u8 gWrittenToWinIn_H;
+extern u8 gWrittenToWinOut_L;
+extern struct IoRegistersBackup gIoRegistersBackup;
 
-#endif
+#endif /* DISPLAY_STRUCT_H */

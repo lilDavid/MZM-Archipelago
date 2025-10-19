@@ -19,6 +19,5 @@ void RoomUpdate(void);
 void RoomUpdateBackgroundsPosition(void);
 void RoomUpdateVerticalTilemap(s32 offset);
 void RoomUpdateHorizontalTilemap(s32 offset);
-void RoomCheckDMA3Ended(void);
 
 #endif /* ROOM_H */

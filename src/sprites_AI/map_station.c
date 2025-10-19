@@ -1,7 +1,7 @@
 #include "sprites_AI/map_station.h"
 #include "gba.h"
 #include "macros.h"
-#include "sprites_AI/item_banner.h"
+#include "sprites_AI/message_banner.h"
 
 #include "data/sprites/map_station.h"
 
@@ -17,11 +17,33 @@
 #include "structs/sprite.h"
 #include "structs/samus.h"
 
+#define MAP_STATION_POSE_IDLE 0x9
+#define MAP_STATION_POSE_DO_NOTHING 0xF
+#define MAP_STATION_POSE_GRABBING_SAMUS 0x23
+#define MAP_STATION_POSE_DOWNLOADING 0x25
+#define MAP_STATION_POSE_DOWNLOADED 0x27
+#define MAP_STATION_POSE_WAIT_FOR_MESSAGE 0x29
+#define MAP_STATION_POSE_DELAY_BEFORE_RETRACTING 0x2B
+#define MAP_STATION_POSE_RETRACTING 0x2D
+#define MAP_STATION_POSE_RETRACTED 0x2F
+
+// Map station part
+
+#define MAP_STATION_PART_POSE_IDLE 0x9
+#define MAP_STATION_PART_POSE_DOWNLOADING 0x23
+#define MAP_STATION_PART_POSE_DOWNLOADED 0x25
+
+enum MapStationPart {
+    MAP_STATION_PART_BACK_SCREEN,
+    MAP_STATION_PART_FRONT_SCREEN
+};
+
+
 /**
  * @brief 1f41c | f0 | Initializes a map station sprite
  * 
  */
-void MapStationInit(void)
+static void MapStationInit(void)
 {
     gCurrentSprite.yPosition += BLOCK_SIZE * 2;
 
@@ -45,8 +67,9 @@ void MapStationInit(void)
         gCurrentSprite.hitboxBottom = -BLOCK_SIZE;
         gCurrentSprite.pose = MAP_STATION_POSE_DO_NOTHING;
 
-        gCurrentSprite.pOam = sMapStationOAM_Inactive;
-        gCurrentSprite.currentAnimationFrame = 19; // Last frame
+        gCurrentSprite.pOam = sMapStationOam_Inactive;
+        // Last frame
+        gCurrentSprite.currentAnimationFrame = FRAME_DATA_LAST_ANIM_FRAME(sMapStationOam_Inactive);
         gCurrentSprite.animationDurationCounter = 0;
     }
     else
@@ -54,7 +77,7 @@ void MapStationInit(void)
         gCurrentSprite.hitboxBottom = BLOCK_SIZE;
         gCurrentSprite.pose = MAP_STATION_POSE_IDLE;
 
-        gCurrentSprite.pOam = sMapStationOAM_Idle;
+        gCurrentSprite.pOam = sMapStationOam_Idle;
         gCurrentSprite.currentAnimationFrame = 0;
         gCurrentSprite.animationDurationCounter = 0;
 
@@ -70,7 +93,7 @@ void MapStationInit(void)
  * @brief 1f50c | 98 | Handles a map station being idle
  * 
  */
-void MapStationIdle(void)
+static void MapStationIdle(void)
 {
     u16 samusY;
     u16 samusX;
@@ -82,11 +105,14 @@ void MapStationIdle(void)
     spriteY = gCurrentSprite.yPosition + BLOCK_SIZE * 2;
     spriteX = gCurrentSprite.xPosition + BLOCK_SIZE + HALF_BLOCK_SIZE;
 
+    if (SpriteUtilCheckCrouchingOrMorphed())
+        return;
+
     // Detect samus
-    if (!SpriteUtilCheckCrouchingOrMorphed() && samusY == spriteY - 1 && spriteX - BLOCK_SIZE < samusX && spriteX + BLOCK_SIZE > samusX)
+    if (samusY == spriteY - ONE_SUB_PIXEL && spriteX - BLOCK_SIZE < samusX && spriteX + BLOCK_SIZE > samusX)
     {
         // Set grabbing
-        gCurrentSprite.pOam = sMapStationOAM_GrabbingSamus;
+        gCurrentSprite.pOam = sMapStationOam_GrabbingSamus;
         gCurrentSprite.currentAnimationFrame = 0;
         gCurrentSprite.animationDurationCounter = 0;
         
@@ -107,20 +133,20 @@ void MapStationIdle(void)
 }
 
 /**
- * @brief 1f5a4 | 3c | Check sif the grabbing animation ended
+ * @brief 1f5a4 | 3c | Checks if the grabbing animation ended
  * 
  */
-void MapStationCheckSamusGrabbedAnimEnded(void)
+static void MapStationCheckSamusGrabbedAnimEnded(void)
 {
-    if (SpriteUtilCheckEndCurrentSpriteAnim())
+    if (SpriteUtilHasCurrentAnimationEnded())
     {
         // Set downloading
-        gCurrentSprite.pOam = sMapStationOAM_Downloading;
+        gCurrentSprite.pOam = sMapStationOam_Downloading;
         gCurrentSprite.currentAnimationFrame = 0;
         gCurrentSprite.animationDurationCounter = 0;
 
         gCurrentSprite.pose = MAP_STATION_POSE_DOWNLOADING;
-        gCurrentSprite.work0 = 60 + 60 / 6;
+        gCurrentSprite.work0 = CONVERT_SECONDS(1.f + 1.f / 6);
         gSamusData.timer = 0;
     }
 }
@@ -129,19 +155,19 @@ void MapStationCheckSamusGrabbedAnimEnded(void)
  * @brief 1f5e0 | 4c | Handles Samus downloading the map
  * 
  */
-void MapStationDownloading(void)
+static void MapStationDownloading(void)
 {
-    if (--gCurrentSprite.work0 == 0)
+    if (APPLY_DELTA_TIME_DEC(gCurrentSprite.work0) == 0)
     {
         // Set retracting
-        gCurrentSprite.pOam = sMapStationOAM_Retracting;
+        gCurrentSprite.pOam = sMapStationOam_Retracting;
         gCurrentSprite.currentAnimationFrame = 0;
         gCurrentSprite.animationDurationCounter = 0;
 
         gCurrentSprite.pose = MAP_STATION_POSE_DOWNLOADED;
-        gCurrentSprite.work0 = 10;
+        gCurrentSprite.work0 = CONVERT_SECONDS(1.f / 6);
     }
-    else if (gCurrentSprite.work0 == 10)
+    else if (gCurrentSprite.work0 == CONVERT_SECONDS(1.f / 6))
     {
         // Start pause screen download sequence
         gPauseScreenFlag = PAUSE_SCREEN_MAP_DOWNLOAD;
@@ -152,11 +178,11 @@ void MapStationDownloading(void)
  * @brief 1f62c | b4 | Spawns the map downloaded message
  * 
  */
-void MapStationSpawnMessage(void)
+static void MapStationSpawnMessage(void)
 {
-    u8 text;
+    MessageId text;
 
-    gCurrentSprite.work0--;
+    APPLY_DELTA_TIME_DEC(gCurrentSprite.work0);
     if (gCurrentSprite.work0 != 0)
         return;
 
@@ -187,14 +213,15 @@ void MapStationSpawnMessage(void)
             text = MESSAGE_ENEMY_LOCATION_ABNORMAL;
     }
 
-    // Spawn item banner
-    gCurrentSprite.work1 = SpriteSpawnPrimary(PSPRITE_ITEM_BANNER, text, 6,
+    // Spawn message banner
+    gCurrentSprite.work1 = SpriteSpawnPrimary(PSPRITE_MESSAGE_BANNER, text, SPRITE_GFX_SLOT_SPECIAL,
         gCurrentSprite.yPosition, gCurrentSprite.xPosition, 0);
 
     gCurrentSprite.hitboxBottom = -BLOCK_SIZE;
     gCurrentSprite.pose = MAP_STATION_POSE_WAIT_FOR_MESSAGE;
     gSamusData.currentAnimationFrame = 0;
-    gSamusData.timer = 1;
+    // This flag freezes the animation of Samus on the first frame
+    gSamusData.timer = TRUE;
 
     SoundFade(SOUND_USING_MAP_STATION, CONVERT_SECONDS(1.f / 6));
 }
@@ -203,16 +230,16 @@ void MapStationSpawnMessage(void)
  * @brief 1f6e0 | 38 | Waits for the message to be disappearing
  * 
  */
-void MapStationWaitForMessage(void)
+static void MapStationWaitForMessage(void)
 {
     u8 ramSlot;
 
     ramSlot = gCurrentSprite.work1;
-    if (gSpriteData[ramSlot].pose == ITEM_BANNER_POSE_REMOVAL_ANIMATION)
+    if (gSpriteData[ramSlot].pose == MESSAGE_BANNER_POSE_REMOVAL_ANIMATION)
     {
         // Message was removed, continue animation
         gCurrentSprite.pose = MAP_STATION_POSE_DELAY_BEFORE_RETRACTING;
-        gCurrentSprite.work0 = 10;
+        gCurrentSprite.work0 = CONVERT_SECONDS(1.f / 6);
     }
 }
 
@@ -220,9 +247,9 @@ void MapStationWaitForMessage(void)
  * @brief 1f718 | 24 | Handles the delay before the map station retracts
  * 
  */
-void MapStationDelayBeforeRetracting(void)
+static void MapStationDelayBeforeRetracting(void)
 {
-    gCurrentSprite.work0--;
+    APPLY_DELTA_TIME_DEC(gCurrentSprite.work0);
     if (gCurrentSprite.work0 == 0)
         gCurrentSprite.pose = MAP_STATION_POSE_RETRACTING;
 }
@@ -231,11 +258,11 @@ void MapStationDelayBeforeRetracting(void)
  * @brief 1f73c | 34 | Initializes a map station to be retracting
  * 
  */
-void MapStationRetracting(void)
+static void MapStationRetracting(void)
 {
     gCurrentSprite.pose = MAP_STATION_POSE_RETRACTED;
 
-    gCurrentSprite.pOam = sMapStationOAM_Inactive;
+    gCurrentSprite.pOam = sMapStationOam_Inactive;
     gCurrentSprite.currentAnimationFrame = 0;
     gCurrentSprite.animationDurationCounter = 0;
 
@@ -292,10 +319,10 @@ void MapStation(void)
  */
 void MapStationPart(void)
 {
-    u8 ramSlot;
+    u8 mainSpriteSlot;
 
     gCurrentSprite.ignoreSamusCollisionTimer = DELTA_TIME;
-    ramSlot = gCurrentSprite.primarySpriteRamSlot;
+    mainSpriteSlot = gCurrentSprite.primarySpriteRamSlot;
 
     switch (gCurrentSprite.pose)
     {
@@ -321,43 +348,43 @@ void MapStationPart(void)
             gCurrentSprite.pose = MAP_STATION_PART_POSE_IDLE;
 
             if (gCurrentSprite.roomSlot == MAP_STATION_PART_BACK_SCREEN)
-                gCurrentSprite.pOam = sMapStationPartOAM_BackScreenIdle;
+                gCurrentSprite.pOam = sMapStationPartOam_BackScreenIdle;
             else
-                gCurrentSprite.pOam = sMapStationPartOAM_FrontScreenIdle;
+                gCurrentSprite.pOam = sMapStationPartOam_FrontScreenIdle;
 
             break;
 
         case MAP_STATION_PART_POSE_IDLE:
-            if (gSpriteData[ramSlot].pose == MAP_STATION_POSE_DOWNLOADING)
+            if (gSpriteData[mainSpriteSlot].pose == MAP_STATION_POSE_DOWNLOADING)
             {
                 gCurrentSprite.animationDurationCounter = 0;
                 gCurrentSprite.currentAnimationFrame = 0;
                 gCurrentSprite.pose = MAP_STATION_PART_POSE_DOWNLOADING;
 
                 if (gCurrentSprite.roomSlot == MAP_STATION_PART_BACK_SCREEN)
-                    gCurrentSprite.pOam = sMapStationPartOAM_BackScreenDownloading;
+                    gCurrentSprite.pOam = sMapStationPartOam_BackScreenDownloading;
                 else
-                    gCurrentSprite.pOam = sMapStationPartOAM_FrontScreenDownloading;
+                    gCurrentSprite.pOam = sMapStationPartOam_FrontScreenDownloading;
             }
             break;
 
         case MAP_STATION_PART_POSE_DOWNLOADING:
-            if (gSpriteData[ramSlot].pose == MAP_STATION_POSE_DOWNLOADED)
+            if (gSpriteData[mainSpriteSlot].pose == MAP_STATION_POSE_DOWNLOADED)
             {
                 gCurrentSprite.animationDurationCounter = 0;
                 gCurrentSprite.currentAnimationFrame = 0;
                 gCurrentSprite.pose = MAP_STATION_PART_POSE_DOWNLOADED;
 
                 if (gCurrentSprite.roomSlot == MAP_STATION_PART_BACK_SCREEN)
-                    gCurrentSprite.pOam = sMapStationPartOAM_BackScreenDownloaded;
+                    gCurrentSprite.pOam = sMapStationPartOam_BackScreenDownloaded;
                 else
-                    gCurrentSprite.pOam = sMapStationPartOAM_FrontScreenDownloaded;
+                    gCurrentSprite.pOam = sMapStationPartOam_FrontScreenDownloaded;
 
             }
             break;
 
         case MAP_STATION_PART_POSE_DOWNLOADED:
-            if (SpriteUtilCheckEndCurrentSpriteAnim())
+            if (SpriteUtilHasCurrentAnimationEnded())
                 gCurrentSprite.status = 0;
     }
 }

@@ -1,4 +1,6 @@
 #include "data/sprite_data.h"
+#include "sprites_AI/deorem.h"
+
 #include "constants/sprite.h"
 
 const u8 sOamXFlipOffsets[3][4] = {
@@ -62,7 +64,7 @@ const s16 sWorkerRobotSleepingFallingSpeed[10] = {
  * 7 : Super missile drop probability
  * 8 : Power bomb drop probability
  */
-const u16 sPrimarySpriteStats[PSPRITE_END][9] = {
+const u16 sPrimarySpriteStats[PSPRITE_COUNT][9] = {
     [PSPRITE_UNUSED0] = {
         0,
         0,
@@ -250,7 +252,7 @@ const u16 sPrimarySpriteStats[PSPRITE_END][9] = {
         0,
         0
     },
-    [PSPRITE_ITEM_BANNER] = {
+    [PSPRITE_MESSAGE_BANNER] = {
         0,
         0,
         WEAKNESS_NONE,
@@ -789,7 +791,7 @@ const u16 sPrimarySpriteStats[PSPRITE_END][9] = {
         0,
         0
     },
-    [PSPRITE_DEOREM] = {
+    [PSPRITE_DEOREM_FIRST_LOCATION] = {
         1,
         12,
         WEAKNESS_NONE,
@@ -1681,7 +1683,11 @@ const u16 sPrimarySpriteStats[PSPRITE_END][9] = {
         0
     },
     [PSPRITE_BARISTUTE] = {
+        #ifdef REGION_US_BETA
+        400,
+        #else // !REGION_US_BETA
         200,
+        #endif // REGION_US_BETA
         58,
         WEAKNESS_BEAM_BOMBS | WEAKNESS_MISSILES | WEAKNESS_POWER_BOMB | WEAKNESS_SPEEDBOOSTER_SCREW_ATTACK,
         0,
@@ -2209,7 +2215,11 @@ const u16 sPrimarySpriteStats[PSPRITE_END][9] = {
         0
     },
     [PSPRITE_BARISTUTE_KRAID_UPPER] = {
+        #ifdef REGION_US_BETA
+        400,
+        #else // !REGION_US_BETA
         200,
+        #endif // REGION_US_BETA
         58,
         WEAKNESS_BEAM_BOMBS | WEAKNESS_MISSILES | WEAKNESS_POWER_BOMB | WEAKNESS_SPEEDBOOSTER_SCREW_ATTACK,
         0,
@@ -2264,7 +2274,11 @@ const u16 sPrimarySpriteStats[PSPRITE_END][9] = {
         0
     },
     [PSPRITE_BARISTUTE_KRAID_LOWER] = {
+        #ifdef REGION_US_BETA
+        400,
+        #else // !REGION_US_BETA
         200,
+        #endif // REGION_US_BETA
         58,
         WEAKNESS_BEAM_BOMBS | WEAKNESS_MISSILES | WEAKNESS_POWER_BOMB | WEAKNESS_SPEEDBOOSTER_SCREW_ATTACK,
         0,
@@ -2343,7 +2357,7 @@ const u16 sPrimarySpriteStats[PSPRITE_END][9] = {
  * 7 : Super missile drop probability
  * 8 : Power bomb drop probability
  */
-const u16 sSecondarySpriteStats[SSPRITE_END][9] = {
+const u16 sSecondarySpriteStats[SSPRITE_COUNT][9] = {
     [SSPRITE_CHOZO_BALL] = {
         1,
         0,
@@ -2455,7 +2469,7 @@ const u16 sSecondarySpriteStats[SSPRITE_END][9] = {
         0
     },
     [SSPRITE_DEOREM_EYE] = {
-        60,
+        DEOREM_MAX_HEALTH,
         0,
         WEAKNESS_MISSILES,
         24,
@@ -2751,7 +2765,7 @@ const u16 sSecondarySpriteStats[SSPRITE_END][9] = {
         0,
         0
     },
-    [SSPRITE_ACID_WORM_BODY] = {
+    [SSPRITE_ACID_WORM_PART] = {
         1,
         10,
         WEAKNESS_BEAM_BOMBS | WEAKNESS_MISSILES | WEAKNESS_POWER_BOMB,

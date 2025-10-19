@@ -13,13 +13,20 @@
 #include "structs/sprite.h"
 #include "structs/samus.h"
 
+#define MELLA_POSE_IDLE_INIT 0x8
+#define MELLA_POSE_IDLE 0x9
+#define MELLA_POSE_MOVING_INIT 0x32
+#define MELLA_POSE_DELAY_BEOFRE_GOING_DOWN 0x33
+#define MELLA_POSE_GOING_DOWN 0x35
+#define MELLA_POSE_GOING_UP 0x37
+
 /**
  * @brief 3b36c | cc | Handles the X movement of a mella
  * 
  * @param movement Y Movement
- * @return u8 1 if colliding with solid, 0 otherwise
+ * @return u8 bool, colliding with solid
  */
-u8 MellaYMovement(u16 movement)
+static u8 MellaYMovement(u16 movement)
 {
     if (gCurrentSprite.status & SPRITE_STATUS_SAMUS_COLLIDING)
     {
@@ -27,11 +34,11 @@ u8 MellaYMovement(u16 movement)
         if (gPreviousCollisionCheck == COLLISION_SOLID)
             return TRUE;
         
-        SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition + BLOCK_SIZE, gCurrentSprite.xPosition - (QUARTER_BLOCK_SIZE * 3));
+        SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition + BLOCK_SIZE, gCurrentSprite.xPosition - THREE_QUARTER_BLOCK_SIZE);
         if (gPreviousCollisionCheck == COLLISION_SOLID)
             return TRUE;
 
-        SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition + BLOCK_SIZE, gCurrentSprite.xPosition + (QUARTER_BLOCK_SIZE * 3));
+        SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition + BLOCK_SIZE, gCurrentSprite.xPosition + THREE_QUARTER_BLOCK_SIZE);
         if (gPreviousCollisionCheck == COLLISION_SOLID)
             return TRUE;
             
@@ -40,24 +47,24 @@ u8 MellaYMovement(u16 movement)
     else
     {
         SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition - HALF_BLOCK_SIZE,
-            gCurrentSprite.xPosition - (QUARTER_BLOCK_SIZE * 3));
+            gCurrentSprite.xPosition - THREE_QUARTER_BLOCK_SIZE);
 
         if (gPreviousCollisionCheck == COLLISION_SOLID)
         {
             SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition - HALF_BLOCK_SIZE,
-                gCurrentSprite.xPosition - (BLOCK_SIZE + QUARTER_BLOCK_SIZE * 3));
+                gCurrentSprite.xPosition - (BLOCK_SIZE + THREE_QUARTER_BLOCK_SIZE));
 
             if (gPreviousCollisionCheck == COLLISION_SOLID)
                 return TRUE;
         }
 
         SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition - HALF_BLOCK_SIZE,
-            gCurrentSprite.xPosition + (QUARTER_BLOCK_SIZE * 3));
+            gCurrentSprite.xPosition + THREE_QUARTER_BLOCK_SIZE);
 
         if (gPreviousCollisionCheck == COLLISION_SOLID)
         {
             SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition - HALF_BLOCK_SIZE,
-                gCurrentSprite.xPosition + (BLOCK_SIZE + QUARTER_BLOCK_SIZE * 3));
+                gCurrentSprite.xPosition + (BLOCK_SIZE + THREE_QUARTER_BLOCK_SIZE));
 
             if (gPreviousCollisionCheck == COLLISION_SOLID)
                 return TRUE;
@@ -73,9 +80,9 @@ u8 MellaYMovement(u16 movement)
  * @brief 3b438 | 8c | Handles the X movement of a mella
  * 
  * @param movement X Movement
- * @return u8 1 if colliding with solid, 0 otherwise
+ * @return u8 bool, colliding with solid
  */
-u8 MellaXMovement(u16 movement)
+static u8 MellaXMovement(u16 movement)
 {
     if (gCurrentSprite.status & SPRITE_STATUS_FACING_RIGHT)
     {
@@ -109,7 +116,7 @@ u8 MellaXMovement(u16 movement)
  * @brief 3b4c4 | 68 | Initializes a mella sprite
  * 
  */
-void MellaInit(void)
+static void MellaInit(void)
 {
     gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(HALF_BLOCK_SIZE);
     gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(HALF_BLOCK_SIZE);
@@ -120,7 +127,7 @@ void MellaInit(void)
     gCurrentSprite.hitboxLeft = -HALF_BLOCK_SIZE;
     gCurrentSprite.hitboxRight = HALF_BLOCK_SIZE;
 
-    gCurrentSprite.pOam = sMellaOAM_Idle;
+    gCurrentSprite.pOam = sMellaOam_Idle;
     gCurrentSprite.animationDurationCounter = 0;
     gCurrentSprite.currentAnimationFrame = 0;
 
@@ -133,12 +140,12 @@ void MellaInit(void)
  * @brief 3b52c | 38 | Initializes a mella to be idle
  * 
  */
-void MellaIdleInit(void)
+static void MellaIdleInit(void)
 {
     u8 rng;
     
     gCurrentSprite.pose = MELLA_POSE_IDLE;
-    gCurrentSprite.pOam = sMellaOAM_Idle;
+    gCurrentSprite.pOam = sMellaOam_Idle;
     gCurrentSprite.animationDurationCounter = 0;
     gCurrentSprite.currentAnimationFrame = 0;
 
@@ -151,7 +158,7 @@ void MellaIdleInit(void)
  * @brief 3b564 | 9c | Handles a mella being idle
  * 
  */
-void MellaIdle(void)
+static void MellaIdle(void)
 {
     s32 movement;
     u8 offset;
@@ -181,7 +188,7 @@ void MellaIdle(void)
     gCurrentSprite.work2 = offset + 1;
     gCurrentSprite.xPosition += movement;
 
-    if (gSamusData.yPosition - (BLOCK_SIZE + PIXEL_SIZE * 2) >= gCurrentSprite.yPosition)
+    if (gSamusData.yPosition - (BLOCK_SIZE + EIGHTH_BLOCK_SIZE) >= gCurrentSprite.yPosition)
     {
         // Detect samus
         nslr = SpriteUtilCheckSamusNearSpriteLeftRight(BLOCK_SIZE * 8, BLOCK_SIZE * 3);
@@ -194,28 +201,30 @@ void MellaIdle(void)
  * @brief 3b600 | 34 | Initializes a mella to be moving
  * 
  */
-void MellaMovingInit(void)
+static void MellaMovingInit(void)
 {
     gCurrentSprite.pose = MELLA_POSE_DELAY_BEOFRE_GOING_DOWN;
 
     gCurrentSprite.animationDurationCounter = 0;
     gCurrentSprite.currentAnimationFrame = 0;
-    gCurrentSprite.pOam = sMelloOAM_Moving;
+    gCurrentSprite.pOam = sMellowOAM_Moving;
 
-    gCurrentSprite.work0 = 7;
+    gCurrentSprite.work0 = CONVERT_SECONDS(.1f) + 1 * DELTA_TIME;
 }
 
 /**
  * @brief 3b624 | 64 | Handles the delay before a mella goes down
  * 
  */
-void MellaDelayBeforeGoingDown(void)
+static void MellaDelayBeforeGoingDown(void)
 {
-    if (gCurrentSprite.status & SPRITE_STATUS_ONSCREEN &&
-        gCurrentSprite.currentAnimationFrame == 0 && gCurrentSprite.animationDurationCounter == 1)
-        SoundPlayNotAlreadyPlaying(SOUND_MELLA_MOVING);
+    if (gCurrentSprite.status & SPRITE_STATUS_ONSCREEN)
+    {
+        if (gCurrentSprite.currentAnimationFrame == 0 && gCurrentSprite.animationDurationCounter == DELTA_TIME)
+            SoundPlayNotAlreadyPlaying(SOUND_MELLA_MOVING);
+    }
 
-    gCurrentSprite.work0--;
+    APPLY_DELTA_TIME_DEC(gCurrentSprite.work0);
     if (gCurrentSprite.work0 == 0)
     {
         // Set going down behavior
@@ -233,14 +242,16 @@ void MellaDelayBeforeGoingDown(void)
  * @brief 3b688 | 94 | Handles a mella going down
  * 
  */
-void MellaGoingDown(void)
+static void MellaGoingDown(void)
 {
     u16 yMovement;
     u16 xMovement;
 
-    if (gCurrentSprite.status & SPRITE_STATUS_ONSCREEN &&
-        gCurrentSprite.currentAnimationFrame == 0 && gCurrentSprite.animationDurationCounter == 1)
-        SoundPlayNotAlreadyPlaying(SOUND_MELLA_MOVING);
+    if (gCurrentSprite.status & SPRITE_STATUS_ONSCREEN)
+    {
+        if (gCurrentSprite.currentAnimationFrame == 0 && gCurrentSprite.animationDurationCounter == DELTA_TIME)
+            SoundPlayNotAlreadyPlaying(SOUND_MELLA_MOVING);
+    }
 
     // Check increase offsets
     if (gCurrentSprite.work3 < ARRAY_SIZE(sMellaGoingDownYMovement) * 8 - 1)
@@ -268,14 +279,16 @@ void MellaGoingDown(void)
  * @brief 3b71c | 94 | Handles the mella going up
  * 
  */
-void MellaGoingUp(void)
+static void MellaGoingUp(void)
 {
     u16 yMovement;
     u16 xMovement;
 
-    if (gCurrentSprite.status & SPRITE_STATUS_ONSCREEN &&
-        gCurrentSprite.currentAnimationFrame == 0 && gCurrentSprite.animationDurationCounter == 1)
-        SoundPlayNotAlreadyPlaying(SOUND_MELLA_MOVING);
+    if (gCurrentSprite.status & SPRITE_STATUS_ONSCREEN)
+    {
+        if (gCurrentSprite.currentAnimationFrame == 0 && gCurrentSprite.animationDurationCounter == DELTA_TIME)
+            SoundPlayNotAlreadyPlaying(SOUND_MELLA_MOVING);
+    }
 
     // Check increase offsets
     if (gCurrentSprite.work3 < ARRAY_SIZE(sMellaGoingUpYMovement) * 8 - 1)

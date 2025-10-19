@@ -14,6 +14,12 @@
 #include "structs/game_state.h"
 #include "structs/sprite.h"
 
+#define FALLING_CHOZO_PILLAR_POSE_CHECK_SUIT_ANIM_ENDED 0x9
+#define FALLING_CHOZO_PILLAR_POSE_CHECK_ON_SCREEN 0x23
+#define FALLING_CHOZO_PILLAR_POSE_FALLING 0x25
+#define FALLING_CHOZO_PILLAR_POSE_FALLEN 0x27
+#define FALLING_CHOZO_PILLAR_POSE_IDLE 0x29
+
 /**
  * @brief 4b884 | 218 | Falling chozo pillar AI
  * 
@@ -40,7 +46,7 @@ void FallingChozoPillar(void)
             gCurrentSprite.samusCollision = SSC_NONE;
             gCurrentSprite.bgPriority = BGCNT_GET_PRIORITY(gIoRegistersBackup.BG1CNT);
 
-            gCurrentSprite.pOam = sFallingChozoPillarOAM_Falling;
+            gCurrentSprite.pOam = sFallingChozoPillarOam_Falling;
             gCurrentSprite.currentAnimationFrame = 0;
             gCurrentSprite.animationDurationCounter = 0;
 
@@ -51,7 +57,7 @@ void FallingChozoPillar(void)
 
         case FALLING_CHOZO_PILLAR_POSE_CHECK_SUIT_ANIM_ENDED:
             // Check suit animation ended
-            if (gSubSpriteData1.workVariable3 == RUINS_TEST_FIGHT_STAGE_SUIT_ANIM_ENDED)
+            if (gSubSpriteData1.work3 == RUINS_TEST_FIGHT_STAGE_SUIT_ANIM_ENDED)
             {
                 gCurrentSprite.status &= ~SPRITE_STATUS_NOT_DRAWN;
                 gCurrentSprite.pose = FALLING_CHOZO_PILLAR_POSE_CHECK_ON_SCREEN;

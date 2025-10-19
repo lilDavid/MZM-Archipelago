@@ -2,6 +2,9 @@
 #define BLOCK_H
 
 #include "types.h"
+
+#include "constants/samus.h"
+
 #include "structs/block.h"
 
 u32 BlockCheckCcaa(struct ClipdataBlockData* pClipBlock);
@@ -17,7 +20,7 @@ u32 BlockCheckRevealOrDestroyNonBombBlock(struct ClipdataBlockData* pClipBlock);
 u32 BlockCheckRevealOrDestroyBombBlock(struct ClipdataBlockData* pClipBlock);
 u32 BlockApplyCcaa(u16 yPosition, u16 xPosition, u16 trueClip);
 u32 BlockUpdateMakeSolidBlocks(u8 makeSolid, u16 xPosition, u16 yPosition);
-u32 BlockSamusApplyScrewSpeedboosterDamageToEnvironment(u16 xPosition, u16 yPosition, u16 action);
+u32 BlockSamusApplyScrewSpeedboosterDamageToEnvironment(u16 xPosition, u16 yPosition, DestructingAction action);
 void BlockUpdateBrokenBlocks(void);
 void BlockUpdateBrokenBlockAnimation(struct BrokenBlock* pBlock);
 u32 BlockStoreBrokenReformBlock(u8 type, u16 xPosition, u16 yPosition, u8 advanceStage);

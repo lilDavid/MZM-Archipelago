@@ -15,7 +15,7 @@ void SramWrite_HeaderAndGameInfo(void);
 u32 SramProcessEndingSave(void);
 void SramCheckSetNewBestCompletionTime(void);
 void SramCopy_GameCompletion(void);
-u32 SramProcessEndingSave_Unused(void);
+u32 SramProcessEndingSave_Debug(void);
 
 u32 SramSaveFile(void);
 void SramWrite_ToEwram(void);
@@ -55,9 +55,5 @@ void SramWrite_FileInfo(void);
 void unk_757c8(u8 file);
 void unk_7584c(u8 param_1);
 void Sram_CheckLoadSaveFile(void);
-void Sram_InitSaveFile(void);
-
-void Sram_VblankEmpty(void);
-u32 unk_75c04(u8 param_1);
 
 #endif /* SAVE_FILE_H */

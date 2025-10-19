@@ -8,6 +8,7 @@
 *.o
 *.map
 *.bin
+*.sav
 *.bsdiff
 
 *.exe
@@ -16,10 +17,15 @@
 *.runtimeconfig.json
 c_extractor
 
+linker.ld.pp
 include/**/*.s
 tools/*.txt
-tools/c_extractor
 .vscode
+
+err.log
+
+!/sound/direct_sound_samples/*.bin
+
 .venv*
 *.log
 extracted_symbols.json

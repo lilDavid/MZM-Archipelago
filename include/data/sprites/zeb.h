@@ -9,14 +9,7 @@ extern const u16 sZebPinkPal[16];
 extern const u32 sZebBlueGfx[162];
 extern const u16 sZebBluePal[16];
 
-extern const u16 sZebOAM_Idle_Frame0[7];
+extern const struct FrameData sZebOam_Idle[5];
+extern const struct FrameData sZebOam_Moving[5];
 
-extern const u16 sZebOAM_Idle_Frame1[7];
-
-extern const u16 sZebOAM_Idle_Frame2[7];
-
-extern const struct FrameData sZebOAM_Idle[5];
-
-extern const struct FrameData sZebOAM_Moving[5];
-
-#endif
+#endif /* ZEB_DATA_H */

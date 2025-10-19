@@ -2,13 +2,16 @@
 #define PAUSE_SCREEN_DATA_H
 
 #include "types.h"
-#include "structs/cutscene.h"
-#include "structs/text.h"
-#include "structs/menus/pause_screen.h"
 #include "connection.h"
 
 #include "constants/game_state.h"
+#include "constants/samus.h"
 #include "constants/menus/pause_screen.h"
+#include "constants/menus/status_screen.h"
+
+#include "structs/cutscene.h"
+#include "structs/text.h"
+#include "structs/menus/pause_screen.h"
 
 extern const u16 sPauseScreen_3fcef0[11 * 16];
 extern const u16 sTankIconsPal[16 * 16];
@@ -41,7 +44,7 @@ extern const u32 sRidleyMinimap[120];
 extern const u32 sTourianMinimap[91];
 extern const u32 sCrateriaMinimap[114];
 extern const u32 sChozodiaMinimap[194];
-extern const u32 sExtraMinimap[78];
+extern const u32 sTestMinimap[78];
 
 extern const u32 sDebugMenuTileParts[175];
 extern const u32 sMapScreenVisorOverlayTilemap[122];
@@ -54,15 +57,27 @@ extern const u32 sMapScreenTextBg0TileTable[92];
 extern const u32 sChozoHintBackgroundTileTable[577];
 
 extern const u32 sEquipmentNamesHiraganaGfx[411];
-extern const u32 sEquipmentNamesEnglishGfx[1900];
+extern const u32 sEquipmentNamesEnglishGfx[380];
+extern const u32 sEquipmentNamesGermanGfx[];
+extern const u32 sEquipmentNamesFrenchGfx[];
+extern const u32 sEquipmentNamesItalianGfx[];
+extern const u32 sEquipmentNamesSpanishGfx[];
 
 extern const u32 sMapScreenAreaNamesHiraganaGfx[198];
 
 extern const u32 sMenuNamesHiraganaGfx[113];
-extern const u32 sMenuNamesEnglishGfx[468];
+extern const u32 sMenuNamesEnglishGfx[92];
+extern const u32 sMenuNamesGermanGfx[97];
+extern const u32 sMenuNamesFrenchGfx[91];
+extern const u32 sMenuNamesItalianGfx[];
+extern const u32 sMenuNamesSpanishGfx[];
 
 extern const u32 sMapScreenUnknownItemsNamesHiraganaGfx[76];
-extern const u32 sMapScreenUnknownItemsNamesEnglishGfx[337];
+extern const u32 sMapScreenUnknownItemsNamesEnglishGfx[65];
+extern const u32 sMapScreenUnknownItemsNamesGermanGfx[];
+extern const u32 sMapScreenUnknownItemsNamesFrenchGfx[];
+extern const u32 sMapScreenUnknownItemsNamesItalianGfx[];
+extern const u32 sMapScreenUnknownItemsNamesSpanishGfx[];
 
 extern const u32 sMapScreenChozoStatueAreaNamesHiraganaGfx[154];
 
@@ -71,9 +86,9 @@ extern const struct MenuOamData sMenuOamDataChozoHint_Empty;
 extern const struct MenuOamData sMenuOamDataEraseSram_Empty;
 extern const struct CutsceneOamData sCutsceneOam_Empty;
 
-extern const u8 sUnused_40d078[16];
+extern const struct MenuOamData sMenuOamDataMinimapRoomInfo;
 
-extern const u16 sPauseScreen_40d088[4];
+extern const u16 sPauseScreen_BgCntPriority[4];
 
 extern const struct PauseScreenAreaIconData sPauseScreenAreaIconsData[MAX_AMOUNT_OF_AREAS];
 extern const u16 sMapScreenArrowsData[4][4];
@@ -83,10 +98,10 @@ extern const u8 sStatusScreenBombFlagsOrder[1];
 extern const u8 sStatusScreenSuitFlagsOrder[2];
 extern const u8 sStatusScreenMiscFlagsOrder[6];
 
-extern const u8 sPauseScreen_40d0fe[4];
-extern const u16 sPauseScreen_40d102[5];
+extern const u8 sStatusScreenFlagsSize[ABILITY_GROUP_STATUS_GROUPS_END];
+extern const u16 sPowersOfTen[5];
 
-extern const struct PauseScreenWireframeData sSamusWireframeData[7];
+extern const struct PauseScreenWireframeData sSamusWireframeData[SAMUS_WIREFRAME_DATA_END];
 
 extern const u16 sChozoHintAreaNamesPosition[2];
 extern const u8 sChozoHintAreaNamesOamIds[MAX_AMOUNT_OF_AREAS];
@@ -105,9 +120,13 @@ extern const struct OamArray sPauseScreenBossIconsOam[BOSS_ICON_OAM_ID_END];
 extern const struct OamArray sPauseScreenTargetsOam[TARGET_OAM_END];
 extern const struct OamArray sPauseScreenWorldMapOam[WORLD_MAP_OAM_ID_END];
 
-extern const u8 sMaintainedInputDelays[8];
+extern const u8 sMaintainedInputDelays_Fast[7];
+#ifdef REGION_EU
+extern const u8 sMaintainedInputDelays_Slow[4];
+extern const u8 sMaintainedInputDelaysLastSet[MAINTAINED_INPUT_SPEED_COUNT];
+#endif // REGION_EU
 
-extern const u8 sMapScreenAreaIds[MAX_AMOUNT_OF_AREAS];
+extern const struct MapScreenAreaIds sMapScreenAreaIds;
 extern const u8 sMapScreenAreasViewOrder[MAX_AMOUNT_OF_AREAS];
 
 extern const struct MinimapAreaName sMinimapAreaNames[10];
@@ -115,7 +134,7 @@ extern const struct MinimapAreaName sMinimapAreaNames[10];
 extern const u8 sPauseScreen_40d6fc[80];
 extern const u8 sPauseScreen_40d74c[80];
 
-extern u8* const sPauseScreen_40d79c[5];
+extern u8* const sPauseScreen_IgtAndTanksVramAddresses[IGT_AND_TANKS_VRAM_ADDRESS_END];
 
 extern const u8 sCharacterWidths[1184];
 

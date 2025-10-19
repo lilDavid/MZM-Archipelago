@@ -4,7 +4,7 @@
 #include "types.h"
 #include "structs/samus.h"
 
-#include "macros.h"
+#include "oam.h"
 
 #define SAMUS_GFX_PART_SIZE 32
 #define SAMUS_GFX_SIZE(size1, size2) (2 + size1 * SAMUS_GFX_PART_SIZE + size2 * SAMUS_GFX_PART_SIZE)
@@ -972,7 +972,7 @@ extern const struct SamusAnimationData sSamusAnim_PowerSuit_Right_TurningOnZipli
 extern const struct SamusAnimationData sSamusAnim_PowerSuit_Right_DiagonalDown_TurningOnZipline[3];
 extern const struct SamusAnimationData sSamusAnim_PowerSuit_Right_Down_TurningOnZipline[3];
 
-extern const struct SamusAnimationData sSamusAnim_PowerSuit_MorphballMotioness[7];
+extern const struct SamusAnimationData sSamusAnim_PowerSuit_MorphballMotionless[7];
 
 extern const struct SamusAnimationData sSamusAnim_PowerSuit_Left_Ballsparking[9];
 extern const struct SamusAnimationData sSamusAnim_PowerSuit_Right_Ballsparking[9];
@@ -2297,7 +2297,7 @@ extern const struct SamusAnimationData sSamusAnim_FullSuit_Right_TurningOnZiplin
 extern const struct SamusAnimationData sSamusAnim_FullSuit_Right_DiagonalDown_TurningOnZipline[3];
 extern const struct SamusAnimationData sSamusAnim_FullSuit_Right_Down_TurningOnZipline[3];
 
-extern const struct SamusAnimationData sSamusAnim_FullSuit_MorphballMotioness[7];
+extern const struct SamusAnimationData sSamusAnim_FullSuit_MorphballMotionless[7];
 
 extern const struct SamusAnimationData sSamusAnim_FullSuit_Left_Ballsparking[9];
 extern const struct SamusAnimationData sSamusAnim_FullSuit_Right_Ballsparking[9];
@@ -3731,12 +3731,12 @@ extern const u16 sSamusOam_Suitless_DiagonalDown_TurningAround_Frame1[OAM_DATA_S
 extern const u16 sSamusOam_Suitless_Up_TurningAround_Frame0[OAM_DATA_SIZE(4)];
 extern const u16 sSamusOam_Suitless_Up_TurningAround_Frame1[OAM_DATA_SIZE(4)];
 
-extern const u16 sSamusOam_Suitless_TurningAroundAndCrouhing_Frame0[OAM_DATA_SIZE(3)];
-extern const u16 sSamusOam_Suitless_TurningAroundAndCrouhing_Frame1[OAM_DATA_SIZE(3)];
-extern const u16 sSamusOam_Suitless_DiagonalUp_TurningAroundAndCrouhing_Frame0[OAM_DATA_SIZE(3)];
-extern const u16 sSamusOam_Suitless_DiagonalUp_TurningAroundAndCrouhing_Frame1[OAM_DATA_SIZE(3)];
-extern const u16 sSamusOam_Suitless_DiagonalDown_TurningAroundAndCrouhing_Frame0[OAM_DATA_SIZE(4)];
-extern const u16 sSamusOam_Suitless_DiagonalDown_TurningAroundAndCrouhing_Frame1[OAM_DATA_SIZE(4)];
+extern const u16 sSamusOam_Suitless_TurningAroundAndCrouching_Frame0[OAM_DATA_SIZE(3)];
+extern const u16 sSamusOam_Suitless_TurningAroundAndCrouching_Frame1[OAM_DATA_SIZE(3)];
+extern const u16 sSamusOam_Suitless_DiagonalUp_TurningAroundAndCrouching_Frame0[OAM_DATA_SIZE(3)];
+extern const u16 sSamusOam_Suitless_DiagonalUp_TurningAroundAndCrouching_Frame1[OAM_DATA_SIZE(3)];
+extern const u16 sSamusOam_Suitless_DiagonalDown_TurningAroundAndCrouching_Frame0[OAM_DATA_SIZE(4)];
+extern const u16 sSamusOam_Suitless_DiagonalDown_TurningAroundAndCrouching_Frame1[OAM_DATA_SIZE(4)];
 
 extern const u16 sSamusOam_Suitless_Down_TurningAroundMidAir_Frame0[OAM_DATA_SIZE(4)];
 extern const u16 sSamusOam_Suitless_Down_TurningAroundMidAir_Frame1[OAM_DATA_SIZE(4)];

@@ -1,5 +1,6 @@
 #include "sprites_AI/rinka.h"
 #include "sprites_AI/zebetite_and_cannon.h"
+#include "gba/display.h"
 #include "syscalls.h"
 #include "macros.h"
 
@@ -17,61 +18,67 @@
 #include "structs/sprite.h"
 #include "structs/samus.h"
 
+#define RINKA_POSE_SPAWNING_INIT 0x8
+#define RINKA_POSE_SPAWNING 0x9
+#define RINKA_POSE_MOVING 0x23
+
 /**
  * @brief 3630c | 98 | Initializes a rinka sprite
  * 
  */
-void RinkaInit(void)
+static void RinkaInit(void)
 {
-    gCurrentSprite.hitboxTop = -0x14;
-    gCurrentSprite.hitboxBottom = 0x14;
-    gCurrentSprite.hitboxLeft = -0x14;
-    gCurrentSprite.hitboxRight = 0x14;
+    gCurrentSprite.hitboxTop = -SUB_PIXEL_TO_PIXEL(BLOCK_SIZE + QUARTER_BLOCK_SIZE);
+    gCurrentSprite.hitboxBottom = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE + QUARTER_BLOCK_SIZE);
+    gCurrentSprite.hitboxLeft = -SUB_PIXEL_TO_PIXEL(BLOCK_SIZE + QUARTER_BLOCK_SIZE);
+    gCurrentSprite.hitboxRight = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE + QUARTER_BLOCK_SIZE);
 
-    gCurrentSprite.drawDistanceTop = 0x8;
-    gCurrentSprite.drawDistanceBottom = 0x8;
-    gCurrentSprite.drawDistanceHorizontal = 0x8;
+    gCurrentSprite.drawDistanceTop = EIGHTH_BLOCK_SIZE;
+    gCurrentSprite.drawDistanceBottom = EIGHTH_BLOCK_SIZE;
+    gCurrentSprite.drawDistanceHorizontal = EIGHTH_BLOCK_SIZE;
 
     gCurrentSprite.health = GET_PSPRITE_HEALTH(gCurrentSprite.spriteId);
-    gCurrentSprite.yPosition -= (HALF_BLOCK_SIZE);
+    gCurrentSprite.yPosition -= HALF_BLOCK_SIZE;
 
     // Get spawn tile position
-    gCurrentSprite.work3 = (gCurrentSprite.yPosition - (HALF_BLOCK_SIZE)) >> 6;
-    gCurrentSprite.work2 = (gCurrentSprite.xPosition - (HALF_BLOCK_SIZE)) >> 6;
+    gCurrentSprite.work3 = SUB_PIXEL_TO_BLOCK_(gCurrentSprite.yPosition - HALF_BLOCK_SIZE);
+    gCurrentSprite.work2 = SUB_PIXEL_TO_BLOCK_(gCurrentSprite.xPosition - HALF_BLOCK_SIZE);
 
     gCurrentSprite.samusCollision = SSC_HURTS_SAMUS;
-    gCurrentSprite.drawOrder = 0x3;
-    gCurrentSprite.bgPriority = gIoRegistersBackup.BG1CNT & 0x3;
-    gCurrentSprite.work1 = 0x0;
+    gCurrentSprite.drawOrder = 3;
+    gCurrentSprite.bgPriority = BGCNT_GET_PRIORITY(gIoRegistersBackup.BG1CNT);
+    gCurrentSprite.work1 = 0;
 
     if (gCurrentSprite.spriteId != PSPRITE_RINKA_GREEN && gCurrentSprite.spriteId != PSPRITE_RINKA_ORANGE)
-        gCurrentSprite.frozenPaletteRowOffset = 0x1;
+        gCurrentSprite.frozenPaletteRowOffset = 1;
 }
 
 /**
  * @brief 363a4 | 3c | Initializes a rinka to be spawning
  * 
  */
-void RinkaSpawningInit(void)
+static void RinkaSpawningInit(void)
 {
     gCurrentSprite.pose = RINKA_POSE_SPAWNING;
-    gCurrentSprite.currentAnimationFrame = 0x0;
-    gCurrentSprite.animationDurationCounter = 0x0;
+    gCurrentSprite.currentAnimationFrame = 0;
+    gCurrentSprite.animationDurationCounter = 0;
 
     if (gCurrentSprite.spriteId == PSPRITE_RINKA_GREEN)
     {
         gCurrentSprite.status |= SPRITE_STATUS_MOSAIC;
-        gCurrentSprite.pOam = sRinkaGreenOAM_Spawning;
+        gCurrentSprite.pOam = sRinkaGreenOam_Spawning;
     }
     else
-        gCurrentSprite.pOam = sRinkaOrangeOAM_Spawning;
+    {
+        gCurrentSprite.pOam = sRinkaOrangeOam_Spawning;
+    }
 }
 
 /**
  * @brief 363e0 | 94 | Handles a rinka respawning
  * 
  */
-void RinkaRespawn(void)
+static void RinkaRespawn(void)
 {
     // Set spawn position
     gCurrentSprite.yPosition = (gCurrentSprite.work3 * BLOCK_SIZE) + (HALF_BLOCK_SIZE);
@@ -79,21 +86,21 @@ void RinkaRespawn(void)
 
     RinkaSpawningInit();
     gCurrentSprite.health = GET_PSPRITE_HEALTH(gCurrentSprite.spriteId);
-    gCurrentSprite.invincibilityStunFlashTimer = 0x0;
-    gCurrentSprite.paletteRow = 0x0;
-    gCurrentSprite.frozenPaletteRowOffset = 0x0;
-    gCurrentSprite.absolutePaletteRow = 0x0;
+    gCurrentSprite.invincibilityStunFlashTimer = 0;
+    gCurrentSprite.paletteRow = 0;
+    gCurrentSprite.frozenPaletteRowOffset = 0;
+    gCurrentSprite.absolutePaletteRow = 0;
 
     gCurrentSprite.ignoreSamusCollisionTimer = DELTA_TIME;
-    gCurrentSprite.freezeTimer = 0x0;
+    gCurrentSprite.freezeTimer = 0;
 
     // Set spawn delay
     if (gCurrentSprite.status & SPRITE_STATUS_MOSAIC)
-        gCurrentSprite.work1 = 0x14; // Green rinka
+        gCurrentSprite.work1 = ONE_THIRD_SECOND; // Green rinka
     else
-        gCurrentSprite.work1 = 0x3C; // Orange rinka
+        gCurrentSprite.work1 = CONVERT_SECONDS(1.f); // Orange rinka
 
-    gCurrentSprite.status |= (SPRITE_STATUS_NOT_DRAWN | SPRITE_STATUS_IGNORE_PROJECTILES);
+    gCurrentSprite.status |= SPRITE_STATUS_NOT_DRAWN | SPRITE_STATUS_IGNORE_PROJECTILES;
     // Duplicated code
     gCurrentSprite.ignoreSamusCollisionTimer = DELTA_TIME;
 }
@@ -102,7 +109,7 @@ void RinkaRespawn(void)
  * @brief 36474 | 118 | Handles a rinka spawning
  * 
  */
-void RinkaSpawning(void)
+static void RinkaSpawning(void)
 {
     u16 samusY;
     u16 samusX;
@@ -110,67 +117,66 @@ void RinkaSpawning(void)
     u16 spriteX;
 
     // Spawn delay
-    if (gCurrentSprite.work1 != 0x0)
+    if (gCurrentSprite.work1 != 0)
     {
         gCurrentSprite.ignoreSamusCollisionTimer = DELTA_TIME;
-        gCurrentSprite.work1--;
+        APPLY_DELTA_TIME_DEC(gCurrentSprite.work1);
+        return;
+    }
+
+    if (gCurrentSprite.status & SPRITE_STATUS_NOT_DRAWN)
+    {
+        gCurrentSprite.ignoreSamusCollisionTimer = DELTA_TIME;
+        if (gCurrentSprite.status & SPRITE_STATUS_ONSCREEN)
+        {
+            gCurrentSprite.status &= ~SPRITE_STATUS_NOT_DRAWN;
+            gCurrentSprite.currentAnimationFrame = 0;
+            gCurrentSprite.animationDurationCounter = 0;
+            gCurrentSprite.work0 = CONVERT_SECONDS(1.f / 6 + 1.f / 60);
+        }
     }
     else
     {
-        if (gCurrentSprite.status & SPRITE_STATUS_NOT_DRAWN)
+        // Vulnerability delay
+        if (gCurrentSprite.work0 != 0)
         {
             gCurrentSprite.ignoreSamusCollisionTimer = DELTA_TIME;
-            if (gCurrentSprite.status & SPRITE_STATUS_ONSCREEN)
-            {
-                gCurrentSprite.status &= ~SPRITE_STATUS_NOT_DRAWN;
-                gCurrentSprite.currentAnimationFrame = 0x0;
-                gCurrentSprite.animationDurationCounter = 0x0;
-                gCurrentSprite.work0 = 0xB;
-            }
+            APPLY_DELTA_TIME_DEC(gCurrentSprite.work0);
+            if (gCurrentSprite.work0 == 0)
+                gCurrentSprite.status &= ~SPRITE_STATUS_IGNORE_PROJECTILES;
         }
-        else
+        else if (SpriteUtilHasCurrentAnimationEnded())
         {
-            // Vulnerability delay
-            if (gCurrentSprite.work0 != 0x0)
-            {
-                gCurrentSprite.ignoreSamusCollisionTimer = DELTA_TIME;
-                gCurrentSprite.work0--;
-                if (gCurrentSprite.work0 == 0x0)
-                    gCurrentSprite.status &= ~SPRITE_STATUS_IGNORE_PROJECTILES;
-            }
-            else if (SpriteUtilCheckEndCurrentSpriteAnim())
-            {
-                if (gCurrentSprite.spriteId == PSPRITE_RINKA_GREEN)
-                    gCurrentSprite.pOam = sRinkaGreenOAM_Moving;
-                else
-                    gCurrentSprite.pOam = sRinkaOrangeOAM_Moving;
+            if (gCurrentSprite.spriteId == PSPRITE_RINKA_GREEN)
+                gCurrentSprite.pOam = sRinkaGreenOam_Moving;
+            else
+                gCurrentSprite.pOam = sRinkaOrangeOam_Moving;
 
-                gCurrentSprite.pose = RINKA_POSE_MOVING;
-                gCurrentSprite.currentAnimationFrame = 0x0;
-                gCurrentSprite.animationDurationCounter = 0x0;
-                gCurrentSprite.scaling = 0x0;
+            gCurrentSprite.pose = RINKA_POSE_MOVING;
+            gCurrentSprite.currentAnimationFrame = 0;
+            gCurrentSprite.animationDurationCounter = 0;
+            gCurrentSprite.scaling = 0;
 
-                samusY = gSamusData.yPosition - 0x3C;
-                samusX = gSamusData.xPosition;
-                spriteY = gCurrentSprite.yPosition;
-                spriteX = gCurrentSprite.xPosition;
+            samusY = gSamusData.yPosition - (BLOCK_SIZE - PIXEL_SIZE);
+            samusX = gSamusData.xPosition;
+            spriteY = gCurrentSprite.yPosition;
+            spriteX = gCurrentSprite.xPosition;
 
-                // Set destination position
-                gCurrentSprite.yPositionSpawn = samusY;
-                gCurrentSprite.xPositionSpawn = samusX;
+            // Set destination position
+            gCurrentSprite.yPositionSpawn = samusY;
+            gCurrentSprite.xPositionSpawn = samusX;
 
-                // Set direction
-                if (samusY < spriteY)
-                    gCurrentSprite.status &= ~SPRITE_STATUS_FACING_DOWN;
-                else
-                    gCurrentSprite.status |= SPRITE_STATUS_FACING_DOWN;
+            // Set direction
+            if (samusY < spriteY)
+                gCurrentSprite.status &= ~SPRITE_STATUS_FACING_DOWN;
+            else
+                gCurrentSprite.status |= SPRITE_STATUS_FACING_DOWN;
 
-                    
-                if (samusX < spriteX)
-                    gCurrentSprite.status &= ~SPRITE_STATUS_FACING_RIGHT;
-                else
-                    gCurrentSprite.status |= SPRITE_STATUS_FACING_RIGHT;
-            }
+                
+            if (samusX < spriteX)
+                gCurrentSprite.status &= ~SPRITE_STATUS_FACING_RIGHT;
+            else
+                gCurrentSprite.status |= SPRITE_STATUS_FACING_RIGHT;
         }
     }
 }
@@ -179,7 +185,7 @@ void RinkaSpawning(void)
  * @brief 3658c | 234 | Handles a rinka moving
  * 
  */
-void RinkaMove(void)
+static void RinkaMove(void)
 {
     u16 velocity;
     u32 spawnY;
@@ -196,15 +202,15 @@ void RinkaMove(void)
 
     respawn = FALSE;
     if (gCurrentSprite.status & SPRITE_STATUS_MOSAIC)
-        velocity = 0x5;
+        velocity = PIXEL_SIZE + ONE_SUB_PIXEL;
     else
-        velocity = 0x4;
+        velocity = PIXEL_SIZE;
 
     acceleration = ++gCurrentSprite.scaling;
-    velocity *= (acceleration);
+    velocity *= acceleration;
 
-    spawnY = gCurrentSprite.work3 * BLOCK_SIZE + (HALF_BLOCK_SIZE);
-    spawnX = gCurrentSprite.work2 * BLOCK_SIZE + (HALF_BLOCK_SIZE);
+    spawnY = gCurrentSprite.work3 * BLOCK_SIZE + HALF_BLOCK_SIZE;
+    spawnX = gCurrentSprite.work2 * BLOCK_SIZE + HALF_BLOCK_SIZE;
 
     if (gCurrentSprite.status & SPRITE_STATUS_FACING_DOWN)
         distanceYUp = gCurrentSprite.yPositionSpawn - spawnY;
@@ -221,7 +227,7 @@ void RinkaMove(void)
         if (gCurrentSprite.status & SPRITE_STATUS_FACING_DOWN)
         {
             totalDistance = (u16)Sqrt(distanceXRight * distanceXRight + distanceYUp * distanceYUp);
-            if (totalDistance != 0x0)
+            if (totalDistance != 0)
             {
                 gCurrentSprite.yPosition = spawnY + ((velocity * ((s32)(distanceYUp << 0xA) / totalDistance) >> 0xA));
                 gCurrentSprite.xPosition = spawnX + ((velocity * ((s32)(distanceXRight << 0xA) / totalDistance) >> 0xA));
@@ -230,7 +236,7 @@ void RinkaMove(void)
         else
         {
             totalDistance = (u16)Sqrt(distanceXRight * distanceXRight + distanceYDown * distanceYDown);
-            if (totalDistance != 0x0)
+            if (totalDistance != 0)
             {
                 gCurrentSprite.yPosition = spawnY - ((velocity * ((s32)(distanceYDown << 0xA) / totalDistance) >> 0xA));
                 gCurrentSprite.xPosition = spawnX + ((velocity * ((s32)(distanceXRight << 0xA) / totalDistance) >> 0xA));
@@ -242,7 +248,7 @@ void RinkaMove(void)
         if (gCurrentSprite.status & SPRITE_STATUS_FACING_DOWN)
         {
             totalDistance = (u16)Sqrt(distanceXLeft * distanceXLeft + distanceYUp * distanceYUp);
-            if (totalDistance != 0x0)
+            if (totalDistance != 0)
             {
                 gCurrentSprite.yPosition = spawnY + ((velocity * ((s32)(distanceYUp << 0xA) / totalDistance) >> 0xA));
                 gCurrentSprite.xPosition = spawnX - ((velocity * ((s32)(distanceXLeft << 0xA) / totalDistance) >> 0xA));
@@ -251,7 +257,7 @@ void RinkaMove(void)
         else
         {
             totalDistance = (u16)Sqrt(distanceXLeft * distanceXLeft + distanceYDown * distanceYDown);
-            if (totalDistance != 0x0)
+            if (totalDistance != 0)
             {
                 gCurrentSprite.yPosition = spawnY - ((velocity * ((s32)(distanceYDown << 0xA) / totalDistance) >> 0xA));
                 gCurrentSprite.xPosition = spawnX - ((velocity * ((s32)(distanceXLeft << 0xA) / totalDistance) >> 0xA));
@@ -263,33 +269,37 @@ void RinkaMove(void)
     {
         if (gCurrentSprite.xPosition > gSamusData.xPosition)
         {
-            if ((gCurrentSprite.xPosition - gSamusData.xPosition) > 0x400)
+            if (gCurrentSprite.xPosition - gSamusData.xPosition > BLOCK_SIZE * 16)
                 respawn++;
         }
         else
         {
-            if ((gSamusData.xPosition - gCurrentSprite.xPosition) > 0x400)
+            if (gSamusData.xPosition - gCurrentSprite.xPosition > BLOCK_SIZE * 16)
                 respawn++;
         }
     }
     else
+    {
         respawn++;
+    }
 
     if (!(gCurrentSprite.yPosition & 0x8000))
     {
         if (gCurrentSprite.yPosition > gSamusData.yPosition)
         {
-            if ((gCurrentSprite.yPosition - gSamusData.yPosition) > 0x400)
+            if (gCurrentSprite.yPosition - gSamusData.yPosition > BLOCK_SIZE * 16)
                 respawn++;
         }
         else
         {
-            if ((gSamusData.yPosition - gCurrentSprite.yPosition) > 0x400)
+            if (gSamusData.yPosition - gCurrentSprite.yPosition > BLOCK_SIZE * 16)
                 respawn++;
         }
     }
     else
+    {
         respawn++;
+    }
 
     if (respawn)
         RinkaRespawn();
@@ -299,111 +309,123 @@ void RinkaMove(void)
  * @brief 367c0 | 20 | Initializes a rinka mother brain to be spawning
  * 
  */
-void RinkaMotherBrainSpawningInit(void)
+static void RinkaMotherBrainSpawningInit(void)
 {
     gCurrentSprite.pose = RINKA_POSE_SPAWNING;
-    gCurrentSprite.currentAnimationFrame = 0x0;
-    gCurrentSprite.animationDurationCounter = 0x0;
-    gCurrentSprite.pOam = sRinkaMotherBrainOAM_Spawning;
+    gCurrentSprite.currentAnimationFrame = 0;
+    gCurrentSprite.animationDurationCounter = 0;
+    gCurrentSprite.pOam = sRinkaMotherBrainOam_Spawning;
 }
 
 /**
  * @brief 367e0 | 184 | Handles a rinka mother brain respawning
  * 
  */
-void RinkaMotherBrainRespawn(void)
+static void RinkaMotherBrainRespawn(void)
 {
     u16 spriteY;
     u16 spriteX;
     u16 samusX;
-    s32 offset;
-    u8* pSprite;
+    s32 distance;
 
-    spriteY = gCurrentSprite.work3 * BLOCK_SIZE + (HALF_BLOCK_SIZE);
-    spriteX = gCurrentSprite.work2 * BLOCK_SIZE + (HALF_BLOCK_SIZE);
+    spriteY = gCurrentSprite.work3 * BLOCK_SIZE + HALF_BLOCK_SIZE;
+    spriteX = gCurrentSprite.work2 * BLOCK_SIZE + HALF_BLOCK_SIZE;
     samusX = gSamusData.xPosition;
 
     // Check should be first or second place
     switch (gCurrentSprite.spriteId)
     {
         case PSPRITE_RINKA_MOTHER_BRAIN2:
-            offset = 0x28;
-            if (samusX < spriteX && (s32)(spriteX - samusX) > (offset * (HALF_BLOCK_SIZE)))
+            distance = (BLOCK_SIZE * 20) / HALF_BLOCK_SIZE;
+            if (samusX < spriteX && spriteX - samusX > distance * HALF_BLOCK_SIZE)
             {
                 gCurrentSprite.status |= SPRITE_STATUS_SAMUS_COLLIDING;
                 spriteY += BLOCK_SIZE;
-                spriteX -= (BLOCK_SIZE * 40);
+                spriteX -= BLOCK_SIZE * 40;
             }
             else
+            {
                 gCurrentSprite.status &= ~SPRITE_STATUS_SAMUS_COLLIDING;
+            }
             break;
 
         case PSPRITE_RINKA_MOTHER_BRAIN3:
-            offset = 0x22;
-            if (samusX < spriteX && (s32)(spriteX - samusX) > (offset * (HALF_BLOCK_SIZE)))
+            distance = (BLOCK_SIZE * 17) / HALF_BLOCK_SIZE;
+            if (samusX < spriteX && spriteX - samusX > distance * HALF_BLOCK_SIZE)
             {
                 gCurrentSprite.status |= SPRITE_STATUS_SAMUS_COLLIDING;
                 spriteY -= BLOCK_SIZE;
-                spriteX -= (BLOCK_SIZE * 34);
+                spriteX -= BLOCK_SIZE * 34;
             }
             else
+            {
                 gCurrentSprite.status &= ~SPRITE_STATUS_SAMUS_COLLIDING;
+            }
             break;
 
         case PSPRITE_RINKA_MOTHER_BRAIN4:
-            offset = 0x18;
-            if (samusX < spriteX && (s32)(spriteX - samusX) > (offset * (HALF_BLOCK_SIZE)))
+            distance = (BLOCK_SIZE * 12) / HALF_BLOCK_SIZE;
+            if (samusX < spriteX && spriteX - samusX > distance * HALF_BLOCK_SIZE)
             {
                 gCurrentSprite.status |= SPRITE_STATUS_SAMUS_COLLIDING;
-                spriteX -= (BLOCK_SIZE * 24);
+                spriteX -= BLOCK_SIZE * 24;
             }
             else
+            {
                 gCurrentSprite.status &= ~SPRITE_STATUS_SAMUS_COLLIDING;
+            }
             break;
 
         case PSPRITE_RINKA_MOTHER_BRAIN5:
-            offset = 0x1E;
-            if (samusX < spriteX && (s32)(spriteX - samusX) > (offset * (HALF_BLOCK_SIZE)))
+            distance = (BLOCK_SIZE * 15) / HALF_BLOCK_SIZE;
+            if (samusX < spriteX && spriteX - samusX > distance * HALF_BLOCK_SIZE)
             {
                 gCurrentSprite.status |= SPRITE_STATUS_SAMUS_COLLIDING;
-                spriteX -= (BLOCK_SIZE * 30);
+                spriteX -= BLOCK_SIZE * 30;
             }
             else
+            {
                 gCurrentSprite.status &= ~SPRITE_STATUS_SAMUS_COLLIDING;
+            }
             break;
 
         case PSPRITE_RINKA_MOTHER_BRAIN6:
-            offset = 0x14;
-            if (samusX < spriteX && (s32)(spriteX - samusX) > (offset * (HALF_BLOCK_SIZE)))
+            distance = (BLOCK_SIZE * 10) / HALF_BLOCK_SIZE;
+            if (samusX < spriteX && spriteX - samusX > distance * HALF_BLOCK_SIZE)
             {
                 gCurrentSprite.status |= SPRITE_STATUS_SAMUS_COLLIDING;
-                spriteX -= (BLOCK_SIZE * 20);
+                spriteX -= BLOCK_SIZE * 20;
             }
             else
+            {
                 gCurrentSprite.status &= ~SPRITE_STATUS_SAMUS_COLLIDING;
+            }
             break;
     }
 
     gCurrentSprite.yPosition = spriteY;
     gCurrentSprite.xPosition = spriteX;
     RinkaMotherBrainSpawningInit();
+
     gCurrentSprite.health = GET_PSPRITE_HEALTH(gCurrentSprite.spriteId);
-    gCurrentSprite.invincibilityStunFlashTimer = 0x0;
-    gCurrentSprite.paletteRow = 0x0;
-    gCurrentSprite.frozenPaletteRowOffset = 0x1;
-    gCurrentSprite.absolutePaletteRow = 0x0;
-    pSprite = &gCurrentSprite.ignoreSamusCollisionTimer;
-    gCurrentSprite.freezeTimer = 0x0;
-    gCurrentSprite.work1 = 0x3C;
-    gCurrentSprite.status |= (SPRITE_STATUS_NOT_DRAWN | SPRITE_STATUS_IGNORE_PROJECTILES);
-    *pSprite = 0x1;
+
+    gCurrentSprite.invincibilityStunFlashTimer = 0;
+    gCurrentSprite.paletteRow = 0;
+    gCurrentSprite.frozenPaletteRowOffset = 1;
+    gCurrentSprite.absolutePaletteRow = 0;
+
+    gCurrentSprite.ignoreSamusCollisionTimer = DELTA_TIME;
+    gCurrentSprite.freezeTimer = 0;
+    gCurrentSprite.work1 = CONVERT_SECONDS(1.f);
+    gCurrentSprite.status |= SPRITE_STATUS_NOT_DRAWN | SPRITE_STATUS_IGNORE_PROJECTILES;
+    gCurrentSprite.ignoreSamusCollisionTimer = DELTA_TIME;
 }
 
 /**
  * @brief 36964 | 110 | Handles a rinka mother brain spawning
  * 
  */
-void RinkaMotherBrainSpawning(void)
+static void RinkaMotherBrainSpawning(void)
 {
     u16 samusY;
     u16 samusX;
@@ -411,66 +433,67 @@ void RinkaMotherBrainSpawning(void)
     u16 spriteX;
 
     // Spawn delay
-    if (gCurrentSprite.work1 != 0x0)
+    if (gCurrentSprite.work1 != 0)
     {
         gCurrentSprite.ignoreSamusCollisionTimer = DELTA_TIME;
-        gCurrentSprite.work1--;
+        APPLY_DELTA_TIME_DEC(gCurrentSprite.work1);
+        return;
     }
-    else
+
+    if (gCurrentSprite.status & SPRITE_STATUS_NOT_DRAWN)
     {
-        if (gCurrentSprite.status & SPRITE_STATUS_NOT_DRAWN)
+        gCurrentSprite.ignoreSamusCollisionTimer = DELTA_TIME;
+        if (gCurrentSprite.status & SPRITE_STATUS_ONSCREEN)
         {
-            gCurrentSprite.ignoreSamusCollisionTimer = DELTA_TIME;
-            if (gCurrentSprite.status & SPRITE_STATUS_ONSCREEN)
-            {
-                gCurrentSprite.status &= ~SPRITE_STATUS_NOT_DRAWN;
-                gCurrentSprite.currentAnimationFrame = 0x0;
-                gCurrentSprite.animationDurationCounter = 0x0;
-                gCurrentSprite.work0 = 0xB;
-            }
-            else
-                RinkaMotherBrainRespawn();
+            gCurrentSprite.status &= ~SPRITE_STATUS_NOT_DRAWN;
+            gCurrentSprite.currentAnimationFrame = 0;
+            gCurrentSprite.animationDurationCounter = 0;
+            gCurrentSprite.work0 = CONVERT_SECONDS(1.f / 6 + 1.f / 60);;
         }
         else
         {
-            // Vulnerability delay
-            if (gCurrentSprite.work0 != 0x0)
-            {
-                gCurrentSprite.ignoreSamusCollisionTimer = DELTA_TIME;
-                gCurrentSprite.work0--;
-                if (gCurrentSprite.work0 == 0x0)
-                    gCurrentSprite.status &= ~SPRITE_STATUS_IGNORE_PROJECTILES;
-            }
-            else if (SpriteUtilCheckEndCurrentSpriteAnim())
-            {
-                gCurrentSprite.pOam = sRinkaMotherBrainOAM_Moving;
+            RinkaMotherBrainRespawn();
+        }
+    }
+    else
+    {
+        // Vulnerability delay
+        if (gCurrentSprite.work0 != 0)
+        {
+            gCurrentSprite.ignoreSamusCollisionTimer = DELTA_TIME;
+            APPLY_DELTA_TIME_DEC(gCurrentSprite.work0);
+            if (gCurrentSprite.work0 == 0)
+                gCurrentSprite.status &= ~SPRITE_STATUS_IGNORE_PROJECTILES;
+        }
+        else if (SpriteUtilHasCurrentAnimationEnded())
+        {
+            gCurrentSprite.pOam = sRinkaMotherBrainOam_Moving;
 
-                gCurrentSprite.pose = RINKA_POSE_MOVING;
-                gCurrentSprite.currentAnimationFrame = 0x0;
-                gCurrentSprite.animationDurationCounter = 0x0;
-                gCurrentSprite.scaling = 0x0;
+            gCurrentSprite.pose = RINKA_POSE_MOVING;
+            gCurrentSprite.currentAnimationFrame = 0;
+            gCurrentSprite.animationDurationCounter = 0;
+            gCurrentSprite.scaling = 0;
 
-                samusY = gSamusData.yPosition - 0x3C;
-                samusX = gSamusData.xPosition;
-                spriteY = gCurrentSprite.yPosition;
-                spriteX = gCurrentSprite.xPosition;
+            samusY = gSamusData.yPosition - (BLOCK_SIZE - PIXEL_SIZE);
+            samusX = gSamusData.xPosition;
+            spriteY = gCurrentSprite.yPosition;
+            spriteX = gCurrentSprite.xPosition;
 
-                // Set destination position
-                gCurrentSprite.yPositionSpawn = samusY;
-                gCurrentSprite.xPositionSpawn = samusX;
+            // Set destination position
+            gCurrentSprite.yPositionSpawn = samusY;
+            gCurrentSprite.xPositionSpawn = samusX;
 
-                // Set direction
-                if (samusY < spriteY)
-                    gCurrentSprite.status &= ~SPRITE_STATUS_FACING_DOWN;
-                else
-                    gCurrentSprite.status |= SPRITE_STATUS_FACING_DOWN;
+            // Set direction
+            if (samusY < spriteY)
+                gCurrentSprite.status &= ~SPRITE_STATUS_FACING_DOWN;
+            else
+                gCurrentSprite.status |= SPRITE_STATUS_FACING_DOWN;
 
-                    
-                if (samusX < spriteX)
-                    gCurrentSprite.status &= ~SPRITE_STATUS_FACING_RIGHT;
-                else
-                    gCurrentSprite.status |= SPRITE_STATUS_FACING_RIGHT;
-            }
+                
+            if (samusX < spriteX)
+                gCurrentSprite.status &= ~SPRITE_STATUS_FACING_RIGHT;
+            else
+                gCurrentSprite.status |= SPRITE_STATUS_FACING_RIGHT;
         }
     }
 }
@@ -479,7 +502,7 @@ void RinkaMotherBrainSpawning(void)
  * @brief 36a74 | 2c0 | Handles the movement of a rinka mother brain
  * 
  */
-void RinkaMotherBrainMove(void)
+static void RinkaMotherBrainMove(void)
 {
     u16 velocity;
     u8 tileY;
@@ -499,7 +522,7 @@ void RinkaMotherBrainMove(void)
     respawn = FALSE;
 
     acceleration = ++gCurrentSprite.scaling;
-    velocity = acceleration * 4;
+    velocity = acceleration * PIXEL_SIZE;
 
     tileX = gCurrentSprite.work2;
     tileY = gCurrentSprite.work3;
@@ -510,37 +533,37 @@ void RinkaMotherBrainMove(void)
         case PSPRITE_RINKA_MOTHER_BRAIN2:
             if (gCurrentSprite.status & SPRITE_STATUS_SAMUS_COLLIDING)
             {
-                tileX -= 0x28;
-                tileY += 0x1;
+                tileX -= HALF_BLOCK_SIZE + EIGHTH_BLOCK_SIZE;
+                tileY += ONE_SUB_PIXEL;
             }
             break;
 
         case PSPRITE_RINKA_MOTHER_BRAIN3:
             if (gCurrentSprite.status & SPRITE_STATUS_SAMUS_COLLIDING)
             {
-                tileX -= 0x22;
-                tileY -= 0x1;
+                tileX -= HALF_BLOCK_SIZE + PIXEL_SIZE / 2;
+                tileY -= ONE_SUB_PIXEL;
             }
             break;
 
         case PSPRITE_RINKA_MOTHER_BRAIN4:
             if (gCurrentSprite.status & SPRITE_STATUS_SAMUS_COLLIDING)
-                tileX -= 0x18;
+                tileX -= QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE;
             break;
 
         case PSPRITE_RINKA_MOTHER_BRAIN5:
             if (gCurrentSprite.status & SPRITE_STATUS_SAMUS_COLLIDING)
-                tileX -= 0x1E;
+                tileX -= HALF_BLOCK_SIZE - PIXEL_SIZE / 2;
             break;
 
         case PSPRITE_RINKA_MOTHER_BRAIN6:
             if (gCurrentSprite.status & SPRITE_STATUS_SAMUS_COLLIDING)
-                tileX -= 0x14;
+                tileX -= QUARTER_BLOCK_SIZE + PIXEL_SIZE;
             break;
     }
 
-    spawnY = tileY * BLOCK_SIZE + (HALF_BLOCK_SIZE);
-    spawnX = tileX * BLOCK_SIZE + (HALF_BLOCK_SIZE);
+    spawnY = BLOCK_TO_SUB_PIXEL(tileY) + HALF_BLOCK_SIZE;
+    spawnX = BLOCK_TO_SUB_PIXEL(tileX) + HALF_BLOCK_SIZE;
 
     if (gCurrentSprite.status & SPRITE_STATUS_FACING_DOWN)
         distanceYUp = gCurrentSprite.yPositionSpawn - spawnY;
@@ -557,7 +580,7 @@ void RinkaMotherBrainMove(void)
         if (gCurrentSprite.status & SPRITE_STATUS_FACING_DOWN)
         {
             totalDistance = (u16)Sqrt(distanceXRight * distanceXRight + distanceYUp * distanceYUp);
-            if (totalDistance != 0x0)
+            if (totalDistance != 0)
             {
                 gCurrentSprite.yPosition = spawnY + ((velocity * ((s32)(distanceYUp << 0xA) / totalDistance) >> 0xA));
                 gCurrentSprite.xPosition = spawnX + ((velocity * ((s32)(distanceXRight << 0xA) / totalDistance) >> 0xA));
@@ -566,7 +589,7 @@ void RinkaMotherBrainMove(void)
         else
         {
             totalDistance = (u16)Sqrt(distanceXRight * distanceXRight + distanceYDown * distanceYDown);
-            if (totalDistance != 0x0)
+            if (totalDistance != 0)
             {
                 gCurrentSprite.yPosition = spawnY - ((velocity * ((s32)(distanceYDown << 0xA) / totalDistance) >> 0xA));
                 gCurrentSprite.xPosition = spawnX + ((velocity * ((s32)(distanceXRight << 0xA) / totalDistance) >> 0xA));
@@ -578,7 +601,7 @@ void RinkaMotherBrainMove(void)
         if (gCurrentSprite.status & SPRITE_STATUS_FACING_DOWN)
         {
             totalDistance = (u16)Sqrt(distanceXLeft * distanceXLeft + distanceYUp * distanceYUp);
-            if (totalDistance != 0x0)
+            if (totalDistance != 0)
             {
                 gCurrentSprite.yPosition = spawnY + ((velocity * ((s32)(distanceYUp << 0xA) / totalDistance) >> 0xA));
                 gCurrentSprite.xPosition = spawnX - ((velocity * ((s32)(distanceXLeft << 0xA) / totalDistance) >> 0xA));
@@ -587,7 +610,7 @@ void RinkaMotherBrainMove(void)
         else
         {
             totalDistance = (u16)Sqrt(distanceXLeft * distanceXLeft + distanceYDown * distanceYDown);
-            if (totalDistance != 0x0)
+            if (totalDistance != 0)
             {
                 gCurrentSprite.yPosition = spawnY - ((velocity * ((s32)(distanceYDown << 0xA) / totalDistance) >> 0xA));
                 gCurrentSprite.xPosition = spawnX - ((velocity * ((s32)(distanceXLeft << 0xA) / totalDistance) >> 0xA));
@@ -599,33 +622,37 @@ void RinkaMotherBrainMove(void)
     {
         if (gCurrentSprite.xPosition > gSamusData.xPosition)
         {
-            if ((gCurrentSprite.xPosition - gSamusData.xPosition) > 0x400)
+            if ((gCurrentSprite.xPosition - gSamusData.xPosition) > BLOCK_SIZE * 16)
                 respawn++;
         }
         else
         {
-            if ((gSamusData.xPosition - gCurrentSprite.xPosition) > 0x400)
+            if ((gSamusData.xPosition - gCurrentSprite.xPosition) > BLOCK_SIZE * 16)
                 respawn++;
         }
     }
     else
+    {
         respawn++;
+    }
 
     if (!(gCurrentSprite.yPosition & 0x8000))
     {
         if (gCurrentSprite.yPosition > gSamusData.yPosition)
         {
-            if ((gCurrentSprite.yPosition - gSamusData.yPosition) > 0x400)
+            if ((gCurrentSprite.yPosition - gSamusData.yPosition) > BLOCK_SIZE * 16)
                 respawn++;
         }
         else
         {
-            if ((gSamusData.yPosition - gCurrentSprite.yPosition) > 0x400)
+            if ((gSamusData.yPosition - gCurrentSprite.yPosition) > BLOCK_SIZE * 16)
                 respawn++;
         }
     }
     else
+    {
         respawn++;
+    }
 
     if (respawn)
         RinkaMotherBrainRespawn();
@@ -637,42 +664,43 @@ void RinkaMotherBrainMove(void)
  */
 void Rinka(void)
 {
-    if (gCurrentSprite.freezeTimer != 0x0)
-        SpriteUtilUpdateFreezeTimer();
-    else
+    if (gCurrentSprite.freezeTimer != 0)
     {
-        if (SpriteUtilIsSpriteStunned())
-            return;
+        SpriteUtilUpdateFreezeTimer();
+        return;
+    }
 
-        switch (gCurrentSprite.pose)
-        {
-            case 0x0:
-                RinkaInit();
-                
-            case RINKA_POSE_SPAWNING_INIT:
-                RinkaSpawningInit();
+    if (SpriteUtilIsSpriteStunned())
+        return;
 
-            case RINKA_POSE_SPAWNING:
-                RinkaSpawning();
-                break;
+    switch (gCurrentSprite.pose)
+    {
+        case SPRITE_POSE_UNINITIALIZED:
+            RinkaInit();
+            
+        case RINKA_POSE_SPAWNING_INIT:
+            RinkaSpawningInit();
 
-            case RINKA_POSE_MOVING:
-                RinkaMove();
-                break;
+        case RINKA_POSE_SPAWNING:
+            RinkaSpawning();
+            break;
 
-            default:
-                if (SpriteUtilCheckHasDrops())
-                {
-                    SpriteUtilSpriteDeath(DEATH_NO_DEATH_OR_RESPAWNING_ALREADY_HAS_DROP, gCurrentSprite.yPosition,
-                        gCurrentSprite.xPosition, TRUE, PE_SPRITE_EXPLOSION_MEDIUM);
-                }
-                else
-                {
-                    SpriteUtilSpriteDeath(DEATH_RESPAWNING, gCurrentSprite.yPosition, gCurrentSprite.xPosition,
-                        TRUE, PE_SPRITE_EXPLOSION_MEDIUM);
-                }
-                RinkaRespawn();
-        }
+        case RINKA_POSE_MOVING:
+            RinkaMove();
+            break;
+
+        default:
+            if (SpriteUtilCheckHasDrops())
+            {
+                SpriteUtilSpriteDeath(DEATH_NO_DEATH_OR_RESPAWNING_ALREADY_HAS_DROP, gCurrentSprite.yPosition,
+                    gCurrentSprite.xPosition, TRUE, PE_SPRITE_EXPLOSION_MEDIUM);
+            }
+            else
+            {
+                SpriteUtilSpriteDeath(DEATH_RESPAWNING, gCurrentSprite.yPosition, gCurrentSprite.xPosition,
+                    TRUE, PE_SPRITE_EXPLOSION_MEDIUM);
+            }
+            RinkaRespawn();
     }
 }
 
@@ -697,46 +725,46 @@ void RinkaMotherBrain(void)
             gCurrentSprite.standingOnSprite = SAMUS_STANDING_ON_SPRITE_OFF;
         }
 
-        gCurrentSprite.status = 0x0;
+        gCurrentSprite.status = 0;
+        return;
     }
-    else
+
+    if (gCurrentSprite.freezeTimer != 0)
     {
-        if (gCurrentSprite.freezeTimer != 0x0)
-            SpriteUtilUpdateFreezeTimer();
-        else
-        {
-            if (SpriteUtilIsSpriteStunned())
-                return;
+        SpriteUtilUpdateFreezeTimer();
+        return;
+    }
 
-            switch (gCurrentSprite.pose)
+    if (SpriteUtilIsSpriteStunned())
+        return;
+
+    switch (gCurrentSprite.pose)
+    {
+        case SPRITE_POSE_UNINITIALIZED:
+            RinkaInit();
+            
+        case RINKA_POSE_SPAWNING_INIT:
+            RinkaMotherBrainSpawningInit();
+
+        case RINKA_POSE_SPAWNING:
+            RinkaMotherBrainSpawning();
+            break;
+
+        case RINKA_POSE_MOVING:
+            RinkaMotherBrainMove();
+            break;
+
+        default:
+            if (SpriteUtilCheckHasDrops())
             {
-                case 0x0:
-                    RinkaInit();
-                    
-                case RINKA_POSE_SPAWNING_INIT:
-                    RinkaMotherBrainSpawningInit();
-
-                case RINKA_POSE_SPAWNING:
-                    RinkaMotherBrainSpawning();
-                    break;
-
-                case RINKA_POSE_MOVING:
-                    RinkaMotherBrainMove();
-                    break;
-
-                default:
-                    if (SpriteUtilCheckHasDrops())
-                    {
-                        SpriteUtilSpriteDeath(DEATH_NO_DEATH_OR_RESPAWNING_ALREADY_HAS_DROP, gCurrentSprite.yPosition,
-                            gCurrentSprite.xPosition, TRUE, PE_SPRITE_EXPLOSION_MEDIUM);
-                    }
-                    else
-                    {
-                        SpriteUtilSpriteDeath(DEATH_RESPAWNING, gCurrentSprite.yPosition, gCurrentSprite.xPosition,
-                            TRUE, PE_SPRITE_EXPLOSION_MEDIUM);
-                    }
-                    RinkaMotherBrainRespawn();
+                SpriteUtilSpriteDeath(DEATH_NO_DEATH_OR_RESPAWNING_ALREADY_HAS_DROP, gCurrentSprite.yPosition,
+                    gCurrentSprite.xPosition, TRUE, PE_SPRITE_EXPLOSION_MEDIUM);
             }
-        }
+            else
+            {
+                SpriteUtilSpriteDeath(DEATH_RESPAWNING, gCurrentSprite.yPosition, gCurrentSprite.xPosition,
+                    TRUE, PE_SPRITE_EXPLOSION_MEDIUM);
+            }
+            RinkaMotherBrainRespawn();
     }
 }

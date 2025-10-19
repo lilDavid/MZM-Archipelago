@@ -13,6 +13,6 @@
 
 void IoWriteRegisters(void);
 void IoWriteRegistersDuringTransition(void);
-void IoUpdateDISPCNT(u8 operation, u16 value);
+void IoUpdateDispcnt(u8 operation, u16 value);
 
 #endif /* DISPLAY_H */

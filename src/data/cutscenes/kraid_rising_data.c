@@ -71,73 +71,73 @@ const struct OamArray sKraidRisingCutsceneOam[KRAID_RISING_OAM_ID_END] = {
 };
 
 const u16 sKraidRisingOam_Samus_Frame0[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xd0, OBJ_SIZE_64x64 | 0x1e0, 0x0
+    1,
+    OAM_ENTRY(-32, -48, OAM_DIMS_64x64, OAM_NO_FLIP, 0x0, 0, 0),
 };
 
 const u16 sKraidRisingOam_Samus_Frame1[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xcf, OBJ_SIZE_64x64 | 0x1e0, 0x0
+    1,
+    OAM_ENTRY(-32, -49, OAM_DIMS_64x64, OAM_NO_FLIP, 0x0, 0, 0),
 };
 
 const u16 sKraidRisingOam_Debris_Frame0[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xf8, 0x1f8, 0x1008
+    1,
+    OAM_ENTRY(-8, -8, OAM_DIMS_8x8, OAM_NO_FLIP, 0x8, 1, 0),
 };
 
 const u16 sKraidRisingOam_Debris_Frame1[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xf8, 0x1f8, 0x1009
+    1,
+    OAM_ENTRY(-8, -8, OAM_DIMS_8x8, OAM_NO_FLIP, 0x9, 1, 0),
 };
 
 const u16 sKraidRisingOam_Debris_Frame2[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xf8, 0x1f8, 0x100a
+    1,
+    OAM_ENTRY(-8, -8, OAM_DIMS_8x8, OAM_NO_FLIP, 0xa, 1, 0),
 };
 
 const u16 sKraidRisingOam_Debris_Frame3[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xf8, 0x1f8, 0x100b
+    1,
+    OAM_ENTRY(-8, -8, OAM_DIMS_8x8, OAM_NO_FLIP, 0xb, 1, 0),
 };
 
 const u16 sKraidRisingOam_SmallPuff_Frame0[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xf8, OBJ_SIZE_16x16 | 0x1f8, 0x1028
+    1,
+    OAM_ENTRY(-8, -8, OAM_DIMS_16x16, OAM_NO_FLIP, 0x28, 1, 0),
 };
 
 const u16 sKraidRisingOam_SmallPuff_Frame1[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xf8, OBJ_SIZE_16x16 | 0x1f8, 0x102a
+    1,
+    OAM_ENTRY(-8, -8, OAM_DIMS_16x16, OAM_NO_FLIP, 0x2a, 1, 0),
 };
 
 const u16 sKraidRisingOam_SmallPuff_Frame2[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xf8, OBJ_SIZE_16x16 | 0x1f8, 0x102c
+    1,
+    OAM_ENTRY(-8, -8, OAM_DIMS_16x16, OAM_NO_FLIP, 0x2c, 1, 0),
 };
 
 const u16 sKraidRisingOam_SmallPuff_Frame3[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xf8, OBJ_SIZE_16x16 | 0x1f8, 0x102e
+    1,
+    OAM_ENTRY(-8, -8, OAM_DIMS_16x16, OAM_NO_FLIP, 0x2e, 1, 0),
 };
 
 const u16 sKraidRisingOam_BigPuff_Frame0[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xf0, OBJ_SIZE_32x32 | 0x1f0, 0x1068
+    1,
+    OAM_ENTRY(-16, -16, OAM_DIMS_32x32, OAM_NO_FLIP, 0x68, 1, 0),
 };
 
 const u16 sKraidRisingOam_BigPuff_Frame1[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xf0, OBJ_SIZE_32x32 | 0x1f0, 0x106c
+    1,
+    OAM_ENTRY(-16, -16, OAM_DIMS_32x32, OAM_NO_FLIP, 0x6c, 1, 0),
 };
 
 const u16 sKraidRisingOam_BigPuff_Frame2[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xf0, OBJ_SIZE_32x32 | 0x1f0, 0x1070
+    1,
+    OAM_ENTRY(-16, -16, OAM_DIMS_32x32, OAM_NO_FLIP, 0x70, 1, 0),
 };
 
 const u16 sKraidRisingOam_BigPuff_Frame3[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xf0, OBJ_SIZE_32x32 | 0x1f0, 0x1074
+    1,
+    OAM_ENTRY(-16, -16, OAM_DIMS_32x32, OAM_NO_FLIP, 0x74, 1, 0),
 };
 
 const struct FrameData sKraidRisingOam_Samus[3] = {
@@ -212,18 +212,18 @@ const struct FrameData sKraidRisingOam_BigPuff[5] = {
     [4] = FRAME_DATA_TERMINATOR
 };
 
-const u16 sKraidRisingCloseUpPal[5 * 16] = INCBIN_U16("data/cutscenes/KraidRising/CloseUp.pal");
-const u16 sKraidRisingSamusPal[1 * 16] = INCBIN_U16("data/cutscenes/KraidRising/Samus.pal");
-const u16 sKraidRisingParticlesPal[1 * 16] = INCBIN_U16("data/cutscenes/KraidRising/Particles.pal");
-const u16 sKraidRisingSamusVariaPal[1 * 16] = INCBIN_U16("data/cutscenes/KraidRising/SamusVaria.pal");
-const u16 sKraidRisingRisingPal[7 * 16] = INCBIN_U16("data/cutscenes/KraidRising/Rising.pal");
-const u32 sKraidRisingKraidCloseUpGfx[3087] = INCBIN_U32("data/cutscenes/KraidRising/CloseUp.gfx.lz");
-const u32 sKraidRisingOamGfx[753] = INCBIN_U32("data/cutscenes/KraidRising/OAM.gfx.lz");
-const u32 sKraidRisingKraidRisingGfx[1609] = INCBIN_U32("data/cutscenes/KraidRising/KraidRising.gfx.lz");
-const u32 sKraidRisingCaveBackroundGfx[1327] = INCBIN_U32("data/cutscenes/KraidRising/CaveBackround.gfx.lz");
-const u32 sKraidRisingKraidCloseUpEyesClosedTileTable[368] = INCBIN_U32("data/cutscenes/KraidRising/KraidCloseUpEyesClosed.tt");
-const u32 sKraidRisingKraidCloseUpEyesBarelyOpenedTileTable[368] = INCBIN_U32("data/cutscenes/KraidRising/KraidCloseUpEyesBarelyOpened.tt");
-const u32 sKraidRisingKraidCloseUpEyesALittleOpenedTileTable[368] = INCBIN_U32("data/cutscenes/KraidRising/KraidCloseUpEyesALittleOpened.tt");
-const u32 sKraidRisingKraidCloseUpEyesOpenedTileTable[368] = INCBIN_U32("data/cutscenes/KraidRising/KraidCloseUpEyesOpened.tt");
-const u32 sKraidRisingKraidRisingTileTable[295] = INCBIN_U32("data/cutscenes/KraidRising/KraidRising.tt");
-const u32 sKraidRisingCaveBackgroundTileTable[370] = INCBIN_U32("data/cutscenes/KraidRising/CaveBackground.tt");
+const u16 sKraidRisingCloseUpPal[5 * 16] = INCBIN_U16("data/cutscenes/kraid_rising/close_up.pal");
+const u16 sKraidRisingSamusPal[1 * 16] = INCBIN_U16("data/cutscenes/kraid_rising/samus.pal");
+const u16 sKraidRisingParticlesPal[1 * 16] = INCBIN_U16("data/cutscenes/kraid_rising/particles.pal");
+const u16 sKraidRisingSamusVariaPal[1 * 16] = INCBIN_U16("data/cutscenes/kraid_rising/samus_varia.pal");
+const u16 sKraidRisingRisingPal[7 * 16] = INCBIN_U16("data/cutscenes/kraid_rising/rising.pal");
+const u32 sKraidRisingKraidCloseUpGfx[3087] = INCBIN_U32("data/cutscenes/kraid_rising/close_up.gfx.lz");
+const u32 sKraidRisingOamGfx[753] = INCBIN_U32("data/cutscenes/kraid_rising/oam.gfx.lz");
+const u32 sKraidRisingKraidRisingGfx[1609] = INCBIN_U32("data/cutscenes/kraid_rising/kraid_rising.gfx.lz");
+const u32 sKraidRisingCaveBackgroundGfx[1327] = INCBIN_U32("data/cutscenes/kraid_rising/cave_background.gfx.lz");
+const u32 sKraidRisingKraidCloseUpEyesClosedTileTable[368] = INCBIN_U32("data/cutscenes/kraid_rising/kraid_close_up_eyes_closed.tt");
+const u32 sKraidRisingKraidCloseUpEyesBarelyOpenedTileTable[368] = INCBIN_U32("data/cutscenes/kraid_rising/kraid_close_up_eyes_barely_opened.tt");
+const u32 sKraidRisingKraidCloseUpEyesALittleOpenedTileTable[368] = INCBIN_U32("data/cutscenes/kraid_rising/kraid_close_up_eyes_a_little_opened.tt");
+const u32 sKraidRisingKraidCloseUpEyesOpenedTileTable[368] = INCBIN_U32("data/cutscenes/kraid_rising/kraid_close_up_eyes_opened.tt");
+const u32 sKraidRisingKraidRisingTileTable[295] = INCBIN_U32("data/cutscenes/kraid_rising/kraid_rising.tt");
+const u32 sKraidRisingCaveBackgroundTileTable[370] = INCBIN_U32("data/cutscenes/kraid_rising/cave_background.tt");

@@ -3,6 +3,9 @@
 
 #include "types.h"
 
+#include "constants/connection.h"
+#include "constants/in_game_cutscene.h"
+
 typedef u32 (*InGameCutsceneFunc_T)(u8, u8);
 
 struct SuitFlashEffect {
@@ -16,15 +19,15 @@ struct SuitFlashEffect {
 struct InGameCutscene {
     u16 timer;
     u8 stage;
-    u8 cutsceneNumber;
-    u8 queuedCutscene;
+    InGameCutsceneScene cutsceneNumber;
+    InGameCutsceneScene queuedCutscene;
     u8 unknown;
     InGameCutsceneFunc_T pSubroutine;
 };
 
 struct InGameCutsceneData {
     u8 unk_0;
-    u8 area;
+    Area area;
     InGameCutsceneFunc_T pSubroutine;
 };
 

@@ -2,6 +2,15 @@
 #define HUD_STRUCT_H
 
 #include "types.h"
+#include "macros.h"
+
+// Defines
+
+MAKE_ENUM(u8, HudHighlightStatus) {
+    HIGHLIGHT_STATUS_NOT_HIGHLIGHTED,
+    HIGHLIGHT_STATUS_SELECTED,
+    HIGHLIGHT_STATUS_HIGHLIGHTED
+};
 
 // Structs
 
@@ -14,10 +23,10 @@ struct HudDigits {
 
 // Globals
 
-extern u8 gHideHud;
-extern u8 gMissileHighlightStatus;
-extern u8 gPowerBombHighlightStatus;
-extern u8 gSuperMissileHighlightStatus;
+extern boolu8 gHideHud;
+extern HudHighlightStatus gMissileHighlightStatus;
+extern HudHighlightStatus gPowerBombHighlightStatus;
+extern HudHighlightStatus gSuperMissileHighlightStatus;
 
 extern struct HudDigits gEnergyDigits;
 extern struct HudDigits gMaxEnergyDigits;
@@ -32,4 +41,4 @@ extern u8 gPowerBombRefillAnimation;
 
 extern u8 gAmmoDigitsGfx[64];
 
-#endif
+#endif /* HUD_STRUCT_H */

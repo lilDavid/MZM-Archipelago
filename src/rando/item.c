@@ -11,7 +11,7 @@
 #include "constants/sprite.h"
 
 #include "data/block_data.h"
-#include "data/text_pointers.h"
+#include "data/text_data.h"
 #include "data/rando_data.h"
 
 #include "structs/demo.h"
@@ -21,6 +21,11 @@
 #include "structs/samus.h"
 #include "structs/sprite.h"
 #include "structs/text.h"
+
+#include "rando/macros.h"
+
+
+#define CHAR_0 0x0050
 
 
 static u32 RandoGetRegion(u32 location) {
@@ -285,7 +290,7 @@ void RandoGiveItemFromCheck(u32 location) {
     if (!gIgnoreLocalItems)
         RandoGiveItem(&placement->item);
 
-    SpriteSpawnPrimary(PSPRITE_ITEM_BANNER, messageID, 6, gSamusData.yPosition, gSamusData.xPosition, 0);
+    SpriteSpawnPrimary(PSPRITE_MESSAGE_BANNER, messageID, 6, gSamusData.yPosition, gSamusData.xPosition, 0);
 }
 
 u32 RandoGetFinalCompletionPercentage(void) {
@@ -327,7 +332,7 @@ void RandoPlaceItemInSpriteGraphics(u32 location, u32 row, u32 column, u32 palet
         }
     }
 
-    if (gGameModeSub1 == SUB_GAME_MODE_DOOR_TRANSITION || gGameModeSub1 == SUB_GAME_MODE_LOADING_ROOM || location == RC_BRINSTAR_MORPH_BALL)
+    if (gSubGameMode1 == SUB_GAME_MODE_DOOR_TRANSITION || gSubGameMode1 == SUB_GAME_MODE_LOADING_ROOM || location == RC_BRINSTAR_MORPH_BALL)
         pal = EWRAM_BASE + 0x35700;
     else
         pal = PALRAM_BASE + 0x300;

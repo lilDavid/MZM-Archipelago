@@ -3,14 +3,16 @@
 
 #include "types.h"
 
+#include "constants/connection.h"
+
 // Structs
 
 struct ElevatorPair {
-    u8 area1;
+    Area area1;
     u8 room1;
     u8 mapX1;
     u8 mapY1;
-    u8 area2;
+    Area area2;
     u8 room2;
     u8 mapX2;
     u8 mapY2;
@@ -51,4 +53,4 @@ extern struct TilemapAndClipPointers gTilemapAndClipPointers;
 extern u16 gEffectYPosition;
 extern s16 gEffectYPositionOffset;
 
-#endif
+#endif /* CLIPDATA_STRUCT_H */

@@ -3,7 +3,9 @@
 
 #include "types.h"
 
-void CheckPlayRoomMusicTrack(u8 area, u8 room);
+#include "constants/connection.h"
+
+void CheckPlayRoomMusicTrack(Area area, u8 room);
 void CheckPlayLoadingJingle(void);
 void UpdateMusicWhenPausing(void);
 void UpdateMusicAfterPause(void);

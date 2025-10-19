@@ -1,10 +1,10 @@
 #include "animated_graphics.h"
+#include "dma.h"
 #include "gba.h"
 #include "macros.h"
 #include "sprite.h"
 #include "color_effects.h"
 
-#include "data/engine_pointers.h"
 #include "data/shortcut_pointers.h"
 #include "data/animated_graphics_data.h"
 #include "data/animated_tiles_data.h"
@@ -21,6 +21,21 @@
 #include "structs/color_effects.h"
 #include "structs/power_bomb_explosion.h"
 #include "structs/room.h"
+
+static const BackgroundEffectBehaviorEntry_T* sBackgroundEffectBehaviorPointers[BACKGROUND_EFFECT_END] = {
+    [BACKGROUND_EFFECT_NONE] = sBackgroundEffectBehavior_Lightning,
+    [BACKGROUND_EFFECT_LIGHTNING] = sBackgroundEffectBehavior_Lightning,
+    [BACKGROUND_EFFECT_SLIGHT_YELLOW] = sBackgroundEffectBehavior_SlightYellow,
+    [BACKGROUND_EFFECT_HEAVY_YELLOW] = sBackgroundEffectBehavior_HeavyYellow,
+    [BACKGROUND_EFFECT_EXIT_ZEBES_FADE] = sBackgroundEffectBehavior_ExitZebes,
+    [BACKGROUND_EFFECT_INTRO_TEXT_FADE] = sBackgroundEffectBehavior_IntroText,
+    [BACKGROUND_EFFECT_QUICK_FLASH] = sBackgroundEffectBehavior_QuickFlash,
+    [BACKGROUND_EFFECT_ALL_BLACK] = sBackgroundEffectBehavior_AllBlackWhite,
+    [BACKGROUND_EFFECT_ALL_WHITE] = sBackgroundEffectBehavior_AllBlackWhite,
+};
+
+static u16 BackgroundEffectProcess(void);
+
 
 /**
  * @brief 5dd5c | 270 | Transfers the animated graphics to VRAM
@@ -69,26 +84,46 @@ void AnimatedGraphicsTransfer(void)
 
     if (gAnimatedGraphicsToUpdate & 1 << 12)
     {
+        #ifdef REGION_EU
+        DmaTransfer(3, ANIMATED_GFX_EWRAM_POS(12), ANIMATED_GFX_VRAM_POS(12), ANIMATED_GFX_SIZE, 16);
+        DmaTransfer(3, ANIMATED_GFX_EWRAM_POS(12), ANIMATED_GFX_VRAM_END_POS(3), ANIMATED_GFX_SIZE, 16);
+        #else // !REGION_EU
         DMA_SET(3, ANIMATED_GFX_EWRAM_POS(12), ANIMATED_GFX_VRAM_POS(12), C_32_2_16(DMA_ENABLE, ANIMATED_GFX_SIZE_16_BITS));
         DMA_SET(3, ANIMATED_GFX_EWRAM_POS(12), ANIMATED_GFX_VRAM_END_POS(3), C_32_2_16(DMA_ENABLE, ANIMATED_GFX_SIZE_16_BITS));
+        #endif // REGION_EU
     }
 
     if (gAnimatedGraphicsToUpdate & 1 << 13)
     {
+        #ifdef REGION_EU
+        DmaTransfer(3, ANIMATED_GFX_EWRAM_POS(13), ANIMATED_GFX_VRAM_POS(13), ANIMATED_GFX_SIZE, 16);
+        DmaTransfer(3, ANIMATED_GFX_EWRAM_POS(13), ANIMATED_GFX_VRAM_END_POS(2), ANIMATED_GFX_SIZE, 16);
+        #else // !REGION_EU
         DMA_SET(3, ANIMATED_GFX_EWRAM_POS(13), ANIMATED_GFX_VRAM_POS(13), C_32_2_16(DMA_ENABLE, ANIMATED_GFX_SIZE_16_BITS));
         DMA_SET(3, ANIMATED_GFX_EWRAM_POS(13), ANIMATED_GFX_VRAM_END_POS(2), C_32_2_16(DMA_ENABLE, ANIMATED_GFX_SIZE_16_BITS));
+        #endif // REGION_EU
     }
 
     if (gAnimatedGraphicsToUpdate & 1 << 14)
     {
+        #ifdef REGION_EU
+        DmaTransfer(3, ANIMATED_GFX_EWRAM_POS(14), ANIMATED_GFX_VRAM_POS(14), ANIMATED_GFX_SIZE, 16);
+        DmaTransfer(3, ANIMATED_GFX_EWRAM_POS(14), ANIMATED_GFX_VRAM_END_POS(1), ANIMATED_GFX_SIZE, 16);
+        #else // !REGION_EU
         DMA_SET(3, ANIMATED_GFX_EWRAM_POS(14), ANIMATED_GFX_VRAM_POS(14), C_32_2_16(DMA_ENABLE, ANIMATED_GFX_SIZE_16_BITS));
         DMA_SET(3, ANIMATED_GFX_EWRAM_POS(14), ANIMATED_GFX_VRAM_END_POS(1), C_32_2_16(DMA_ENABLE, ANIMATED_GFX_SIZE_16_BITS));
+        #endif // REGION_EU
     }
 
     if (gAnimatedGraphicsToUpdate & 1 << 15)
     {
+        #ifdef REGION_EU
+        DmaTransfer(3, ANIMATED_GFX_EWRAM_POS(15), ANIMATED_GFX_VRAM_POS(15), ANIMATED_GFX_SIZE, 16);
+        DmaTransfer(3, ANIMATED_GFX_EWRAM_POS(15), ANIMATED_GFX_VRAM_END_POS(0), ANIMATED_GFX_SIZE, 16);
+        #else // !REGION_EU
         DMA_SET(3, ANIMATED_GFX_EWRAM_POS(15), ANIMATED_GFX_VRAM_POS(15), C_32_2_16(DMA_ENABLE, ANIMATED_GFX_SIZE_16_BITS));
         DMA_SET(3, ANIMATED_GFX_EWRAM_POS(15), ANIMATED_GFX_VRAM_END_POS(0), C_32_2_16(DMA_ENABLE, ANIMATED_GFX_SIZE_16_BITS));
+        #endif // REGION_EU
     }
 
     gAnimatedGraphicsToUpdate = 0;
@@ -275,7 +310,11 @@ void AnimatedGraphicsLoad(void)
     }
 
     // Some backup?
+    #ifdef REGION_EU
+    DmaTransfer(3, ANIMATED_GFX_VRAM_POS(12), ANIMATED_GFX_VRAM_END_POS(4 - 1), ANIMATED_GFX_SIZE * 4, 16);
+    #else // !REGION_EU
     DMA_SET(3, ANIMATED_GFX_VRAM_POS(12), ANIMATED_GFX_VRAM_END_POS(4 - 1), C_32_2_16(DMA_ENABLE, ANIMATED_GFX_SIZE * 4 / 2));
+    #endif // REGION_EU
 }
 
 /**
@@ -352,7 +391,7 @@ void AnimatedPaletteUpdate(void)
     update = FALSE;
 
     // Update timer
-    APPLY_DELTA_TIME_INC(gAnimatedPaletteTiming.timer);
+    APPLY_DELTA_TIME_INC(gAnimatedPaletteTiming.timer1);
 
     switch (sAnimatedPaletteEntries[gAnimatedGraphicsEntry.palette].type)
     {
@@ -362,14 +401,14 @@ void AnimatedPaletteUpdate(void)
 
         case ANIMATED_PALETTE_TYPE_NORMAL:
             // Standard animation progression
-            if (sAnimatedPaletteEntries[gAnimatedGraphicsEntry.palette].framesPerState <= gAnimatedPaletteTiming.timer)
+            if (sAnimatedPaletteEntries[gAnimatedGraphicsEntry.palette].framesPerState <= gAnimatedPaletteTiming.timer1)
             {
-                gAnimatedPaletteTiming.timer = 0;
-                gAnimatedPaletteTiming.row++;
+                gAnimatedPaletteTiming.timer1 = 0;
+                gAnimatedPaletteTiming.row1++;
 
-                if (sAnimatedPaletteEntries[gAnimatedGraphicsEntry.palette].numbersOfStates <= gAnimatedPaletteTiming.row)
+                if (sAnimatedPaletteEntries[gAnimatedGraphicsEntry.palette].numbersOfStates <= gAnimatedPaletteTiming.row1)
                 {
-                    gAnimatedPaletteTiming.row = 0;
+                    gAnimatedPaletteTiming.row1 = 0;
                     if (gDisableAnimatedPalette < 0)
                         gDisableAnimatedPalette = TRUE;
 
@@ -379,17 +418,17 @@ void AnimatedPaletteUpdate(void)
             break;
 
         case ANIMATED_PALETTE_TYPE_ALTERNATE:
-            if (sAnimatedPaletteEntries[gAnimatedGraphicsEntry.palette].framesPerState <= gAnimatedPaletteTiming.timer)
+            if (sAnimatedPaletteEntries[gAnimatedGraphicsEntry.palette].framesPerState <= gAnimatedPaletteTiming.timer1)
             {
-                gAnimatedPaletteTiming.timer = 0;
-                gAnimatedPaletteTiming.row++;
-                if (sAnimatedPaletteEntries[gAnimatedGraphicsEntry.palette].numbersOfStates <= gAnimatedPaletteTiming.row)
+                gAnimatedPaletteTiming.timer1 = 0;
+                gAnimatedPaletteTiming.row1++;
+                if (sAnimatedPaletteEntries[gAnimatedGraphicsEntry.palette].numbersOfStates <= gAnimatedPaletteTiming.row1)
                 {
                     newRow = sAnimatedPaletteEntries[gAnimatedGraphicsEntry.palette].numbersOfStates - 1;
-                    gAnimatedPaletteTiming.row = -newRow;
+                    gAnimatedPaletteTiming.row1 = -newRow;
                 }
             
-                if (gDisableAnimatedPalette < 0 && gAnimatedPaletteTiming.row == 0)
+                if (gDisableAnimatedPalette < 0 && gAnimatedPaletteTiming.row1 == 0)
                     gDisableAnimatedPalette = TRUE;
 
                 update++;
@@ -398,13 +437,13 @@ void AnimatedPaletteUpdate(void)
 
         case ANIMATED_PALETTE_TYPE_REVERSE:
             // Standard animation progression, just played backwards
-            if (sAnimatedPaletteEntries[gAnimatedGraphicsEntry.palette].framesPerState <= gAnimatedPaletteTiming.timer)
+            if (sAnimatedPaletteEntries[gAnimatedGraphicsEntry.palette].framesPerState <= gAnimatedPaletteTiming.timer1)
             {
-                gAnimatedPaletteTiming.timer = 0;
-                gAnimatedPaletteTiming.row--;
+                gAnimatedPaletteTiming.timer1 = 0;
+                gAnimatedPaletteTiming.row1--;
 
-                if (0 > gAnimatedPaletteTiming.row)
-                    gAnimatedPaletteTiming.row = sAnimatedPaletteEntries[gAnimatedGraphicsEntry.palette].numbersOfStates - 1;
+                if (gAnimatedPaletteTiming.row1 < 0)
+                    gAnimatedPaletteTiming.row1 = sAnimatedPaletteEntries[gAnimatedGraphicsEntry.palette].numbersOfStates - 1;
                 
                 update++;
             }
@@ -415,22 +454,22 @@ void AnimatedPaletteUpdate(void)
         return;
 
     // Get row
-    row = gAnimatedPaletteTiming.row;
+    row = gAnimatedPaletteTiming.row1;
     if (row < 0)
         row = -row;
 
     // Transfer palette
-    if (gGameModeSub1 == SUB_GAME_MODE_PLAYING)
+    if (gSubGameMode1 == SUB_GAME_MODE_PLAYING)
     {
         // Directly to palram if in game
-        DMA_SET(3, &sAnimatedPaletteEntries[gAnimatedGraphicsEntry.palette].pPalette[row * 16],
-            ANIMATED_PALETTE_PALRAM, C_32_2_16(DMA_ENABLE, 16));
+        DMA_SET(3, &sAnimatedPaletteEntries[gAnimatedGraphicsEntry.palette].pPalette[row * PAL_ROW],
+            ANIMATED_PALETTE_PALRAM, C_32_2_16(DMA_ENABLE, PAL_ROW_SIZE / 2));
     }
     else
     {
         // To backup if not in game
-        DMA_SET(3, &sAnimatedPaletteEntries[gAnimatedGraphicsEntry.palette].pPalette[row * 16],
-            ANIMATED_PALETTE_EWRAM, C_32_2_16(DMA_ENABLE, 16));    
+        DMA_SET(3, &sAnimatedPaletteEntries[gAnimatedGraphicsEntry.palette].pPalette[row * PAL_ROW],
+            ANIMATED_PALETTE_EWRAM, C_32_2_16(DMA_ENABLE, PAL_ROW_SIZE / 2));    
     }
 }
 
@@ -441,9 +480,7 @@ void AnimatedPaletteUpdate(void)
 void AnimatedPaletteCheckDisableOnTransition(void)
 {
     gAnimatedPaletteTiming = sAnimatedPaletteTiming_Empty;
-
-    // FIXME merge struct HatchFlashingAnimation and struct AnimatedPaletteTiming 
-    gHatchFlashingAnimation = *(struct HatchFlashingAnimation*)&sAnimatedPaletteTiming_Empty;
+    gHatchFlashingAnimation = sAnimatedPaletteTiming_Empty;
 
     gDisableAnimatedPalette = FALSE;
 
@@ -451,7 +488,8 @@ void AnimatedPaletteCheckDisableOnTransition(void)
         return;
 
     // Transfer palette
-    DMA_SET(3, sAnimatedPaletteEntries[gAnimatedGraphicsEntry.palette].pPalette, ANIMATED_PALETTE_PALRAM, C_32_2_16(DMA_ENABLE, 16));
+    DMA_SET(3, sAnimatedPaletteEntries[gAnimatedGraphicsEntry.palette].pPalette,
+        ANIMATED_PALETTE_PALRAM, C_32_2_16(DMA_ENABLE, PAL_ROW));
 
     // Check disable
     switch (gAnimatedGraphicsEntry.palette)
@@ -486,7 +524,7 @@ void AnimatedGraphicsCheckPlayLightningEffect(void)
     effect = BACKGROUND_EFFECT_NONE;
 
     // Check no effect currently active
-    if (gPauseScreenFlag != 0 || gBackgroundEffect.type != 0)
+    if (gPauseScreenFlag != PAUSE_SCREEN_NONE || gBackgroundEffect.type != BACKGROUND_EFFECT_NONE)
         return;
 
     // Crateria, landing site with no gunship
@@ -537,7 +575,7 @@ void BackgroundEffectUpdate(void)
  * 
  * @return u16 Color id to update
  */
-u16 BackgroundEffectProcess(void)
+static u16 BackgroundEffectProcess(void)
 {
     u16 colorId;
     const u16* pBehavior;
@@ -613,7 +651,7 @@ u16 BackgroundEffectProcess(void)
 
         case BACKGROUND_EFFECT_CMD_FINISH_AND_KILL:
             // Kill
-            gBackgroundEffect.type = 0;
+            gBackgroundEffect.type = BACKGROUND_EFFECT_NONE;
 
         case BACKGROUND_EFFECT_CMD_FINISH:
             // End
@@ -623,24 +661,24 @@ u16 BackgroundEffectProcess(void)
 
         case BACKGROUND_EFFECT_CMD_FINISH_EXIT_ZEBES:
             // End
-            gBackgroundEffect.type = 0;
+            gBackgroundEffect.type = BACKGROUND_EFFECT_NONE;
             gBackgroundEffect.stage = 0;
             gBackgroundEffect.timer = 0;
 
             // Start appropriate color fading
             ColorFadingStart(COLOR_FADING_TOURIAN_ESCAPE);
-            gGameModeSub1 = 3;
+            gSubGameMode1 = 3;
             break;
 
         case BACKGROUND_EFFECT_CMD_FINISH_BEFORE_INTRO_TEXT:
             // End
-            gBackgroundEffect.type = 0;
+            gBackgroundEffect.type = BACKGROUND_EFFECT_NONE;
             gBackgroundEffect.stage = 0;
             gBackgroundEffect.timer = 0;
 
             // Start appropriate color fading
             ColorFadingStart(COLOR_FADING_INTRO_TEXT);
-            gGameModeSub1 = 3;
+            gSubGameMode1 = 3;
             break;
     }
 
@@ -661,10 +699,11 @@ u32 BackgroundEffectStart(u8 effect)
         gBackgroundEffect.colorStage = 0;
         gBackgroundEffect.stage = 0;
         gBackgroundEffect.timer = 0;
-        gBackgroundEffect.unk_7 = 0;
+        gBackgroundEffect.unk_7 = 0; ANIMATED_GFX_EWRAM_BASE;
 
-        DmaTransfer(3, EWRAM_BASE + 0x35400, EWRAM_BASE + 0x35800, 0x200, 16);
-        DmaTransfer(3, EWRAM_BASE + 0x35600, EWRAM_BASE + 0x35A00, 0x200, 16);
+        // TODO: verify this is the same or different EWRAM as color fading
+        DmaTransfer(3, COLOR_DATA_BG_EWRAM2, COLOR_DATA_BG_EWRAM3, PAL_SIZE, 16);
+        DmaTransfer(3, COLOR_DATA_OBJ_EWRAM2, COLOR_DATA_OBJ_EWRAM3, PAL_SIZE, 16);
         return TRUE;
     }
 

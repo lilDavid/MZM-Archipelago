@@ -7,18 +7,6 @@
 extern const u32 sWaverGfx[289];
 extern const u16 sWaverPal[16];
 
-extern const u16 sWaverOAM_Frame0[7];
+extern const struct FrameData sWaverOam[7];
 
-extern const u16 sWaverOAM_Frame1[4];
-
-extern const u16 sWaverOAM_Frame2[4];
-
-extern const u16 sWaverOAM_Frame3[4];
-
-extern const u16 sWaverOAM_Frame4[7];
-
-extern const u16 sWaverOAM_Frame5[7];
-
-extern const struct FrameData sWaverOAM[7];
-
-#endif
+#endif /* WAVER_DATA_H */

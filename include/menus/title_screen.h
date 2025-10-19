@@ -20,17 +20,20 @@ u32 unk_76a98(void);
 u32 TitleScreenCometsView(void);
 void TitleScreenTransferGroundGraphics(void);
 void TitleScreenProcessOAM(void);
-void TitleScreenProcessComets(struct TitleScrenOamTiming* pTiming, struct MenuOamData* pOam, u8 cometNumber);
-void TitleScreenProcessTopSparkle(struct TitleScrenOamTiming* pTiming, struct MenuOamData* pOam);
-u32 TitleScreenProcessBottomSparkle(struct TitleScrenOamTiming* pTiming, struct MenuOamData* pOam);
-s8 TitleScreenCheckPlayEffects(void);
+void TitleScreenProcessComets(struct TitleScreenOamTiming* pTiming, struct MenuOamData* pOam, u8 cometNumber);
+void TitleScreenProcessTopSparkle(struct TitleScreenOamTiming* pTiming, struct MenuOamData* pOam);
+u32 TitleScreenProcessBottomSparkle(struct TitleScreenOamTiming* pTiming, struct MenuOamData* pOam);
+u32 TitleScreenCheckPlayEffects(void);
 u32 TitleScreenSubroutine(void);
 u32 TitleScreenIdle(void);
 void TitleScreenSetIdleStage(u8 stage);
 void TitleScreenInit(void);
 void TitleScreenVBlank(void);
 void TitleScreenVBlank_Empty(void);
-void unk_777d8(u8 param_1);
-void unk_77824(u8* param_1, u16* dst, u8 palette);
+void TitleScreenSetCopyrightSymbol(u8 symbol);
+void TitleScreenDrawString(const u8* pString, u16* dst, u8 palette);
+#ifdef DEBUG
+void TitleScreenDrawDebugText(void);
+#endif // DEBUG
 
 #endif /* TITLE_SCREEN_MENU_H */

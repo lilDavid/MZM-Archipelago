@@ -11,7 +11,7 @@ const struct ColorFadingData sColorFadingData[COLOR_FADING_END] = {
         .secondColorSet = 0,
         .bgColorMask = USHORT_MAX,
         .objColorMask = USHORT_MAX,
-        .pFadeSubroutine = COLOR_FADING_SUBROUTINE_EMPTY
+        .fadeSubroutine = COLOR_FADING_SUBROUTINE_EMPTY
     },
     [COLOR_FADING_FLASH] = {
         .isWhite = TRUE,
@@ -21,7 +21,7 @@ const struct ColorFadingData sColorFadingData[COLOR_FADING_END] = {
         .secondColorSet = 0,
         .bgColorMask = USHORT_MAX,
         .objColorMask = USHORT_MAX,
-        .pFadeSubroutine = COLOR_FADING_SUBROUTINE_2
+        .fadeSubroutine = COLOR_FADING_SUBROUTINE_2
     },
     [COLOR_FADING_CANCEL] = {
         .isWhite = FALSE,
@@ -31,7 +31,7 @@ const struct ColorFadingData sColorFadingData[COLOR_FADING_END] = {
         .secondColorSet = 0,
         .bgColorMask = USHORT_MAX,
         .objColorMask = USHORT_MAX,
-        .pFadeSubroutine = COLOR_FADING_SUBROUTINE_2
+        .fadeSubroutine = COLOR_FADING_SUBROUTINE_2
     },
     [COLOR_FADING_WHITE] = {
         .isWhite = TRUE,
@@ -41,7 +41,7 @@ const struct ColorFadingData sColorFadingData[COLOR_FADING_END] = {
         .secondColorSet = 1,
         .bgColorMask = 0xFFFD,
         .objColorMask = 0xFFC7,
-        .pFadeSubroutine = COLOR_FADING_SUBROUTINE_1
+        .fadeSubroutine = COLOR_FADING_SUBROUTINE_1
     },
     [COLOR_FADING_DOOR_TRANSITION] = {
         .isWhite = FALSE,
@@ -51,7 +51,7 @@ const struct ColorFadingData sColorFadingData[COLOR_FADING_END] = {
         .secondColorSet = 1,
         .bgColorMask = 0xFFFD,
         .objColorMask = 0xFFC7,
-        .pFadeSubroutine = COLOR_FADING_SUBROUTINE_1
+        .fadeSubroutine = COLOR_FADING_SUBROUTINE_1
     },
     [COLOR_FADING_FLASH2] = {
         .isWhite = TRUE,
@@ -61,7 +61,7 @@ const struct ColorFadingData sColorFadingData[COLOR_FADING_END] = {
         .secondColorSet = 0,
         .bgColorMask = USHORT_MAX,
         .objColorMask = 0xFFC7,
-        .pFadeSubroutine = COLOR_FADING_SUBROUTINE_1
+        .fadeSubroutine = COLOR_FADING_SUBROUTINE_1
     },
     [COLOR_FADING_NO_TRANSITION] = {
         .isWhite = FALSE,
@@ -71,7 +71,7 @@ const struct ColorFadingData sColorFadingData[COLOR_FADING_END] = {
         .secondColorSet = 0,
         .bgColorMask = USHORT_MAX,
         .objColorMask = 0xFFC7,
-        .pFadeSubroutine = COLOR_FADING_SUBROUTINE_1
+        .fadeSubroutine = COLOR_FADING_SUBROUTINE_1
     },
     [COLOR_FADING_FLASH_NO_TRANSITION] = {
         .isWhite = TRUE,
@@ -81,7 +81,7 @@ const struct ColorFadingData sColorFadingData[COLOR_FADING_END] = {
         .secondColorSet = 4,
         .bgColorMask = USHORT_MAX,
         .objColorMask = USHORT_MAX,
-        .pFadeSubroutine = COLOR_FADING_SUBROUTINE_2
+        .fadeSubroutine = COLOR_FADING_SUBROUTINE_2
     },
     [COLOR_FADING_NO_TRANSITION_HUD_HIDE] = {
         .isWhite = FALSE,
@@ -91,7 +91,7 @@ const struct ColorFadingData sColorFadingData[COLOR_FADING_END] = {
         .secondColorSet = 4,
         .bgColorMask = USHORT_MAX,
         .objColorMask = USHORT_MAX,
-        .pFadeSubroutine = COLOR_FADING_SUBROUTINE_2
+        .fadeSubroutine = COLOR_FADING_SUBROUTINE_2
     },
     [COLOR_FADING_SLOW_WHITE] = {
         .isWhite = TRUE,
@@ -101,7 +101,7 @@ const struct ColorFadingData sColorFadingData[COLOR_FADING_END] = {
         .secondColorSet = 3,
         .bgColorMask = USHORT_MAX,
         .objColorMask = USHORT_MAX,
-        .pFadeSubroutine = COLOR_FADING_SUBROUTINE_2
+        .fadeSubroutine = COLOR_FADING_SUBROUTINE_2
     },
     [COLOR_FADING_SLOW_BLACK] = {
         .isWhite = FALSE,
@@ -111,7 +111,7 @@ const struct ColorFadingData sColorFadingData[COLOR_FADING_END] = {
         .secondColorSet = 3,
         .bgColorMask = USHORT_MAX,
         .objColorMask = USHORT_MAX,
-        .pFadeSubroutine = COLOR_FADING_SUBROUTINE_2
+        .fadeSubroutine = COLOR_FADING_SUBROUTINE_2
     },
     [COLOR_FADING_AFTER_ENTER_MOTHER_SHIP] = {
         .isWhite = FALSE,
@@ -121,7 +121,7 @@ const struct ColorFadingData sColorFadingData[COLOR_FADING_END] = {
         .secondColorSet = 0,
         .bgColorMask = USHORT_MAX,
         .objColorMask = USHORT_MAX,
-        .pFadeSubroutine = COLOR_FADING_SUBROUTINE_1
+        .fadeSubroutine = COLOR_FADING_SUBROUTINE_1
     },
     [COLOR_FADING_ESCAPE_FAILED] = {
         .isWhite = TRUE,
@@ -131,7 +131,7 @@ const struct ColorFadingData sColorFadingData[COLOR_FADING_END] = {
         .secondColorSet = 3,
         .bgColorMask = USHORT_MAX,
         .objColorMask = USHORT_MAX,
-        .pFadeSubroutine = COLOR_FADING_SUBROUTINE_2
+        .fadeSubroutine = COLOR_FADING_SUBROUTINE_2
     },
     [COLOR_FADING_DEMO_ENDING_AUTO] = {
         .isWhite = FALSE,
@@ -141,7 +141,7 @@ const struct ColorFadingData sColorFadingData[COLOR_FADING_END] = {
         .secondColorSet = 2,
         .bgColorMask = USHORT_MAX,
         .objColorMask = USHORT_MAX,
-        .pFadeSubroutine = COLOR_FADING_SUBROUTINE_2
+        .fadeSubroutine = COLOR_FADING_SUBROUTINE_2
     },
     [COLOR_FADING_DEMO_ENDING_WITH_INPUT] = {
         .isWhite = FALSE,
@@ -151,7 +151,7 @@ const struct ColorFadingData sColorFadingData[COLOR_FADING_END] = {
         .secondColorSet = 2,
         .bgColorMask = USHORT_MAX,
         .objColorMask = USHORT_MAX,
-        .pFadeSubroutine = COLOR_FADING_SUBROUTINE_2
+        .fadeSubroutine = COLOR_FADING_SUBROUTINE_2
     },
     [COLOR_FADING_CHOZODIA_ESCAPE] = {
         .isWhite = FALSE,
@@ -161,7 +161,7 @@ const struct ColorFadingData sColorFadingData[COLOR_FADING_END] = {
         .secondColorSet = 0,
         .bgColorMask = USHORT_MAX,
         .objColorMask = USHORT_MAX,
-        .pFadeSubroutine = COLOR_FADING_SUBROUTINE_2
+        .fadeSubroutine = COLOR_FADING_SUBROUTINE_2
     },
     [COLOR_FADING_TOURIAN_ESCAPE] = {
         .isWhite = TRUE,
@@ -171,7 +171,7 @@ const struct ColorFadingData sColorFadingData[COLOR_FADING_END] = {
         .secondColorSet = 4,
         .bgColorMask = USHORT_MAX,
         .objColorMask = USHORT_MAX,
-        .pFadeSubroutine = COLOR_FADING_SUBROUTINE_2
+        .fadeSubroutine = COLOR_FADING_SUBROUTINE_2
     },
     [COLOR_FADING_GETTING_FULLY_POWERED] = {
         .isWhite = TRUE,
@@ -181,7 +181,7 @@ const struct ColorFadingData sColorFadingData[COLOR_FADING_END] = {
         .secondColorSet = 3,
         .bgColorMask = USHORT_MAX,
         .objColorMask = USHORT_MAX,
-        .pFadeSubroutine = COLOR_FADING_SUBROUTINE_2
+        .fadeSubroutine = COLOR_FADING_SUBROUTINE_2
     },
     [COLOR_FADING_RIDLEY_SPAWN] = {
         .isWhite = FALSE,
@@ -191,7 +191,7 @@ const struct ColorFadingData sColorFadingData[COLOR_FADING_END] = {
         .secondColorSet = 0,
         .bgColorMask = USHORT_MAX,
         .objColorMask = USHORT_MAX,
-        .pFadeSubroutine = COLOR_FADING_SUBROUTINE_2
+        .fadeSubroutine = COLOR_FADING_SUBROUTINE_2
     },
     [COLOR_FADING_STATUE_CUTSCENE] = {
         .isWhite = FALSE,
@@ -201,7 +201,7 @@ const struct ColorFadingData sColorFadingData[COLOR_FADING_END] = {
         .secondColorSet = 0,
         .bgColorMask = USHORT_MAX,
         .objColorMask = USHORT_MAX,
-        .pFadeSubroutine = COLOR_FADING_SUBROUTINE_2
+        .fadeSubroutine = COLOR_FADING_SUBROUTINE_2
     },
     [COLOR_FADING_INTRO_TEXT] = {
         .isWhite = FALSE,
@@ -211,7 +211,7 @@ const struct ColorFadingData sColorFadingData[COLOR_FADING_END] = {
         .secondColorSet = 4,
         .bgColorMask = USHORT_MAX,
         .objColorMask = USHORT_MAX,
-        .pFadeSubroutine = COLOR_FADING_SUBROUTINE_2
+        .fadeSubroutine = COLOR_FADING_SUBROUTINE_2
     },
     [COLOR_FADING_LANDING_SHIP] = {
         .isWhite = FALSE,
@@ -221,7 +221,7 @@ const struct ColorFadingData sColorFadingData[COLOR_FADING_END] = {
         .secondColorSet = 0,
         .bgColorMask = USHORT_MAX,
         .objColorMask = USHORT_MAX,
-        .pFadeSubroutine = COLOR_FADING_SUBROUTINE_2
+        .fadeSubroutine = COLOR_FADING_SUBROUTINE_2
     },
     [COLOR_FADING_SAMUS_IN_BLUE_SHIP] = {
         .isWhite = FALSE,
@@ -231,7 +231,7 @@ const struct ColorFadingData sColorFadingData[COLOR_FADING_END] = {
         .secondColorSet = 0,
         .bgColorMask = USHORT_MAX,
         .objColorMask = USHORT_MAX,
-        .pFadeSubroutine = COLOR_FADING_SUBROUTINE_2
+        .fadeSubroutine = COLOR_FADING_SUBROUTINE_2
     },
     [COLOR_FADING_TO_WHITE] = {
         .isWhite = TRUE,
@@ -241,7 +241,7 @@ const struct ColorFadingData sColorFadingData[COLOR_FADING_END] = {
         .secondColorSet = 0,
         .bgColorMask = USHORT_MAX,
         .objColorMask = 0xFFFC,
-        .pFadeSubroutine = COLOR_FADING_SUBROUTINE_3
+        .fadeSubroutine = COLOR_FADING_SUBROUTINE_3
     },
     [COLOR_FADING_TO_BLACK] = {
         .isWhite = FALSE,
@@ -251,7 +251,7 @@ const struct ColorFadingData sColorFadingData[COLOR_FADING_END] = {
         .secondColorSet = 0,
         .bgColorMask = USHORT_MAX,
         .objColorMask = 0xFFFC,
-        .pFadeSubroutine = COLOR_FADING_SUBROUTINE_3
+        .fadeSubroutine = COLOR_FADING_SUBROUTINE_3
     },
 };
 

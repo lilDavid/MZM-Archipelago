@@ -46,7 +46,7 @@ extern struct DefaultTransparency gDefaultTransparency;
 
 extern struct BldalphaData gBldalphaData1;
 extern struct BldalphaData gBldalphaData2;
-extern struct BldyData gBLDYData1;
-extern struct BldyData gBLDYData2;
+extern struct BldyData gBldyData1;
+extern struct BldyData gBldyData2;
 
 #endif /* TRANSPARENCY_STRUCT_H */

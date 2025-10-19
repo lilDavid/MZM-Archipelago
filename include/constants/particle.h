@@ -1,7 +1,10 @@
 #ifndef PARTICLE_CONSTANTS_H
 #define PARTICLE_CONSTANTS_H
 
-enum ParticleEffectId {
+#include "types.h"
+#include "macros.h"
+
+MAKE_ENUM(u8, ParticleEffectId) {
     PE_SPRITE_SPLASH_WATER_SMALL,
     PE_SPRITE_SPLASH_WATER_BIG,
     PE_SPRITE_SPLASH_WATER_HUGE,
@@ -39,7 +42,7 @@ enum ParticleEffectId {
     PE_SPRITE_EXPLOSION_SINGLE_THEN_BIG,
     PE_SCREW_ATTACK_DESTROYED,
     PE_SHINESPARK_DESTROYED,
-    PE_SUDO_SCREW_DESTROYED,
+    PE_PSEUDO_SCREW_DESTROYED,
     PE_SPEEDBOOSTER_DESTROYED,
     PE_MAIN_BOSS_DEATH,
     PE_FREEZING_SPRITE_WITH_ICE,
@@ -67,14 +70,16 @@ enum ParticleEffectId {
     PE_END
 };
 
-#define PARTICLE_STATUS_NONE               0
-#define PARTICLE_STATUS_EXISTS             (1 << 0)
-#define PARTICLE_STATUS_ONSCREEN           (1 << 1)
-#define PARTICLE_STATUS_EXPLOSION          (1 << 2)
-#define PARTICLE_STATUS_NOT_DRAWN          (1 << 3)
-#define PARTICLE_STATUS_LIVE_OFF_SCREEN    (1 << 4)
-#define PARTICLE_STATUS_LOW_PRIORITY       (1 << 5)
-#define PARTICLE_STATUS_ABSOLUTE_POSITION  (1 << 6)
-#define PARTICLE_STATUS_X_FLIP             (1 << 7)
+MAKE_ENUM(u8, ParticleStatus) ENUM_FLAG {
+    PARTICLE_STATUS_NONE              = 0 << 0,
+    PARTICLE_STATUS_EXISTS            = 1 << 0,
+    PARTICLE_STATUS_ONSCREEN          = 1 << 1,
+    PARTICLE_STATUS_HIGH_OAM_PRIORITY = 1 << 2,
+    PARTICLE_STATUS_NOT_DRAWN         = 1 << 3,
+    PARTICLE_STATUS_LIVE_OFF_SCREEN   = 1 << 4,
+    PARTICLE_STATUS_LOW_BG_PRIORITY   = 1 << 5,
+    PARTICLE_STATUS_ABSOLUTE_POSITION = 1 << 6,
+    PARTICLE_STATUS_X_FLIP            = 1 << 7,
+};
 
 #endif /* PARTICLE_CONSTANTS_H */

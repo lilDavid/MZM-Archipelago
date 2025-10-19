@@ -28,12 +28,6 @@ struct KraidRisingEwramData {
 
 #define KRAID_RISING_EWRAM sEwramPointer->kraidRising
 
-u8 KraidRisingRising(void);
-struct CutsceneOamData* KraidRisingUpdatePuff(struct CutsceneOamData* pOam, u8 puffID);
-struct CutsceneOamData* KraidRisingUpdateDebris(struct CutsceneOamData* pOam, u8 debrisID);
-u8 KraidRisingOpeningEyes(void);
-u8 KraidRisingInit(void);
 u8 KraidRisingSubroutine(void);
-void KraidRisingProcessOam(void);
 
 #endif /* KRAID_RISING_CUTSCENE */

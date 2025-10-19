@@ -7,16 +7,7 @@
 extern const u32 sSearchlightGfx[172];
 extern const u16 sSearchlightPal[16];
 
-extern const u16 sSearchlightOAM_Moving_Frame0[25];
+extern const struct FrameData sSearchlightOam_Moving[7];
+extern const struct FrameData sSearchlightOam_Unused[5];
 
-extern const u16 sSearchlightOAM_Moving_Frame1[25];
-
-extern const u16 sSearchlightOAM_Moving_Frame2[25];
-
-extern const u16 sSearchlightOAM_Moving_Frame3[25];
-
-extern const struct FrameData sSearchlightOAM_Moving[7];
-
-extern const struct FrameData sSearchlightOAM_Unused[5];
-
-#endif
+#endif /* SEARCHLIGHT_DATA_H */

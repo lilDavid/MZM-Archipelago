@@ -1,8 +1,8 @@
 #include "data/sprites/gekitai_machine.h"
 #include "macros.h"
 
-const u32 sGekitaiMachineGfx[364] = INCBIN_U32("data/sprites/GekitaiMachine.gfx.lz");
-const u16 sGekitaiMachinePal[80] = INCBIN_U16("data/sprites/GekitaiMachine.pal");
+const u32 sGekitaiMachineGfx[364] = INCBIN_U32("data/sprites/gekitai_machine.gfx.lz");
+const u16 sGekitaiMachinePal[80] = INCBIN_U16("data/sprites/gekitai_machine.pal");
 
 const s16 sGekitaiMachine_array_2f1c7c[96] = {
     4097, 4098, 4099, 4100, 4101, 4102, 4103, 4104, 4105, 4106,

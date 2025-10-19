@@ -1,4 +1,5 @@
 #include "sprites_AI/unknown_item_block.h"
+#include "gba/display.h"
 #include "macros.h"
 
 #include "data/sprites/unknown_item_block.h"
@@ -17,7 +18,7 @@
  * 
  * @param caa Clipdata affecting action
  */
-void UnknownItemBlockChangeCcaa(u8 caa)
+static void UnknownItemBlockChangeClipdata(u8 caa)
 {
     u16 yPosition;
     u16 xPosition;
@@ -25,17 +26,21 @@ void UnknownItemBlockChangeCcaa(u8 caa)
     yPosition = gCurrentSprite.yPosition - HALF_BLOCK_SIZE;
     xPosition = gCurrentSprite.xPosition - HALF_BLOCK_SIZE;
 
+    // Top left
     gCurrentClipdataAffectingAction = caa;
-    ClipdataProcess(yPosition, xPosition); // Top left
+    ClipdataProcess(yPosition + BLOCK_SIZE * 0, xPosition + BLOCK_SIZE * 0);
 
+    // Top right
     gCurrentClipdataAffectingAction = caa;
-    ClipdataProcess(yPosition, xPosition + BLOCK_SIZE); // Top right
+    ClipdataProcess(yPosition + BLOCK_SIZE * 0, xPosition + BLOCK_SIZE * 1);
 
+    // Bottom left
     gCurrentClipdataAffectingAction = caa;
-    ClipdataProcess(yPosition + BLOCK_SIZE, xPosition); // Bottom left
-
+    ClipdataProcess(yPosition + BLOCK_SIZE * 1, xPosition + BLOCK_SIZE * 0);
+    
+    // Bottom right
     gCurrentClipdataAffectingAction = caa;
-    ClipdataProcess(yPosition + BLOCK_SIZE, xPosition + BLOCK_SIZE); // Bottom right
+    ClipdataProcess(yPosition + BLOCK_SIZE * 1, xPosition + BLOCK_SIZE * 1);
 }
 
 /**
@@ -77,7 +82,7 @@ void UnknownItemBlock(void)
             gCurrentSprite.yPosition -= BLOCK_SIZE;
             gCurrentSprite.xPosition += (HALF_BLOCK_SIZE);
 
-            UnknownItemBlockChangeCcaa(CAA_MAKE_SOLID_GRIPPABLE);
+            UnknownItemBlockChangeClipdata(CAA_MAKE_SOLID_GRIPPABLE);
 
         case UNKNOWN_ITEM_BLOCK_POSE_CHECK_ACTIVATE:
             // Check activate block
@@ -113,7 +118,7 @@ void UnknownItemBlock(void)
             break; // No behavior (don't go to default)
 
         case UNKNOWN_ITEM_BLOCK_POSE_EXPLODING:
-            if (SpriteUtilCheckEndCurrentSpriteAnim())
+            if (SpriteUtilHasCurrentAnimationEnded())
             {
                 gCurrentSprite.status = 0;
                 return;
@@ -130,7 +135,7 @@ void UnknownItemBlock(void)
                 gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 6);
                 gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(0);
             }
-            else if (gCurrentSprite.currentAnimationFrame == 7 && gCurrentSprite.animationDurationCounter == 2)
+            else if (gCurrentSprite.currentAnimationFrame == 7 && gCurrentSprite.animationDurationCounter == 2 * DELTA_TIME)
             {
                 // Spawn light
                 activated = SpriteSpawnSecondary(SSPRITE_UNKNOWN_ITEM_BLOCK_LIGHT, 0, gCurrentSprite.spritesetGfxSlot,
@@ -148,8 +153,13 @@ void UnknownItemBlock(void)
                     gSpriteData[activated].hitboxLeft = 0;
                     gSpriteData[activated].hitboxRight = 0;
 
+                    #ifdef REGION_US_BETA
+                    gSpriteData[activated].drawDistanceTop = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 5);
+                    gSpriteData[activated].drawDistanceBottom = SUB_PIXEL_TO_PIXEL(0);
+                    #else // !REGION_US_BETA
                     gSpriteData[activated].drawDistanceTop = SUB_PIXEL_TO_PIXEL(0);
                     gSpriteData[activated].drawDistanceBottom = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 5);
+                    #endif // REGION_US_BETA
                     gSpriteData[activated].drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 6);
 
                     gSpriteData[activated].pOam = sUnknownItemBlockLightOam_Idle;
@@ -165,7 +175,7 @@ void UnknownItemBlock(void)
         default:
             // Hit by something, set exploding behavior
             gCurrentSprite.pose = UNKNOWN_ITEM_BLOCK_POSE_EXPLODING;
-            gCurrentSprite.bgPriority = MOD_AND(gIoRegistersBackup.BG1CNT, 4);
+            gCurrentSprite.bgPriority = BGCNT_GET_PRIORITY(gIoRegistersBackup.BG1CNT);
 
             gCurrentSprite.pOam = sUnknownItemBlockOam_Exploding;
             gCurrentSprite.animationDurationCounter = 0;
@@ -173,7 +183,7 @@ void UnknownItemBlock(void)
 
             gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 6);
 
-            UnknownItemBlockChangeCcaa(CAA_REMOVE_SOLID); // Remove collision
+            UnknownItemBlockChangeClipdata(CAA_REMOVE_SOLID); // Remove collision
 
             // Play sound, most likely planned to have a different sound for each block
             if (spriteId == PSPRITE_PLASMA_BEAM_BLOCK)
@@ -193,12 +203,13 @@ void UnknownItemBlock(void)
 void UnknownItemBlockLight(void)
 {
     gCurrentSprite.ignoreSamusCollisionTimer = DELTA_TIME;
+
     if (gCurrentSprite.currentAnimationFrame != 0)
     {
         gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(0);
         gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 6);
     }
 
-    if (SpriteUtilCheckEndCurrentSpriteAnim())
+    if (SpriteUtilHasCurrentAnimationEnded())
         gCurrentSprite.status = 0;
 }

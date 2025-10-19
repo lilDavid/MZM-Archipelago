@@ -14,11 +14,11 @@ extern Func_T gTimer3Callback;
 // Functions
 
 void CallbackCallVblank(void);
-void CallbackSetVBlank(Func_T callback);
-void CallbackCallHBlank(void);
-void CallbackSetHBlank(Func_T callback);
-void CallbackCallVCount(void);
-void CallbackSetVCount(Func_T callback);
+void CallbackSetVblank(Func_T callback);
+void CallbackCallHblank(void);
+void CallbackSetHblank(Func_T callback);
+void CallbackCallVcount(void);
+void CallbackSetVcount(Func_T callback);
 void CallbackCallSerialCommunication(void);
 void CallbackSetSerialCommunication(Func_T callback);
 void CallbackCallTimer3(void);

@@ -330,8 +330,11 @@ const u8 sAnimatedTilesetEntries[8][3*2*8] = {
 };
 
 const struct AnimatedPaletteTiming sAnimatedPaletteTiming_Empty = {
-    .timer = 0,
-    .row = 0
+    .timer1 = 0,
+    .row1 = 0,
+
+    .timer2 = 0,
+    .row2 = 0
 };
 
 const struct AnimatedPaletteData sAnimatedPaletteEntries[ANIMATED_PALETTE_ID_END] = {

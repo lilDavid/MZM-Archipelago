@@ -27,11 +27,11 @@ const u8 sBrinstar_8_Scrolls[SCROLL_DATA_SIZE(3)] = {
 	UCHAR_MAX, // Breakeable block Y bound extension
 };
 
-const u8 sBrinstar_15_Clipdata[287] = INCBIN_U8("data/rooms/brinstar/Brinstar_15_Clipdata.gfx");
+const u8 sBrinstar_15_Clipdata[287] = INCBIN_U8("data/rooms/brinstar/brinstar_15_clipdata.gfx");
 
-const u8 sBrinstar_15_Bg2[78] = INCBIN_U8("data/rooms/brinstar/Brinstar_15_Bg2.gfx");
+const u8 sBrinstar_15_Bg2[78] = INCBIN_U8("data/rooms/brinstar/brinstar_15_bg2.gfx");
 
-const u8 sBrinstar_15_Bg1[975] = INCBIN_U8("data/rooms/brinstar/Brinstar_15_Bg1.gfx");
+const u8 sBrinstar_15_Bg1[975] = INCBIN_U8("data/rooms/brinstar/brinstar_15_bg1.gfx");
 
 const u8 sBrinstar_15_Spriteset0[ENEMY_ROOM_DATA_ARRAY_SIZE(4)] = {
 	5, 7, SPRITESET_IDX(0),

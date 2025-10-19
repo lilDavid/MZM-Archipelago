@@ -3,13 +3,15 @@
 
 #include "types.h"
 
+#include "constants/demo.h"
+
 struct Demo {
     u8 number;
-    u8 active;
-    u16 hasBeenInit:4;
-    u16 loading:4;
-    u16 endedWithInput:4;
-    u16 noDemoShuffle:4;
+    boolu8 active;
+    boolu16 hasBeenInit:4;
+    boolu16 loading:4;
+    boolu16 endedWithInput:4;
+    boolu16 noDemoShuffle:4;
 };
 
 struct DemoEntry {
@@ -19,7 +21,7 @@ struct DemoEntry {
     u16 durationSize;
 };
 
-extern u8 gDemoState;
+extern DemoState gDemoState;
 extern struct Demo gCurrentDemo;
 
 #define DEMO_MAX_DURATION 256
@@ -30,4 +32,4 @@ extern u16 gDemoInputNumber;
 extern u16 gDemoInputTimer;
 extern u16 gDemoInput;
 
-#endif
+#endif /* DEMO_STRUCT_H */

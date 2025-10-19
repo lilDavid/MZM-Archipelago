@@ -2,6 +2,7 @@
 #define TEXT_STRUCT_H
 
 #include "types.h"
+#include "macros.h"
 
 struct Message {
     u16 textIndex;
@@ -21,7 +22,12 @@ struct Message {
 };
 
 extern struct Message gCurrentMessage;
-extern u32 gCurrentCharacterGfx[32];
 extern s8 gCurrentItemBeingAcquired;
+
+#ifdef USE_EWRAM_SYMBOLS
+extern u32 gCurrentCharacterGfx[32];
+#else
+#define gCurrentCharacterGfx CAST_TO_ARRAY(u32, [32], EWRAM_BASE + 0x27700)
+#endif /* USE_EWRAM_SYMBOLS */
 
 #endif /* TEXT_STRUCT_H */

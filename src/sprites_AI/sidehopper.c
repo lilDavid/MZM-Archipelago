@@ -13,12 +13,24 @@
 
 #include "structs/sprite.h"
 
+#define SIDEHOPPER_POSE_JUMP_WARNING_INIT 0x8
+#define SIDEHOPPER_POSE_JUMP_WARNING 0x9
+#define SIDEHOPPER_POSE_IDLE 0xF
+#define SIDEHOPPER_POSE_FALLING 0x1F
+#define SIDEHOPPER_POSE_JUMPING 0x23
+#define SIDEHOPPER_POSE_LANDING 0x25
+
+#define HEAD_HITBOX (BLOCK_SIZE + HALF_BLOCK_SIZE - PIXEL_SIZE)
+#define FEET_HITBOX (0)
+#define HEAD_DRAW_DISTANCE (SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 2 + HALF_BLOCK_SIZE))
+#define FEET_DRAW_DISTANCE (SUB_PIXEL_TO_PIXEL(HALF_BLOCK_SIZE))
+
 /**
  * @brief 3f684 | 20 | Checks if samus is near the dessgeega on the sides in a 5 block range
  * 
  * @return u8 1 if near, 0 otherwise
  */
-u8 SidehopperCheckSamusNearLeftRight(void)
+static u8 SidehopperCheckSamusNearLeftRight(void)
 {
     u8 result;
 
@@ -36,41 +48,46 @@ u8 SidehopperCheckSamusNearLeftRight(void)
  * @brief 3f6a4 | d0 | Initializes a sidehopper sprite
  * 
  */
-void SidehopperInit(void)
+static void SidehopperInit(void)
 {
-    SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition - (BLOCK_SIZE + 0x4), gCurrentSprite.xPosition);
+    // Check for a ceiling block
+    SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition - (BLOCK_SIZE + PIXEL_SIZE), gCurrentSprite.xPosition);
 
-    if (gPreviousCollisionCheck & 0xF0)
+    if (gPreviousCollisionCheck & COLLISION_FLAGS_UNKNOWN_F0)
     {
+        // Put on the ceiling if there's one
         gCurrentSprite.status |= SPRITE_STATUS_Y_FLIP;
         gCurrentSprite.yPosition -= BLOCK_SIZE;
     }
 
-    gCurrentSprite.work0 = 0x0;
+    gCurrentSprite.work0 = 0;
+    #ifdef BUGFIX
+    gCurrentSprite.work1 = MOD_AND(gSpriteRng, 4);
+    #endif // BUGFIX
     gCurrentSprite.pose = SIDEHOPPER_POSE_IDLE;
 
     if (gCurrentSprite.status & SPRITE_STATUS_Y_FLIP)
     {
-        gCurrentSprite.drawDistanceTop = 0x8;
-        gCurrentSprite.drawDistanceBottom = 0x28;
-        gCurrentSprite.hitboxTop = 0x0;
-        gCurrentSprite.hitboxBottom = 0x5C;
+        gCurrentSprite.drawDistanceTop = FEET_DRAW_DISTANCE;
+        gCurrentSprite.drawDistanceBottom = HEAD_DRAW_DISTANCE;
+        gCurrentSprite.hitboxTop = -FEET_HITBOX;
+        gCurrentSprite.hitboxBottom = HEAD_HITBOX;
     }
     else
     {
-        gCurrentSprite.drawDistanceTop = 0x28;
-        gCurrentSprite.drawDistanceBottom = 0x8;
-        gCurrentSprite.hitboxTop = -0x5C;
-        gCurrentSprite.hitboxBottom = 0x0;
+        gCurrentSprite.drawDistanceTop = HEAD_DRAW_DISTANCE;
+        gCurrentSprite.drawDistanceBottom = FEET_DRAW_DISTANCE;
+        gCurrentSprite.hitboxTop = -HEAD_HITBOX;
+        gCurrentSprite.hitboxBottom = FEET_HITBOX;
     }
 
-    gCurrentSprite.drawDistanceHorizontal = 0x1C;
-    gCurrentSprite.hitboxLeft = -0x48;
-    gCurrentSprite.hitboxRight = 0x48;
+    gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE + THREE_QUARTER_BLOCK_SIZE);
+    gCurrentSprite.hitboxLeft = -(BLOCK_SIZE + EIGHTH_BLOCK_SIZE);
+    gCurrentSprite.hitboxRight = BLOCK_SIZE + EIGHTH_BLOCK_SIZE;
 
-    gCurrentSprite.pOam = sSidehopperOAM_Idle;
-    gCurrentSprite.animationDurationCounter = 0x0;
-    gCurrentSprite.currentAnimationFrame = 0x0;
+    gCurrentSprite.pOam = sSidehopperOam_Idle;
+    gCurrentSprite.animationDurationCounter = 0;
+    gCurrentSprite.currentAnimationFrame = 0;
 
     gCurrentSprite.samusCollision = SSC_HURTS_SAMUS;
     gCurrentSprite.health = GET_PSPRITE_HEALTH(gCurrentSprite.spriteId);
@@ -81,29 +98,29 @@ void SidehopperInit(void)
  * @brief 3f774 | 50 | Initializes a sidehopper to do the jump warning
  * 
  */
-void SidehopperJumpWarningInit(void)
+static void SidehopperJumpWarningInit(void)
 {
     gCurrentSprite.pose = SIDEHOPPER_POSE_JUMP_WARNING;
 
-    gCurrentSprite.animationDurationCounter = 0x0;
-    gCurrentSprite.currentAnimationFrame = 0x0;
-    gCurrentSprite.pOam = sSidehopperOAM_JumpWarning;
+    gCurrentSprite.animationDurationCounter = 0;
+    gCurrentSprite.currentAnimationFrame = 0;
+    gCurrentSprite.pOam = sSidehopperOam_JumpWarning;
 }
 
 /**
  * @brief 3f794 | 80 | Initializes a sidehopper to jump
  * 
  */
-void SidehopperJumpingInit(void)
+static void SidehopperJumpingInit(void)
 {
     gCurrentSprite.pose = SIDEHOPPER_POSE_JUMPING;
 
-    gCurrentSprite.animationDurationCounter = 0x0;
-    gCurrentSprite.currentAnimationFrame = 0x0;
-    gCurrentSprite.work3 = 0x0;
-    gCurrentSprite.pOam = sSidehopperOAM_Jumping;
+    gCurrentSprite.animationDurationCounter = 0;
+    gCurrentSprite.currentAnimationFrame = 0;
+    gCurrentSprite.work3 = 0;
+    gCurrentSprite.pOam = sSidehopperOam_Jumping;
 
-    if (gSpriteRng & 0x1)
+    if (MOD_AND(gSpriteRng, 2))
         gCurrentSprite.work2 = TRUE;
     else
         gCurrentSprite.work2 = FALSE;
@@ -121,13 +138,13 @@ void SidehopperJumpingInit(void)
  * @brief 3f814 | 50 | Initializes a sidehopper to land
  * 
  */
-void SidehopperLandingInit(void)
+static void SidehopperLandingInit(void)
 {
     gCurrentSprite.pose = SIDEHOPPER_POSE_LANDING;
 
     gCurrentSprite.animationDurationCounter = 0x0;
     gCurrentSprite.currentAnimationFrame = 0x0;
-    gCurrentSprite.pOam = sSidehopperOAM_Landing;
+    gCurrentSprite.pOam = sSidehopperOam_Landing;
 
     if (gCurrentSprite.status & SPRITE_STATUS_Y_FLIP)
         gCurrentSprite.hitboxBottom = 0x5C;
@@ -142,27 +159,30 @@ void SidehopperLandingInit(void)
  * @brief 3f864 | 74 | Initializes a sidehopper to be idle
  * 
  */
-void SidehopperIdleInit(void)
+static void SidehopperIdleInit(void)
 {
     if (SidehopperCheckSamusNearLeftRight())
+    {
         SidehopperJumpWarningInit();
+        return;
+    }
+
+    gCurrentSprite.pose = SIDEHOPPER_POSE_IDLE;
+    gCurrentSprite.animationDurationCounter = 0;
+    gCurrentSprite.currentAnimationFrame = 0;
+    gCurrentSprite.work0 = 0;
+
+    gCurrentSprite.work1 = MOD_AND(gSpriteRng, 4);
+
+    if (gSpriteRng >= SPRITE_RNG_PROB(.5f))
+    {
+        gCurrentSprite.pOam = sSidehopperOam_Idle;
+    }
     else
     {
-        gCurrentSprite.pose = SIDEHOPPER_POSE_IDLE;
-        gCurrentSprite.animationDurationCounter = 0x0;
-        gCurrentSprite.currentAnimationFrame = 0x0;
-        gCurrentSprite.work0 = 0x0;
-
-        gCurrentSprite.work1 = gSpriteRng & 0x3;
-
-        if (gSpriteRng > 0x7)
-            gCurrentSprite.pOam = sSidehopperOAM_Idle;
-        else
-        {
-            gCurrentSprite.pOam = sSidehopperOAM_ShakingHead;
-            if (gCurrentSprite.status & SPRITE_STATUS_ONSCREEN)
-                SoundPlayNotAlreadyPlaying(SOUND_SIDEHOPPER_SHAKING_HEAD);
-        }
+        gCurrentSprite.pOam = sSidehopperOam_ShakingHead;
+        if (gCurrentSprite.status & SPRITE_STATUS_ONSCREEN)
+            SoundPlayNotAlreadyPlaying(SOUND_SIDEHOPPER_SHAKING_HEAD);
     }
 }
 
@@ -170,20 +190,20 @@ void SidehopperIdleInit(void)
  * @brief 3f8d8 | 24 | Initializes a sidehopper to be falling
  * 
  */
-void SidehopperFallingInit(void)
+static void SidehopperFallingInit(void)
 {
     gCurrentSprite.pose = SIDEHOPPER_POSE_FALLING;
-    gCurrentSprite.animationDurationCounter = 0x0;
-    gCurrentSprite.currentAnimationFrame = 0x0;
-    gCurrentSprite.work3 = 0x0;
-    gCurrentSprite.pOam = sSidehopperOAM_Jumping;
+    gCurrentSprite.animationDurationCounter = 0;
+    gCurrentSprite.currentAnimationFrame = 0;
+    gCurrentSprite.work3 = 0;
+    gCurrentSprite.pOam = sSidehopperOam_Jumping;
 }
 
 /**
  * @brief 3f8fc | 5c | Handles a sidehopper doing the jump warning when on the ground
  * 
  */
-void SidehopperJumpWarningGround(void)
+static void SidehopperJumpWarningGround(void)
 {
     if (SpriteUtilGetCollisionAtPosition(gCurrentSprite.yPosition, gCurrentSprite.xPosition) == COLLISION_AIR)
     {
@@ -199,7 +219,7 @@ void SidehopperJumpWarningGround(void)
         }
     }
     
-    if (SpriteUtilCheckEndCurrentSpriteAnim())
+    if (SpriteUtilHasCurrentAnimationEnded())
         SidehopperJumpingInit();
 }
 
@@ -207,9 +227,9 @@ void SidehopperJumpWarningGround(void)
  * @brief 3f958 | 14 | Handles a sidehopper doing the jump warning when on the ceiling
  * 
  */
-void SidehopperJumpWarningCeiling(void)
+static void SidehopperJumpWarningCeiling(void)
 {
-    if (SpriteUtilCheckEndCurrentSpriteAnim())
+    if (SpriteUtilHasCurrentAnimationEnded())
         SidehopperJumpingInit();
 }
 
@@ -217,7 +237,7 @@ void SidehopperJumpWarningCeiling(void)
  * @brief 3f96c | 1e8 | Handles a sidehopper jumping when on the ground
  * 
  */
-void SidehopperJumpingGround(void)
+static void SidehopperJumpingGround(void)
 {
     u8 colliding;
     u8 offset;
@@ -234,39 +254,47 @@ void SidehopperJumpingGround(void)
     if (gCurrentSprite.status & SPRITE_STATUS_FACING_RIGHT)
     {
         SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition - QUARTER_BLOCK_SIZE,
-            gCurrentSprite.xPosition + gCurrentSprite.hitboxRight + 0x4);
+            gCurrentSprite.xPosition + gCurrentSprite.hitboxRight + PIXEL_SIZE);
 
         if (gPreviousCollisionCheck == COLLISION_SOLID)
         {
             colliding++;
-            gCurrentSprite.xPosition -= 0x6;
+            gCurrentSprite.xPosition -= PIXEL_SIZE + PIXEL_SIZE / 2;
         }
-        else if (movement > 0x0)
-            gCurrentSprite.xPosition += 0x4;
+        else if (movement > 0)
+        {
+            gCurrentSprite.xPosition += PIXEL_SIZE;
+        }
         else
-            gCurrentSprite.xPosition += 0x5;
+        {
+            gCurrentSprite.xPosition += PIXEL_SIZE + ONE_SUB_PIXEL;
+        }
     }
     else
     {
         SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition - QUARTER_BLOCK_SIZE,
-            gCurrentSprite.xPosition + gCurrentSprite.hitboxLeft - 0x4);
+            gCurrentSprite.xPosition + gCurrentSprite.hitboxLeft - PIXEL_SIZE);
 
         if (gPreviousCollisionCheck == COLLISION_SOLID)
         {
             colliding++;
-            gCurrentSprite.xPosition += 0x6;
+            gCurrentSprite.xPosition += PIXEL_SIZE + PIXEL_SIZE / 2;
         }
-        else if (movement > 0x0)
-            gCurrentSprite.xPosition -= 0x4;
+        else if (movement > 0)
+        {
+            gCurrentSprite.xPosition -= PIXEL_SIZE;
+        }
         else
-            gCurrentSprite.xPosition -= 0x5;
+        {
+            gCurrentSprite.xPosition -= PIXEL_SIZE + ONE_SUB_PIXEL;
+        }
     }
 
     gCurrentSprite.yPosition += movement;
-    if (gCurrentSprite.work3 < 0x27)
+    if (gCurrentSprite.work3 < ARRAY_SIZE(sSidehopperLowJumpVelocity) * 4 - 1)
         gCurrentSprite.work3++;
 
-    if (movement > 0x0)
+    if (movement > 0)
     {
         if (colliding)
             gCurrentSprite.status ^= SPRITE_STATUS_FACING_RIGHT;
@@ -308,7 +336,7 @@ void SidehopperJumpingGround(void)
             if (gPreviousCollisionCheck == COLLISION_SOLID)
             {
                 colliding++;
-                gCurrentSprite.xPosition -= 0x6;
+                gCurrentSprite.xPosition -= PIXEL_SIZE + PIXEL_SIZE / 2;
                 SidehopperFallingInit();
             }
         }
@@ -320,7 +348,7 @@ void SidehopperJumpingGround(void)
             if (gPreviousCollisionCheck == COLLISION_SOLID)
             {
                 colliding++;
-                gCurrentSprite.xPosition += 0x6;
+                gCurrentSprite.xPosition += PIXEL_SIZE + PIXEL_SIZE / 2;
                 SidehopperFallingInit();
             }
         }
@@ -334,7 +362,7 @@ void SidehopperJumpingGround(void)
  * @brief 3fb54 | 1fc | Handles a sidehopper jumping when on the ceiling
  * 
  */
-void SidehopperJumpingCeiling(void)
+static void SidehopperJumpingCeiling(void)
 {
     u8 colliding;
     u8 offset;
@@ -351,39 +379,47 @@ void SidehopperJumpingCeiling(void)
     if (gCurrentSprite.status & SPRITE_STATUS_FACING_RIGHT)
     {
         SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition + QUARTER_BLOCK_SIZE,
-            gCurrentSprite.xPosition + gCurrentSprite.hitboxRight + 0x4);
+            gCurrentSprite.xPosition + gCurrentSprite.hitboxRight + PIXEL_SIZE);
 
         if (gPreviousCollisionCheck == COLLISION_SOLID)
         {
             colliding++;
-            gCurrentSprite.xPosition -= 0x6;
+            gCurrentSprite.xPosition -= PIXEL_SIZE + PIXEL_SIZE / 2;
         }
-        else if (movement > 0x0)
-            gCurrentSprite.xPosition += 0x4;
+        else if (movement > 0)
+        {
+            gCurrentSprite.xPosition += PIXEL_SIZE;
+        }
         else
-            gCurrentSprite.xPosition += 0x5;
+        {
+            gCurrentSprite.xPosition += PIXEL_SIZE + ONE_SUB_PIXEL;
+        }
     }
     else
     {
         SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition + QUARTER_BLOCK_SIZE,
-            gCurrentSprite.xPosition + gCurrentSprite.hitboxLeft - 0x4);
+            gCurrentSprite.xPosition + gCurrentSprite.hitboxLeft - PIXEL_SIZE);
 
         if (gPreviousCollisionCheck == COLLISION_SOLID)
         {
             colliding++;
-            gCurrentSprite.xPosition += 0x6;
+            gCurrentSprite.xPosition += PIXEL_SIZE + PIXEL_SIZE / 2;
         }
-        else if (movement > 0x0)
-            gCurrentSprite.xPosition -= 0x4;
+        else if (movement > 0)
+        {
+            gCurrentSprite.xPosition -= PIXEL_SIZE;
+        }
         else
-            gCurrentSprite.xPosition -= 0x5;
+        {
+            gCurrentSprite.xPosition -= PIXEL_SIZE + ONE_SUB_PIXEL;
+        }
     }
 
     gCurrentSprite.yPosition -= movement;
-    if (gCurrentSprite.work3 < 0x27)
+    if (gCurrentSprite.work3 < ARRAY_SIZE(sSidehopperLowJumpVelocity) * 4 - 1)
         gCurrentSprite.work3++;
 
-    if (movement < 0x0)
+    if (movement < 0)
     {
         if (gCurrentSprite.status & SPRITE_STATUS_FACING_RIGHT)
         {
@@ -393,7 +429,7 @@ void SidehopperJumpingCeiling(void)
             if (gPreviousCollisionCheck == COLLISION_SOLID)
             {
                 colliding++;
-                gCurrentSprite.xPosition -= 0x6;
+                gCurrentSprite.xPosition -= PIXEL_SIZE + PIXEL_SIZE / 2;
                 SidehopperFallingInit();
             }
         }
@@ -405,7 +441,7 @@ void SidehopperJumpingCeiling(void)
             if (gPreviousCollisionCheck == COLLISION_SOLID)
             {
                 colliding++;
-                gCurrentSprite.xPosition += 0x6;
+                gCurrentSprite.xPosition += PIXEL_SIZE + PIXEL_SIZE / 2;
                 SidehopperFallingInit();
             }
         }
@@ -419,7 +455,7 @@ void SidehopperJumpingCeiling(void)
             gCurrentSprite.status ^= SPRITE_STATUS_FACING_RIGHT;
 
         blockTop = SpriteUtilCheckVerticalCollisionAtPositionSlopes(gCurrentSprite.yPosition, gCurrentSprite.xPosition);
-        if (gPreviousVerticalCollisionCheck & 0xF)
+        if (gPreviousVerticalCollisionCheck & COLLISION_FLAGS_UNKNOWN_F)
         {
             gCurrentSprite.yPosition = blockTop + BLOCK_SIZE;
             SidehopperLandingInit();
@@ -429,12 +465,14 @@ void SidehopperJumpingCeiling(void)
         if (!colliding)
         {
             blockTop = SpriteUtilCheckVerticalCollisionAtPositionSlopes(gCurrentSprite.yPosition, gCurrentSprite.xPosition + gCurrentSprite.hitboxRight);
-            if (gPreviousVerticalCollisionCheck & 0xF)
+            if (gPreviousVerticalCollisionCheck & COLLISION_FLAGS_UNKNOWN_F)
+            {
                 colliding++;
+            }
             else
             {
                 blockTop = SpriteUtilCheckVerticalCollisionAtPositionSlopes(gCurrentSprite.yPosition, gCurrentSprite.xPosition + gCurrentSprite.hitboxLeft);
-                if (gPreviousVerticalCollisionCheck & 0xF)
+                if (gPreviousVerticalCollisionCheck & COLLISION_FLAGS_UNKNOWN_F)
                     colliding++;
             }
     
@@ -451,9 +489,9 @@ void SidehopperJumpingCeiling(void)
  * @brief 3fd50 | 14 | Checks if the landing animation as ended
  * 
  */
-void SidehopperCheckLandingAnimEnded(void)
+static void SidehopperCheckLandingAnimEnded(void)
 {
-    if (SpriteUtilCheckEndCurrentSpriteAnim())
+    if (SpriteUtilHasCurrentAnimationEnded())
         SidehopperIdleInit();
 }
 
@@ -461,7 +499,7 @@ void SidehopperCheckLandingAnimEnded(void)
  * @brief 3fd64 | a4 | Handles a dessgeega falling from the ground
  * 
  */
-void SidehopperFallingGround(void)
+static void SidehopperFallingGround(void)
 {
     u8 colliding;
     u32 blockTop;
@@ -472,13 +510,17 @@ void SidehopperFallingGround(void)
 
     blockTop = SpriteUtilCheckVerticalCollisionAtPositionSlopes(gCurrentSprite.yPosition, gCurrentSprite.xPosition);
     if (gPreviousVerticalCollisionCheck != COLLISION_AIR)
+    {
         colliding++;
+    }
     else
     {
         blockTop = SpriteUtilCheckVerticalCollisionAtPositionSlopes(gCurrentSprite.yPosition,
             gCurrentSprite.xPosition + gCurrentSprite.hitboxRight);
         if (gPreviousVerticalCollisionCheck != COLLISION_AIR)
+        {
             colliding++;
+        }
         else
         {
             blockTop = SpriteUtilCheckVerticalCollisionAtPositionSlopes(gCurrentSprite.yPosition,
@@ -515,7 +557,7 @@ void SidehopperFallingGround(void)
  * @brief 3fe08 | a8 | Handles a dessgeega falling from the ceiling
  * 
  */
-void SidehopperFallingCeiling(void)
+static void SidehopperFallingCeiling(void)
 {
     u8 colliding;
     u32 blockTop;
@@ -526,13 +568,17 @@ void SidehopperFallingCeiling(void)
 
     blockTop = SpriteUtilCheckVerticalCollisionAtPositionSlopes(gCurrentSprite.yPosition, gCurrentSprite.xPosition);
     if (gPreviousVerticalCollisionCheck != COLLISION_AIR)
+    {
         colliding++;
+    }
     else
     {
         blockTop = SpriteUtilCheckVerticalCollisionAtPositionSlopes(gCurrentSprite.yPosition,
             gCurrentSprite.xPosition + gCurrentSprite.hitboxRight);
         if (gPreviousVerticalCollisionCheck != COLLISION_AIR)
+        {
             colliding++;
+        }
         else
         {
             blockTop = SpriteUtilCheckVerticalCollisionAtPositionSlopes(gCurrentSprite.yPosition,
@@ -569,32 +615,35 @@ void SidehopperFallingCeiling(void)
  * @brief 3feb0 | 9c | Handles a sidehopper being idle on the ground
  * 
  */
-void SidehopperIdleGround(void)
+static void SidehopperIdleGround(void)
 {
     if (SidehopperCheckSamusNearLeftRight())
-        SidehopperJumpWarningInit();
-    else
     {
-        SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition, gCurrentSprite.xPosition + gCurrentSprite.hitboxRight);
+        SidehopperJumpWarningInit();
+        return;
+    }
+
+    SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition, gCurrentSprite.xPosition + gCurrentSprite.hitboxRight);
+    if (gPreviousCollisionCheck == COLLISION_AIR)
+    {
+        SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition, gCurrentSprite.xPosition + gCurrentSprite.hitboxLeft);
         if (gPreviousCollisionCheck == COLLISION_AIR)
         {
-            SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition, gCurrentSprite.xPosition + gCurrentSprite.hitboxLeft);
-            if (gPreviousCollisionCheck == COLLISION_AIR)
-            {
-                SidehopperFallingInit();
-                return;
-            }
+            SidehopperFallingInit();
+            return;
         }
+    }
 
-        if (SpriteUtilCheckEndCurrentSpriteAnim())
+    if (SpriteUtilHasCurrentAnimationEnded())
+    {
+        if (gCurrentSprite.work0++ == gCurrentSprite.work1)
         {
-            if (gCurrentSprite.work0++ == gCurrentSprite.work1)
-                SidehopperJumpWarningInit();
-            else
-            {
-                if (gCurrentSprite.pOam == sSidehopperOAM_ShakingHead && gCurrentSprite.status & SPRITE_STATUS_ONSCREEN)
-                    SoundPlayNotAlreadyPlaying(SOUND_SIDEHOPPER_SHAKING_HEAD);
-            }
+            SidehopperJumpWarningInit();
+        }
+        else
+        {
+            if (gCurrentSprite.pOam == sSidehopperOam_ShakingHead && gCurrentSprite.status & SPRITE_STATUS_ONSCREEN)
+                SoundPlayNotAlreadyPlaying(SOUND_SIDEHOPPER_SHAKING_HEAD);
         }
     }
 }
@@ -603,21 +652,24 @@ void SidehopperIdleGround(void)
  * @brief 3ff4c | 5c | Handles a sidehopper being idle on the ceiling
  * 
  */
-void SidehopperIdleCeiling(void)
+static void SidehopperIdleCeiling(void)
 {
     if (SidehopperCheckSamusNearLeftRight())
-        SidehopperJumpWarningInit();
-    else
     {
-        if (SpriteUtilCheckEndCurrentSpriteAnim())
+        SidehopperJumpWarningInit();
+        return;
+    }
+
+    if (SpriteUtilHasCurrentAnimationEnded())
+    {
+        if (gCurrentSprite.work0++ == gCurrentSprite.work1)
         {
-            if (gCurrentSprite.work0++ == gCurrentSprite.work1)
-                SidehopperJumpWarningInit();
-            else
-            {
-                if (gCurrentSprite.pOam == sSidehopperOAM_ShakingHead && gCurrentSprite.status & SPRITE_STATUS_ONSCREEN)
-                    SoundPlayNotAlreadyPlaying(SOUND_SIDEHOPPER_SHAKING_HEAD);
-            }
+            SidehopperJumpWarningInit();
+        }
+        else
+        {
+            if (gCurrentSprite.pOam == sSidehopperOam_ShakingHead && gCurrentSprite.status & SPRITE_STATUS_ONSCREEN)
+                SoundPlayNotAlreadyPlaying(SOUND_SIDEHOPPER_SHAKING_HEAD);
         }
     }
 }
@@ -626,14 +678,14 @@ void SidehopperIdleCeiling(void)
  * @brief 3ffa8 | 38 | Handles the death of a sidehopper
  * 
  */
-void SidehopperDeath(void)
+static void SidehopperDeath(void)
 {
     u16 yPosition;
 
     if (gCurrentSprite.status & SPRITE_STATUS_Y_FLIP)
-        yPosition = gCurrentSprite.yPosition + 0x34;
+        yPosition = gCurrentSprite.yPosition + (THREE_QUARTER_BLOCK_SIZE + PIXEL_SIZE);
     else
-        yPosition = gCurrentSprite.yPosition - 0x34;
+        yPosition = gCurrentSprite.yPosition - (THREE_QUARTER_BLOCK_SIZE + PIXEL_SIZE);
 
     SpriteUtilSpriteDeath(DEATH_NORMAL, yPosition, gCurrentSprite.xPosition, TRUE, PE_SPRITE_EXPLOSION_SINGLE_THEN_BIG);
 }
@@ -651,56 +703,57 @@ void Sidehopper(void)
             SoundPlayNotAlreadyPlaying(SOUND_SIDEHOPPER_DAMAGED);
     }
 
-    if (gCurrentSprite.freezeTimer != 0x0)
-        SpriteUtilUpdateFreezeTimer();
-    else
+    if (gCurrentSprite.freezeTimer != 0)
     {
-        if (SpriteUtilIsSpriteStunned())
-            return;
+        SpriteUtilUpdateFreezeTimer();
+        return;
+    }
 
-        switch (gCurrentSprite.pose)
-        {
-            case 0x0:
-                SidehopperInit();
-                break;
+    if (SpriteUtilIsSpriteStunned())
+        return;
 
-            case SIDEHOPPER_POSE_JUMP_WARNING_INIT:
-                SidehopperJumpWarningInit();
+    switch (gCurrentSprite.pose)
+    {
+        case SPRITE_POSE_UNINITIALIZED:
+            SidehopperInit();
+            break;
 
-            case SIDEHOPPER_POSE_JUMP_WARNING:
-                if (gCurrentSprite.status & SPRITE_STATUS_Y_FLIP)
-                    SidehopperJumpWarningCeiling();
-                else
-                    SidehopperJumpWarningGround();
-                break;
+        case SIDEHOPPER_POSE_JUMP_WARNING_INIT:
+            SidehopperJumpWarningInit();
 
-            case SIDEHOPPER_POSE_JUMPING:
-                if (gCurrentSprite.status & SPRITE_STATUS_Y_FLIP)
-                    SidehopperJumpingCeiling();
-                else
-                    SidehopperJumpingGround();
-                break;
+        case SIDEHOPPER_POSE_JUMP_WARNING:
+            if (gCurrentSprite.status & SPRITE_STATUS_Y_FLIP)
+                SidehopperJumpWarningCeiling();
+            else
+                SidehopperJumpWarningGround();
+            break;
 
-            case SIDEHOPPER_POSE_LANDING:
-                SidehopperCheckLandingAnimEnded();
-                break;
+        case SIDEHOPPER_POSE_JUMPING:
+            if (gCurrentSprite.status & SPRITE_STATUS_Y_FLIP)
+                SidehopperJumpingCeiling();
+            else
+                SidehopperJumpingGround();
+            break;
 
-            case SIDEHOPPER_POSE_IDLE:
-                if (gCurrentSprite.status & SPRITE_STATUS_Y_FLIP)
-                    SidehopperIdleCeiling();
-                else
-                    SidehopperIdleGround();
-                break;
+        case SIDEHOPPER_POSE_LANDING:
+            SidehopperCheckLandingAnimEnded();
+            break;
 
-            case SIDEHOPPER_POSE_FALLING:
-                if (gCurrentSprite.status & SPRITE_STATUS_Y_FLIP)
-                    SidehopperFallingCeiling();
-                else
-                    SidehopperFallingGround();
-                break;
+        case SIDEHOPPER_POSE_IDLE:
+            if (gCurrentSprite.status & SPRITE_STATUS_Y_FLIP)
+                SidehopperIdleCeiling();
+            else
+                SidehopperIdleGround();
+            break;
 
-            default:
-                SidehopperDeath();
-        }
+        case SIDEHOPPER_POSE_FALLING:
+            if (gCurrentSprite.status & SPRITE_STATUS_Y_FLIP)
+                SidehopperFallingCeiling();
+            else
+                SidehopperFallingGround();
+            break;
+
+        default:
+            SidehopperDeath();
     }
 }

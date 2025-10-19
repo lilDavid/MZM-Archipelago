@@ -1,6 +1,5 @@
 #include "room_music.h"
 
-#include "data/engine_pointers.h"
 #include "data/cutscenes/cutscenes_data.h"
 
 #include "constants/audio.h"
@@ -10,11 +9,14 @@
 #include "constants/samus.h"
 
 #include "structs/audio.h"
+#include "structs/connection.h"
 #include "structs/demo.h"
 #include "structs/game_state.h"
 #include "structs/room.h"
 #include "structs/samus.h"
 #include "structs/sprite.h"
+
+extern const struct RoomEntryRom* sAreaRoomEntryPointers[AREA_ENTRY_COUNT];
 
 /**
  * @brief 60928 | bc | Checks if the current room music track should play
@@ -22,7 +24,7 @@
  * @param area Area
  * @param room Room id
  */
-void CheckPlayRoomMusicTrack(u8 area, u8 room)
+void CheckPlayRoomMusicTrack(Area area, u8 room)
 {
     gMusicTrackInfo.currentRoomTrack = sAreaRoomEntryPointers[area][room].musicTrack;
 
@@ -66,14 +68,23 @@ void CheckPlayLoadingJingle(void)
 {
     gMusicTrackInfo.currentRoomTrack = gCurrentRoomEntry.musicTrack;
 
-    if (!gGameModeSub3 && gDemoState == DEMO_STATE_NONE && gIsLoadingFile)
+    if (!gSubGameMode3 && gDemoState == DEMO_STATE_NONE)
     {
-        PlayCurrentMusicTrack();
-        if (gSamusData.pose == SPOSE_SAVING_LOADING_GAME)
+        if (gIsLoadingFile)
         {
-            gDisablePause = TRUE;
-            InsertMusicAndQueueCurrent(MUSIC_LOADING_JINGLE, TRUE);
+            PlayCurrentMusicTrack();
+            if (gSamusData.pose == SPOSE_SAVING_LOADING_GAME)
+            {
+                gDisablePause = TRUE;
+                InsertMusicAndQueueCurrent(MUSIC_LOADING_JINGLE, TRUE);
+            }
         }
+        #ifdef DEBUG
+        else if (gDebugMode && gCurrentRoomEntry.musicTrack != 0)
+        {
+            unk_42bc(gMusicTrackInfo.currentRoomTrack);
+        }
+        #endif // DEBUG
     }
 }
 

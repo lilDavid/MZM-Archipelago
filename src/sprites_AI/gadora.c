@@ -15,11 +15,32 @@
 #include "structs/display.h"
 #include "structs/sprite.h"
 
+#define GADORA_POSE_IDLE_INIT 0x8
+#define GADORA_POSE_SAMUS_DETECTION 0x9
+#define GADORA_POSE_CHECK_WARNING_ENDED 0x23
+#define GADORA_POSE_CHECK_OPENING_EYE_ENDED 0x25
+#define GADORA_POSE_EYE_OPENED 0x27
+#define GADORA_POSE_CHECK_CLOSING_EYE_ENDED 0x29
+#define GADORA_POSE_DEATH 0x67
+
+#define GADORA_EYE_POSE_IDLE 0x9
+#define GADORA_EYE_POSE_DEATH 0x67
+
+#define GADORA_BEAM_POSE_MOVING 0x9
+
+#define GADORA_COMPUTE_TIMER(min) (gSpriteRng * 4 + (min))
+
+#define GADORA_DETECTION_DELAY_TIMER work0
+#define GADORA_EYE_OPEN_TIMER work0
+#define GADORA_DEATH_ANIMATION_TIMER work0
+#define GADORA_EYE_DEATH_ANIMATION_TIMER work0
+#define GADORA_BEAM_MOVEMENT_DELAY_TIMER work0
+
 /**
  * @brief 49eb8 | 134 | Initializes a gadora sprite
  * 
  */
-void GadoraInit(void)
+static void GadoraInit(void)
 {
     u16 yPosition;
     u16 xPosition;
@@ -30,7 +51,9 @@ void GadoraInit(void)
     {
         if (!EventFunction(EVENT_ACTION_CHECKING, EVENT_KRAID_GADORA_KILLED))
         {
-            gCurrentSprite.status |= SPRITE_STATUS_UNKNOWN_10;
+            #ifndef REGION_US_BETA
+            gCurrentSprite.status |= SPRITE_STATUS_HIGH_PRIORITY;
+            #endif // !REGION_US_BETA
         }
         else
         {
@@ -78,7 +101,7 @@ void GadoraInit(void)
     gCurrentSprite.hitboxLeft = -(QUARTER_BLOCK_SIZE + PIXEL_SIZE);
     gCurrentSprite.hitboxRight = QUARTER_BLOCK_SIZE + PIXEL_SIZE;
 
-    gCurrentSprite.pOam = sGadoraOAM_EyeClosed;
+    gCurrentSprite.pOam = sGadoraOam_EyeClosed;
     gCurrentSprite.animationDurationCounter = 0;
     gCurrentSprite.currentAnimationFrame = 0;
 
@@ -99,38 +122,38 @@ void GadoraInit(void)
  * @brief 49fec | 30 | Initializes a gadora to be idle
  * 
  */
-void GadoraIdleInit(void)
+static void GadoraIdleInit(void)
 {
     gCurrentSprite.pose = GADORA_POSE_SAMUS_DETECTION;
 
-    gCurrentSprite.pOam = sGadoraOAM_EyeClosed;
+    gCurrentSprite.pOam = sGadoraOam_EyeClosed;
     gCurrentSprite.animationDurationCounter = 0;
     gCurrentSprite.currentAnimationFrame = 0;
 
-    gCurrentSprite.work0 = GADORA_COMPUTE_TIMER(61);
+    gCurrentSprite.GADORA_DETECTION_DELAY_TIMER = GADORA_COMPUTE_TIMER(61);
 }
 
 /**
  * @brief 4a01c | 54 | Checks if samus is in range to open the eye
  * 
  */
-void GadoraSamusDetection(void)
+static void GadoraSamusDetection(void)
 {
-    APPLY_DELTA_TIME_DEC(gCurrentSprite.work0); // Timer before checking for samus
-    if (gCurrentSprite.work0 == 0)
+    APPLY_DELTA_TIME_DEC(gCurrentSprite.GADORA_DETECTION_DELAY_TIMER); // Timer before checking for samus
+    if (gCurrentSprite.GADORA_DETECTION_DELAY_TIMER == 0)
     {
         // Check if samus in front
         if (SpriteUtilCheckSamusNearSpriteFrontBehind(BLOCK_SIZE * 2, BLOCK_SIZE * 7, 0) == NSFB_IN_FRONT)
         {
             gCurrentSprite.pose = GADORA_POSE_CHECK_WARNING_ENDED;
 
-            gCurrentSprite.pOam = sGadoraOAM_Warning;
+            gCurrentSprite.pOam = sGadoraOam_Warning;
             gCurrentSprite.animationDurationCounter = 0;
             gCurrentSprite.currentAnimationFrame = 0;
         }
         else
         {
-            gCurrentSprite.work0 = GADORA_COMPUTE_TIMER(61); // Reset timer
+            gCurrentSprite.GADORA_DETECTION_DELAY_TIMER = GADORA_COMPUTE_TIMER(61); // Reset timer
         }
     }
 }
@@ -139,13 +162,13 @@ void GadoraSamusDetection(void)
  * @brief 4a070 | 34 | Checks if the warning animation ended
  * 
  */
-void GadoraCheckWarningAnimEnded(void)
+static void GadoraCheckWarningAnimEnded(void)
 {
-    if (SpriteUtilCheckEndCurrentSpriteAnim())
+    if (SpriteUtilHasCurrentAnimationEnded())
     {
         gCurrentSprite.pose = GADORA_POSE_CHECK_OPENING_EYE_ENDED;
 
-        gCurrentSprite.pOam = sGadoraOAM_OpeningEye;
+        gCurrentSprite.pOam = sGadoraOam_OpeningEye;
         gCurrentSprite.animationDurationCounter = 0;
         gCurrentSprite.currentAnimationFrame = 0;
 
@@ -157,23 +180,23 @@ void GadoraCheckWarningAnimEnded(void)
  * @brief 4a0a4 | 38 | Checks if the opening eye animation ended
  * 
  */
-void GadoraCheckOpeningEyeAnimEnded(void)
+static void GadoraCheckOpeningEyeAnimEnded(void)
 {
     u16 xPosition;
     u16 status;
     
-    if (SpriteUtilCheckEndCurrentSpriteAnim())
+    if (SpriteUtilHasCurrentAnimationEnded())
     {
         gCurrentSprite.pose = GADORA_POSE_EYE_OPENED;
 
-        gCurrentSprite.pOam = sGadoraOAM_EyeOpened;
+        gCurrentSprite.pOam = sGadoraOam_EyeOpened;
         gCurrentSprite.animationDurationCounter = 0;
         gCurrentSprite.currentAnimationFrame = 0;
 
-        gCurrentSprite.work0 = CONVERT_SECONDS(1.f); // Timer for how long to stay open
+        gCurrentSprite.GADORA_EYE_OPEN_TIMER = CONVERT_SECONDS(1.f); // Timer for how long to stay open
         if (gCurrentSprite.spriteId == PSPRITE_GADORA_RIDLEY)
         {
-            gCurrentSprite.work0 = CONVERT_SECONDS(1.f) + CONVERT_SECONDS(7.f / 15); // Longer timer because of beam
+            gCurrentSprite.GADORA_EYE_OPEN_TIMER = CONVERT_SECONDS(1.f) + CONVERT_SECONDS(7.f / 15); // Longer timer because of beam
 
             // Spawn beam
             xPosition = gCurrentSprite.xPosition + QUARTER_BLOCK_SIZE;
@@ -189,14 +212,14 @@ void GadoraCheckOpeningEyeAnimEnded(void)
  * @brief 4a10c | 74 | Handles the gadora having its eye opened
  * 
  */
-void GadoraEyeOpened(void)
+static void GadoraEyeOpened(void)
 {
-    if (gCurrentSprite.work0 == 0)
+    if (gCurrentSprite.GADORA_EYE_OPEN_TIMER == 0)
     {
         // Timer done, close eye
         gCurrentSprite.pose = GADORA_POSE_CHECK_CLOSING_EYE_ENDED;
 
-        gCurrentSprite.pOam = sGadoraOAM_ClosingEye;
+        gCurrentSprite.pOam = sGadoraOam_ClosingEye;
         gCurrentSprite.animationDurationCounter = 0;
         gCurrentSprite.currentAnimationFrame = 0;
 
@@ -204,22 +227,22 @@ void GadoraEyeOpened(void)
         return;
     }
 
-    APPLY_DELTA_TIME_DEC(gCurrentSprite.work0); // Timer fow how long it stays open
+    APPLY_DELTA_TIME_DEC(gCurrentSprite.GADORA_EYE_OPEN_TIMER); // Timer for how long it stays open
 
     // Check set the eye moving OAM
-    if (gCurrentSprite.pOam == sGadoraOAM_EyeOpened)
+    if (gCurrentSprite.pOam == sGadoraOam_EyeOpened)
     {
-        if (SpriteUtilCheckEndCurrentSpriteAnim())
+        if (SpriteUtilHasCurrentAnimationEnded())
         {
-            gCurrentSprite.pOam = sGadoraOAM_EyeMoving;
+            gCurrentSprite.pOam = sGadoraOam_EyeMoving;
             gCurrentSprite.animationDurationCounter = 0;
             gCurrentSprite.currentAnimationFrame = 0;
         }
     }
-    else if (gCurrentSprite.work0 == CONVERT_SECONDS(0.1f) + 1 * DELTA_TIME)
+    else if (gCurrentSprite.GADORA_EYE_OPEN_TIMER == CONVERT_SECONDS(0.1f) + 1 * DELTA_TIME)
     {
         // Eye will soon close, set before closing OAM
-        gCurrentSprite.pOam = sGadoraOAM_BeforeClosing;
+        gCurrentSprite.pOam = sGadoraOam_BeforeClosing;
         gCurrentSprite.animationDurationCounter = 0;
         gCurrentSprite.currentAnimationFrame = 0;
     }
@@ -229,9 +252,9 @@ void GadoraEyeOpened(void)
  * @brief 4a180 | 1c | Checks if the closing eye animation almost ended
  * 
  */
-void GadoraCheckClosingEyeAnimNearEnded(void)
+static void GadoraCheckClosingEyeAnimNearEnded(void)
 {
-    if (SpriteUtilCheckNearEndCurrentSpriteAnim())
+    if (SpriteUtilHasCurrentAnimationNearlyEnded())
         gCurrentSprite.pose = GADORA_POSE_IDLE_INIT; // Set idle
 }
 
@@ -239,15 +262,15 @@ void GadoraCheckClosingEyeAnimNearEnded(void)
  * @brief 4a19c | 30 | Initializes a gadara to be dying
  * 
  */
-void GadoraDeathGfxInit(void)
+static void GadoraDeathGfxInit(void)
 {
     gCurrentSprite.pose = GADORA_POSE_DEATH;
 
-    gCurrentSprite.pOam = sGadoraOAM_Death;
+    gCurrentSprite.pOam = sGadoraOam_Death;
     gCurrentSprite.animationDurationCounter = 0;
     gCurrentSprite.currentAnimationFrame = 0;
 
-    gCurrentSprite.work0 = TWO_THIRD_SECOND; // Death animation timer
+    gCurrentSprite.GADORA_DEATH_ANIMATION_TIMER = TWO_THIRD_SECOND; // Death animation timer
     gCurrentSprite.samusCollision = SSC_NONE;
 }
 
@@ -255,7 +278,7 @@ void GadoraDeathGfxInit(void)
  * @brief 4a1cc | d4 | Handles the death of a gadora
  * 
  */
-void GadoraDeath(void)
+static void GadoraDeath(void)
 {
     u16 yPosition;
     u16 xPosition;
@@ -264,12 +287,12 @@ void GadoraDeath(void)
     u8 timer;
     u32 yOffset;
     
-    timer = APPLY_DELTA_TIME_DEC(gCurrentSprite.work0);
+    timer = APPLY_DELTA_TIME_DEC(gCurrentSprite.GADORA_DEATH_ANIMATION_TIMER);
     // CONVERT_SECONDS(1.f / 15)
     if (MOD_AND(timer, 4))
         return;
 
-    if (timer & 4)
+    if (MOD_BLOCK_AND(timer, 4))
     {
         // Set stun (white) palette
         gCurrentSprite.paletteRow = 14 - (gCurrentSprite.spritesetGfxSlot + gCurrentSprite.frozenPaletteRowOffset);
@@ -294,7 +317,7 @@ void GadoraDeath(void)
 
         rng = gSpriteRng;
         xPosition += QUARTER_BLOCK_SIZE;
-        yOffset = rng - (BLOCK_SIZE + PIXEL_SIZE * 2);
+        yOffset = rng - (BLOCK_SIZE + EIGHTH_BLOCK_SIZE);
 
         // Kill sprite
         SpriteUtilSpriteDeath(DEATH_NORMAL, yPosition - yOffset, xPosition - rng, TRUE, PE_SPRITE_EXPLOSION_SINGLE_THEN_BIG);
@@ -406,12 +429,12 @@ void GadoraEye(void)
             gCurrentSprite.hitboxLeft = -QUARTER_BLOCK_SIZE;
             gCurrentSprite.hitboxRight = QUARTER_BLOCK_SIZE;
 
-            gCurrentSprite.pOam = sEnemyDropOAM_LargeEnergy; // No graphics
+            gCurrentSprite.pOam = sEnemyDropOam_LargeEnergy; // No graphics
             gCurrentSprite.animationDurationCounter = 0.;
             gCurrentSprite.currentAnimationFrame = 0.;
 
             gCurrentSprite.samusCollision = SSC_NONE;
-            gCurrentSprite.pose = 0x9;
+            gCurrentSprite.pose = GADORA_EYE_POSE_IDLE;
             break;
 
         case SPRITE_POSE_DESTROYED: // Killed
@@ -421,12 +444,12 @@ void GadoraEye(void)
 
             gCurrentSprite.pose = GADORA_EYE_POSE_DEATH;
             gCurrentSprite.status |= SPRITE_STATUS_IGNORE_PROJECTILES;
-            gCurrentSprite.work0 = TWO_THIRD_SECOND; // Death timer
+            gCurrentSprite.GADORA_EYE_DEATH_ANIMATION_TIMER = TWO_THIRD_SECOND; // Death timer
             break;
 
         case GADORA_EYE_POSE_DEATH:
-            APPLY_DELTA_TIME_DEC(gCurrentSprite.work0);
-            if (gCurrentSprite.work0 == 0)
+            APPLY_DELTA_TIME_DEC(gCurrentSprite.GADORA_EYE_DEATH_ANIMATION_TIMER);
+            if (gCurrentSprite.GADORA_EYE_DEATH_ANIMATION_TIMER == 0)
             {
                 rng = gSpriteRng;
                 yOffset = rng - (BLOCK_SIZE + PIXEL_SIZE);
@@ -442,9 +465,10 @@ void GadoraEye(void)
             {
                 // Make vulnerable
                 gCurrentSprite.status &= ~SPRITE_STATUS_IGNORE_PROJECTILES;
+
                 // CONVERT_SECONDS(.25f) + 1 * DELTA_TIME
                 if (SPRITE_GET_ISFT(gCurrentSprite) == 16)
-                    gSpriteData[ramSlot].work0 = 0; // Force close eye if hit
+                    gSpriteData[ramSlot].GADORA_EYE_OPEN_TIMER = 0; // Force close eye if hit
             }
             else
                 gCurrentSprite.status |= SPRITE_STATUS_IGNORE_PROJECTILES; // Make un-vulnerable
@@ -467,10 +491,10 @@ void GadoraBeam(void)
             gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE);
             gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE);
 
-            gCurrentSprite.hitboxTop = -(QUARTER_BLOCK_SIZE * 3);
-            gCurrentSprite.hitboxBottom = (QUARTER_BLOCK_SIZE * 3);
+            gCurrentSprite.hitboxTop = -(THREE_QUARTER_BLOCK_SIZE);
+            gCurrentSprite.hitboxBottom = THREE_QUARTER_BLOCK_SIZE;
 
-            gCurrentSprite.pOam = sGadoraBeamOAM_Moving;
+            gCurrentSprite.pOam = sGadoraBeamOam_Moving;
             gCurrentSprite.animationDurationCounter = 0;
             gCurrentSprite.currentAnimationFrame = 0;
 
@@ -480,15 +504,15 @@ void GadoraBeam(void)
             gCurrentSprite.bgPriority = MOD_AND(gIoRegistersBackup.BG1CNT, 4);
             gCurrentSprite.health = 1;
 
-            gCurrentSprite.work0 = CONVERT_SECONDS(.25f) + 1 * DELTA_TIME; // Delay before it starts actually moving
+            gCurrentSprite.GADORA_BEAM_MOVEMENT_DELAY_TIMER = CONVERT_SECONDS(.25f) + 1 * DELTA_TIME; // Delay before it starts actually moving
             gCurrentSprite.hitboxLeft = -PIXEL_SIZE;
-            gCurrentSprite.hitboxRight = QUARTER_BLOCK_SIZE + PIXEL_SIZE * 2;
+            gCurrentSprite.hitboxRight = QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE;
 
         case GADORA_BEAM_POSE_MOVING:
-            if (gCurrentSprite.work0 != 0)
+            if (gCurrentSprite.GADORA_BEAM_MOVEMENT_DELAY_TIMER != 0)
             {
-                APPLY_DELTA_TIME_DEC(gCurrentSprite.work0);
-                if (gCurrentSprite.work0 == 0)
+                APPLY_DELTA_TIME_DEC(gCurrentSprite.GADORA_BEAM_MOVEMENT_DELAY_TIMER);
+                if (gCurrentSprite.GADORA_BEAM_MOVEMENT_DELAY_TIMER == 0)
                     SoundPlay(SOUND_GADORA_BEAM_EMERGING);
             }
             else

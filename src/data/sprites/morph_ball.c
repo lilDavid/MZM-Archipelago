@@ -1,47 +1,47 @@
 #include "data/sprites/morph_ball.h"
 #include "macros.h"
 
-const u32 sMorphBallGfx[168] = INCBIN_U32("data/sprites/MorphBall.gfx.lz");
-const u16 sMorphBallPal[16] = INCBIN_U16("data/sprites/MorphBall.pal");
+const u32 sMorphBallGfx[168] = INCBIN_U32("data/sprites/morph_ball.gfx.lz");
+const u16 sMorphBallPal[16] = INCBIN_U16("data/sprites/morph_ball.pal");
 
-const u16 sMorphBallOam_Idle_Frame0[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xf8, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x200
+static const u16 sMorphBallOam_Idle_Frame0[OAM_DATA_SIZE(1)] = {
+    1,
+    OAM_ENTRY(-8, -8, OAM_DIMS_16x16, OAM_NO_FLIP, 0x200, 8, 0),
 };
 
-const u16 sMorphBallOam_Idle_Frame1[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xf8, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x202
+static const u16 sMorphBallOam_Idle_Frame1[OAM_DATA_SIZE(1)] = {
+    1,
+    OAM_ENTRY(-8, -8, OAM_DIMS_16x16, OAM_NO_FLIP, 0x202, 8, 0),
 };
 
-const u16 sMorphBallOam_Idle_Frame2[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xf8, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x204
+static const u16 sMorphBallOam_Idle_Frame2[OAM_DATA_SIZE(1)] = {
+    1,
+    OAM_ENTRY(-8, -8, OAM_DIMS_16x16, OAM_NO_FLIP, 0x204, 8, 0),
 };
 
-const u16 sMorphBallOutsideOam_Idle_Frame0[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xf8, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x206
+static const u16 sMorphBallOutsideOam_Idle_Frame0[OAM_DATA_SIZE(1)] = {
+    1,
+    OAM_ENTRY(-8, -8, OAM_DIMS_16x16, OAM_NO_FLIP, 0x206, 8, 0),
 };
 
-const u16 sMorphBallOutsideOam_Idle_Frame1[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xf8, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x208
+static const u16 sMorphBallOutsideOam_Idle_Frame1[OAM_DATA_SIZE(1)] = {
+    1,
+    OAM_ENTRY(-8, -8, OAM_DIMS_16x16, OAM_NO_FLIP, 0x208, 8, 0),
 };
 
-const u16 sMorphBallOutsideOam_Idle_Frame2[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xf8, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x20a
+static const u16 sMorphBallOutsideOam_Idle_Frame2[OAM_DATA_SIZE(1)] = {
+    1,
+    OAM_ENTRY(-8, -8, OAM_DIMS_16x16, OAM_NO_FLIP, 0x20a, 8, 0),
 };
 
-const u16 sMorphBallOutsideOam_Idle_Frame3[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xf8, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x20c
+static const u16 sMorphBallOutsideOam_Idle_Frame3[OAM_DATA_SIZE(1)] = {
+    1,
+    OAM_ENTRY(-8, -8, OAM_DIMS_16x16, OAM_NO_FLIP, 0x20c, 8, 0),
 };
 
-const u16 sMorphBallOutsideOam_Idle_Frame4[OAM_DATA_SIZE(1)] = {
-    0x1,
-    0xf8, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x20e
+static const u16 sMorphBallOutsideOam_Idle_Frame4[OAM_DATA_SIZE(1)] = {
+    1,
+    OAM_ENTRY(-8, -8, OAM_DIMS_16x16, OAM_NO_FLIP, 0x20e, 8, 0),
 };
 
 const struct FrameData sMorphBallOam_Idle[5] = {

@@ -26,13 +26,14 @@ enum ScrollSubData {
 
 #define SCROLL_DATA_SIZE(nbrScrolls) (2 + SCROLL_SUB_DATA_END * nbrScrolls)
 
+enum LockScreenType {
+    LOCK_SCREEN_TYPE_NONE,
+    LOCK_SCREEN_TYPE_POSITION,
+    LOCK_SCREEN_TYPE_MIDDLE
+};
 
 #define SCROLL_NOT_WITHIN_FLAG 0
 #define SCROLL_WITHIN_FLAG 2
-
-#define LOCK_SCREEN_TYPE_NONE 0
-#define LOCK_SCREEN_TYPE_POSITION 1
-#define LOCK_SCREEN_TYPE_MIDDLE 2
 
 enum ScrollVelocityCap {
     SCROLL_VELOCITY_CAP_SET_DEFAULT,
@@ -42,7 +43,7 @@ enum ScrollVelocityCap {
     SCROLL_VELOCITY_CAP_END
 };
 
-enum Bg3ScrollingType {
+enum bg3ScrollingType {
     BG3_SCROLLING_TYPE_NONE,
     BG3_SCROLLING_TYPE_NORMAL,
     BG3_SCROLLING_TYPE_HALVED,
@@ -83,15 +84,15 @@ struct CameraScrollVelocityCaps {
 
 extern u8 gDisableScrolling;
 extern u16 gSlowScrollingTimer;
-extern u8 gSkipDoorTransition;
+extern boolu8 gSkipDoorTransition;
 extern struct Scroll gCurrentScrolls[2];
 extern struct Camera gCamera;
 extern struct LockScreen gLockScreen;
 extern s8 gScreenYOffset;
 extern s16 gScreenXOffset;
 
-extern u8 gFreeMovementLockCamera;
+extern u8 gNoClipLockCamera;
 extern struct CameraScrollVelocityCaps gScrollingVelocityCaps;
 extern const u8* gCurrentRoomScrollDataPointer;
 
-#endif
+#endif /* SCROLL_STRUCT_H */

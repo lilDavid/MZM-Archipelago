@@ -1,4 +1,5 @@
 #include "in_game.h"
+#include "dma.h"
 #include "gba.h"
 #include "callbacks.h"
 #include "oam.h"
@@ -42,91 +43,118 @@ u32 InGameMainLoop(void)
 {
     u32 changing;
 
+    #ifdef DEBUG
+    gDebugVCount_InGameStart = READ_16(REG_VCOUNT);
+    #endif // DEBUG
+
     SetVBlankCodeInGame();
     changing = FALSE;
 
-    switch (gGameModeSub1)
+    switch (gSubGameMode1)
     {
         case 0:
-            if (gGameModeSub3 == 0)
+            #ifdef DEBUG
+            gDebugVCount_AudioMax = 0;
+            #endif // DEBUG
+
+            if (gSubGameMode3 == 0)
                 DemoResetInputAndDuration();
 
             if (gDemoState == DEMO_STATE_PLAYING)
                 CopyDemoInput();
 
             InitAndLoadGenerics();
-            gGameModeSub1++;
+            gSubGameMode1++;
             break;
 
         case SUB_GAME_MODE_DOOR_TRANSITION:
+            #ifndef REGION_EU
             IoWriteRegisters();
+            #endif // !REGION_EU
             if (ColorFadingFinishDoorTransition()) // Undefined
-                gGameModeSub1++;
+                gSubGameMode1++;
             break;
 
         case SUB_GAME_MODE_PLAYING:
             DemoMainLoop();
+            #ifndef REGION_EU
             IoWriteRegisters();
+            #endif // !REGION_EU
 
-            if ((gChangedInput & gButtonAssignments.pause || gPauseScreenFlag != PAUSE_SCREEN_NONE) && ProcessPauseButtonPress())
-                gGameModeSub1++;
-
-            if (gGameModeSub1 == SUB_GAME_MODE_PLAYING)
+            #ifdef DEBUG
+            // Check for no-clip input
+            if (gDebugMode && gChangedInput & KEY_START &&
+                (gButtonInput & (KEY_L | KEY_B)) == (KEY_L | KEY_B) && !gPreventMovementTimer)
             {
-                gPreviousXPosition = gSamusData.xPosition;
-                gPreviousYPosition = gSamusData.yPosition;
-
-                if (!(gButtonInput & KEY_UP))
-                    gNotPressingUp = TRUE;
-
-                if (gPreventMovementTimer != 0)
-                {
-                    APPLY_DELTA_TIME_DEC(gPreventMovementTimer);
-                    if (gWarpToStart)
-                        SamusUpdate();
-                }
-                else
-                {
-                    SamusUpdate();
-                    SamusUpdateHitboxMovingDirection();
-                }
-
-                InGameTimerUpdate();
+                gSubGameMode1 = SUB_GAME_MODE_NO_CLIP;
             }
+            else
+            #endif // DEBUG
+            {
+                if ((gChangedInput & gButtonAssignments.pause || gPauseScreenFlag != PAUSE_SCREEN_NONE) && ProcessPauseButtonPress())
+                    gSubGameMode1++;
 
-            RoomUpdateGfxInfo();
+                if (gSubGameMode1 == SUB_GAME_MODE_PLAYING)
+                {
+                    gPreviousXPosition = gSamusData.xPosition;
+                    gPreviousYPosition = gSamusData.yPosition;
+
+                    if (!(gButtonInput & KEY_UP))
+                        gNotPressingUp = TRUE;
+
+                    if (gPreventMovementTimer != 0)
+                    {
+                        APPLY_DELTA_TIME_DEC(gPreventMovementTimer);
+                            if (gWarpToStart)
+                            SamusUpdate();
+                    }
+                    else
+                    {
+                        SamusUpdate();
+                        SamusUpdateHitboxMovingDirection();
+                    }
+
+                    InGameTimerUpdate();
+                }
+
+                RoomUpdateGfxInfo();
+            }
             break;
 
         case SUB_GAME_MODE_LOADING_ROOM:
+            #ifndef REGION_EU
             IoWriteRegistersDuringTransition();
+            #endif // !REGION_EU
             if (ColorFadingProcess())
             {
-                gGameModeSub1 = 0;
+                gSubGameMode1 = 0;
                 if (gPauseScreenFlag != PAUSE_SCREEN_NONE || gCurrentCutscene != 0 || gTourianEscapeCutsceneStage != 0)
                     changing = TRUE;
             }
             break;
 
         case SUB_GAME_MODE_DYING:
+            #ifndef REGION_EU
             IoWriteRegisters();
+            #endif // !REGION_EU
             SamusUpdate();
             RoomUpdateGfxInfo();
             break;
 
-        case SUB_GAME_MODE_FREE_MOVEMENT:
-            UpdateFreeMovement_Debug();
+        case SUB_GAME_MODE_NO_CLIP:
+            UpdateNoClip_Debug();
             RoomUpdateGfxInfo();
             break;
     }
 
-    if (gGameModeSub1 == SUB_GAME_MODE_DYING)
+    if (gSubGameMode1 == SUB_GAME_MODE_DYING)
     {
         SamusCallGfxFunctions();
         SamusDraw();
         ResetFreeOam();
         RoomUpdate();
     }
-    else if (gGameModeSub1 != 0)
+    else if (gSubGameMode1 != 0)
     {
         RoomUpdateAnimatedGraphicsAndPalettes();
         SpriteUpdate();
@@ -142,27 +170,54 @@ u32 InGameMainLoop(void)
         ProjectileUpdate();
         HudDraw();
     
-        SpriteDrawAll_2();
+        SpriteDrawAll_HighPriority();
         ParticleProcessAll();
-        ProjectileDrawAllStatusFalse();
+        ProjectileDrawAll_HighPriority();
     
         if (!gDisableDrawingSprites)
-            SpriteDrawAll();
+            SpriteDrawAll_MediumPriority();
     
         if (!gDisableDrawingSamusAndScrolling)
             SamusDraw();
     
-        SpriteDrawAll_Upper();
-        ProjectileDrawAllStatusTrue();
+        SpriteDrawAll_LowPriority();
+        ProjectileDrawAll_LowPriority();
         
         ResetFreeOam();
         RoomUpdate();
 
         RandoHandleMultiworld();
     
-        if (gGameModeSub1 == SUB_GAME_MODE_PLAYING)
+        if (gSubGameMode1 == SUB_GAME_MODE_PLAYING)
             SamusCallCheckLowHealth();
     }
+
+    #ifdef DEBUG
+    if (gDebugMode == 1)
+    {
+        if (gDebugVCount_VBlankEnd < SCREEN_SIZE_Y)
+            gOamData[0x7E].split.y = gDebugVCount_InGameStart - gDebugVCount_VBlankEnd;
+        else if (gDebugVCount_InGameStart > SCREEN_SIZE_Y)
+            gOamData[0x7E].split.y = gDebugVCount_InGameStart - gDebugVCount_VBlankEnd;
+        else
+            gOamData[0x7E].split.y = gDebugVCount_InGameStart - (gDebugVCount_VBlankEnd + 28);
+
+        if (gDebugVCount_AudioMax <= gOamData[0x7E].split.y)
+            gDebugVCount_AudioMax = gOamData[0x7E].split.y;
+
+        gOamData[0x7D].split.y = gDebugVCount_AudioMax; 
+        gOamData[0x7D].split.x = 234;
+        gOamData[0x7D].split.tileNum = 0x76;
+        gOamData[0x7D].split.paletteNum = 4;
+        gOamData[0x7E].split.x = 234;
+        gOamData[0x7E].split.tileNum = 0x77;
+        gOamData[0x7E].split.paletteNum = 4;
+        gOamData[0x7F].split.y = gDebugVCount_InGameEnd = READ_16(REG_VCOUNT);
+        gOamData[0x7F].split.x = 0;
+        gOamData[0x7F].split.tileNum = 0x78;
+        gOamData[0x7F].split.paletteNum = 4;
+    }
+    #endif // DEBUG
 
     return changing;
 }
@@ -173,19 +228,44 @@ u32 InGameMainLoop(void)
  */
 void SetVBlankCodeInGame(void)
 {
-    switch (gGameModeSub1)
+    switch (gSubGameMode1)
     {
         case 0:
         case SUB_GAME_MODE_DOOR_TRANSITION:
         case SUB_GAME_MODE_LOADING_ROOM:
-            CallbackSetVBlank(VBlankCodeInGameLoad);
+            CallbackSetVblank(VBlankCodeInGameLoad);
             break;
 
         case SUB_GAME_MODE_PLAYING:
         default:
-            CallbackSetVBlank(VBlankCodeInGame);
+            CallbackSetVblank(VBlankCodeInGame);
     }
 }
+
+#ifdef REGION_EU
+/**
+ * @brief Calls IoWriteRegisters based on gSubGameMode1
+ * 
+ */
+void InGameIoWriteRegisters(void)
+{
+    switch (gSubGameMode1)
+    {
+        case 0:
+            break;
+        case SUB_GAME_MODE_DOOR_TRANSITION:
+        case SUB_GAME_MODE_PLAYING:
+        case SUB_GAME_MODE_DYING:
+            IoWriteRegisters();
+            break;
+        case SUB_GAME_MODE_LOADING_ROOM:
+            IoWriteRegistersDuringTransition();
+            break;
+        case SUB_GAME_MODE_NO_CLIP:
+            break;
+    }
+}
+#endif // REGION_EU
 
 /**
  * @brief c734 | 160 | Transfers Samus's graphics/palette to VRAM
@@ -262,25 +342,29 @@ void VBlankCodeInGameLoad(void)
 
     TransferSamusGraphics(FALSE, &gSamusPhysics);
 
-    if (gWrittenToBLDCNT_Internal & BLDCNT_BRIGHTNESS_INCREASE_EFFECT)
+    if (gWrittenToBldcnt_Internal & BLDCNT_BRIGHTNESS_INCREASE_EFFECT)
     {
-        write16(REG_BLDCNT, gWrittenToBLDCNT_Internal);
-        gWrittenToBLDCNT_Internal = 0;
+        WRITE_16(REG_BLDCNT, gWrittenToBldcnt_Internal);
+        gWrittenToBldcnt_Internal = 0;
     }
 
-    write16(REG_BLDY, gWrittenToBLDY_NonGameplay);
+    WRITE_16(REG_BLDY, gWrittenToBldy_NonGameplay);
 
-    write16(REG_BG0HOFS, gBackgroundPositions.bg[0].x);
-    write16(REG_BG0VOFS, gBackgroundPositions.bg[0].y);
+    WRITE_16(REG_BG0HOFS, gBackgroundPositions.bg[0].x);
+    WRITE_16(REG_BG0VOFS, gBackgroundPositions.bg[0].y);
 
-    write16(REG_BG1HOFS, gBackgroundPositions.bg[1].x);
-    write16(REG_BG1VOFS, gBackgroundPositions.bg[1].y);
+    WRITE_16(REG_BG1HOFS, gBackgroundPositions.bg[1].x);
+    WRITE_16(REG_BG1VOFS, gBackgroundPositions.bg[1].y);
 
-    write16(REG_BG2HOFS, gBackgroundPositions.bg[2].x);
-    write16(REG_BG2VOFS, gBackgroundPositions.bg[2].y);
+    WRITE_16(REG_BG2HOFS, gBackgroundPositions.bg[2].x);
+    WRITE_16(REG_BG2VOFS, gBackgroundPositions.bg[2].y);
 
-    write16(REG_BG3HOFS, gBackgroundPositions.bg[gWhichBGPositionIsWrittenToBG3OFS].x);
-    write16(REG_BG3VOFS, gBackgroundPositions.bg[gWhichBGPositionIsWrittenToBG3OFS].y);
+    WRITE_16(REG_BG3HOFS, gBackgroundPositions.bg[gWhichBGPositionIsWrittenToBG3OFS].x);
+    WRITE_16(REG_BG3VOFS, gBackgroundPositions.bg[gWhichBGPositionIsWrittenToBG3OFS].y);
+
+    #ifdef DEBUG
+    gDebugVCount_VBlankEnd = READ_16(REG_VCOUNT);
+    #endif // DEBUG
 }
 
 /**
@@ -292,17 +376,17 @@ void TransferSamusAndBgGraphics(void)
     DMA_SET(3, gOamData, OAM_BASE, C_32_2_16((DMA_ENABLE | DMA_32BIT), OAM_SIZE / sizeof(u32)));
     TransferSamusGraphics(FALSE, &gSamusPhysics);
 
-    write16(REG_BG0HOFS, gBackgroundPositions.bg[0].x);
-    write16(REG_BG0VOFS, gBackgroundPositions.bg[0].y);
+    WRITE_16(REG_BG0HOFS, gBackgroundPositions.bg[0].x);
+    WRITE_16(REG_BG0VOFS, gBackgroundPositions.bg[0].y);
 
-    write16(REG_BG1HOFS, gBackgroundPositions.bg[1].x);
-    write16(REG_BG1VOFS, gBackgroundPositions.bg[1].y);
+    WRITE_16(REG_BG1HOFS, gBackgroundPositions.bg[1].x);
+    WRITE_16(REG_BG1VOFS, gBackgroundPositions.bg[1].y);
 
-    write16(REG_BG2HOFS, gBackgroundPositions.bg[2].x);
-    write16(REG_BG2VOFS, gBackgroundPositions.bg[2].y);
+    WRITE_16(REG_BG2HOFS, gBackgroundPositions.bg[2].x);
+    WRITE_16(REG_BG2VOFS, gBackgroundPositions.bg[2].y);
 
-    write16(REG_BG3HOFS, gBackgroundPositions.bg[gWhichBGPositionIsWrittenToBG3OFS].x);
-    write16(REG_BG3VOFS, gBackgroundPositions.bg[gWhichBGPositionIsWrittenToBG3OFS].y);
+    WRITE_16(REG_BG3HOFS, gBackgroundPositions.bg[gWhichBGPositionIsWrittenToBG3OFS].x);
+    WRITE_16(REG_BG3VOFS, gBackgroundPositions.bg[gWhichBGPositionIsWrittenToBG3OFS].y);
 }
 
 /**
@@ -341,19 +425,23 @@ void VBlankCodeInGame(void)
 
     TransferSamusGraphics(TRUE, &gSamusPhysics);
 
-    write16(REG_MOSAIC, gWrittenToMOSAIC_H << 4 | gWrittenToMOSAIC_L);
+    WRITE_16(REG_MOSAIC, gWrittenToMosaic_H << 4 | gWrittenToMosaic_L);
 
-    write16(REG_BG0HOFS, gBackgroundPositions.bg[0].x);
-    write16(REG_BG0VOFS, gBackgroundPositions.bg[0].y);
+    WRITE_16(REG_BG0HOFS, gBackgroundPositions.bg[0].x);
+    WRITE_16(REG_BG0VOFS, gBackgroundPositions.bg[0].y);
 
-    write16(REG_BG1HOFS, gBackgroundPositions.bg[1].x);
-    write16(REG_BG1VOFS, gBackgroundPositions.bg[1].y);
+    WRITE_16(REG_BG1HOFS, gBackgroundPositions.bg[1].x);
+    WRITE_16(REG_BG1VOFS, gBackgroundPositions.bg[1].y);
 
-    write16(REG_BG2HOFS, gBackgroundPositions.bg[2].x);
-    write16(REG_BG2VOFS, gBackgroundPositions.bg[2].y);
+    WRITE_16(REG_BG2HOFS, gBackgroundPositions.bg[2].x);
+    WRITE_16(REG_BG2VOFS, gBackgroundPositions.bg[2].y);
 
-    write16(REG_BG3HOFS, gBackgroundPositions.bg[3].x);
-    write16(REG_BG3VOFS, gBackgroundPositions.bg[3].y);
+    WRITE_16(REG_BG3HOFS, gBackgroundPositions.bg[3].x);
+    WRITE_16(REG_BG3VOFS, gBackgroundPositions.bg[3].y);
+
+    #ifdef DEBUG
+    gDebugVCount_VBlankEnd = READ_16(REG_VCOUNT);
+    #endif // DEBUG
 }
 
 /**
@@ -371,40 +459,42 @@ void VBlankInGame_Empty(void)
  */
 void InitAndLoadGenerics(void)
 {
-    write16(REG_IME, FALSE);
-    write16(REG_DISPSTAT, read16(REG_DISPSTAT) & ~DSTAT_IF_HBLANK);
-    write16(REG_IE, read16(REG_IE) & ~IF_HBLANK);
-    write16(REG_IF, IF_HBLANK);
-    write16(REG_IME, TRUE);
+    WRITE_16(REG_IME, FALSE);
+    WRITE_16(REG_DISPSTAT, READ_16(REG_DISPSTAT) & ~DSTAT_IF_HBLANK);
+    WRITE_16(REG_IE, READ_16(REG_IE) & ~IF_HBLANK);
+    WRITE_16(REG_IF, IF_HBLANK);
+    WRITE_16(REG_IME, TRUE);
 
-    CallbackSetVBlank(VBlankInGame_Empty);
+    CallbackSetVblank(VBlankInGame_Empty);
 
-    if (gGameModeSub3 == 0 || gTourianEscapeCutsceneStage != 0)
+    if (gSubGameMode3 == 0 || gTourianEscapeCutsceneStage != 0)
     {
         ClearGfxRam();
         HudGenericLoadCommonSpriteGfx();
     }
 
-    gWrittenToBLDY_NonGameplay = BLDY_MAX_VALUE;
+    gWrittenToBldy_NonGameplay = BLDY_MAX_VALUE;
     ColorFadingHideScreenDuringLoad(); // Undefined
-    write16(REG_BLDY, gWrittenToBLDY_NonGameplay);
+    WRITE_16(REG_BLDY, gWrittenToBldy_NonGameplay);
 
     if (gPauseScreenFlag != PAUSE_SCREEN_NONE || gCurrentCutscene != 0)
-        DmaTransfer(3, EWRAM_BASE + 0x1E000, VRAM_OBJ, 0x4000, 0x10);
+        DmaTransfer(3, EWRAM_BASE + 0x1E000, VRAM_OBJ, 0x4000, 16);
 
-    gDebugFlag = FALSE;
-    DMA_SET(3, sCommonSpritesPal, PALRAM_BASE + 0x240, DMA_ENABLE << 16 | sizeof(sCommonSpritesPal) / 2);
+    #ifndef DEBUG
+    gDebugMode = FALSE;
+    #endif // !DEBUG
+    DMA_SET(3, sCommonSpritesPal, PALRAM_BASE + 0x240, C_32_2_16(DMA_ENABLE, sizeof(sCommonSpritesPal) / 2));
     SamusInit();
 
     do {
-    } while ((u16)(read16(REG_VCOUNT) - 21) < 140); // read16(REG_VCOUNT) <= SCREEN_SIZE_Y
+    } while ((u16)(READ_16(REG_VCOUNT) - 21) < 140); // READ_16(REG_VCOUNT) <= SCREEN_SIZE_Y
 
     RoomLoad();
 
     do {
-    } while ((u16)(read16(REG_VCOUNT) - 21) < 140); // read16(REG_VCOUNT) <= SCREEN_SIZE_Y
+    } while ((u16)(READ_16(REG_VCOUNT) - 21) < 140); // READ_16(REG_VCOUNT) <= SCREEN_SIZE_Y
 
-    if (gPauseScreenFlag == PAUSE_SCREEN_NONE && gGameModeSub3 != 0)
+    if (gPauseScreenFlag == PAUSE_SCREEN_NONE && gSubGameMode3 != 0)
     {
         SamusUpdate();
         SamusUpdateHitboxMovingDirection();
@@ -416,7 +506,7 @@ void InitAndLoadGenerics(void)
     TransferSamusAndBgGraphics();
 
     do {
-    } while ((u16)(read16(REG_VCOUNT) - 21) < 140); // read16(REG_VCOUNT) <= SCREEN_SIZE_Y
+    } while ((u16)(READ_16(REG_VCOUNT) - 21) < 140); // READ_16(REG_VCOUNT) <= SCREEN_SIZE_Y
 
     HudGenericResetHUDData();
     SpriteLoadAllData();
@@ -424,25 +514,35 @@ void InitAndLoadGenerics(void)
 
     if (gPauseScreenFlag != PAUSE_SCREEN_NONE)
     {
-        DmaTransfer(3, EWRAM_BASE + 0x22000, VRAM_BASE + 0x14000, 0x4000, 0x10);
-        DmaTransfer(3, EWRAM_BASE + 0x35700, PALRAM_BASE + 0x300, 0x100, 0x10);
-        DmaTransfer(3, EWRAM_BASE + 0x35460, PALRAM_BASE + 0x60, 0x1A0, 0x10);
+        DmaTransfer(3, EWRAM_BASE + 0x22000, VRAM_BASE + 0x14000, 0x4000, 16);
+        DmaTransfer(3, EWRAM_BASE + 0x35700, PALRAM_BASE + 0x300, 0x100, 16);
+        DmaTransfer(3, EWRAM_BASE + 0x35460, PALRAM_BASE + 0x60, 0x1A0, 16);
     }
 
     unk_55f68();
 
-    if (gGameModeSub3 == 0)
+    if (gSubGameMode3 == 0)
     {
         SpriteUpdate();
-        gGameModeSub3 = 1;
+        gSubGameMode3 = 1;
         if (!gWarpToStart)
             gPreventMovementTimer = 0;
     }
 
-    gWrittenToBLDY_NonGameplay = BLDY_MAX_VALUE - 1;
+    gWrittenToBldy_NonGameplay = BLDY_MAX_VALUE - 1;
 
     do {
-    } while ((u16)(read16(REG_VCOUNT) - 21) < 140); // read16(REG_VCOUNT) <= SCREEN_SIZE_Y
+    } while ((u16)(READ_16(REG_VCOUNT) - 21) < 140); // READ_16(REG_VCOUNT) <= SCREEN_SIZE_Y
+
+
+    #ifdef REGION_EU_BETA
+    do {
+        gIsLoadingFile = FALSE;
+        gPauseScreenFlag = PAUSE_SCREEN_NONE;
+        gCurrentCutscene = 0;
+        gTourianEscapeCutsceneStage = 0;
+    } while(0);
+    #endif // REGION_EU_BETA
 
     gIsLoadingFile = FALSE;
     gPauseScreenFlag = PAUSE_SCREEN_NONE;
@@ -453,10 +553,10 @@ void InitAndLoadGenerics(void)
     gIncomingMessage = sEmptyRandoMessage;
     gCurrentRandoMessage = sEmptyRandoMessage;
 
-    CallbackSetVBlank(VBlankCodeInGameLoad);
+    CallbackSetVblank(VBlankCodeInGameLoad);
 }
 
-void UpdateFreeMovement_Debug(void)
+void UpdateNoClip_Debug(void)
 {
     s32 xVelocity;
     s32 yVelocity;
@@ -470,12 +570,12 @@ void UpdateFreeMovement_Debug(void)
 
     if (gChangedInput & (KEY_B | KEY_START))
     {
-        gGameModeSub1 = SUB_GAME_MODE_PLAYING;
-        gFreeMovementLockCamera = FALSE;
+        gSubGameMode1 = SUB_GAME_MODE_PLAYING;
+        gNoClipLockCamera = FALSE;
     }
 
     if (gChangedInput & KEY_SELECT)
-        gFreeMovementLockCamera ^= TRUE;
+        gNoClipLockCamera ^= TRUE;
 
     if (gButtonInput & KEY_RIGHT)
         xVelocity = 3 * PIXEL_SIZE;

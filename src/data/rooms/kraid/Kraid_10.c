@@ -13,11 +13,11 @@ const u8 sKraid_5_Scrolls[SCROLL_DATA_SIZE(1)] = {
 	UCHAR_MAX, // Breakeable block Y bound extension
 };
 
-const u8 sKraid_10_Clipdata[165] = INCBIN_U8("data/rooms/kraid/Kraid_10_Clipdata.gfx");
+const u8 sKraid_10_Clipdata[165] = INCBIN_U8("data/rooms/kraid/kraid_10_clipdata.gfx");
 
-const u8 sKraid_10_Bg2[113] = INCBIN_U8("data/rooms/kraid/Kraid_10_Bg2.gfx");
+const u8 sKraid_10_Bg2[113] = INCBIN_U8("data/rooms/kraid/kraid_10_bg2.gfx");
 
-const u8 sKraid_10_Bg1[413] = INCBIN_U8("data/rooms/kraid/Kraid_10_Bg1.gfx");
+const u8 sKraid_10_Bg1[413] = INCBIN_U8("data/rooms/kraid/kraid_10_bg1.gfx");
 
 const u8 sKraid_10_Spriteset0[ENEMY_ROOM_DATA_ARRAY_SIZE(6)] = {
 	3, 25, SPRITESET_IDX(0),

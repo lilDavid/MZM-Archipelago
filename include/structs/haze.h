@@ -31,7 +31,12 @@ extern HazeFunc_T gHazeProcessCodePointer;
 
 extern u8 gCurrentHazeValue;
 
+#ifdef USE_EWRAM_SYMBOLS
 extern u16 gHazeValues[1280];
 extern u16 gPreviousHazeValues[1280];
+#else
+#define gHazeValues CAST_TO_ARRAY(u16, [1280], EWRAM_BASE + 0x26300)
+#define gPreviousHazeValues CAST_TO_ARRAY(u16, [1280], EWRAM_BASE + 0x26D00)
+#endif /* USE_EWRAM_SYMBOLS */
 
 #endif /* HAZE_STRUCT_H */

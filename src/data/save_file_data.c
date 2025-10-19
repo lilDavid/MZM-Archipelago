@@ -15,7 +15,7 @@ const u8 sUsaVer_Text[20] = "ZeroMissionUSAver005";
 const struct FileScreenOptionsUnlocked sFileScreenOptionsUnlocked_Empty = {
     .galleryImages = 0,
     .fusionGalleryImages = 0,
-    .soundTestAndOgMetroid = 0,
+    .soundTestAndOrigMetroid = 0,
     .unk_5 = 0,
     .unk_6 = 0,
     .unk_7 = 0,
@@ -69,9 +69,10 @@ const u8 sUnk_411520[4] = {
     8, 8, 0, 0
 };
 
-const struct StartingInfo sStartingInfo = {
-    .startingArea = AREA_CRATERIA,
-    .unk_1 = 5,
-    .unk_2 = 0,
-    .unk_3 = 0
+const struct SectionInfo sSectionInfo = {
+    .sectionIndex = AREA_CRATERIA,
+    .starIndex = AREA_CRATERIA,
+    .downloadedMaps = 0,
+    .onMapScreen = FALSE,
+    .unk_3_1 = 0
 };

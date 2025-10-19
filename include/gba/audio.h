@@ -1,7 +1,7 @@
 #ifndef GBA_AUDIO_H
 #define GBA_AUDIO_H
 
-#include "memory.h"
+#include "gba/memory.h"
 
 #define REG_SOUND1CNT_L (REG_BASE + 0x60)
 #define REG_SOUND1CNT_H (REG_BASE + 0x62)
@@ -22,6 +22,15 @@
 
 #define REG_SOUNDCNT_X (REG_BASE + 0x84)
 #define REG_SOUNDBIAS  (REG_BASE + 0x88)
+
+#define REG_WAVE_RAM0_L (REG_BASE + 0x90)
+#define REG_WAVE_RAM0_H (REG_BASE + 0x92)
+#define REG_WAVE_RAM1_L (REG_BASE + 0x94)
+#define REG_WAVE_RAM1_H (REG_BASE + 0x96)
+#define REG_WAVE_RAM2_L (REG_BASE + 0x98)
+#define REG_WAVE_RAM2_H (REG_BASE + 0x9A)
+#define REG_WAVE_RAM3_L (REG_BASE + 0x9C)
+#define REG_WAVE_RAM3_H (REG_BASE + 0x9E)
 
 #define REG_FIFO_A (REG_BASE + 0xA0)
 #define REG_FIFO_B (REG_BASE + 0xA4)

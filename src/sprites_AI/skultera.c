@@ -14,11 +14,25 @@
 #include "structs/sprite.h"
 #include "structs/samus.h"
 
+#define SKULTERA_POSE_IDLE_INIT 0x8
+#define SKULTERA_POSE_IDLE 0x9
+#define SKULTERA_POSE_TURNING_AROUND 0xA
+#define SKULTERA_POSE_CHECK_TURNING_AROUND_ENDED 0xB
+#define SKULTERA_POSE_CHASING_SAMUS_INIT 0x34
+#define SKULTERA_POSE_CHASING_SAMUS 0x35
+
+#define SKULTERA_HEAD_HITBOX (HALF_BLOCK_SIZE + EIGHTH_BLOCK_SIZE)
+#define SKULTERA_TAIL_HITBOX (QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE)
+
+#define SKULTERA_TERRITORY_RANGE (BLOCK_SIZE * 8)
+#define SKULTERA_Y_MOVEMENT_SPEED (PIXEL_SIZE / 2)
+#define SKULTERA_X_MOVEMENT_SPEED (PIXEL_SIZE)
+
 /**
  * @brief 48c7c | 30 | Sets the side hitboxes depending on the X flip
  * 
  */
-void SkulteraSetSidesHitbox(void)
+static void SkulteraSetSidesHitbox(void)
 {
     if (gCurrentSprite.status & SPRITE_STATUS_X_FLIP)
     {
@@ -38,7 +52,7 @@ void SkulteraSetSidesHitbox(void)
  * @param movement X velocity
  * @return u8 bool, colliding with solid
  */
-u8 SkulteraXMovement(u16 movement)
+static u8 SkulteraXMovement(u16 movement)
 {
     s16 negMovement;
 
@@ -46,7 +60,7 @@ u8 SkulteraXMovement(u16 movement)
     if (gCurrentSprite.status & SPRITE_STATUS_X_FLIP)
     {
         SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition - HALF_BLOCK_SIZE,
-            gCurrentSprite.xPosition + (QUARTER_BLOCK_SIZE * 3 + PIXEL_SIZE * 2));
+            gCurrentSprite.xPosition + (THREE_QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE));
 
         if (gPreviousCollisionCheck != COLLISION_SOLID)
         {
@@ -59,7 +73,7 @@ u8 SkulteraXMovement(u16 movement)
     else
     {
         SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition - HALF_BLOCK_SIZE,
-            gCurrentSprite.xPosition - (QUARTER_BLOCK_SIZE * 3 + PIXEL_SIZE * 2));
+            gCurrentSprite.xPosition - (THREE_QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE));
 
         if (gPreviousCollisionCheck != COLLISION_SOLID)
         {
@@ -75,7 +89,7 @@ u8 SkulteraXMovement(u16 movement)
  * @brief 48d10 | 68 | Initializes a skultera sprite
  * 
  */
-void SkulteraInit(void)
+static void SkulteraInit(void)
 {
     // Random direction
     SpriteUtilChooseRandomXFlip();
@@ -103,7 +117,7 @@ void SkulteraInit(void)
  * @brief 48d78 | 30 | Initializes a skultera to be idle
  * 
  */
-void SkulteraIdleInit(void)
+static void SkulteraIdleInit(void)
 {
     // Save spawn X to allow loop back
     gCurrentSprite.xPositionSpawn = gCurrentSprite.xPosition;
@@ -115,21 +129,23 @@ void SkulteraIdleInit(void)
     gCurrentSprite.currentAnimationFrame = 0;
 
     // Timer before movement
-    gCurrentSprite.work0 = 3;
+    gCurrentSprite.work0 = CONVERT_SECONDS(.05f);
 }
 
 /**
  * @brief 48da8 | c4 | Handles the skultera moving in idle behavior
  * 
  */
-void SkulteraMoving(void)
+static void SkulteraMoving(void)
 {
     u32 nslr;
-
-    gCurrentSprite.work0--; // Timer before movement
+    
+    // Timer before movement
+    APPLY_DELTA_TIME_DEC(gCurrentSprite.work0);
     if (gCurrentSprite.work0 == 0)
     {
-        if (SkulteraXMovement(SKULTERA_X_MOVEMENT_SPEED)) // Move and check hit solid
+        // Move and check hit solid
+        if (SkulteraXMovement(SKULTERA_X_MOVEMENT_SPEED))
         {
             // Hit solid, set turning around
             gCurrentSprite.pose = SKULTERA_POSE_TURNING_AROUND;
@@ -149,7 +165,7 @@ void SkulteraMoving(void)
             }
 
             // Reset timer
-            gCurrentSprite.work0 = 3;
+            gCurrentSprite.work0 = CONVERT_SECONDS(.05f);
         }
     }
 
@@ -183,7 +199,7 @@ void SkulteraMoving(void)
  * @brief 48e6c | 20 | Initializes a skultera to be chasing samus
  * 
  */
-void SkulteraChasingSamusInit(void)
+static void SkulteraChasingSamusInit(void)
 {
     gCurrentSprite.pose = SKULTERA_POSE_CHASING_SAMUS;
 
@@ -196,13 +212,13 @@ void SkulteraChasingSamusInit(void)
  * @brief 48e8c | 110 | Handles the skultera moving in chasing samus behavior 
  * 
  */
-void SkulteraChasingSamus(void)
+static void SkulteraChasingSamus(void)
 {
     u16 samusY;
     u16 spriteY;
     u32 nslr;
 
-    samusY = gSamusData.yPosition + gSamusPhysics.drawDistanceTop / 2;
+    samusY = gSamusData.yPosition + gSamusPhysics.hitboxTop / 2;
     spriteY = gCurrentSprite.yPosition - HALF_BLOCK_SIZE;
 
     // Check move vertically
@@ -225,13 +241,14 @@ void SkulteraChasingSamus(void)
             gCurrentSprite.yPosition += SKULTERA_Y_MOVEMENT_SPEED;
     }
 
-    gCurrentSprite.work0--; // Timer before movement
+    // Timer before movement
+    APPLY_DELTA_TIME_DEC(gCurrentSprite.work0);
     if (gCurrentSprite.work0 == 0)
     {
         if (SkulteraXMovement(SKULTERA_X_MOVEMENT_SPEED))
             gCurrentSprite.pose = SKULTERA_POSE_TURNING_AROUND;
         else
-            gCurrentSprite.work0 = 2; // Reset timer, 1 frame faster than idle for faster movement
+            gCurrentSprite.work0 = CONVERT_SECONDS(1.f / 30); // Reset timer, 1 frame faster than idle for faster movement
     }
 
     // Check samus still in range
@@ -268,7 +285,7 @@ void SkulteraChasingSamus(void)
  * @brief 48f9c | 38 | Initializes a skultera to be turning around
  * 
  */
-void SkulteraTurningAroundInit(void)
+static void SkulteraTurningAroundInit(void)
 {
     gCurrentSprite.pose = SKULTERA_POSE_CHECK_TURNING_AROUND_ENDED;
 
@@ -284,9 +301,9 @@ void SkulteraTurningAroundInit(void)
  * @brief 48fd4 | 24 | Checks if the skultera has finished turning around
  * 
  */
-void SkulteraCheckTurningAroundAnimEnded(void)
+static void SkulteraCheckTurningAroundAnimEnded(void)
 {
-    if (SpriteUtilCheckEndCurrentSpriteAnim())
+    if (SpriteUtilHasCurrentAnimationEnded())
     {
         // Set idle behavior
         SkulteraIdleInit();

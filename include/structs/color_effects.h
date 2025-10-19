@@ -21,14 +21,14 @@ struct ColorFading {
 };
 
 struct ColorFadingData {
-    u8 isWhite;
+    boolu8 isWhite;
     ColorFadingUnkFunc_T pUpdateSubroutine;
     u8 firstColorSet;
     ColorFadingUnkFunc_T pProcessSubroutine;
     u8 secondColorSet;
     u16 bgColorMask;
     u16 objColorMask;
-    u8 pFadeSubroutine;
+    u8 fadeSubroutine;
 };
 
 struct ColorFadingColorInfo {
@@ -39,7 +39,7 @@ struct ColorFadingColorInfo {
 // Globals
 
 extern struct ColorFading gColorFading;
-extern u16 gBg1CntDuringDoorTransition;
 extern u16 gBg3CntDuringDoorTransition;
+extern u16 gBg1CntDuringDoorTransition;
 
-#endif
+#endif /* COLOR_EFFECTS_STRUCT_H */

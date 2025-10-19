@@ -1,4 +1,5 @@
 #include "sprites_AI/security_laser.h"
+#include "macros.h"
 #include "gba.h"
 
 #include "data/sprites/security_laser.h"
@@ -9,11 +10,22 @@
 
 #include "structs/sprite.h"
 
+#define SECURITY_LASER_SMALL 0x2
+#define SECURITY_LASER_MEDIUM 0x3
+#define SECURITY_LASER_LARGE 0x4
+#define SECURITY_LASER_VERY_LARGE 0x5
+#define SECURITY_LASER_VERTICAL 0x80
+
+#define SECURITY_LASER_POSE_IDLE 0x9
+#define SECURITY_LASER_POSE_DISAPPEARING 0xB
+#define SECURITY_LASER_POSE_UNUSED 0xC
+#define SECURITY_LASER_POSE_SET_ALARM 0x23
+
 /**
  * @brief 37cbc | 21c | Initializes a security laser sprite
  * 
  */
-void SecurityLaserInit(void)
+static void SecurityLaserInit(void)
 {
     u16 yPosition;
     u16 xPosition;
@@ -29,39 +41,39 @@ void SecurityLaserInit(void)
         // Get size
         if (SpriteUtilGetCollisionAtPosition(yPosition - (BLOCK_SIZE * 2 + HALF_BLOCK_SIZE), xPosition) != COLLISION_AIR)
         {
-            gCurrentSprite.pOam = sSecurityLaserOAM_VerticalSmall;
-            gCurrentSprite.drawDistanceTop = 0x20;
-            gCurrentSprite.hitboxTop = -0x64;
+            gCurrentSprite.pOam = sSecurityLaserOam_VerticalSmall;
+            gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 2);
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 1 + HALF_BLOCK_SIZE + PIXEL_SIZE);
             gCurrentSprite.work1 = SECURITY_LASER_VERTICAL | SECURITY_LASER_SMALL;
         }
         else if (SpriteUtilGetCollisionAtPosition(yPosition - (BLOCK_SIZE * 3 + HALF_BLOCK_SIZE), xPosition) != COLLISION_AIR)
         {
-            gCurrentSprite.pOam = sSecurityLaserOAM_VerticalMedium;
-            gCurrentSprite.drawDistanceTop = 0x30;
-            gCurrentSprite.hitboxTop = -0xA4;
+            gCurrentSprite.pOam = sSecurityLaserOam_VerticalMedium;
+            gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 3);
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 2 + HALF_BLOCK_SIZE + PIXEL_SIZE);
             gCurrentSprite.work1 = SECURITY_LASER_VERTICAL | SECURITY_LASER_MEDIUM;
         }
         else if (SpriteUtilGetCollisionAtPosition(yPosition - (BLOCK_SIZE * 4 + HALF_BLOCK_SIZE), xPosition) != COLLISION_AIR)
         {
-            gCurrentSprite.pOam = sSecurityLaserOAM_VerticalLarge;
-            gCurrentSprite.drawDistanceTop = 0x40;
-            gCurrentSprite.hitboxTop = -0xE4;
+            gCurrentSprite.pOam = sSecurityLaserOam_VerticalLarge;
+            gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 4);
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 3 + HALF_BLOCK_SIZE + PIXEL_SIZE);
             gCurrentSprite.work1 = SECURITY_LASER_VERTICAL | SECURITY_LASER_LARGE;
         }
         else
         {
-            gCurrentSprite.pOam = sSecurityLaserOAM_VerticalVeryLarge;
-            gCurrentSprite.drawDistanceTop = 0x50;
-            gCurrentSprite.hitboxTop = -0x124;
+            gCurrentSprite.pOam = sSecurityLaserOam_VerticalVeryLarge;
+            gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 5);
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 4 + HALF_BLOCK_SIZE + PIXEL_SIZE);
             gCurrentSprite.work1 = SECURITY_LASER_VERTICAL | SECURITY_LASER_VERY_LARGE;
         }
 
-        gCurrentSprite.drawDistanceBottom = 0x0;
-        gCurrentSprite.drawDistanceHorizontal = 0x8;
+        gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(0);
+        gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(HALF_BLOCK_SIZE);
 
-        gCurrentSprite.hitboxBottom = 0x0;
-        gCurrentSprite.hitboxLeft = -0x8;
-        gCurrentSprite.hitboxRight = 0x8;
+        gCurrentSprite.hitboxBottom = 0;
+        gCurrentSprite.hitboxLeft = -EIGHTH_BLOCK_SIZE;
+        gCurrentSprite.hitboxRight = EIGHTH_BLOCK_SIZE;
     }
     else
     {
@@ -69,64 +81,64 @@ void SecurityLaserInit(void)
         // Get size
         if (SpriteUtilGetCollisionAtPosition(yPosition - HALF_BLOCK_SIZE, xPosition + BLOCK_SIZE * 2) != COLLISION_AIR)
         {
-            gCurrentSprite.pOam = sSecurityLaserOAM_HorizontalSmall;
-            gCurrentSprite.drawDistanceHorizontal = 0x18;
-            gCurrentSprite.hitboxRight = 0x44;
+            gCurrentSprite.pOam = sSecurityLaserOam_HorizontalSmall;
+            gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 1 + HALF_BLOCK_SIZE);
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 1 + PIXEL_SIZE;
             gCurrentSprite.work1 = SECURITY_LASER_SMALL;
         }
         else if (SpriteUtilGetCollisionAtPosition(yPosition - HALF_BLOCK_SIZE, xPosition + BLOCK_SIZE * 3) != COLLISION_AIR)
         {
-            gCurrentSprite.pOam = sSecurityLaserOAM_HorizontalMedium;
-            gCurrentSprite.drawDistanceHorizontal = 0x28;
-            gCurrentSprite.hitboxRight = 0x84;
+            gCurrentSprite.pOam = sSecurityLaserOam_HorizontalMedium;
+            gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 2 + HALF_BLOCK_SIZE);
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 2 + PIXEL_SIZE;
             gCurrentSprite.work1 = SECURITY_LASER_MEDIUM;
         }
         else if (SpriteUtilGetCollisionAtPosition(yPosition - HALF_BLOCK_SIZE, xPosition + BLOCK_SIZE * 4) != COLLISION_AIR)
         {
-            gCurrentSprite.pOam = sSecurityLaserOAM_HorizontalLarge;
-            gCurrentSprite.drawDistanceHorizontal = 0x38;
-            gCurrentSprite.hitboxRight = 0xC4;
+            gCurrentSprite.pOam = sSecurityLaserOam_HorizontalLarge;
+            gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 3 + HALF_BLOCK_SIZE);
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 3 + PIXEL_SIZE;
             gCurrentSprite.work1 = SECURITY_LASER_LARGE;
         }
         else
         {
-            gCurrentSprite.pOam = sSecurityLaserOAM_HorizontalVeryLarge;
-            gCurrentSprite.drawDistanceHorizontal = 0x48;
-            gCurrentSprite.hitboxRight = 0x104;
+            gCurrentSprite.pOam = sSecurityLaserOam_HorizontalVeryLarge;
+            gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 4 + HALF_BLOCK_SIZE);
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 4 + PIXEL_SIZE;
             gCurrentSprite.work1 = SECURITY_LASER_VERY_LARGE;
         }
 
-        gCurrentSprite.drawDistanceTop = 0x10;
-        gCurrentSprite.drawDistanceBottom = 0x0;
+        gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE);
+        gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(0);
 
-        gCurrentSprite.hitboxTop = -0x28;
-        gCurrentSprite.hitboxBottom = -0x18;
-        gCurrentSprite.hitboxLeft = -0x4;
+        gCurrentSprite.hitboxTop = -(HALF_BLOCK_SIZE + EIGHTH_BLOCK_SIZE);
+        gCurrentSprite.hitboxBottom = -(QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE);
+        gCurrentSprite.hitboxLeft = -PIXEL_SIZE;
     }
 
     gCurrentSprite.samusCollision = SSC_CHECK_COLLIDING;
-    gCurrentSprite.drawOrder = 0x2;
-    gCurrentSprite.currentAnimationFrame = 0x0;
-    gCurrentSprite.animationDurationCounter = 0x0;
+    gCurrentSprite.drawOrder = 2;
+    gCurrentSprite.currentAnimationFrame = 0;
+    gCurrentSprite.animationDurationCounter = 0;
 
     
     TransparencyUpdateBldcnt(0x1, BLDCNT_BG0_FIRST_TARGET_PIXEL | BLDCNT_ALPHA_BLENDING_EFFECT |
         BLDCNT_BG2_SECOND_TARGET_PIXEL | BLDCNT_BG3_SECOND_TARGET_PIXEL);
 
-    if (gAlarmTimer != 0x0)
+    if (gAlarmTimer != 0)
     {
         // Set aware
         gCurrentSprite.pose = SECURITY_LASER_POSE_SET_ALARM;
         gCurrentSprite.status |= SPRITE_STATUS_NOT_DRAWN;
         gCurrentSprite.work2 = FALSE;
-        gCurrentSprite.work3 = 0x10;
+        gCurrentSprite.work3 = BLDALPHA_MAX_VALUE;
     }
     else
     {
         // Set idle
         gCurrentSprite.pose = SECURITY_LASER_POSE_IDLE;
         gCurrentSprite.work2 = TRUE;
-        gCurrentSprite.work3 = 0x8;
+        gCurrentSprite.work3 = BLDALPHA_MAX_VALUE / 2;
     }
 }
 
@@ -134,7 +146,7 @@ void SecurityLaserInit(void)
  * @brief 37ed8 | 13c | Handles a security laser being idle
  * 
  */
-void SecurityLaserIdle(void)
+static void SecurityLaserIdle(void)
 {
     struct SpriteData* pSprite;
 
@@ -148,49 +160,51 @@ void SecurityLaserIdle(void)
                 pSprite->status |= SPRITE_STATUS_MOSAIC;
         }
     }
-    else if (gAlarmTimer == 0x0)
+    else if (gAlarmTimer == 0)
+    {
         return;
+    }
 
     gCurrentSprite.pose = SECURITY_LASER_POSE_DISAPPEARING;
     gCurrentSprite.status &= ~SPRITE_STATUS_SAMUS_COLLIDING;
 
     gCurrentSprite.ignoreSamusCollisionTimer = DELTA_TIME;
-    gCurrentSprite.currentAnimationFrame = 0x0;
-    gCurrentSprite.animationDurationCounter = 0x0;
+    gCurrentSprite.currentAnimationFrame = 0;
+    gCurrentSprite.animationDurationCounter = 0;
 
     // Set disappearing OAM
     switch (gCurrentSprite.work1)
     {
         case SECURITY_LASER_SMALL:
-            gCurrentSprite.pOam = sSecurityLaserOAM_HorizontalSmallDisappearing;
+            gCurrentSprite.pOam = sSecurityLaserOam_HorizontalSmallDisappearing;
             break;
 
         case SECURITY_LASER_MEDIUM:
-            gCurrentSprite.pOam = sSecurityLaserOAM_HorizontalMediumDisappearing;
+            gCurrentSprite.pOam = sSecurityLaserOam_HorizontalMediumDisappearing;
             break;
 
         case SECURITY_LASER_LARGE:
-            gCurrentSprite.pOam = sSecurityLaserOAM_HorizontalLargeDisappearing;
+            gCurrentSprite.pOam = sSecurityLaserOam_HorizontalLargeDisappearing;
             break;
 
         case SECURITY_LASER_VERY_LARGE:
-            gCurrentSprite.pOam = sSecurityLaserOAM_HorizontalVeryLargeDisappearing;
+            gCurrentSprite.pOam = sSecurityLaserOam_HorizontalVeryLargeDisappearing;
             break;
 
         case SECURITY_LASER_VERTICAL | SECURITY_LASER_SMALL:
-            gCurrentSprite.pOam = sSecurityLaserOAM_VerticalSmallDisappearing;
+            gCurrentSprite.pOam = sSecurityLaserOam_VerticalSmallDisappearing;
             break;
 
         case SECURITY_LASER_VERTICAL | SECURITY_LASER_MEDIUM:
-            gCurrentSprite.pOam = sSecurityLaserOAM_VerticalMediumDisappearing;
+            gCurrentSprite.pOam = sSecurityLaserOam_VerticalMediumDisappearing;
             break;
 
         case SECURITY_LASER_VERTICAL | SECURITY_LASER_LARGE:
-            gCurrentSprite.pOam = sSecurityLaserOAM_VerticalLargeDisappearing;
+            gCurrentSprite.pOam = sSecurityLaserOam_VerticalLargeDisappearing;
             break;
 
         case SECURITY_LASER_VERTICAL | SECURITY_LASER_VERY_LARGE:
-            gCurrentSprite.pOam = sSecurityLaserOAM_VerticalVeryLargeDisappearing;
+            gCurrentSprite.pOam = sSecurityLaserOam_VerticalVeryLargeDisappearing;
             break;
 
         default:
@@ -205,53 +219,53 @@ void SecurityLaserIdle(void)
  * @brief 38014 | d4 | Checks if the despawning animation has ended
  * 
  */
-void SecurityLaserCheckDespawnAnimEnded(void)
+static void SecurityLaserCheckDespawnAnimEnded(void)
 {
     gCurrentSprite.ignoreSamusCollisionTimer = DELTA_TIME;
 
-    if (SpriteUtilCheckEndCurrentSpriteAnim())
+    if (SpriteUtilHasCurrentAnimationEnded())
     {
         gCurrentSprite.pose = SECURITY_LASER_POSE_SET_ALARM;
-        gCurrentSprite.currentAnimationFrame = 0x0;
-        gCurrentSprite.animationDurationCounter = 0x0;
+        gCurrentSprite.currentAnimationFrame = 0;
+        gCurrentSprite.animationDurationCounter = 0;
         gCurrentSprite.status |= SPRITE_STATUS_NOT_DRAWN;
 
         switch (gCurrentSprite.work1)
         {
             case SECURITY_LASER_SMALL:
-                gCurrentSprite.pOam = sSecurityLaserOAM_HorizontalSmall;
+                gCurrentSprite.pOam = sSecurityLaserOam_HorizontalSmall;
                 break;
 
             case SECURITY_LASER_MEDIUM:
-                gCurrentSprite.pOam = sSecurityLaserOAM_HorizontalMedium;
+                gCurrentSprite.pOam = sSecurityLaserOam_HorizontalMedium;
                 break;
 
             case SECURITY_LASER_LARGE:
-                gCurrentSprite.pOam = sSecurityLaserOAM_HorizontalLarge;
+                gCurrentSprite.pOam = sSecurityLaserOam_HorizontalLarge;
                 break;
 
             case SECURITY_LASER_VERY_LARGE:
-                gCurrentSprite.pOam = sSecurityLaserOAM_HorizontalVeryLarge;
+                gCurrentSprite.pOam = sSecurityLaserOam_HorizontalVeryLarge;
                 break;
 
             case SECURITY_LASER_VERTICAL | SECURITY_LASER_SMALL:
-                gCurrentSprite.pOam = sSecurityLaserOAM_VerticalSmall;
+                gCurrentSprite.pOam = sSecurityLaserOam_VerticalSmall;
                 break;
 
             case SECURITY_LASER_VERTICAL | SECURITY_LASER_MEDIUM:
-                gCurrentSprite.pOam = sSecurityLaserOAM_VerticalMedium;
+                gCurrentSprite.pOam = sSecurityLaserOam_VerticalMedium;
                 break;
 
             case SECURITY_LASER_VERTICAL | SECURITY_LASER_LARGE:
-                gCurrentSprite.pOam = sSecurityLaserOAM_VerticalLarge;
+                gCurrentSprite.pOam = sSecurityLaserOam_VerticalLarge;
                 break;
 
             case SECURITY_LASER_VERTICAL | SECURITY_LASER_VERY_LARGE:
-                gCurrentSprite.pOam = sSecurityLaserOAM_VerticalVeryLarge;
+                gCurrentSprite.pOam = sSecurityLaserOam_VerticalVeryLarge;
                 break;
 
             default:
-                gCurrentSprite.status = 0x0;
+                gCurrentSprite.status = 0;
         }
     }
 }
@@ -260,7 +274,7 @@ void SecurityLaserCheckDespawnAnimEnded(void)
  * @brief 380e8 | 1c | Continuously sets the alarm
  * 
  */
-void SecurityLaserSetAlarm(void)
+static void SecurityLaserSetAlarm(void)
 {
     gCurrentSprite.ignoreSamusCollisionTimer = DELTA_TIME;
     gAlarmTimer = ALARM_TIMER_ACTIVE_TIMER;
@@ -270,52 +284,52 @@ void SecurityLaserSetAlarm(void)
  * @brief 38104 | cc | Unused code
  * 
  */
-void SecurityLaser_Unused(void)
+static void SecurityLaser_Unused(void)
 {
     gCurrentSprite.ignoreSamusCollisionTimer = DELTA_TIME;
 
-    if (SpriteUtilCheckEndCurrentSpriteAnim())
+    if (SpriteUtilHasCurrentAnimationEnded())
     {
         gCurrentSprite.pose = SECURITY_LASER_POSE_IDLE;
-        gCurrentSprite.currentAnimationFrame = 0x0;
-        gCurrentSprite.animationDurationCounter = 0x0;
+        gCurrentSprite.currentAnimationFrame = 0;
+        gCurrentSprite.animationDurationCounter = 0;
 
         switch (gCurrentSprite.work1)
         {
             case SECURITY_LASER_SMALL:
-                gCurrentSprite.pOam = sSecurityLaserOAM_HorizontalSmall;
+                gCurrentSprite.pOam = sSecurityLaserOam_HorizontalSmall;
                 break;
 
             case SECURITY_LASER_MEDIUM:
-                gCurrentSprite.pOam = sSecurityLaserOAM_HorizontalMedium;
+                gCurrentSprite.pOam = sSecurityLaserOam_HorizontalMedium;
                 break;
 
             case SECURITY_LASER_LARGE:
-                gCurrentSprite.pOam = sSecurityLaserOAM_HorizontalLarge;
+                gCurrentSprite.pOam = sSecurityLaserOam_HorizontalLarge;
                 break;
 
             case SECURITY_LASER_VERY_LARGE:
-                gCurrentSprite.pOam = sSecurityLaserOAM_HorizontalVeryLarge;
+                gCurrentSprite.pOam = sSecurityLaserOam_HorizontalVeryLarge;
                 break;
 
             case SECURITY_LASER_VERTICAL | SECURITY_LASER_SMALL:
-                gCurrentSprite.pOam = sSecurityLaserOAM_VerticalSmall;
+                gCurrentSprite.pOam = sSecurityLaserOam_VerticalSmall;
                 break;
 
             case SECURITY_LASER_VERTICAL | SECURITY_LASER_MEDIUM:
-                gCurrentSprite.pOam = sSecurityLaserOAM_VerticalMedium;
+                gCurrentSprite.pOam = sSecurityLaserOam_VerticalMedium;
                 break;
 
             case SECURITY_LASER_VERTICAL | SECURITY_LASER_LARGE:
-                gCurrentSprite.pOam = sSecurityLaserOAM_VerticalLarge;
+                gCurrentSprite.pOam = sSecurityLaserOam_VerticalLarge;
                 break;
 
             case SECURITY_LASER_VERTICAL | SECURITY_LASER_VERY_LARGE:
-                gCurrentSprite.pOam = sSecurityLaserOAM_VerticalVeryLarge;
+                gCurrentSprite.pOam = sSecurityLaserOam_VerticalVeryLarge;
                 break;
 
             default:
-                gCurrentSprite.status = 0x0;
+                gCurrentSprite.status = 0;
         }
     }
 }
@@ -328,7 +342,7 @@ void SecurityLaser(void)
 {
     switch (gCurrentSprite.pose)
     {
-        case 0x0:
+        case SPRITE_POSE_UNINITIALIZED:
             SecurityLaserInit();
             break;
 
@@ -348,26 +362,26 @@ void SecurityLaser(void)
             SecurityLaser_Unused();
     }
 
-    if ((u8)(gCurrentSprite.spriteId + 0x68) < 0x2)
+    if (gCurrentSprite.spriteId == PSPRITE_SECURITY_LASER_VERTICAL || gCurrentSprite.spriteId == PSPRITE_SECURITY_LASER_HORIZONTAL)
     {
-        if (gAlarmTimer != 0x0)
+        if (gAlarmTimer != 0)
         {
             if (gCurrentSprite.work2)
             {
                 gCurrentSprite.work2--;
-                if (gCurrentSprite.work2 == 0x0 && gCurrentSprite.work3 < 0x10)
+                if (gCurrentSprite.work2 == 0 && gCurrentSprite.work3 < BLDALPHA_MAX_VALUE)
                 {
                     gCurrentSprite.work3++;
                     gCurrentSprite.work2 = TRUE;
                 }
             }
         }
-        else if (gCurrentSprite.work3 != 0x8)            
+        else if (gCurrentSprite.work3 != BLDALPHA_MAX_VALUE / 2)            
         {
-            gCurrentSprite.work3 = 0x8;
+            gCurrentSprite.work3 = BLDALPHA_MAX_VALUE / 2;
             gCurrentSprite.work2 = TRUE;
         }
 
-        TransparencySpriteUpdateBLDALPHA(0x0, gCurrentSprite.work3, 0x0, 0x10);
+        TransparencySpriteUpdateBldalpha(0, gCurrentSprite.work3, 0, BLDALPHA_MAX_VALUE);
     }
 }

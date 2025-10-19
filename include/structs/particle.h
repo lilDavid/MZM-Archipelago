@@ -3,13 +3,16 @@
 
 #include "types.h"
 #include "macros.h"
+#include "oam.h"
+
+#include "constants/particle.h"
 
 // Structs
 
 struct ParticleEffect {
-    u8 status;
+    ParticleStatus status;
     u8 animationDurationCounter;
-    u8 effect;
+    ParticleEffectId effect;
     u8 stage;
     u8 frameCounter;
     u16 currentAnimationFrame;

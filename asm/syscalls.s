@@ -34,8 +34,8 @@ LZ77UncompWRAM: @ 0x080051a8
     swi SYSCALL_LZ77UnCompWRAM
     bx lr
 
-    thumb_func_start Midikey2Freq
-Midikey2Freq: @ 0x080051ac
+    thumb_func_start MidiKey2Freq
+MidiKey2Freq: @ 0x080051ac
     swi SYSCALL_MIDIKey2Freq
     bx lr
 

@@ -13,12 +13,26 @@
 #include "structs/samus.h"
 #include "structs/clipdata.h"
 
+#define ELEVATOR_STATUE_POSE_CHECK_FALL 0x8
+#define ELEVATOR_STATUE_POSE_DELAY_BEFORE_FALLING 0x9
+#define ELEVATOR_STATUE_POSE_FALLING 0xB
+#define ELEVATOR_STATUE_POSE_IDLE 0xF
+
+
+#define ELEVATOR_STATUE_DEBRIS_PART_KRAID 0x0
+#define ELEVATOR_STATUE_DEBRIS_PART_RIDLEY 0x1
+#define ELEVATOR_STATUE_DEBRIS_PART_DUST 0x2
+
+#define ELEVATOR_STATUE_DEBRIS_POSE_IDLE 0x9
+
+#define ELEVATOR_STATUE_FALL_DELAY work0
+
 /**
  * @brief 47ebc | 50 | Updates the clipdata of the statue debris on the ground
  * 
  * @param caa Clipdata Affecting Action
  */
-void ElevatorStatueChangeTwoGroundCcaa(u8 caa)
+static void ElevatorStatueChangeTwoGroundCcaa(u8 caa)
 {
     u16 yPosition;
     u16 xPosition;
@@ -37,7 +51,7 @@ void ElevatorStatueChangeTwoGroundCcaa(u8 caa)
  * 
  * @param caa Clipdata Affecting Action
  */
-void KraidElevatorStatueChangeCAA(u8 caa)
+static void KraidElevatorStatueChangeCAA(u8 caa)
 {
     u16 yPosition;
     u16 xPosition;
@@ -62,17 +76,17 @@ void KraidElevatorStatueChangeCAA(u8 caa)
  * @brief 47f70 | 4c | Initializes a Kraid elevator statue to be fallen
  * 
  */
-void KraidElevatorStatueFallenInit(void)
+static void KraidElevatorStatueFallenInit(void)
 {
     gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 2);
     gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE + HALF_BLOCK_SIZE);
 
-    gCurrentSprite.hitboxTop = -(QUARTER_BLOCK_SIZE * 3 + PIXEL_SIZE * 3); // Hitbox even though there's no samus collision?
+    gCurrentSprite.hitboxTop = -(THREE_QUARTER_BLOCK_SIZE + PIXEL_SIZE * 3); // Hitbox even though there's no samus collision?
     gCurrentSprite.hitboxBottom = 0;
     gCurrentSprite.hitboxLeft = -(BLOCK_SIZE * 4);
     gCurrentSprite.hitboxRight = BLOCK_SIZE + HALF_BLOCK_SIZE;
 
-    gCurrentSprite.pOam = sKraidElevatorStatueOAM_Fallen;
+    gCurrentSprite.pOam = sKraidElevatorStatueOam_Fallen;
     gCurrentSprite.currentAnimationFrame = 0;
     gCurrentSprite.animationDurationCounter = 0;
 
@@ -84,7 +98,7 @@ void KraidElevatorStatueFallenInit(void)
  * @brief 47fbc | 8c | Initializes a Kraid elevator statue sprite
  * 
  */
-void KraidElevatorStatueInit(void)
+static void KraidElevatorStatueInit(void)
 {
     gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 5);
     gCurrentSprite.bgPriority = 1;
@@ -107,7 +121,7 @@ void KraidElevatorStatueInit(void)
     gCurrentSprite.hitboxLeft = -BLOCK_SIZE;
     gCurrentSprite.hitboxRight = BLOCK_SIZE;
 
-    gCurrentSprite.pOam = sKraidElevatorStatueOAM_Idle;
+    gCurrentSprite.pOam = sKraidElevatorStatueOam_Idle;
     gCurrentSprite.currentAnimationFrame = 0;
     gCurrentSprite.animationDurationCounter = 0;
 
@@ -120,14 +134,14 @@ void KraidElevatorStatueInit(void)
  * @brief 48048 | 34 | Checks if the Kraid elevator statue should fall
  * 
  */
-void KraidElevatorStatueCheckShouldFall(void)
+static void KraidElevatorStatueCheckShouldFall(void)
 {
     // Samus not using the elevator and kraid dead
     if (gSamusData.pose != SPOSE_USING_AN_ELEVATOR && EventFunction(EVENT_ACTION_CHECKING, EVENT_KRAID_KILLED))
     {
         // Set falling behavior
         gCurrentSprite.pose = ELEVATOR_STATUE_POSE_DELAY_BEFORE_FALLING;
-        gCurrentSprite.work0 = CONVERT_SECONDS(.25f) + 1 * DELTA_TIME; // Delay before falling
+        gCurrentSprite.ELEVATOR_STATUE_FALL_DELAY = CONVERT_SECONDS(.25f) + 1 * DELTA_TIME; // Delay before falling
     }
 }
 
@@ -135,13 +149,13 @@ void KraidElevatorStatueCheckShouldFall(void)
  * @brief 4807c | 54 | Handles the delay before the Kraid elevator statue starts falling
  * 
  */
-void KraidElevatorStatueDelayBeforeFalling(void)
+static void KraidElevatorStatueDelayBeforeFalling(void)
 {
-    APPLY_DELTA_TIME_DEC(gCurrentSprite.work0);
-    if (gCurrentSprite.work0 == 0)
+    APPLY_DELTA_TIME_DEC(gCurrentSprite.ELEVATOR_STATUE_FALL_DELAY);
+    if (gCurrentSprite.ELEVATOR_STATUE_FALL_DELAY == 0)
     {
         // Set falling behavior
-        gCurrentSprite.pOam = sKraidElevatorStatueOAM_Falling;
+        gCurrentSprite.pOam = sKraidElevatorStatueOam_Falling;
         gCurrentSprite.currentAnimationFrame = 0;
         gCurrentSprite.animationDurationCounter = 0;
 
@@ -163,7 +177,7 @@ void KraidElevatorStatueDelayBeforeFalling(void)
  * @brief 480d0 | a4 | Handles the Kraid elevator statue falling
  * 
  */
-void KraidElevatorStatueFalling(void)
+static void KraidElevatorStatueFalling(void)
 {
     switch (gCurrentSprite.currentAnimationFrame)
     {
@@ -200,7 +214,7 @@ void KraidElevatorStatueFalling(void)
     }
 
     // Check set fallen
-    if (SpriteUtilCheckEndCurrentSpriteAnim())
+    if (SpriteUtilHasCurrentAnimationEnded())
         KraidElevatorStatueFallenInit();
 }
 
@@ -209,7 +223,7 @@ void KraidElevatorStatueFalling(void)
  * 
  * @param caa Clipdata Affecting Action
  */
-void RidleyElevatorStatueChangeCcaa(u8 caa)
+static void RidleyElevatorStatueChangeCcaa(u8 caa)
 {
     u16 yPosition;
     u16 xPosition;
@@ -234,17 +248,17 @@ void RidleyElevatorStatueChangeCcaa(u8 caa)
  * @brief 481d8 | 4c | Initializes the Ridley elevator statue to be fallen
  * 
  */
-void RidleyElevatorStatueFallenInit(void)
+static void RidleyElevatorStatueFallenInit(void)
 {
-    gCurrentSprite.drawDistanceTop = HALF_BLOCK_SIZE + PIXEL_SIZE * 2;
-    gCurrentSprite.drawDistanceBottom = QUARTER_BLOCK_SIZE + PIXEL_SIZE * 2;
+    gCurrentSprite.drawDistanceTop = HALF_BLOCK_SIZE + EIGHTH_BLOCK_SIZE;
+    gCurrentSprite.drawDistanceBottom = QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE;
 
-    gCurrentSprite.hitboxTop = -(QUARTER_BLOCK_SIZE * 3 + PIXEL_SIZE * 3); // Hitbox even though there's no samus collision?
+    gCurrentSprite.hitboxTop = -(THREE_QUARTER_BLOCK_SIZE + PIXEL_SIZE * 3); // Hitbox even though there's no samus collision?
     gCurrentSprite.hitboxBottom = 0;
     gCurrentSprite.hitboxLeft = -(BLOCK_SIZE * 4);
     gCurrentSprite.hitboxRight = BLOCK_SIZE + HALF_BLOCK_SIZE;
 
-    gCurrentSprite.pOam = sRidleyElevatorStatueOAM_Fallen;
+    gCurrentSprite.pOam = sRidleyElevatorStatueOam_Fallen;
     gCurrentSprite.currentAnimationFrame = 0;
     gCurrentSprite.animationDurationCounter = 0;
 
@@ -256,7 +270,7 @@ void RidleyElevatorStatueFallenInit(void)
  * @brief 48224 | 8c | Initializes the Ridley elevator sprite
  * 
  */
-void RidleyElevatorStatueInit(void)
+static void RidleyElevatorStatueInit(void)
 {
     gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 5);
 
@@ -280,7 +294,7 @@ void RidleyElevatorStatueInit(void)
     gCurrentSprite.hitboxLeft = -BLOCK_SIZE;
     gCurrentSprite.hitboxRight = BLOCK_SIZE;
 
-    gCurrentSprite.pOam = sRidleyElevatorStatueOAM_Idle;
+    gCurrentSprite.pOam = sRidleyElevatorStatueOam_Idle;
     gCurrentSprite.currentAnimationFrame = 0;
     gCurrentSprite.animationDurationCounter = 0;
 
@@ -292,14 +306,14 @@ void RidleyElevatorStatueInit(void)
  * @brief 482b0 | 34 | Checks if the Ridley elevator statue should fall
  * 
  */
-void RidleyElevatorStatueCheckShouldFall(void)
+static void RidleyElevatorStatueCheckShouldFall(void)
 {
     // Samus not using the elevator and ridley dead
     if (gSamusData.pose != SPOSE_USING_AN_ELEVATOR && EventFunction(EVENT_ACTION_CHECKING, EVENT_RIDLEY_KILLED))
     {
         // Set falling behavior
         gCurrentSprite.pose = ELEVATOR_STATUE_POSE_DELAY_BEFORE_FALLING;
-        gCurrentSprite.work0 = CONVERT_SECONDS(.25f) + 1 * DELTA_TIME; // Timer before falling
+        gCurrentSprite.ELEVATOR_STATUE_FALL_DELAY = CONVERT_SECONDS(.25f) + 1 * DELTA_TIME; // Timer before falling
     }
 }
 
@@ -307,13 +321,13 @@ void RidleyElevatorStatueCheckShouldFall(void)
  * @brief 482e4 | 54 | Handles the delay before the Ridley elevator statue starts falling
  * 
  */
-void RidleyElevatorStatueDelayBeforeFalling(void)
+static void RidleyElevatorStatueDelayBeforeFalling(void)
 {
-    APPLY_DELTA_TIME_DEC(gCurrentSprite.work0);
-    if (gCurrentSprite.work0 == 0)
+    APPLY_DELTA_TIME_DEC(gCurrentSprite.ELEVATOR_STATUE_FALL_DELAY);
+    if (gCurrentSprite.ELEVATOR_STATUE_FALL_DELAY == 0)
     {
         // Set falling behavior
-        gCurrentSprite.pOam = sRidleyElevatorStatueOAM_Falling;
+        gCurrentSprite.pOam = sRidleyElevatorStatueOam_Falling;
         gCurrentSprite.currentAnimationFrame = 0;
         gCurrentSprite.animationDurationCounter = 0;
 
@@ -335,7 +349,7 @@ void RidleyElevatorStatueDelayBeforeFalling(void)
  * @brief 48338 | b8 | Handles the Ridley elevator statue falling
  * 
  */
-void RidleyElevatorStatueFalling(void)
+static void RidleyElevatorStatueFalling(void)
 {
     switch (gCurrentSprite.currentAnimationFrame)
     {
@@ -360,7 +374,7 @@ void RidleyElevatorStatueFalling(void)
             gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE);
             break;
 
-        case 0x6:
+        case 6:
             // Update draw distance
             gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 4 + HALF_BLOCK_SIZE);
             gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE + HALF_BLOCK_SIZE);
@@ -377,7 +391,7 @@ void RidleyElevatorStatueFalling(void)
     }
 
     // Check set fallen
-    if (SpriteUtilCheckEndCurrentSpriteAnim())
+    if (SpriteUtilHasCurrentAnimationEnded())
         RidleyElevatorStatueFallenInit();
 }
 
@@ -471,7 +485,7 @@ void ElevatorStatueDebris(void)
                 gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE);
                 gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 5);
 
-                gCurrentSprite.pOam = sElevatorStatueDebrisOAM_Dust;
+                gCurrentSprite.pOam = sElevatorStatueDebrisOam_Dust;
             }
             else
             {
@@ -482,15 +496,15 @@ void ElevatorStatueDebris(void)
                 gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 2);
 
                 if (gCurrentSprite.roomSlot == ELEVATOR_STATUE_DEBRIS_PART_KRAID)
-                    gCurrentSprite.pOam = sElevatorStatueDebrisOAM_Kraid;
+                    gCurrentSprite.pOam = sElevatorStatueDebrisOam_Kraid;
                 else
-                    gCurrentSprite.pOam = sElevatorStatueDebrisOAM_Ridley;
+                    gCurrentSprite.pOam = sElevatorStatueDebrisOam_Ridley;
             }
             break;
 
         case ELEVATOR_STATUE_DEBRIS_POSE_IDLE:
             // Kill if animation ended
-            if (SpriteUtilCheckEndCurrentSpriteAnim())
+            if (SpriteUtilHasCurrentAnimationEnded())
                 gCurrentSprite.status = 0;
     }
 }

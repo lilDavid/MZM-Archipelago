@@ -1,97 +1,97 @@
 #include "data/sprites/zipline.h"
 #include "macros.h"
 
-const u32 sZiplineGfx[264] = INCBIN_U32("data/sprites/Zipline.gfx.lz");
-const u16 sZiplinePal[16] = INCBIN_U16("data/sprites/Zipline.pal");
+const u32 sZiplineGfx[264] = INCBIN_U32("data/sprites/zipline.gfx.lz");
+const u16 sZiplinePal[16] = INCBIN_U16("data/sprites/zipline.pal");
 
-const u16 sZiplineOam_OffIdle_Frame0[OAM_DATA_SIZE(2)] = {
-    0x2,
-    0xf0, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x200,
-    OBJ_SHAPE_HORIZONTAL | 0x0, 0x1f8, OBJ_SPRITE_OAM | 0x208
+static const u16 sZiplineOam_OffIdle_Frame0[OAM_DATA_SIZE(2)] = {
+    2,
+    OAM_ENTRY(-8, -16, OAM_DIMS_16x16, OAM_NO_FLIP, 0x200, 8, 0),
+    OAM_ENTRY(-8, 0, OAM_DIMS_16x8, OAM_NO_FLIP, 0x208, 8, 0),
 };
 
-const u16 sZiplineOam_OffGrabbingSamus_Frame1[OAM_DATA_SIZE(2)] = {
-    0x2,
-    0xf0, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x200,
-    OBJ_SHAPE_HORIZONTAL | 0x0, 0x1f8, OBJ_SPRITE_OAM | 0x228
+static const u16 sZiplineOam_OffGrabbingSamus_Frame1[OAM_DATA_SIZE(2)] = {
+    2,
+    OAM_ENTRY(-8, -16, OAM_DIMS_16x16, OAM_NO_FLIP, 0x200, 8, 0),
+    OAM_ENTRY(-8, 0, OAM_DIMS_16x8, OAM_NO_FLIP, 0x228, 8, 0),
 };
 
-const u16 sZiplineOam_OffGrabbingSamus_Frame2[OAM_DATA_SIZE(2)] = {
-    0x2,
-    0xf0, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x200,
-    OBJ_SHAPE_HORIZONTAL | 0x0, 0x1f8, OBJ_SPRITE_OAM | 0x20a
+static const u16 sZiplineOam_OffGrabbingSamus_Frame2[OAM_DATA_SIZE(2)] = {
+    2,
+    OAM_ENTRY(-8, -16, OAM_DIMS_16x16, OAM_NO_FLIP, 0x200, 8, 0),
+    OAM_ENTRY(-8, 0, OAM_DIMS_16x8, OAM_NO_FLIP, 0x20a, 8, 0),
 };
 
-const u16 sZiplineOam_OnGrabbingSamus_Frame1[OAM_DATA_SIZE(2)] = {
-    0x2,
-    0xf0, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x206,
-    OBJ_SHAPE_HORIZONTAL | 0x0, 0x1f8, OBJ_SPRITE_OAM | 0x228
+static const u16 sZiplineOam_OnGrabbingSamus_Frame1[OAM_DATA_SIZE(2)] = {
+    2,
+    OAM_ENTRY(-8, -16, OAM_DIMS_16x16, OAM_NO_FLIP, 0x206, 8, 0),
+    OAM_ENTRY(-8, 0, OAM_DIMS_16x8, OAM_NO_FLIP, 0x228, 8, 0),
 };
 
-const u16 sZiplineOam_OnSamusGrabbed_Frame2[OAM_DATA_SIZE(2)] = {
-    0x2,
-    0xf0, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x204,
-    OBJ_SHAPE_HORIZONTAL | 0x0, 0x1f8, OBJ_SPRITE_OAM | 0x228
+static const u16 sZiplineOam_OnSamusGrabbed_Frame2[OAM_DATA_SIZE(2)] = {
+    2,
+    OAM_ENTRY(-8, -16, OAM_DIMS_16x16, OAM_NO_FLIP, 0x204, 8, 0),
+    OAM_ENTRY(-8, 0, OAM_DIMS_16x8, OAM_NO_FLIP, 0x228, 8, 0),
 };
 
-const u16 sZiplineOam_OnSamusGrabbed_Frame1[OAM_DATA_SIZE(2)] = {
-    0x2,
-    0xf0, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x202,
-    OBJ_SHAPE_HORIZONTAL | 0x0, 0x1f8, OBJ_SPRITE_OAM | 0x228
+static const u16 sZiplineOam_OnSamusGrabbed_Frame1[OAM_DATA_SIZE(2)] = {
+    2,
+    OAM_ENTRY(-8, -16, OAM_DIMS_16x16, OAM_NO_FLIP, 0x202, 8, 0),
+    OAM_ENTRY(-8, 0, OAM_DIMS_16x8, OAM_NO_FLIP, 0x228, 8, 0),
 };
 
-const u16 sZiplineOam_OnSamusGrabbed_Frame0[OAM_DATA_SIZE(2)] = {
-    0x2,
-    0xf0, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x200,
-    OBJ_SHAPE_HORIZONTAL | 0x0, 0x1f8, OBJ_SPRITE_OAM | 0x228
+static const u16 sZiplineOam_OnSamusGrabbed_Frame0[OAM_DATA_SIZE(2)] = {
+    2,
+    OAM_ENTRY(-8, -16, OAM_DIMS_16x16, OAM_NO_FLIP, 0x200, 8, 0),
+    OAM_ENTRY(-8, 0, OAM_DIMS_16x8, OAM_NO_FLIP, 0x228, 8, 0),
 };
 
-const u16 sZiplineOam_OnIdle_Frame3[OAM_DATA_SIZE(2)] = {
-    0x2,
-    0xf0, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x206,
-    OBJ_SHAPE_HORIZONTAL | 0x0, 0x1f8, OBJ_SPRITE_OAM | 0x208
+static const u16 sZiplineOam_OnIdle_Frame3[OAM_DATA_SIZE(2)] = {
+    2,
+    OAM_ENTRY(-8, -16, OAM_DIMS_16x16, OAM_NO_FLIP, 0x206, 8, 0),
+    OAM_ENTRY(-8, 0, OAM_DIMS_16x8, OAM_NO_FLIP, 0x208, 8, 0),
 };
 
-const u16 sZiplineOam_OnGrabbingSamus_Frame2[OAM_DATA_SIZE(2)] = {
-    0x2,
-    0xf0, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x206,
-    OBJ_SHAPE_HORIZONTAL | 0x0, 0x1f8, OBJ_SPRITE_OAM | 0x20a
+static const u16 sZiplineOam_OnGrabbingSamus_Frame2[OAM_DATA_SIZE(2)] = {
+    2,
+    OAM_ENTRY(-8, -16, OAM_DIMS_16x16, OAM_NO_FLIP, 0x206, 8, 0),
+    OAM_ENTRY(-8, 0, OAM_DIMS_16x8, OAM_NO_FLIP, 0x20a, 8, 0),
 };
 
-const u16 sZiplineOam_OnIdle_Frame1[OAM_DATA_SIZE(2)] = {
-    0x2,
-    0xf0, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x202,
-    OBJ_SHAPE_HORIZONTAL | 0x0, 0x1f8, OBJ_SPRITE_OAM | 0x208
+static const u16 sZiplineOam_OnIdle_Frame1[OAM_DATA_SIZE(2)] = {
+    2,
+    OAM_ENTRY(-8, -16, OAM_DIMS_16x16, OAM_NO_FLIP, 0x202, 8, 0),
+    OAM_ENTRY(-8, 0, OAM_DIMS_16x8, OAM_NO_FLIP, 0x208, 8, 0),
 };
 
-const u16 sZiplineOam_OnIdle_Frame2[OAM_DATA_SIZE(2)] = {
-    0x2,
-    0xf0, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x204,
-    OBJ_SHAPE_HORIZONTAL | 0x0, 0x1f8, OBJ_SPRITE_OAM | 0x208
+static const u16 sZiplineOam_OnIdle_Frame2[OAM_DATA_SIZE(2)] = {
+    2,
+    OAM_ENTRY(-8, -16, OAM_DIMS_16x16, OAM_NO_FLIP, 0x204, 8, 0),
+    OAM_ENTRY(-8, 0, OAM_DIMS_16x8, OAM_NO_FLIP, 0x208, 8, 0),
 };
 
-const u16 sZiplineButtonOAM_OffIdle_Frame0[OAM_DATA_SIZE(2)] = {
-    0x2,
-    0x0, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x20c,
-    OBJ_SHAPE_HORIZONTAL | 0x10, 0x1f8, OBJ_SPRITE_OAM | 0x214
+const u16 sZiplineButtonOam_OffIdle_Frame0[OAM_DATA_SIZE(2)] = {
+    2,
+    OAM_ENTRY(-8, 0, OAM_DIMS_16x16, OAM_NO_FLIP, 0x20c, 8, 0),
+    OAM_ENTRY(-8, 16, OAM_DIMS_16x8, OAM_NO_FLIP, 0x214, 8, 0),
 };
 
-const u16 sZiplineButtonOAM_OnIdle_Frame1[OAM_DATA_SIZE(2)] = {
-    0x2,
-    0x0, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x20e,
-    OBJ_SHAPE_HORIZONTAL | 0x10, 0x1f8, OBJ_SPRITE_OAM | 0x234
+const u16 sZiplineButtonOam_OnIdle_Frame1[OAM_DATA_SIZE(2)] = {
+    2,
+    OAM_ENTRY(-8, 0, OAM_DIMS_16x16, OAM_NO_FLIP, 0x20e, 8, 0),
+    OAM_ENTRY(-8, 16, OAM_DIMS_16x8, OAM_NO_FLIP, 0x234, 8, 0),
 };
 
-const u16 sZiplineButtonOAM_OnIdle_Frame2[OAM_DATA_SIZE(2)] = {
-    0x2,
-    0x0, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x210,
-    OBJ_SHAPE_HORIZONTAL | 0x10, 0x1f8, OBJ_SPRITE_OAM | 0x216
+const u16 sZiplineButtonOam_OnIdle_Frame2[OAM_DATA_SIZE(2)] = {
+    2,
+    OAM_ENTRY(-8, 0, OAM_DIMS_16x16, OAM_NO_FLIP, 0x210, 8, 0),
+    OAM_ENTRY(-8, 16, OAM_DIMS_16x8, OAM_NO_FLIP, 0x216, 8, 0),
 };
 
-const u16 sZiplineButtonOAM_OnIdle_Frame3[OAM_DATA_SIZE(2)] = {
-    0x2,
-    0x0, OBJ_SIZE_16x16 | 0x1f8, OBJ_SPRITE_OAM | 0x212,
-    OBJ_SHAPE_HORIZONTAL | 0x10, 0x1f8, OBJ_SPRITE_OAM | 0x236
+const u16 sZiplineButtonOam_OnIdle_Frame3[OAM_DATA_SIZE(2)] = {
+    2,
+    OAM_ENTRY(-8, 0, OAM_DIMS_16x16, OAM_NO_FLIP, 0x212, 8, 0),
+    OAM_ENTRY(-8, 16, OAM_DIMS_16x8, OAM_NO_FLIP, 0x236, 8, 0),
 };
 
 const struct FrameData sZiplineOam_OffIdle[2] = {
@@ -230,65 +230,65 @@ const struct FrameData sZiplineOam_OnReleasingSamus[4] = {
     [3] = FRAME_DATA_TERMINATOR
 };
 
-const struct FrameData sZiplineButtonOAM_OffIdle[2] = {
+const struct FrameData sZiplineButtonOam_OffIdle[2] = {
     [0] = {
-        .pFrame = sZiplineButtonOAM_OffIdle_Frame0,
+        .pFrame = sZiplineButtonOam_OffIdle_Frame0,
         .timer = UCHAR_MAX
     },
     [1] = FRAME_DATA_TERMINATOR
 };
 
-const struct FrameData sZiplineButtonOAM_OnIdle[7] = {
+const struct FrameData sZiplineButtonOam_OnIdle[7] = {
     [0] = {
-        .pFrame = sZiplineButtonOAM_OffIdle_Frame0,
+        .pFrame = sZiplineButtonOam_OffIdle_Frame0,
         .timer = CONVERT_SECONDS(0.2f)
     },
     [1] = {
-        .pFrame = sZiplineButtonOAM_OnIdle_Frame1,
+        .pFrame = sZiplineButtonOam_OnIdle_Frame1,
         .timer = CONVERT_SECONDS(0.2f)
     },
     [2] = {
-        .pFrame = sZiplineButtonOAM_OnIdle_Frame2,
+        .pFrame = sZiplineButtonOam_OnIdle_Frame2,
         .timer = CONVERT_SECONDS(0.2f)
     },
     [3] = {
-        .pFrame = sZiplineButtonOAM_OnIdle_Frame3,
+        .pFrame = sZiplineButtonOam_OnIdle_Frame3,
         .timer = CONVERT_SECONDS(0.2f)
     },
     [4] = {
-        .pFrame = sZiplineButtonOAM_OnIdle_Frame2,
+        .pFrame = sZiplineButtonOam_OnIdle_Frame2,
         .timer = CONVERT_SECONDS(0.2f)
     },
     [5] = {
-        .pFrame = sZiplineButtonOAM_OnIdle_Frame1,
+        .pFrame = sZiplineButtonOam_OnIdle_Frame1,
         .timer = CONVERT_SECONDS(0.2f)
     },
     [6] = FRAME_DATA_TERMINATOR
 };
 
-const struct FrameData sZiplineButtonOAM_Active[7] = {
+const struct FrameData sZiplineButtonOam_Active[7] = {
     [0] = {
-        .pFrame = sZiplineButtonOAM_OffIdle_Frame0,
+        .pFrame = sZiplineButtonOam_OffIdle_Frame0,
         .timer = CONVERT_SECONDS(1.f / 30)
     },
     [1] = {
-        .pFrame = sZiplineButtonOAM_OnIdle_Frame1,
+        .pFrame = sZiplineButtonOam_OnIdle_Frame1,
         .timer = CONVERT_SECONDS(1.f / 30)
     },
     [2] = {
-        .pFrame = sZiplineButtonOAM_OnIdle_Frame2,
+        .pFrame = sZiplineButtonOam_OnIdle_Frame2,
         .timer = CONVERT_SECONDS(1.f / 30)
     },
     [3] = {
-        .pFrame = sZiplineButtonOAM_OnIdle_Frame3,
+        .pFrame = sZiplineButtonOam_OnIdle_Frame3,
         .timer = CONVERT_SECONDS(1.f / 15)
     },
     [4] = {
-        .pFrame = sZiplineButtonOAM_OnIdle_Frame2,
+        .pFrame = sZiplineButtonOam_OnIdle_Frame2,
         .timer = CONVERT_SECONDS(1.f / 30)
     },
     [5] = {
-        .pFrame = sZiplineButtonOAM_OnIdle_Frame1,
+        .pFrame = sZiplineButtonOam_OnIdle_Frame1,
         .timer = CONVERT_SECONDS(1.f / 30)
     },
     [6] = FRAME_DATA_TERMINATOR

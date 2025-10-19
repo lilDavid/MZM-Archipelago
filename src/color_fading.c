@@ -1,9 +1,9 @@
 #include "color_fading.h"
+#include "dma.h"
 #include "gba.h"
 #include "color_effects.h"
 #include "sprites_AI/ruins_test.h"
 
-#include "data/engine_pointers.h"
 #include "data/color_fading_data.h"
 #include "data/common_pals.h"
 
@@ -32,6 +32,15 @@
 #include "structs/room.h"
 
 #include "rando/game_start.h"
+
+extern u8 sHazeData[EFFECT_HAZE_END][4];
+
+static ColorFadingFunc_T sColorFadingSubroutinePointers[COLOR_FADING_SUBROUTINE_END] = {
+    [COLOR_FADING_SUBROUTINE_EMPTY] = ColorFadingSubroutine_Empty,
+    [COLOR_FADING_SUBROUTINE_1] = unk_5bd58,
+    [COLOR_FADING_SUBROUTINE_2] = unk_5bdc8,
+    [COLOR_FADING_SUBROUTINE_3] = unk_5be7c
+};
 
 /**
  * @brief 5bcb0 | a8 | Processes the current color fading effect, visually
@@ -70,7 +79,7 @@ u8 ColorFadingUpdate(void)
         color = 0;
 
     // Process color
-    colorType = sColorFadingData[gColorFading.type].pFadeSubroutine;
+    colorType = sColorFadingData[gColorFading.type].fadeSubroutine;
     if (sColorFadingSubroutinePointers[colorType](stage, color))
     {
         gColorFading.fadeTimer = 0;
@@ -93,7 +102,7 @@ u8 unk_5bd58(u8 stage, u8 color)
     {
         case COLOR_FADING_STAGE_STARTED:
             if (!gColorFading.useSecondColorSet)
-                gWrittenToBLDY_NonGameplay = 0;
+                gWrittenToBldy_NonGameplay = 0;
 
         case COLOR_FADING_STAGE_IN_PROGRESS:
             CallApplySpecialBackgroundFadingColor(color);
@@ -128,7 +137,7 @@ u8 unk_5bdc8(u8 stage, u8 color)
     {
         case COLOR_FADING_STAGE_STARTED:
             if (!gColorFading.useSecondColorSet)
-                gWrittenToBLDY_NonGameplay = 0;
+                gWrittenToBldy_NonGameplay = 0;
 
         case COLOR_FADING_STAGE_IN_PROGRESS:
             CallApplySpecialBackgroundFadingColor(color);
@@ -140,14 +149,14 @@ u8 unk_5bdc8(u8 stage, u8 color)
             {
                 if (sColorFadingData[gColorFading.type].isWhite)
                 {
-                    write16(REG_BLDCNT, BLDCNT_SCREEN_FIRST_TARGET | BLDCNT_BRIGHTNESS_INCREASE_EFFECT);
+                    WRITE_16(REG_BLDCNT, BLDCNT_SCREEN_FIRST_TARGET | BLDCNT_BRIGHTNESS_INCREASE_EFFECT);
                 }
                 else
                 {
-                    write16(REG_BLDCNT, BLDCNT_SCREEN_FIRST_TARGET | BLDCNT_BRIGHTNESS_DECREASE_EFFECT);
+                    WRITE_16(REG_BLDCNT, BLDCNT_SCREEN_FIRST_TARGET | BLDCNT_BRIGHTNESS_DECREASE_EFFECT);
                 }
 
-                write16(REG_BLDY, gWrittenToBLDY_NonGameplay = BLDY_MAX_VALUE);
+                WRITE_16(REG_BLDY, gWrittenToBldy_NonGameplay = BLDY_MAX_VALUE);
             }
             else
             {
@@ -250,17 +259,17 @@ void StartEffectForCutscene(u8 request)
     switch (request)
     {
         case EFFECT_CUTSCENE_ESCAPING_CHOZODIA:
-            gDisableSoftreset = TRUE;
+            gDisableSoftReset = TRUE;
             gSramOperationStage = 0;
             unk_5b340();
             ColorFadingStart(COLOR_FADING_CHOZODIA_ESCAPE);
-            gGameModeSub1 = 3;
+            gSubGameMode1 = 3;
             break;
 
         case EFFECT_CUTSCENE_ESCAPE_FAILED:
             unk_5b340();
             ColorFadingStart(COLOR_FADING_ESCAPE_FAILED);
-            gGameModeSub1 = 3;
+            gSubGameMode1 = 3;
             break;
 
         case EFFECT_CUTSCENE_EXITING_ZEBES:
@@ -270,19 +279,19 @@ void StartEffectForCutscene(u8 request)
         case EFFECT_CUTSCENE_GETTING_FULLY_POWERED:
             unk_5b340();
             ColorFadingStart(COLOR_FADING_GETTING_FULLY_POWERED);
-            gGameModeSub1 = 3;
+            gSubGameMode1 = 3;
             break;
 
         case EFFECT_CUTSCENE_RIDLEY_SPAWN:
             unk_5b340();
             ColorFadingStart(COLOR_FADING_RIDLEY_SPAWN);
-            gGameModeSub1 = 3;
+            gSubGameMode1 = 3;
             break;
 
         case EFFECT_CUTSCENE_STATUE_OPENING:
             unk_5b340();
             ColorFadingStart(COLOR_FADING_STATUE_CUTSCENE);
-            gGameModeSub1 = 3;
+            gSubGameMode1 = 3;
             break;
 
         case EFFECT_CUTSCENE_INTRO_TEXT:
@@ -292,7 +301,7 @@ void StartEffectForCutscene(u8 request)
         case EFFECT_CUTSCENE_SAMUS_IN_BLUE_SHIP:
             unk_5b340();
             ColorFadingStart(COLOR_FADING_SAMUS_IN_BLUE_SHIP);
-            gGameModeSub1 = 3;
+            gSubGameMode1 = 3;
             break;
     }
 }
@@ -319,34 +328,34 @@ void ColorFadingStart(u8 type)
  */
 void ColorFadingHideScreenDuringLoad(void)
 {
-    if (gGameModeSub3 == 0 || gPauseScreenFlag != 0 || gCurrentCutscene != 0 || gTourianEscapeCutsceneStage != 0)
+    if (gSubGameMode3 == 0 || gPauseScreenFlag != 0 || gCurrentCutscene != 0 || gTourianEscapeCutsceneStage != 0)
     {
         if (sColorFadingData[gColorFading.type].isWhite)
         {
-            write16(REG_BLDCNT, BLDCNT_SCREEN_FIRST_TARGET | BLDCNT_BRIGHTNESS_INCREASE_EFFECT);
+            WRITE_16(REG_BLDCNT, BLDCNT_SCREEN_FIRST_TARGET | BLDCNT_BRIGHTNESS_INCREASE_EFFECT);
         }
         else
         {
-            write16(REG_BLDCNT, BLDCNT_SCREEN_FIRST_TARGET | BLDCNT_BRIGHTNESS_DECREASE_EFFECT);
+            WRITE_16(REG_BLDCNT, BLDCNT_SCREEN_FIRST_TARGET | BLDCNT_BRIGHTNESS_DECREASE_EFFECT);
         }
 
-        write16(REG_DISPCNT, 0);
+        WRITE_16(REG_DISPCNT, 0);
     }
     else
     {
         if (sColorFadingData[gColorFading.type].isWhite)
         {
-            write16(REG_BLDCNT, BLDCNT_BG0_FIRST_TARGET_PIXEL | BLDCNT_BG1_FIRST_TARGET_PIXEL | BLDCNT_BG2_FIRST_TARGET_PIXEL |
+            WRITE_16(REG_BLDCNT, BLDCNT_BG0_FIRST_TARGET_PIXEL | BLDCNT_BG1_FIRST_TARGET_PIXEL | BLDCNT_BG2_FIRST_TARGET_PIXEL |
                 BLDCNT_BACKDROP_FIRST_TARGET_PIXEL | BLDCNT_BRIGHTNESS_INCREASE_EFFECT);
         }
         else
         {
-            write16(REG_BLDCNT, BLDCNT_BG0_FIRST_TARGET_PIXEL | BLDCNT_BG1_FIRST_TARGET_PIXEL | BLDCNT_BG2_FIRST_TARGET_PIXEL |
+            WRITE_16(REG_BLDCNT, BLDCNT_BG0_FIRST_TARGET_PIXEL | BLDCNT_BG1_FIRST_TARGET_PIXEL | BLDCNT_BG2_FIRST_TARGET_PIXEL |
                 BLDCNT_BACKDROP_FIRST_TARGET_PIXEL | BLDCNT_BRIGHTNESS_DECREASE_EFFECT);
         }
 
-        write16(REG_BG3CNT, (BGCNT_SIZE_512x256 << BGCNT_SCREEN_SIZE_SHIFT) | (6 << BGCNT_SCREEN_BASE_BLOCK_SHIFT) | (1 << BGCNT_CHAR_BASE_BLOCK_SHIFT));
-        write16(REG_DISPCNT, DCNT_BG3 | DCNT_OBJ);
+        WRITE_16(REG_BG3CNT, (BGCNT_SIZE_512x256 << BGCNT_SCREEN_SIZE_SHIFT) | (6 << BGCNT_SCREEN_BASE_BLOCK_SHIFT) | (1 << BGCNT_CHAR_BASE_BLOCK_SHIFT));
+        WRITE_16(REG_DISPCNT, DCNT_BG3 | DCNT_OBJ);
     }
 }
 
@@ -356,7 +365,7 @@ void ColorFadingHideScreenDuringLoad(void)
  */
 void ColorFadingSetBg3Position(void)
 {
-    if (sColorFadingData[gColorFading.type].pFadeSubroutine == COLOR_FADING_SUBROUTINE_1)
+    if (sColorFadingData[gColorFading.type].fadeSubroutine == COLOR_FADING_SUBROUTINE_1)
         gWhichBGPositionIsWrittenToBG3OFS = 4;
     else
         gWhichBGPositionIsWrittenToBG3OFS = 3;
@@ -373,8 +382,8 @@ void ColorFadingStartDefault(void)
 
     DmaTransfer(3, gDecompBg3Map, VRAM_BASE + 0x3000, sizeof(gDecompBg3Map), 16);
 
-    write16(REG_BG0CNT, gIoRegistersBackup.unk_12);
-    write16(REG_BG3CNT, gIoRegistersBackup.BG3CNT);
+    WRITE_16(REG_BG0CNT, gIoRegistersBackup.unk_12);
+    WRITE_16(REG_BG3CNT, gIoRegistersBackup.BG3CNT);
 
     gDisableDrawingSprites = FALSE;
 
@@ -382,17 +391,17 @@ void ColorFadingStartDefault(void)
         gHazeInfo.active = TRUE;
 
     TransparencyUpdateBldcnt(2, gIoRegistersBackup.Bldcnt_NonGameplay);
-    write16(REG_DISPCNT, gIoRegistersBackup.Dispcnt_NonGameplay);
+    WRITE_16(REG_DISPCNT, gIoRegistersBackup.Dispcnt_NonGameplay);
 
-    if (gDoorUnlockTimer == 1 * DELTA_TIME)
+    if (gDoorUnlockTimer == DELTA_TIME)
         ConnectionLockHatchesWithTimer();
 }
 
 /**
- * @brief 5c220 | 5c | Starts a door transition fade | FIXME verify this function 
+ * @brief 5c220 | 5c | Starts a door transition fade
  * 
  */
-void ColorFadingStartDoorTransition(void)
+void unk_5c220(void)
 {
     gBackgroundPositions.doorTransition.y = gBackgroundPositions.bg[3].y;
     gBackgroundPositions.doorTransition.x = gBackgroundPositions.bg[3].x;
@@ -401,8 +410,8 @@ void ColorFadingStartDoorTransition(void)
     BlockShiftNeverReformBlocks();
     ConnectionUpdateHatches();
 
-    gWrittenToBLDALPHA_L = gIoRegistersBackup.BLDALPHA_NonGameplay_EVA;
-    gWrittenToBLDALPHA_H = gIoRegistersBackup.BLDALPHA_NonGameplay_EVB;
+    gWrittenToBldalpha_L = gIoRegistersBackup.BLDALPHA_NonGameplay_EVA;
+    gWrittenToBldalpha_H = gIoRegistersBackup.BLDALPHA_NonGameplay_EVB;
 
     if (gMusicTrackInfo.takingNormalTransition)
     {
@@ -425,16 +434,16 @@ void ColorFadingGradients(u8 delay)
     if (gFrameCounter8Bit & delay)
         return;
 
-    bldalpha = gWrittenToBLDALPHA_H << 8 | gWrittenToBLDALPHA_L;
+    bldalpha = gWrittenToBldalpha_H << 8 | gWrittenToBldalpha_L;
     if (sHazeData[gCurrentRoomEntry.visualEffect][3] == 2 && bldalpha != 0)
     {
-        if (gWrittenToBLDALPHA_H != 0)
-            gWrittenToBLDALPHA_H--;
+        if (gWrittenToBldalpha_H != 0)
+            gWrittenToBldalpha_H--;
 
-        if (gWrittenToBLDALPHA_L != 0)
-            gWrittenToBLDALPHA_L--;
+        if (gWrittenToBldalpha_L != 0)
+            gWrittenToBldalpha_L--;
         
-        gWrittenToBLDALPHA = gWrittenToBLDALPHA_H << 8 | gWrittenToBLDALPHA_L;
+        gWrittenToBldalpha = gWrittenToBldalpha_H << 8 | gWrittenToBldalpha_L;
     }
 }
 
@@ -446,18 +455,18 @@ void ColorFadingFinishDoorFade(void)
 {
     unk_5d09c();
     SET_BACKDROP_COLOR(COLOR_BLACK);
-    write16(REG_DISPCNT, read16(REG_DISPCNT) & ~(DCNT_BG0 | DCNT_BG1 | DCNT_BG2 | DCNT_BG3));
+    WRITE_16(REG_DISPCNT, READ_16(REG_DISPCNT) & ~(DCNT_BG0 | DCNT_BG1 | DCNT_BG2 | DCNT_BG3));
     
     // Decompress and write the door transition tilemap to BG3
     RoomRleDecompress(FALSE, sDoorTransitionTilemap, gDecompBg3Map);
     DmaTransfer(3, gDecompBg3Map, VRAM_BASE + 0x3000, sizeof(gDecompBg3Map), 16);
-    write16(REG_BG3CNT, (BGCNT_SIZE_512x256 << BGCNT_SCREEN_SIZE_SHIFT) | (6 << BGCNT_SCREEN_BASE_BLOCK_SHIFT) | (1 << BGCNT_CHAR_BASE_BLOCK_SHIFT));
+    WRITE_16(REG_BG3CNT, (BGCNT_SIZE_512x256 << BGCNT_SCREEN_SIZE_SHIFT) | (6 << BGCNT_SCREEN_BASE_BLOCK_SHIFT) | (1 << BGCNT_CHAR_BASE_BLOCK_SHIFT));
 
     gBackgroundPositions.bg[3].y = BLOCK_SIZE;
     gBackgroundPositions.doorTransition.y = BLOCK_SIZE;
 
-    write16(REG_BG3VOFS, BLOCK_SIZE);
-    write16(REG_DISPCNT, read16(REG_DISPCNT) | DCNT_BG3);
+    WRITE_16(REG_BG3VOFS, BLOCK_SIZE);
+    WRITE_16(REG_DISPCNT, READ_16(REG_DISPCNT) | DCNT_BG3);
 
     if (gUseMotherShipDoors == TRUE)
     {
@@ -480,7 +489,7 @@ u32 ColorFadingFinishDoorTransition(void)
 
     if (sColorFadingData[gColorFading.type].pUpdateSubroutine && sColorFadingData[gColorFading.type].pUpdateSubroutine())
     {
-        switch (sColorFadingData[gColorFading.type].pFadeSubroutine)
+        switch (sColorFadingData[gColorFading.type].fadeSubroutine)
         {
             case COLOR_FADING_SUBROUTINE_1:
                 if (!gMusicTrackInfo.unk)
@@ -497,7 +506,7 @@ u32 ColorFadingFinishDoorTransition(void)
         gMusicTrackInfo.pauseScreenFlag = 0;
 
         ColorFadingStart(COLOR_FADING_CANCEL);
-        write16(REG_BLDY, gIoRegistersBackup.BLDY_NonGameplay);
+        WRITE_16(REG_BLDY, gIoRegistersBackup.BLDY_NonGameplay);
         TransparencyUpdateBldcnt(3, gIoRegistersBackup.Bldcnt_NonGameplay);
         gDisableDrawingSprites = FALSE;
         gColorFading.stage = 0;
@@ -547,7 +556,7 @@ u8 ColorFadingProcess_DoorTransition(void)
     switch (gColorFading.stage)
     {
         case 0:
-            ColorFadingStartDoorTransition();
+            unk_5c220();
             gColorFading.stage++;
             break;
 
@@ -574,7 +583,7 @@ u8 ColorFadingProcess_DoorTransition(void)
                 DmaTransfer(3, sDoorTransitionPal, PALRAM_BASE + 1 * PAL_ROW_SIZE, 2 * PAL_ROW_SIZE, 16);
             }
 
-            write16(REG_DISPCNT, read16(REG_DISPCNT) & ~(DCNT_BG2 | DCNT_BG3 | DCNT_WIN1));
+            WRITE_16(REG_DISPCNT, READ_16(REG_DISPCNT) & ~(DCNT_BG2 | DCNT_BG3 | DCNT_WIN1));
             gSamusOnTopOfBackgrounds = FALSE;
             gColorFading.stage++;
             break;
@@ -591,50 +600,50 @@ u8 ColorFadingProcess_DoorTransition(void)
             offset = BLOCK_TO_SUB_PIXEL(gDoorPositionStart.y) - gBg1YPosition;
             gBackgroundPositions.doorTransition.y = SUB_PIXEL_TO_PIXEL_(BLOCK_SIZE * 16 - offset);
 
-            write16(REG_BG3HOFS, gBackgroundPositions.doorTransition.x);
-            write16(REG_BG3VOFS, gBackgroundPositions.doorTransition.y);
+            WRITE_16(REG_BG3HOFS, gBackgroundPositions.doorTransition.x);
+            WRITE_16(REG_BG3VOFS, gBackgroundPositions.doorTransition.y);
 
-            gWrittenToBLDCNT = BLDCNT_BG3_FIRST_TARGET_PIXEL | BLDCNT_ALPHA_BLENDING_EFFECT | BLDCNT_SCREEN_SECOND_TARGET;
+            gWrittenToBldcnt = BLDCNT_BG3_FIRST_TARGET_PIXEL | BLDCNT_ALPHA_BLENDING_EFFECT | BLDCNT_SCREEN_SECOND_TARGET;
 
-            bgProp = gCurrentRoomEntry.Bg0Prop; BG_PROP_CLOSE_UP;
+            bgProp = gCurrentRoomEntry.bg0Prop; BG_PROP_CLOSE_UP;
             if (bgProp != 0x43 && bgProp != 0x44 && bgProp != BG_PROP_DARK_ROOM)
             {
-                gWrittenToBLDALPHA_H = 16;
-                gWrittenToBLDALPHA_L = 0;
+                gWrittenToBldalpha_H = 16;
+                gWrittenToBldalpha_L = 0;
             }
-            gWrittenToBLDALPHA = C_16_2_8(gWrittenToBLDALPHA_H, gWrittenToBLDALPHA_L);
+            gWrittenToBldalpha = C_16_2_8(gWrittenToBldalpha_H, gWrittenToBldalpha_L);
 
             gBg3CntDuringDoorTransition = CREATE_BGCNT(1, 6, BGCNT_HIGH_PRIORITY, BGCNT_SIZE_512x256);
-            gBg1CntDuringDoorTransition = read16(REG_BG1CNT) | BGCNT_HIGH_MID_PRIORITY;
+            gBg1CntDuringDoorTransition = READ_16(REG_BG1CNT) | BGCNT_HIGH_MID_PRIORITY;
 
-            gWrittenToDISPCNT = read16(REG_DISPCNT);
-            gWrittenToDISPCNT |= DCNT_BG3;
-            gWrittenToDISPCNT &= ~DCNT_BG0;
+            gWrittenToDispcnt = READ_16(REG_DISPCNT);
+            gWrittenToDispcnt |= DCNT_BG3;
+            gWrittenToDispcnt &= ~DCNT_BG0;
 
             gColorFading.stage = 4;
             gColorFading.unk_3 = 0;
             break;
 
         case 4:
-            if (gWrittenToBLDALPHA_H != 0 || gWrittenToBLDALPHA_L < BLDALPHA_MAX_VALUE)
+            if (gWrittenToBldalpha_H != 0 || gWrittenToBldalpha_L < BLDALPHA_MAX_VALUE)
             {
-                bldalphaH = gWrittenToBLDALPHA_H - 2;
+                bldalphaH = gWrittenToBldalpha_H - 2;
                 if (bldalphaH < 0)
                     bldalphaH = 0;
 
-                gWrittenToBLDALPHA_H = bldalphaH;
+                gWrittenToBldalpha_H = bldalphaH;
 
-                bldalphaL = gWrittenToBLDALPHA_L + 2;
+                bldalphaL = gWrittenToBldalpha_L + 2;
                 if (bldalphaL > BLDALPHA_MAX_VALUE)
                     bldalphaL = BLDALPHA_MAX_VALUE;
 
-                gWrittenToBLDALPHA_L = bldalphaL;
+                gWrittenToBldalpha_L = bldalphaL;
 
-                gWrittenToBLDALPHA = C_16_2_8_(bldalphaH, bldalphaL);
+                gWrittenToBldalpha = C_16_2_8_(bldalphaH, bldalphaL);
             }
             else
             {
-                write16(REG_DISPCNT, read16(REG_DISPCNT) & ~DCNT_BG1);
+                WRITE_16(REG_DISPCNT, READ_16(REG_DISPCNT) & ~DCNT_BG1);
                 gColorFading.unk_3 = 0;
                 gColorFading.stage = 5;
             }
@@ -658,7 +667,7 @@ u8 ColorFadingProcess_Default(void)
     switch (gColorFading.stage)
     {
         case 0:
-            ColorFadingStartDoorTransition();
+            unk_5c220();
             gColorFading.stage++;
             break;
 
@@ -688,7 +697,7 @@ u8 ColorFadingProcess_EscapeFailed(void)
     {
         case 0:
             gPauseScreenFlag = 0;
-            ColorFadingStartDoorTransition();
+            unk_5c220();
             FadeAllSounds(CONVERT_SECONDS(1.f));
             FadeMusic(CONVERT_SECONDS(1.f));
             gColorFading.stage++;
@@ -710,7 +719,7 @@ u8 ColorFadingProcess_EscapeFailed(void)
             gColorFading.subroutineTimer++;
             if (gColorFading.subroutineTimer > CONVERT_SECONDS(1.f))
             {
-                gGameModeSub1 = 0;
+                gSubGameMode1 = 0;
                 gMainGameMode = GM_GAMEOVER;
                 return TRUE;
             }
@@ -730,7 +739,7 @@ u8 ColorFadingProcess_ChozodiaEscape(void)
     {
         case 0:
             SET_BACKDROP_COLOR(COLOR_BLACK);
-            gWrittenToDISPCNT = read16(REG_DISPCNT) & ~(DCNT_BG0 | DCNT_BG1 | DCNT_BG2 | DCNT_BG3 | DCNT_OBJ);
+            gWrittenToDispcnt = READ_16(REG_DISPCNT) & ~(DCNT_BG0 | DCNT_BG1 | DCNT_BG2 | DCNT_BG3 | DCNT_OBJ);
             gColorFading.stage++;
             break;
 
@@ -749,10 +758,16 @@ u8 ColorFadingProcess_ChozodiaEscape(void)
             break;
 
         default:
+            #ifdef DEBUG
+            if (gDebugMode)
             {
-                gGameModeSub1 = 0;
-                gMainGameMode = GM_CHOZODIA_ESCAPE;
+                gDisableSoftReset = FALSE;
+                gCompletedGameFlagCopy = 0x80;
             }
+            #endif // DEBUG
+            gSubGameMode1 = 0;
+            gMainGameMode = GM_CHOZODIA_ESCAPE;
+            break;
     }
 
     return FALSE;
@@ -768,7 +783,7 @@ u8 ColorFadingProcess_BeforeDemoEnding(void)
     switch (gColorFading.stage)
     {
         case 0:
-            ColorFadingStartDoorTransition();
+            unk_5c220();
 
             // Set input ended flag
             if (gColorFading.type == COLOR_FADING_DEMO_ENDING_WITH_INPUT)
@@ -804,7 +819,7 @@ u8 ColorFadingProcess_TourianEscape(void)
     switch (gColorFading.stage)
     {
         case 0:
-            ColorFadingStartDoorTransition();
+            unk_5c220();
             gColorFading.stage++;
             break;
 
@@ -842,7 +857,7 @@ u8 ColorFadingProcess_GettingFullyPowered(void)
     switch (gColorFading.stage)
     {
         case 0:
-            ColorFadingStartDoorTransition();
+            unk_5c220();
             gColorFading.unk_3 = 0;
             gColorFading.stage++;
             break;
@@ -868,7 +883,7 @@ u8 ColorFadingProcess_GettingFullyPowered(void)
             gCurrentCutscene = CUTSCENE_GETTING_FULLY_POWERED;
             ColorFadingStart(COLOR_FADING_CANCEL);
 
-            gSubSpriteData1.workVariable3 = RUINS_TEST_FIGHT_STAGE_STARTING_CUTSCENE;
+            gSubSpriteData1.work3 = RUINS_TEST_FIGHT_STAGE_STARTING_CUTSCENE;
 #if 0
             EventFunction(EVENT_ACTION_SETTING, EVENT_STATUE_VARIA_SUIT_GRABBED);
 
@@ -909,7 +924,7 @@ u8 ColorFadingProcess_BeforeRidleySpawn(void)
     switch (gColorFading.stage)
     {
         case 0:
-            ColorFadingStartDoorTransition();
+            unk_5c220();
             gColorFading.unk_3 = 0;
             gColorFading.stage++;
             break;
@@ -950,7 +965,7 @@ u8 ColorFadingProcess_StatueOpening(void)
     switch (gColorFading.stage)
     {
         case 0:
-            ColorFadingStartDoorTransition();
+            unk_5c220();
             gColorFading.stage++;
             break;
 
@@ -992,7 +1007,7 @@ u8 ColorFadingProcess_BeforeIntroText(void)
     switch (gColorFading.stage)
     {
         case 0:
-            ColorFadingStartDoorTransition();
+            unk_5c220();
             gColorFading.stage++;
             break;
 
@@ -1048,7 +1063,7 @@ u8 ColorFadingProcess_BeforeBlueShip(void)
     switch (gColorFading.stage)
     {
         case 0:
-            ColorFadingStartDoorTransition();
+            unk_5c220();
             gColorFading.stage++;
             break;
 
@@ -1212,14 +1227,14 @@ u8 ColorFadingUpdate_DoorTransition(void)
             }
             else
             {
-                write16(REG_DISPCNT, read16(REG_DISPCNT) | DCNT_BG1);
-                write16(REG_BLDCNT, read16(REG_BLDCNT) & ~BLDCNT_BG1_FIRST_TARGET_PIXEL);
-                write16(REG_DISPCNT, read16(REG_DISPCNT) & ~DCNT_BG3);
+                WRITE_16(REG_DISPCNT, READ_16(REG_DISPCNT) | DCNT_BG1);
+                WRITE_16(REG_BLDCNT, READ_16(REG_BLDCNT) & ~BLDCNT_BG1_FIRST_TARGET_PIXEL);
+                WRITE_16(REG_DISPCNT, READ_16(REG_DISPCNT) & ~DCNT_BG3);
 
                 DmaTransfer(3, gDecompBg3Map, BGCNT_TO_VRAM_TILE_BASE(6), sizeof(gDecompBg3Map), 16);
 
-                write16(REG_BG0CNT, gIoRegistersBackup.unk_12);
-                write16(REG_BG3CNT, gIoRegistersBackup.BG3CNT);
+                WRITE_16(REG_BG0CNT, gIoRegistersBackup.unk_12);
+                WRITE_16(REG_BG3CNT, gIoRegistersBackup.BG3CNT);
 
                 gBackgroundPositions.doorTransition.y = gBackgroundPositions.bg[3].y;
                 gBackgroundPositions.doorTransition.x = gBackgroundPositions.bg[3].x;
@@ -1228,7 +1243,7 @@ u8 ColorFadingUpdate_DoorTransition(void)
                     gHazeInfo.active = TRUE;
 
                 TransparencyUpdateBldcnt(2, gIoRegistersBackup.Bldcnt_NonGameplay);
-                write16(REG_DISPCNT, gIoRegistersBackup.Dispcnt_NonGameplay);
+                WRITE_16(REG_DISPCNT, gIoRegistersBackup.Dispcnt_NonGameplay);
 
                 gColorFading.unk_3 = 0;
                 gDisableDrawingSprites = FALSE;
@@ -1273,7 +1288,7 @@ void ColorFadingApplyMonochrome(void)
     {
         if (ColorFadingUpdate())
         {
-            write16(REG_DISPCNT, read16(REG_DISPCNT) & ~(DCNT_BG0 | DCNT_BG1 | DCNT_BG2 | DCNT_BG3));
+            WRITE_16(REG_DISPCNT, READ_16(REG_DISPCNT) & ~(DCNT_BG0 | DCNT_BG1 | DCNT_BG2 | DCNT_BG3));
             gMonochromeBgFading = MONOCHROME_FADING_ENDED;
         }
     }

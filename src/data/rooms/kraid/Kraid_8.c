@@ -27,11 +27,11 @@ const u8 sKraid_4_Scrolls[SCROLL_DATA_SIZE(3)] = {
 	UCHAR_MAX, // Breakeable block Y bound extension
 };
 
-const u8 sKraid_8_Clipdata[395] = INCBIN_U8("data/rooms/kraid/Kraid_8_Clipdata.gfx");
+const u8 sKraid_8_Clipdata[395] = INCBIN_U8("data/rooms/kraid/kraid_8_clipdata.gfx");
 
-const u8 sKraid_8_Bg2[121] = INCBIN_U8("data/rooms/kraid/Kraid_8_Bg2.gfx");
+const u8 sKraid_8_Bg2[121] = INCBIN_U8("data/rooms/kraid/kraid_8_bg2.gfx");
 
-const u8 sKraid_8_Bg1[1051] = INCBIN_U8("data/rooms/kraid/Kraid_8_Bg1.gfx");
+const u8 sKraid_8_Bg1[1051] = INCBIN_U8("data/rooms/kraid/kraid_8_bg1.gfx");
 
 const u8 sKraid_8_Spriteset0[ENEMY_ROOM_DATA_ARRAY_SIZE(4)] = {
 	3, 49, SPRITESET_IDX(1),
@@ -40,5 +40,5 @@ const u8 sKraid_8_Spriteset0[ENEMY_ROOM_DATA_ARRAY_SIZE(4)] = {
 	ROOM_SPRITE_DATA_TERMINATOR
 };
 
-const u8 sKraid_8_Bg0[183] = INCBIN_U8("data/rooms/kraid/Kraid_8_Bg0.gfx");
+const u8 sKraid_8_Bg0[183] = INCBIN_U8("data/rooms/kraid/kraid_8_bg0.gfx");
 

@@ -3,16 +3,6 @@
 
 #include "types.h"
 
-// Defines
-
-enum HudHighlightStatus {
-    HIGHLIGHT_STATUS_NOT_HIGHLIGHTED,
-    HIGHLIGHT_STATUS_SELECTED,
-    HIGHLIGHT_STATUS_HIGHLIGHTED
-};
-
-// Functions
-
 void HudUpdateOam(void);
 void HudUpdateEnergyTanks(u8* pDst, const u8* pSrcNormal, const u8* pSrcRefill, u8 nbrTanks, u8 refillStage);
 void HudDrawEnergy(u8 fileNumber);

@@ -13,12 +13,37 @@
 #include "structs/game_state.h"
 #include "structs/sprite.h"
 
+enum SovaTurningDirection {
+    SOVA_TURNING_DIRECTION_BOTTOM_LEFT_CORNER,
+    SOVA_TURNING_DIRECTION_TOP_RIGHT_EDGE,
+    SOVA_TURNING_DIRECTION_BOTTOM_RIGHT_EDGE,
+    SOVA_TURNING_DIRECTION_TOP_RIGHT_CORNER,
+    SOVA_TURNING_DIRECTION_TOP_LEFT_EDGE,
+    SOVA_TURNING_DIRECTION_BOTTOM_RIGHT_CORNER,
+    SOVA_TURNING_DIRECTION_TOP_LEFT_CORNER,
+    SOVA_TURNING_DIRECTION_BOTTOM_LEFT_EDGE
+};
+
+#define SOVA_POSE_IDLE_INIT 0x8
+#define SOVA_POSE_IDLE 0x9
+#define SOVA_POSE_TURNING_AROUND_INIT 0xA
+#define SOVA_POSE_TURNING_AROUND 0xB
+#define SOVA_POSE_LANDING_INIT 0xE
+#define SOVA_POSE_LANDING 0xF
+#define SOVA_POSE_FALLING_INIT 0x1E
+#define SOVA_POSE_FALLING 0x1F
+
+#define SOVA_HITBOX_TOP (THREE_QUARTER_BLOCK_SIZE + PIXEL_SIZE)
+#define SOVA_HITBOX_BOTTOM (PIXEL_SIZE)
+#define SOVA_HITBOX_LEFT (HALF_BLOCK_SIZE - PIXEL_SIZE)
+#define SOVA_HITBOX_RIGHT (HALF_BLOCK_SIZE - PIXEL_SIZE)
+
 /**
  * @brief 1da24 | b8 | Checks if a sova is colliding with air
  * 
  * @return u8 1 if colliding with air, 0 otherwise
  */
-u8 SovaCheckCollidingWithAir(void)
+static u8 SovaCheckCollidingWithAir(void)
 {
     u8 result;
 
@@ -38,10 +63,10 @@ u8 SovaCheckCollidingWithAir(void)
         }
         else
         {
-            SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition - HALF_BLOCK_SIZE, gCurrentSprite.xPosition - 0x4);
+            SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition - HALF_BLOCK_SIZE, gCurrentSprite.xPosition - PIXEL_SIZE);
             if (gPreviousCollisionCheck == COLLISION_AIR)
             {
-                SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition + HALF_BLOCK_SIZE, gCurrentSprite.xPosition - 0x4);
+                SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition + HALF_BLOCK_SIZE, gCurrentSprite.xPosition - PIXEL_SIZE);
                 if (gPreviousCollisionCheck == COLLISION_AIR)
                     result = TRUE;
             }
@@ -51,10 +76,10 @@ u8 SovaCheckCollidingWithAir(void)
     {
         if (gCurrentSprite.work2)
         {
-            SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition - 0x4, gCurrentSprite.xPosition - HALF_BLOCK_SIZE);
+            SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition - PIXEL_SIZE, gCurrentSprite.xPosition - HALF_BLOCK_SIZE);
             if (gPreviousCollisionCheck == COLLISION_AIR)
             {
-                SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition - 0x4, gCurrentSprite.xPosition + HALF_BLOCK_SIZE);
+                SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition - PIXEL_SIZE, gCurrentSprite.xPosition + HALF_BLOCK_SIZE);
                 if (gPreviousCollisionCheck == COLLISION_AIR)
                     result = TRUE;
             }
@@ -78,40 +103,40 @@ u8 SovaCheckCollidingWithAir(void)
  * @brief 1dadc | 80 | Updates the hitbox of a Sova
  * 
  */
-void SovaUpdateHitbox(void)
+static void SovaUpdateHitbox(void)
 {
     if (gCurrentSprite.status & SPRITE_STATUS_FACING_DOWN)
     {
         if (gCurrentSprite.status & SPRITE_STATUS_X_FLIP)
         {
-            gCurrentSprite.hitboxTop = -0x1C;
-            gCurrentSprite.hitboxBottom = 0x1C;
-            gCurrentSprite.hitboxLeft = -0x34;
-            gCurrentSprite.hitboxRight = 0x4;
+            gCurrentSprite.hitboxTop = -SOVA_HITBOX_LEFT;
+            gCurrentSprite.hitboxBottom = SOVA_HITBOX_RIGHT;
+            gCurrentSprite.hitboxLeft = -SOVA_HITBOX_TOP;
+            gCurrentSprite.hitboxRight = SOVA_HITBOX_BOTTOM;
         }
         else
         {
-            gCurrentSprite.hitboxTop = -0x1C;
-            gCurrentSprite.hitboxBottom = 0x1C;
-            gCurrentSprite.hitboxLeft = -0x4;
-            gCurrentSprite.hitboxRight = 0x34;
+            gCurrentSprite.hitboxTop = -SOVA_HITBOX_RIGHT;
+            gCurrentSprite.hitboxBottom = SOVA_HITBOX_LEFT;
+            gCurrentSprite.hitboxLeft = -SOVA_HITBOX_BOTTOM;
+            gCurrentSprite.hitboxRight = SOVA_HITBOX_TOP;
         }
     }
     else
     {
         if (gCurrentSprite.work2)
         {
-            gCurrentSprite.hitboxTop = -0x4;
-            gCurrentSprite.hitboxBottom = 0x34;
-            gCurrentSprite.hitboxLeft = -0x1C;
-            gCurrentSprite.hitboxRight = 0x1C;
+            gCurrentSprite.hitboxTop = -SOVA_HITBOX_BOTTOM;
+            gCurrentSprite.hitboxBottom = SOVA_HITBOX_TOP;
+            gCurrentSprite.hitboxLeft = -SOVA_HITBOX_LEFT;
+            gCurrentSprite.hitboxRight = SOVA_HITBOX_RIGHT;
         }
         else
         {
-            gCurrentSprite.hitboxTop = -0x34;
-            gCurrentSprite.hitboxBottom = 0x4;
-            gCurrentSprite.hitboxLeft = -0x1C;
-            gCurrentSprite.hitboxRight = 0x1C;
+            gCurrentSprite.hitboxTop = -SOVA_HITBOX_TOP;
+            gCurrentSprite.hitboxBottom = SOVA_HITBOX_BOTTOM;
+            gCurrentSprite.hitboxLeft = -SOVA_HITBOX_LEFT;
+            gCurrentSprite.hitboxRight = SOVA_HITBOX_RIGHT;
         }
     }
 }
@@ -120,7 +145,7 @@ void SovaUpdateHitbox(void)
  * @brief 1db5c | 78 | Sets the crawling OAM for a sova
  * 
  */
-void SovaSetCrawlingOAM(void)
+static void SovaSetCrawlingOam(void)
 {
     if (gCurrentSprite.status & SPRITE_STATUS_FACING_DOWN)
     {
@@ -150,19 +175,21 @@ void SovaSetCrawlingOAM(void)
  * @brief 1dbd4 | 150 | Initializes a sova
  * 
  */
-void SovaInit(void)
+static void SovaInit(void)
 {
     gCurrentSprite.work2 = FALSE;
     gCurrentSprite.pose = SOVA_POSE_IDLE;
     SpriteUtilChooseRandomXDirection();
 
     SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition, gCurrentSprite.xPosition);
-    if (gPreviousCollisionCheck & 0xF0)
+    if (gPreviousCollisionCheck & COLLISION_FLAGS_UNKNOWN_F0)
+    {
         gCurrentSprite.status &= ~SPRITE_STATUS_FACING_DOWN;
+    }
     else
     {
-        SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition - (BLOCK_SIZE + 0x4), gCurrentSprite.xPosition);
-        if (gPreviousCollisionCheck & 0xF0)
+        SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition - (BLOCK_SIZE + PIXEL_SIZE), gCurrentSprite.xPosition);
+        if (gPreviousCollisionCheck & COLLISION_FLAGS_UNKNOWN_F0)
         {
             gCurrentSprite.status &= ~SPRITE_STATUS_FACING_DOWN;
             gCurrentSprite.yPosition -= BLOCK_SIZE;
@@ -171,8 +198,8 @@ void SovaInit(void)
         else
         {
             SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition - HALF_BLOCK_SIZE,
-                gCurrentSprite.xPosition - (HALF_BLOCK_SIZE + 0x4));
-            if (gPreviousCollisionCheck & 0xF0)
+                gCurrentSprite.xPosition - (HALF_BLOCK_SIZE + PIXEL_SIZE));
+            if (gPreviousCollisionCheck & COLLISION_FLAGS_UNKNOWN_F0)
             {
                 gCurrentSprite.status |= SPRITE_STATUS_FACING_DOWN;
                 gCurrentSprite.yPosition -= HALF_BLOCK_SIZE;
@@ -182,7 +209,7 @@ void SovaInit(void)
             {
                 SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition - HALF_BLOCK_SIZE,
                     gCurrentSprite.xPosition + HALF_BLOCK_SIZE);
-                if (gPreviousCollisionCheck & 0xF0)
+                if (gPreviousCollisionCheck & COLLISION_FLAGS_UNKNOWN_F0)
                 {
                     gCurrentSprite.status |= SPRITE_STATUS_FACING_DOWN;
                     gCurrentSprite.status |= SPRITE_STATUS_X_FLIP;
@@ -207,18 +234,18 @@ void SovaInit(void)
     }
 
     gCurrentSprite.samusCollision = SSC_HURTS_SAMUS;
-    SovaSetCrawlingOAM();
+    SovaSetCrawlingOam();
     SovaUpdateHitbox();
 
     gCurrentSprite.health = GET_PSPRITE_HEALTH(gCurrentSprite.spriteId);
-    gCurrentSprite.drawDistanceTop = 0x10;
-    gCurrentSprite.drawDistanceBottom = 0x10;
-    gCurrentSprite.drawDistanceHorizontal = 0x10;
+    gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE);
+    gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE);
+    gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE);
 
     if (gCurrentSprite.spriteId == PSPRITE_SOVA_ORANGE)
     {
-        gCurrentSprite.absolutePaletteRow = 0x1;
-        gCurrentSprite.paletteRow = 0x1;
+        gCurrentSprite.absolutePaletteRow = 1;
+        gCurrentSprite.paletteRow = 1;
     }
 }
 
@@ -226,9 +253,9 @@ void SovaInit(void)
  * @brief 1dd24 | 14 | Initializes a Sova to be idle
  * 
  */
-void SovaIdleInit(void)
+static void SovaIdleInit(void)
 {
-    SovaSetCrawlingOAM();
+    SovaSetCrawlingOam();
     gCurrentSprite.pose = SOVA_POSE_IDLE;
 }
 
@@ -236,7 +263,7 @@ void SovaIdleInit(void)
  * @brief 1dd3c | 4b0 | Handles a sova moving
  * 
  */
-void SovaMove(void)
+static void SovaMove(void)
 {
     u16 speed;
     u8 turning;
@@ -288,7 +315,7 @@ void SovaMove(void)
             if (gCurrentSprite.status & SPRITE_STATUS_FACING_RIGHT)
             {
                 SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition, gCurrentSprite.xPosition);
-                if (!(gPreviousCollisionCheck & 0xF0))
+                if (!(gPreviousCollisionCheck & COLLISION_FLAGS_UNKNOWN_F0))
                 {
                     gCurrentSprite.status |= SPRITE_STATUS_FACING_RIGHT;
                     turning++;
@@ -296,7 +323,7 @@ void SovaMove(void)
                 }
                 else
                 {
-                    SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition + (HALF_BLOCK_SIZE - 4), gCurrentSprite.xPosition - 4);
+                    SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition + (HALF_BLOCK_SIZE - PIXEL_SIZE), gCurrentSprite.xPosition - PIXEL_SIZE);
                     if (gPreviousCollisionCheck == COLLISION_SOLID)
                     {
                         gCurrentSprite.status &= ~SPRITE_STATUS_FACING_RIGHT;
@@ -304,13 +331,15 @@ void SovaMove(void)
                         gCurrentSprite.work1 = SOVA_TURNING_DIRECTION_BOTTOM_RIGHT_CORNER;
                     }
                     else
+                    {
                         gCurrentSprite.yPosition += speed;
+                    }
                 }
             }
             else
             {
-                SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition - 4, gCurrentSprite.xPosition);
-                if (!(gPreviousCollisionCheck & 0xF0))
+                SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition - PIXEL_SIZE, gCurrentSprite.xPosition);
+                if (!(gPreviousCollisionCheck & COLLISION_FLAGS_UNKNOWN_F0))
                 {
                     gCurrentSprite.status |= SPRITE_STATUS_FACING_RIGHT;
                     turning++;
@@ -318,7 +347,7 @@ void SovaMove(void)
                 }
                 else
                 {
-                    SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition - (HALF_BLOCK_SIZE - 4), gCurrentSprite.xPosition - 4);
+                    SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition - (HALF_BLOCK_SIZE - PIXEL_SIZE), gCurrentSprite.xPosition - PIXEL_SIZE);
                     if (gPreviousCollisionCheck == COLLISION_SOLID)
                     {
                         gCurrentSprite.status &= ~SPRITE_STATUS_FACING_RIGHT;
@@ -326,7 +355,9 @@ void SovaMove(void)
                         gCurrentSprite.work1 = SOVA_TURNING_DIRECTION_BOTTOM_LEFT_EDGE;
                     }
                     else
+                    {
                         gCurrentSprite.yPosition -= speed;
+                    }
                 }
             }
         }
@@ -334,8 +365,8 @@ void SovaMove(void)
         {
             if (gCurrentSprite.status & SPRITE_STATUS_FACING_RIGHT)
             {
-                SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition, gCurrentSprite.xPosition - 4);
-                if (!(gPreviousCollisionCheck & 0xF0))
+                SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition, gCurrentSprite.xPosition - PIXEL_SIZE);
+                if (!(gPreviousCollisionCheck & COLLISION_FLAGS_UNKNOWN_F0))
                 {
                     gCurrentSprite.status &= ~SPRITE_STATUS_FACING_RIGHT;
                     turning++;
@@ -343,7 +374,7 @@ void SovaMove(void)
                 }
                 else
                 {
-                    SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition + (HALF_BLOCK_SIZE - 4), gCurrentSprite.xPosition);
+                    SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition + (HALF_BLOCK_SIZE - PIXEL_SIZE), gCurrentSprite.xPosition);
                     if (gPreviousCollisionCheck == COLLISION_SOLID)
                     {
                         gCurrentSprite.status |= SPRITE_STATUS_FACING_RIGHT;
@@ -351,13 +382,15 @@ void SovaMove(void)
                         gCurrentSprite.work1 = SOVA_TURNING_DIRECTION_TOP_LEFT_EDGE;
                     }
                     else
+                    {
                         gCurrentSprite.yPosition += speed;
+                    }
                 }
             }
             else
             {
-                SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition - 4, gCurrentSprite.xPosition - 4);
-                if (!(gPreviousCollisionCheck & 0xF0))
+                SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition - PIXEL_SIZE, gCurrentSprite.xPosition - PIXEL_SIZE);
+                if (!(gPreviousCollisionCheck & COLLISION_FLAGS_UNKNOWN_F0))
                 {
                     gCurrentSprite.status &= ~SPRITE_STATUS_FACING_RIGHT;
                     turning++;
@@ -365,7 +398,7 @@ void SovaMove(void)
                 }
                 else
                 {
-                    SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition - (HALF_BLOCK_SIZE - 4), gCurrentSprite.xPosition);
+                    SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition - (HALF_BLOCK_SIZE - PIXEL_SIZE), gCurrentSprite.xPosition);
                     if (gPreviousCollisionCheck == COLLISION_SOLID)
                     {
                         gCurrentSprite.status |= SPRITE_STATUS_FACING_RIGHT;
@@ -373,7 +406,9 @@ void SovaMove(void)
                         gCurrentSprite.work1 = SOVA_TURNING_DIRECTION_TOP_LEFT_CORNER;
                     }
                     else
+                    {
                         gCurrentSprite.yPosition -= speed;
+                    }
                 }
             }
         }
@@ -384,8 +419,8 @@ void SovaMove(void)
         {
             if (gCurrentSprite.status & SPRITE_STATUS_FACING_RIGHT)
             {
-                SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition - 4, gCurrentSprite.xPosition);
-                if (!(gPreviousCollisionCheck & 0xF))
+                SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition - PIXEL_SIZE, gCurrentSprite.xPosition);
+                if (!(gPreviousCollisionCheck & COLLISION_FLAGS_UNKNOWN_F))
                 {
                     gCurrentSprite.status &= ~SPRITE_STATUS_FACING_RIGHT;
                     turning++;
@@ -393,7 +428,7 @@ void SovaMove(void)
                 }
                 else
                 {
-                    SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition, gCurrentSprite.xPosition + (HALF_BLOCK_SIZE - 4));
+                    SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition, gCurrentSprite.xPosition + (HALF_BLOCK_SIZE - PIXEL_SIZE));
                     if (gPreviousCollisionCheck == COLLISION_SOLID)
                     {
                         gCurrentSprite.status |= SPRITE_STATUS_FACING_RIGHT;
@@ -401,13 +436,15 @@ void SovaMove(void)
                         gCurrentSprite.work1 = SOVA_TURNING_DIRECTION_TOP_RIGHT_CORNER;
                     }
                     else
+                    {
                         gCurrentSprite.xPosition += speed;
+                    }
                 }
             }
             else
             {
-                SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition - 4, gCurrentSprite.xPosition - 4);
-                if (!(gPreviousCollisionCheck & 0xF))
+                SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition - PIXEL_SIZE, gCurrentSprite.xPosition - PIXEL_SIZE);
+                if (!(gPreviousCollisionCheck & COLLISION_FLAGS_UNKNOWN_F))
                 {
                     gCurrentSprite.status &= ~SPRITE_STATUS_FACING_RIGHT;
                     turning++;
@@ -415,7 +452,7 @@ void SovaMove(void)
                 }
                 else
                 {
-                    SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition, gCurrentSprite.xPosition - (HALF_BLOCK_SIZE - 4));
+                    SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition, gCurrentSprite.xPosition - (HALF_BLOCK_SIZE - PIXEL_SIZE));
                     if (gPreviousCollisionCheck == COLLISION_SOLID)
                     {
                         gCurrentSprite.status |= SPRITE_STATUS_FACING_RIGHT;
@@ -423,15 +460,17 @@ void SovaMove(void)
                         gCurrentSprite.work1 = SOVA_TURNING_DIRECTION_BOTTOM_RIGHT_EDGE;
                     }
                     else
+                    {
                         gCurrentSprite.xPosition -= speed;
+                    }
                 }
             }
         }
         else
         {
-            unk_f594();
+            SpriteUtilAlignYPositionOnSlopeAtOrigin();
 
-            if (gPreviousVerticalCollisionCheck == COLLISION_AIR || gPreviousVerticalCollisionCheck & 0xF0)
+            if (gPreviousVerticalCollisionCheck == COLLISION_AIR || gPreviousVerticalCollisionCheck & COLLISION_FLAGS_UNKNOWN_F0)
             {
                 if (gCurrentSprite.pOam != sSovaOam_OnGround)
                 {
@@ -456,7 +495,7 @@ void SovaMove(void)
                     }
                     else
                     {
-                        SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition - 4, gCurrentSprite.xPosition + (HALF_BLOCK_SIZE - 4));
+                        SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition - PIXEL_SIZE, gCurrentSprite.xPosition + (HALF_BLOCK_SIZE - PIXEL_SIZE));
                         if (gPreviousCollisionCheck == COLLISION_SOLID)
                         {
                             gCurrentSprite.status &= ~SPRITE_STATUS_FACING_RIGHT;
@@ -469,7 +508,7 @@ void SovaMove(void)
                 }
                 else
                 {
-                    SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition, gCurrentSprite.xPosition - 4);
+                    SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition, gCurrentSprite.xPosition - PIXEL_SIZE);
                     if (gPreviousCollisionCheck == COLLISION_AIR)
                     {
                         gCurrentSprite.status |= SPRITE_STATUS_FACING_RIGHT;
@@ -478,7 +517,7 @@ void SovaMove(void)
                     }
                     else
                     {
-                        SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition - 4, gCurrentSprite.xPosition - (HALF_BLOCK_SIZE - 4));
+                        SpriteUtilCheckCollisionAtPosition(gCurrentSprite.yPosition - PIXEL_SIZE, gCurrentSprite.xPosition - (HALF_BLOCK_SIZE - PIXEL_SIZE));
                         if (gPreviousCollisionCheck == COLLISION_SOLID)
                         {
                             gCurrentSprite.status &= ~SPRITE_STATUS_FACING_RIGHT;
@@ -486,7 +525,9 @@ void SovaMove(void)
                             gCurrentSprite.work1 = SOVA_TURNING_DIRECTION_BOTTOM_LEFT_CORNER;
                         }
                         else
+                        {
                             gCurrentSprite.xPosition -= speed;
+                        }
                     }
                 }
             }
@@ -516,7 +557,7 @@ void SovaMove(void)
                             gCurrentSprite.status |= SPRITE_STATUS_X_FLIP;
                         }
 
-                        gCurrentSprite.xPosition += (speed * 2 / 3);
+                        gCurrentSprite.xPosition += speed * 2 / 3;
                     }
                 }
                 else
@@ -543,7 +584,7 @@ void SovaMove(void)
                             gCurrentSprite.status &= ~SPRITE_STATUS_X_FLIP;
                         }
 
-                        gCurrentSprite.xPosition -= (speed * 2 / 3);
+                        gCurrentSprite.xPosition -= speed * 2 / 3;
                     }
                 }
             }
@@ -558,7 +599,7 @@ void SovaMove(void)
  * @brief 1e1ec | 194 | Initializes a sova to be turning around
  * 
  */
-void SovaTurningAroundInit(void)
+static void SovaTurningAroundInit(void)
 {
     gCurrentSprite.pose = SOVA_POSE_TURNING_AROUND;
     gCurrentSprite.animationDurationCounter = 0;
@@ -647,7 +688,7 @@ void SovaTurningAroundInit(void)
             break;
 
         default:
-            gCurrentSprite.status = 0x0;
+            gCurrentSprite.status = 0;
     }
 }
 
@@ -655,9 +696,9 @@ void SovaTurningAroundInit(void)
  * @brief 1e380 | 1f0 | Handles a sova turning around
  * 
  */
-void SovaTurningAround(void)
+static void SovaTurningAround(void)
 {
-    if (!SpriteUtilCheckEndCurrentSpriteAnim())
+    if (!SpriteUtilHasCurrentAnimationEnded())
         return;
 
     gCurrentSprite.pose = SOVA_POSE_IDLE;
@@ -669,7 +710,7 @@ void SovaTurningAround(void)
         case SOVA_TURNING_DIRECTION_BOTTOM_LEFT_CORNER:
             if (!(gCurrentSprite.status & SPRITE_STATUS_FACING_RIGHT))
             {
-                gCurrentSprite.yPosition -= 0x18;
+                gCurrentSprite.yPosition -= QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE;
                 gCurrentSprite.xPosition &= BLOCK_POSITION_FLAG;
             }
 
@@ -680,7 +721,7 @@ void SovaTurningAround(void)
         case SOVA_TURNING_DIRECTION_TOP_RIGHT_EDGE:
             if (!(gCurrentSprite.status & SPRITE_STATUS_FACING_RIGHT))
             {
-                gCurrentSprite.yPosition -= 0x1C;
+                gCurrentSprite.yPosition -= HALF_BLOCK_SIZE - PIXEL_SIZE;
                 gCurrentSprite.xPosition &= BLOCK_POSITION_FLAG;
                 gCurrentSprite.xPosition += BLOCK_SIZE;
             }
@@ -692,7 +733,7 @@ void SovaTurningAround(void)
         case SOVA_TURNING_DIRECTION_BOTTOM_RIGHT_EDGE:
             if (gCurrentSprite.status & SPRITE_STATUS_FACING_RIGHT)
             {
-                gCurrentSprite.yPosition += 0x18;
+                gCurrentSprite.yPosition += QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE;
                 gCurrentSprite.xPosition &= BLOCK_POSITION_FLAG;
             }
 
@@ -703,7 +744,7 @@ void SovaTurningAround(void)
         case SOVA_TURNING_DIRECTION_TOP_RIGHT_CORNER:
             if (gCurrentSprite.status & SPRITE_STATUS_FACING_RIGHT)
             {
-                gCurrentSprite.yPosition += 0x1C;
+                gCurrentSprite.yPosition += HALF_BLOCK_SIZE - PIXEL_SIZE;
                 gCurrentSprite.xPosition &= BLOCK_POSITION_FLAG;
                 gCurrentSprite.xPosition += BLOCK_SIZE;
             }
@@ -715,7 +756,7 @@ void SovaTurningAround(void)
         case SOVA_TURNING_DIRECTION_TOP_LEFT_EDGE:
             if (gCurrentSprite.status & SPRITE_STATUS_FACING_RIGHT)
             {
-                gCurrentSprite.xPosition += 0x1C;
+                gCurrentSprite.xPosition += HALF_BLOCK_SIZE - PIXEL_SIZE;
                 gCurrentSprite.yPosition &= BLOCK_POSITION_FLAG;
                 gCurrentSprite.yPosition += BLOCK_SIZE;
                 gCurrentSprite.status |= SPRITE_STATUS_X_FLIP;
@@ -732,7 +773,7 @@ void SovaTurningAround(void)
         case SOVA_TURNING_DIRECTION_BOTTOM_RIGHT_CORNER:
             if (!(gCurrentSprite.status & SPRITE_STATUS_FACING_RIGHT))
             {
-                gCurrentSprite.xPosition -= 0x1C;
+                gCurrentSprite.xPosition -= HALF_BLOCK_SIZE - PIXEL_SIZE;
                 gCurrentSprite.yPosition &= BLOCK_POSITION_FLAG;
                 gCurrentSprite.yPosition += BLOCK_SIZE;
                 gCurrentSprite.status |= SPRITE_STATUS_X_FLIP;
@@ -750,7 +791,7 @@ void SovaTurningAround(void)
             if (gCurrentSprite.status & SPRITE_STATUS_FACING_RIGHT)
             {
                 gCurrentSprite.yPosition &= BLOCK_POSITION_FLAG;
-                gCurrentSprite.xPosition += 0x18;
+                gCurrentSprite.xPosition += QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE;
                 gCurrentSprite.status |= SPRITE_STATUS_X_FLIP;
             }
             else
@@ -764,7 +805,7 @@ void SovaTurningAround(void)
             if (!(gCurrentSprite.status & SPRITE_STATUS_FACING_RIGHT))
             {
                 gCurrentSprite.yPosition &= BLOCK_POSITION_FLAG;
-                gCurrentSprite.xPosition -= 0x1C;
+                gCurrentSprite.xPosition -= HALF_BLOCK_SIZE - PIXEL_SIZE;
                 gCurrentSprite.status |= SPRITE_STATUS_X_FLIP;
             }
             else
@@ -778,7 +819,7 @@ void SovaTurningAround(void)
             gCurrentSprite.status = 0;
     }
 
-    SovaSetCrawlingOAM();
+    SovaSetCrawlingOam();
     SovaUpdateHitbox();
 }
 
@@ -786,7 +827,7 @@ void SovaTurningAround(void)
  * @brief 1e570 | 44 | Initializes a sova to be landing
  * 
  */
-void SovaLandingInit(void)
+static void SovaLandingInit(void)
 {
     gCurrentSprite.pose = SOVA_POSE_LANDING;
 
@@ -806,11 +847,11 @@ void SovaLandingInit(void)
  * @brief 1e5b4 | 30 | Handles a sova landing
  * 
  */
-void SovaLanding(void)
+static void SovaLanding(void)
 {
     if (SovaCheckCollidingWithAir())
         gCurrentSprite.pose = SOVA_POSE_FALLING_INIT;
-    else if (SpriteUtilCheckNearEndCurrentSpriteAnim())
+    else if (SpriteUtilHasCurrentAnimationNearlyEnded())
         gCurrentSprite.pose = SOVA_POSE_IDLE_INIT;
 }
 
@@ -818,7 +859,7 @@ void SovaLanding(void)
  * @brief 1e5e4 | 78 | Initializes a sova to be falling
  * 
  */
-void SovaFallingInit(void)
+static void SovaFallingInit(void)
 {
     if (gCurrentSprite.status & SPRITE_STATUS_FACING_DOWN)
     {
@@ -830,7 +871,7 @@ void SovaFallingInit(void)
     else
     {
         if (gCurrentSprite.work2 != 0)
-            gCurrentSprite.yPosition += (HALF_BLOCK_SIZE + 8);
+            gCurrentSprite.yPosition += HALF_BLOCK_SIZE + EIGHTH_BLOCK_SIZE;
     }
     
     gCurrentSprite.pose = SOVA_POSE_FALLING;
@@ -849,7 +890,7 @@ void SovaFallingInit(void)
  * @brief 1e65c | 7c | Handles a sova falling
  * 
  */
-void SovaFalling(void)
+static void SovaFalling(void)
 {
     u16 oldY;
     u8 offset;
@@ -879,14 +920,16 @@ void SovaFalling(void)
         SovaLandingInit();
     }
     else
+    {
         SpriteUtilCheckInRoomEffect(oldY, gCurrentSprite.yPosition, gCurrentSprite.xPosition, SPLASH_BIG);
+    }
 }
 
 /**
  * @brief 1e6d8 | 60 | Handles the death of a sova
  * 
  */
-void SovaDeath(void)
+static void SovaDeath(void)
 {
     u16 yPosition;
     u16 xPosition;
@@ -897,16 +940,16 @@ void SovaDeath(void)
     if (gCurrentSprite.status & SPRITE_STATUS_FACING_DOWN)
     {
         if (gCurrentSprite.status & SPRITE_STATUS_X_FLIP)
-            xPosition -= 0x28;
+            xPosition -= HALF_BLOCK_SIZE + EIGHTH_BLOCK_SIZE;
         else
-            xPosition += 0x28;
+            xPosition += HALF_BLOCK_SIZE + EIGHTH_BLOCK_SIZE;
     }
     else
     {
         if (gCurrentSprite.work2)
-            yPosition += 0x28;
+            yPosition += HALF_BLOCK_SIZE + EIGHTH_BLOCK_SIZE;
         else
-            yPosition -= 0x28;
+            yPosition -= HALF_BLOCK_SIZE + EIGHTH_BLOCK_SIZE;
     }
 
     SpriteUtilSpriteDeath(DEATH_NORMAL, yPosition, xPosition, TRUE, PE_SPRITE_EXPLOSION_MEDIUM);
@@ -925,49 +968,50 @@ void Sova(void)
             SoundPlayNotAlreadyPlaying(SOUND_SOVA_DAMAGED);
     }
 
-    if (gCurrentSprite.freezeTimer != 0x0)
-        SpriteUtilUpdateFreezeTimer();
-    else
+    if (gCurrentSprite.freezeTimer != 0)
     {
-        if (SpriteUtilIsSpriteStunned())
-            return;
+        SpriteUtilUpdateFreezeTimer();
+        return;
+    }
 
-        switch (gCurrentSprite.pose)
-        {
-            case 0:
-                SovaInit();
-                break;
+    if (SpriteUtilIsSpriteStunned())
+        return;
 
-            case SOVA_POSE_IDLE_INIT:
-                SovaIdleInit();
+    switch (gCurrentSprite.pose)
+    {
+        case SPRITE_POSE_UNINITIALIZED:
+            SovaInit();
+            break;
 
-            case SOVA_POSE_IDLE:
-                SovaMove();
-                break;
+        case SOVA_POSE_IDLE_INIT:
+            SovaIdleInit();
 
-            case SOVA_POSE_TURNING_AROUND_INIT:
-                SovaTurningAroundInit();
+        case SOVA_POSE_IDLE:
+            SovaMove();
+            break;
 
-            case SOVA_POSE_TURNING_AROUND:
-                SovaTurningAround();
-                break;
+        case SOVA_POSE_TURNING_AROUND_INIT:
+            SovaTurningAroundInit();
 
-            case SOVA_POSE_LANDING_INIT:
-                SovaLandingInit();
+        case SOVA_POSE_TURNING_AROUND:
+            SovaTurningAround();
+            break;
 
-            case SOVA_POSE_LANDING:
-                SovaLanding();
-                break;
+        case SOVA_POSE_LANDING_INIT:
+            SovaLandingInit();
 
-            case SOVA_POSE_FALLING_INIT:
-                SovaFallingInit();
+        case SOVA_POSE_LANDING:
+            SovaLanding();
+            break;
 
-            case SOVA_POSE_FALLING:
-                SovaFalling();
-                break;
+        case SOVA_POSE_FALLING_INIT:
+            SovaFallingInit();
 
-            default:
-                SovaDeath();
-        }
+        case SOVA_POSE_FALLING:
+            SovaFalling();
+            break;
+
+        default:
+            SovaDeath();
     }
 }

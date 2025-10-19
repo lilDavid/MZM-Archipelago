@@ -26,8 +26,11 @@ struct AnimatedTiming {
 };
 
 struct AnimatedPaletteTiming {
-    u8 timer;
-    s8 row;
+    u8 timer1;
+    s8 row1;
+
+    u8 timer2;
+    s8 row2;
 };
 
 struct AnimatedGraphicsInfo {

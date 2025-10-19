@@ -22,7 +22,7 @@ struct FusionGalleryImageEntry {
 struct FusionGalleryData {
     u8 stage;
     u8 unk_1;
-    u16 unk_2;
+    u16 finishedInitialScroll;
     u16 unk_4;
     u8 unk_6;
     u16 unk_8;
@@ -32,7 +32,7 @@ struct FusionGalleryData {
     u16 creditLineTilemap_1[32];
     u16 creditLineTilemap_2[32];
     u32 unk_90;
-    u16 unk_94;
+    u16 fadeOutTimer;
     u16 unk_96;
     u8 unk_98;
     u8 currentImage;

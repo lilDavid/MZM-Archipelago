@@ -3,6 +3,7 @@
 #include "gba.h"
 #include "globals.h"
 #include "io.h"
+#include "audio/track_internal.h"
 #include "structs/game_state.h"
 
 /**
@@ -14,9 +15,9 @@ void CallbackCallVblank(void)
     if (gVBlankCallback)
         gVBlankCallback();
 
-    write16(REG_IF, read16(REG_IF) | IF_VBLANK);
+    WRITE_16(REG_IF, READ_16(REG_IF) | IF_VBLANK);
     gVBlankRequestFlag = TRUE;
-    gInterruptCheckFlag |= 0x1;
+    gInterruptCheckFlag |= 1;
 
     if (!gVblankActive)
         UpdateAudio();
@@ -27,7 +28,7 @@ void CallbackCallVblank(void)
  * 
  * @param callback Callback pointer
  */
-void CallbackSetVBlank(Func_T callback)
+void CallbackSetVblank(Func_T callback)
 {
     gVBlankCallback = callback;
 
@@ -42,12 +43,12 @@ void CallbackSetVBlank(Func_T callback)
  * @brief b00 | 24 | Calls the h-blank callback
  * 
  */
-void CallbackCallHBlank(void)
+void CallbackCallHblank(void)
 {
     if (gHBlankCallback)
         gHBlankCallback();
 
-    write16(REG_IF, read16(REG_IF) | IF_HBLANK);
+    WRITE_16(REG_IF, READ_16(REG_IF) | IF_HBLANK);
 }
 
 /**
@@ -55,7 +56,7 @@ void CallbackCallHBlank(void)
  * 
  * @param callback Callback pointer
  */
-void CallbackSetHBlank(Func_T callback)
+void CallbackSetHblank(Func_T callback)
 {
     gHBlankCallback = callback;
 
@@ -70,12 +71,12 @@ void CallbackSetHBlank(Func_T callback)
  * @brief b40 | 24 | Calls the v-count callback
  * 
  */
-void CallbackCallVCount(void)
+void CallbackCallVcount(void)
 {
     if (gVCountCallback)
         gVCountCallback();
 
-    write16(REG_IF, read16(REG_IF) | IF_VCOUNT);
+    WRITE_16(REG_IF, READ_16(REG_IF) | IF_VCOUNT);
 }
 
 /**
@@ -83,7 +84,7 @@ void CallbackCallVCount(void)
  * 
  * @param callback Callback pointer
  */
-void CallbackSetVCount(Func_T callback)
+void CallbackSetVcount(Func_T callback)
 {
     gVCountCallback = callback;
 
@@ -103,7 +104,7 @@ void CallbackCallSerialCommunication(void)
     if (gSerialCommunicationCallback)
         gSerialCommunicationCallback();
 
-    write16(REG_IF, read16(REG_IF) | IF_SERIAL);
+    WRITE_16(REG_IF, READ_16(REG_IF) | IF_SERIAL);
 }
 
 /**
@@ -131,7 +132,7 @@ void CallbackCallTimer3(void)
     if (gTimer3Callback)
         gTimer3Callback();
 
-    write16(REG_IF, read16(REG_IF) | IF_TIMER3);
+    WRITE_16(REG_IF, READ_16(REG_IF) | IF_TIMER3);
 }
 
 /**

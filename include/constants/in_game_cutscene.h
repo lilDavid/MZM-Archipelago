@@ -1,23 +1,36 @@
 #ifndef IN_GAME_CUTSCENE_CONSTANTS_H
 #define IN_GAME_CUTSCENE_CONSTANTS_H
 
-enum InGameCutsceneScene {
+#include "types.h"
+#include "macros.h"
+
+MAKE_ENUM(u8, InGameCutsceneScene) {
     IGC_CLOSE_UP = 4,
     IGC_LONG_BEAM_HINT = 7,
     IGC_GETTING_VARIA = 9,
     IGC_GETTING_FULLY_POWERED,
 
-    IGC_END = 32
+    IGC_END = 32,
+
+    IGC_STARTED_FLAG = 1 << 7
 };
 
-#define IGC_STARTED_FLAG 0x80
 #define IGC_NO_STARTED_FLAG 0x7F
 
-enum BackgroundFlash {
+MAKE_ENUM(u8, BackgroundFlash) {
     BG_FLASH_SLIGHT_YELLOW,
     BG_FLASH_CHOZO_LONG_TRANSPARENCY,
     BG_FLASH_HEAVY_YELLOW,
     BG_FLASH_QUICK_YELLOW,
 };
 
-#endif
+MAKE_ENUM(u32, InGameCutsceneResult) {
+    IGC_RESULT_NONE,
+    IGC_RESULT_NEXT_STAGE,
+    IGC_RESULT_PREV_STAGE,
+    IGC_RESULT_BACK_3_STAGES,
+    IGC_RESULT_RESTART_STAGE,
+    IGC_RESULT_STOP
+};
+
+#endif /* IN_GAME_CUTSCENE_CONSTANTS_H */

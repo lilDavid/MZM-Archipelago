@@ -48,13 +48,13 @@ const struct RandoSprite sRandoPowerGripSprite = {sRandoPowerGripGfx, sPowerGrip
 const u16 sRandoOam_EnergyDNAHeader[] = {
     8,
     // vanilla energy
-    0xfe, OBJ_SIZE_16x16 | 0x1f0, OBJ_SPRITE_OAM | 0x3000 | 684,
-    OBJ_SHAPE_HORIZONTAL | 0x8, OBJ_SIZE_32x8 | 0x0, OBJ_SPRITE_OAM | 0x3000 | 724,
-    OBJ_SHAPE_HORIZONTAL | 0x8, OBJ_SIZE_32x8 | 0x20, OBJ_SPRITE_OAM | 0x3000 | 724,
-    0x8, 0x40, OBJ_SPRITE_OAM | 0x3000 | 728,
+    OAM_ENTRY(-16, -2, OAM_DIMS_16x16, 0, 684, 3, 0),
+    OAM_ENTRY(8, 0, OAM_DIMS_32x8, 0, 724, 3, 0),
+    OAM_ENTRY(8, 0x20, OAM_DIMS_32x8, 0, 724, 3, 0),
+    OAM_ENTRY(8, 0x40, OAM_DIMS_8x8, 0, 728, 3, 0),
     // rando DNA
-    OBJ_SHAPE_HORIZONTAL | 0xfd, 0x48, OBJ_SPRITE_OAM | 0x3000 | 720,
-    OBJ_SHAPE_HORIZONTAL | 0x5, 0x48, OBJ_SPRITE_OAM | 0x3000 | 722,
-    OBJ_SHAPE_HORIZONTAL | 0x8, OBJ_SIZE_32x8 | 0x58, OBJ_SPRITE_OAM | 0x3000 | 724,
-    0x8, 0x78, OBJ_SPRITE_OAM | 0x3000 | 728,
+    OAM_ENTRY(-3, 0x48, OAM_DIMS_16x16, 0, 720, 3, 0),
+    OAM_ENTRY(5, 0x48, OAM_DIMS_16x8, 0, 722, 3, 0),
+    OAM_ENTRY(8, 0x58, OAM_DIMS_32x8, 0, 724, 3, 0),
+    OAM_ENTRY(8, 0x78, OAM_DIMS_8x8, 0, 728, 3, 0),
 };

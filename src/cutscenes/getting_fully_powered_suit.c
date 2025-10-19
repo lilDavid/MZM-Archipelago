@@ -1,11 +1,11 @@
 #include "cutscenes/getting_fully_powered_suit.h"
 #include "cutscenes/cutscene_utils.h"
+#include "dma.h"
 #include "macros.h"
 
 #include "data/shortcut_pointers.h"
 #include "data/generic_data.h"
 #include "data/cutscenes/getting_fully_powered_suit_data.h"
-#include "data/cutscenes/internal_getting_fully_powered_suit_data.h"
 
 #include "constants/audio.h"
 #include "constants/cutscene.h"
@@ -31,12 +31,18 @@
 
 #define RING_MOVEMENT_SPEED PIXEL_SIZE
 
+static void GettingFullyPoweredSuitUpdateRingPalette(struct CutscenePaletteData* pPalette);
+static void GettingFullyPoweredSuitUpdateRing(struct CutsceneOamData* pOam);
+static void GettingFullyPoweredSuitUpdateSparkleAroundRing(struct CutsceneOamData* pOam, u8 sparkleId);
+static void GettingFullyPoweredSuitUpdateSparkleGoingUp(struct CutsceneOamData* pOam, u8 sparkleId);
+static void GettingFullyPoweredSuitProcessOAM(void);
+
 /**
  * @brief 65bd8 | 204 | Handles the animation part (entire cutscene)
  * 
  * @return u8 FALSE
  */
-u8 GettingFullyPoweredSuitAnimation(void)
+static u8 GettingFullyPoweredSuitAnimation(void)
 {
     s32 i;
     u16* bgPosition;
@@ -140,11 +146,15 @@ u8 GettingFullyPoweredSuitAnimation(void)
     CLAMP2(i, 0, SCREEN_SIZE_Y);
 
     // Write to window 1 Y size
-    write16(REG_WIN1V, i);
+    WRITE_16(REG_WIN1V, i);
 
     // Update up sparkles
     for (i = OAM_UP_SPARKLES_START; i < OAM_UP_SPARKLES_END; i++)
         GettingFullyPoweredSuitUpdateSparkleGoingUp(&CUTSCENE_DATA.oam[i], i);
+
+    #ifdef DEBUG
+    CutsceneCheckSkipStage(2);
+    #endif // DEBUG
 
     return FALSE;
 }
@@ -154,7 +164,7 @@ u8 GettingFullyPoweredSuitAnimation(void)
  * 
  * @param pPalette Cutscene palette data pointer
  */
-void GettingFullyPoweredSuitUpdateRingPalette(struct CutscenePaletteData* pPalette)
+static void GettingFullyPoweredSuitUpdateRingPalette(struct CutscenePaletteData* pPalette)
 {
     if (!(pPalette->active & TRUE))
         return;
@@ -184,7 +194,7 @@ void GettingFullyPoweredSuitUpdateRingPalette(struct CutscenePaletteData* pPalet
  * 
  * @param pOam Cutscene OAM data pointer
  */
-void GettingFullyPoweredSuitUpdateRing(struct CutsceneOamData* pOam)
+static void GettingFullyPoweredSuitUpdateRing(struct CutsceneOamData* pOam)
 {
     u16 unk;
     
@@ -221,7 +231,7 @@ void GettingFullyPoweredSuitUpdateRing(struct CutsceneOamData* pOam)
  * @param pOam Cutscene OAM data pointer
  * @param sparkleId Sparkle ID
  */
-void GettingFullyPoweredSuitUpdateSparkleAroundRing(struct CutsceneOamData* pOam, u8 sparkleId)
+static void GettingFullyPoweredSuitUpdateSparkleAroundRing(struct CutsceneOamData* pOam, u8 sparkleId)
 {
     if (pOam->actions == CUTSCENE_OAM_ACTION_NONE)
     {
@@ -267,7 +277,7 @@ void GettingFullyPoweredSuitUpdateSparkleAroundRing(struct CutsceneOamData* pOam
  * @param pOam Cutscene OAM data pointer
  * @param sparkleId Sparkle ID
  */
-void GettingFullyPoweredSuitUpdateSparkleGoingUp(struct CutsceneOamData* pOam, u8 sparkleId)
+static void GettingFullyPoweredSuitUpdateSparkleGoingUp(struct CutsceneOamData* pOam, u8 sparkleId)
 {
     u16 unk;
 
@@ -313,7 +323,7 @@ void GettingFullyPoweredSuitUpdateSparkleGoingUp(struct CutsceneOamData* pOam, u
             return;
         }
 
-        pOam->timer--;
+        APPLY_DELTA_TIME_DEC(pOam->timer);
     }
 }
 
@@ -322,11 +332,15 @@ void GettingFullyPoweredSuitUpdateSparkleGoingUp(struct CutsceneOamData* pOam, u
  * 
  * @return u8 FALSE
  */
-u8 GettingFullyPoweredSuitInit(void)
+static u8 GettingFullyPoweredSuitInit(void)
 {
     s32 i;
 
+    #ifdef REGION_EU
+    CutsceneFadeScreenToWhite();
+    #else // !REGION_EU
     CutsceneFadeScreenToBlack();
+    #endif // REGION_EU
 
     // Load palette, in both background and object
     DmaTransfer(3, sGettingFullyPoweredSuitPal, PALRAM_BASE, 11 * PAL_ROW_SIZE, 16);
@@ -355,9 +369,9 @@ u8 GettingFullyPoweredSuitInit(void)
         BLDCNT_BG0_SECOND_TARGET_PIXEL | BLDCNT_BG1_SECOND_TARGET_PIXEL | BLDCNT_BG3_SECOND_TARGET_PIXEL |
         BLDCNT_OBJ_SECOND_TARGET_PIXEL | BLDCNT_BACKDROP_SECOND_TARGET_PIXEL;
 
-    gWrittenToBLDY_NonGameplay = 0;
-    gWrittenToBLDALPHA_L = 0;
-    gWrittenToBLDALPHA_H = BLDALPHA_MAX_VALUE;
+    gWrittenToBldy_NonGameplay = 0;
+    gWrittenToBldalpha_L = 0;
+    gWrittenToBldalpha_H = BLDALPHA_MAX_VALUE;
 
     CutsceneSetBackgroundPosition(CUTSCENE_BG_EDIT_HOFS, sGettingFullyPoweredSuitPageData[0].bg, NON_GAMEPLAY_START_BG_POS);
     CutsceneSetBackgroundPosition(CUTSCENE_BG_EDIT_HOFS, sGettingFullyPoweredSuitPageData[1].bg, NON_GAMEPLAY_START_BG_POS);
@@ -414,12 +428,12 @@ u8 GettingFullyPoweredSuitInit(void)
     CUTSCENE_DATA.dispcnt = DCNT_OBJ | DCNT_WIN1 | sGettingFullyPoweredSuitPageData[0].bg | sGettingFullyPoweredSuitPageData[1].bg;
 
     // Setup windows
-    write8(REG_WINOUT, WIN0_ALL);
-    write8(REG_WININ + 1, HIGH_BYTE(WIN1_ALL_NO_COLOR_EFFECT));
+    WRITE_8(REG_WINOUT, WIN0_ALL);
+    WRITE_8(REG_WININ + 1, HIGH_BYTE(WIN1_ALL_NO_COLOR_EFFECT));
 
     // Set entire screen for the size of window 1
-    write16(REG_WIN1H, SCREEN_SIZE_X);
-    write16(REG_WIN1V, SCREEN_SIZE_Y);
+    WRITE_16(REG_WIN1H, SCREEN_SIZE_X);
+    WRITE_16(REG_WIN1V, SCREEN_SIZE_Y);
 
     gPauseScreenFlag = PAUSE_SCREEN_NONE;
     PlayMusic(MUSIC_GETTING_FULLY_POWERED_SUIT_CUTSCENE, 0);
@@ -430,6 +444,21 @@ u8 GettingFullyPoweredSuitInit(void)
 
     return FALSE;
 }
+
+static struct CutsceneSubroutineData sGettingFullyPoweredSuitSubroutineData[3] = {
+    [0] = {
+        .pFunction = GettingFullyPoweredSuitInit,
+        .oamLength = 14
+    },
+    [1] = {
+        .pFunction = GettingFullyPoweredSuitAnimation,
+        .oamLength = 14
+    },
+    [2] = {
+        .pFunction = CutsceneEndFunction,
+        .oamLength = 0
+    }
+};
 
 /**
  * @brief 6635c | 34 | Subroutine for the getting fully powered suit cutscene
@@ -451,7 +480,7 @@ u8 GettingFullyPoweredSuitSubroutine(void)
  * @brief 66390 | 38 | Processes the OAM
  * 
  */
-void GettingFullyPoweredSuitProcessOAM(void)
+static void GettingFullyPoweredSuitProcessOAM(void)
 {
     gNextOamSlot = 0;
     ProcessCutsceneOam(sGettingFullyPoweredSuitSubroutineData[CUTSCENE_DATA.timeInfo.stage].oamLength, CUTSCENE_DATA.oam, sGettingFullyPoweredSuitCutsceneOam);

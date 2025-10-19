@@ -4,15 +4,18 @@
 #include "data/menus/file_select_data.h"
 
 #include "constants/game_over.h"
-#include "constants/samus.h"
 
-const u16 sGameOverMenuPal[16 * 5] = INCBIN_U16("data/menus/GameOver/Palette.pal");
-const u32 sGameOverTextAndBackgroundGfx[2738] = INCBIN_U32("data/menus/GameOver/TextAndBackground.gfx.lz");
-const u32 sGameOverTextPromptEnglishGfx[333] = INCBIN_U32("data/menus/GameOver/TextPromptEnglish.gfx.lz");
-const u32 sGameOverTextPromptHiragnaGfx[1780] = INCBIN_U32("data/menus/GameOver/TextPromptHiragna.gfx.lz");
-const u32 sGameOverBackgroundTileTable[370] = INCBIN_U32("data/menus/GameOver/Background.tt");
-const u32 sGameOverTextTileTable[116] = INCBIN_U32("data/menus/GameOver/Text.tt");
-const u32 sGameOver_454520[160] = INCBIN_U32("data/menus/GameOver/454520.tt");
+const u16 sGameOverMenuPal[16 * 5] = INCBIN_U16("data/menus/game_over/palette.pal");
+const u32 sGameOverTextAndBackgroundGfx[2738] = INCBIN_U32("data/menus/game_over/text_and_background.gfx.lz");
+const u32 sGameOverTextPromptEnglishGfx[333] = INCBIN_U32("data/menus/game_over/text_prompt_english.gfx.lz");
+const u32 sGameOverTextPromptHiraganaGfx[428] = INCBIN_U32("data/menus/game_over/text_prompt_hiragana.gfx.lz");
+const u32 sGameOverTextPromptGermanGfx[] = INCBIN_U32("data/menus/game_over/text_prompt_german.gfx.lz");
+const u32 sGameOverTextPromptFrenchGfx[] = INCBIN_U32("data/menus/game_over/text_prompt_french.gfx.lz");
+const u32 sGameOverTextPromptItalianGfx[] = INCBIN_U32("data/menus/game_over/text_prompt_italian.gfx.lz");
+const u32 sGameOverTextPromptSpanishGfx[] = INCBIN_U32("data/menus/game_over/text_prompt_spanish.gfx.lz");
+const u32 sGameOverBackgroundTileTable[370] = INCBIN_U32("data/menus/game_over/background.tt");
+const u32 sGameOverTextTileTable[116] = INCBIN_U32("data/menus/game_over/text.tt");
+const u32 sGameOver_454520[160] = INCBIN_U32("data/menus/game_over/454520.tt");
 
 const struct GameOverDynamicPalette sGameOverDynamicPalette_Empty = {
     .timer = 0,
@@ -28,10 +31,17 @@ const u16 sGameOverSamusHeadXPositions[LANGUAGE_END] = {
     [LANGUAGE_JAPANESE] = BLOCK_SIZE * 3 + EIGHTH_BLOCK_SIZE,
     [LANGUAGE_HIRAGANA] = BLOCK_SIZE * 3 + EIGHTH_BLOCK_SIZE,
     [LANGUAGE_ENGLISH] = BLOCK_SIZE * 3 + EIGHTH_BLOCK_SIZE,
+    #ifdef REGION_EU
+    [LANGUAGE_GERMAN] = BLOCK_SIZE * 4 + EIGHTH_BLOCK_SIZE,
+    [LANGUAGE_FRENCH] = BLOCK_SIZE * 3 + HALF_BLOCK_SIZE + EIGHTH_BLOCK_SIZE,
+    [LANGUAGE_ITALIAN] = BLOCK_SIZE * 2 + HALF_BLOCK_SIZE + EIGHTH_BLOCK_SIZE,
+    [LANGUAGE_SPANISH] = BLOCK_SIZE * 5 + EIGHTH_BLOCK_SIZE
+    #else // !REGION_EU
     [LANGUAGE_GERMAN] = BLOCK_SIZE * 3 + EIGHTH_BLOCK_SIZE,
     [LANGUAGE_FRENCH] = BLOCK_SIZE * 3 + EIGHTH_BLOCK_SIZE,
     [LANGUAGE_ITALIAN] = BLOCK_SIZE * 3 + EIGHTH_BLOCK_SIZE,
     [LANGUAGE_SPANISH] = BLOCK_SIZE * 3 + EIGHTH_BLOCK_SIZE
+    #endif // REGION_EU
 };
 
 const u16 sGameOverSamusHeadYPositions[2] = {
@@ -39,7 +49,7 @@ const u16 sGameOverSamusHeadYPositions[2] = {
     [TRUE] = BLOCK_SIZE * 8 + HALF_BLOCK_SIZE
 };
 
-const u8 sGameOverSamusHeadOamIds[SUIT_END][SAMUS_CURSOR_ACTION_END] = {
+const GameOverOamId sGameOverSamusHeadOamIds[SUIT_END][SAMUS_CURSOR_ACTION_END] = {
     [SUIT_NORMAL] = {
         [SAMUS_CURSOR_ACTION_LOADING] = GAME_OVER_OAM_ID_SUIT_LOADING,
         [SAMUS_CURSOR_ACTION_MOVING] = GAME_OVER_OAM_ID_SUIT_MOVING,

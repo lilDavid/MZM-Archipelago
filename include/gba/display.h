@@ -1,7 +1,7 @@
 #ifndef GBA_DISPLAY_H
 #define GBA_DISPLAY_H
 
-#include "types.h"
+#include "gba/memory.h"
 
 #define REG_DISPCNT (REG_BASE + 0x000)
 
@@ -27,8 +27,10 @@
 #define REG_BG2PC (REG_BASE + 0x024)
 #define REG_BG2PD (REG_BASE + 0x026)
 
-#define REG_BG2X (REG_BASE + 0x028)
-#define REG_BG2Y (REG_BASE + 0x02C)
+#define REG_BG2X_L (REG_BASE + 0x028)
+#define REG_BG2X_H (REG_BASE + 0x02A)
+#define REG_BG2Y_L (REG_BASE + 0x02C)
+#define REG_BG2Y_H (REG_BASE + 0x02E)
 
 #define REG_DISPSTAT (REG_BASE + 0x004)
 #define REG_WIN0H    (REG_BASE + 0x040)
@@ -93,7 +95,7 @@
 #define BGCNT_TO_VRAM_CHAR_BASE(val) (VRAM_BASE + (val) * BGCNT_VRAM_CHAR_SIZE)
 #define BGCNT_TO_VRAM_TILE_BASE(val) (VRAM_BASE + (val) * BGCNT_VRAM_TILE_SIZE)
 
-#define BGCNT_GET_PRIORITY(val) (val & 3)
+#define BGCNT_GET_PRIORITY(val) ((val) & 3)
 
 #define CREATE_BGCNT(charBase, screenBase, prio, size) ((size) << BGCNT_SCREEN_SIZE_SHIFT | (screenBase) << BGCNT_SCREEN_BASE_BLOCK_SHIFT | (charBase) << BGCNT_CHAR_BASE_BLOCK_SHIFT | (prio))
 

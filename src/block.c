@@ -1,9 +1,10 @@
 #include "block.h"
 #include "macros.h"
+#include "dma.h"
 #include "gba.h"
+#include "bg_clip.h"
 
 #include "data/block_data.h"
-#include "data/engine_pointers.h"
 
 #include "constants/audio.h"
 #include "constants/block.h"
@@ -17,20 +18,16 @@
 #include "structs/power_bomb_explosion.h"
 
 /**
- * @brief 590b0 | 214 | Checks if soemthing should happen to a block depending on the Ccaa
+ * @brief 590b0 | 214 | Checks if something should happen to a block depending on the Ccaa
  * 
  * @param pClipBlock Clipdata Block Data Pointer
  * @return u32 1 if detroyed, 0 otherwise
  */
-#ifdef NON_MATCHING
 u32 BlockCheckCcaa(struct ClipdataBlockData* pClipBlock)
 {
-    // https://decomp.me/scratch/LL1r2
-
     u32 result;
     u32 bombChainType;
     u32 destroy;
-    u32 behavior;
     u16 block;
 
     result = FALSE;
@@ -171,11 +168,11 @@ u32 BlockCheckCcaa(struct ClipdataBlockData* pClipBlock)
             // Check should reveal
             if (sClipdataAffectingActionDamageTypes[gCurrentClipdataAffectingAction] & TANK_WEAKNESS)
             {
-                behavior = sTankBehaviors[BEHAVIOR_TO_TANK(pClipBlock->behavior)].revealedClipdata;
-                if (behavior != 0)
+                destroy = sTankBehaviors[BEHAVIOR_TO_TANK(pClipBlock->behavior)].revealedClipdata;
+                if (destroy != CLIPDATA_AIR)
                 {
-                    BgClipSetBg1BlockValue(behavior, pClipBlock->yPosition, pClipBlock->xPosition);
-                    BgClipSetClipdataBlockValue(behavior, pClipBlock->yPosition, pClipBlock->xPosition);
+                    BgClipSetBg1BlockValue(destroy, pClipBlock->yPosition, pClipBlock->xPosition);
+                    BgClipSetClipdataBlockValue(destroy, pClipBlock->yPosition, pClipBlock->xPosition);
                     result = TRUE;
                 }
             }
@@ -183,264 +180,14 @@ u32 BlockCheckCcaa(struct ClipdataBlockData* pClipBlock)
 
     return result;
 }
-#else
-NAKED_FUNCTION
-u32 BlockCheckCcaa(struct ClipdataBlockData* pClipBlock)
-{
-    asm(" \n\
-        push {r4, r5, r6, r7, lr} \n\
-        add r5, r0, #0 \n\
-        movs r7, #0 \n\
-        ldrh r1, [r5, #4] \n\
-        add r0, r1, #0 \n\
-        sub r0, #0x10 \n\
-        lsl r0, r0, #0x10 \n\
-        lsr r0, r0, #0x10 \n\
-        cmp r0, #0x2f \n\
-        bls lbl_080590c6 \n\
-        b lbl_080591ec \n\
-    lbl_080590c6: \n\
-        add r0, r1, #0 \n\
-        sub r0, #0x10 \n\
-        strb r0, [r5, #6] \n\
-        ldr r3, lbl_080590ec @ =gCurrentClipdataAffectingAction \n\
-        ldrb r0, [r3] \n\
-        cmp r0, #0xd \n\
-        bne lbl_080590f4 \n\
-        ldr r1, lbl_080590f0 @ =sBlockBehaviors \n\
-        ldrb r2, [r5, #6] \n\
-        lsl r0, r2, #2 \n\
-        add r0, r0, r1 \n\
-        ldrb r0, [r0, #3] \n\
-        lsl r0, r0, #0x1c \n\
-        cmp r0, #0 \n\
-        bne lbl_080590e6 \n\
-        b lbl_080591ec \n\
-    lbl_080590e6: \n\
-        movs r0, #0xc \n\
-        strb r0, [r3] \n\
-        b lbl_08059108 \n\
-        .align 2, 0 \n\
-    lbl_080590ec: .4byte gCurrentClipdataAffectingAction \n\
-    lbl_080590f0: .4byte sBlockBehaviors \n\
-    lbl_080590f4: \n\
-        ldrb r2, [r5, #6] \n\
-        cmp r0, #0xf \n\
-        bne lbl_08059108 \n\
-        ldr r0, lbl_0805911c @ =sBlockBehaviors \n\
-        lsl r1, r2, #2 \n\
-        add r1, r1, r0 \n\
-        ldrb r0, [r1, #3] \n\
-        lsr r0, r0, #4 \n\
-        cmp r0, #0 \n\
-        beq lbl_080591ec \n\
-    lbl_08059108: \n\
-        movs r4, #1 \n\
-        movs r6, #0 \n\
-        sub r0, r2, #2 \n\
-        cmp r0, #0x1c \n\
-        bhi lbl_080591e8 \n\
-        lsl r0, r0, #2 \n\
-        ldr r1, lbl_08059120 @ =lbl_08059124 \n\
-        add r0, r0, r1 \n\
-        ldr r0, [r0] \n\
-        mov pc, r0 \n\
-        .align 2, 0 \n\
-    lbl_0805911c: .4byte sBlockBehaviors \n\
-    lbl_08059120: .4byte lbl_08059124 \n\
-    lbl_08059124: @ jump table \n\
-        .4byte lbl_08059198 @ case 0 \n\
-        .4byte lbl_080591a6 @ case 1 \n\
-        .4byte lbl_080591a0 @ case 2 \n\
-        .4byte lbl_080591e8 @ case 3 \n\
-        .4byte lbl_080591e8 @ case 4 \n\
-        .4byte lbl_08059198 @ case 5 \n\
-        .4byte lbl_080591a6 @ case 6 \n\
-        .4byte lbl_080591a0 @ case 7 \n\
-        .4byte lbl_080591e8 @ case 8 \n\
-        .4byte lbl_080591ae @ case 9 \n\
-        .4byte lbl_080591ae @ case 10 \n\
-        .4byte lbl_080591b8 @ case 11 \n\
-        .4byte lbl_080591b8 @ case 12 \n\
-        .4byte lbl_080591b8 @ case 13 \n\
-        .4byte lbl_080591b8 @ case 14 \n\
-        .4byte lbl_080591b8 @ case 15 \n\
-        .4byte lbl_080591b8 @ case 16 \n\
-        .4byte lbl_080591c2 @ case 17 \n\
-        .4byte lbl_080591b8 @ case 18 \n\
-        .4byte lbl_080591b8 @ case 19 \n\
-        .4byte lbl_080591ca @ case 20 \n\
-        .4byte lbl_080591ce @ case 21 \n\
-        .4byte lbl_080591d2 @ case 22 \n\
-        .4byte lbl_080591d6 @ case 23 \n\
-        .4byte lbl_080591da @ case 24 \n\
-        .4byte lbl_080591de @ case 25 \n\
-        .4byte lbl_080591e2 @ case 26 \n\
-        .4byte lbl_080591e6 @ case 27 \n\
-        .4byte lbl_080591c2 @ case 28 \n\
-    lbl_08059198: \n\
-        ldrh r0, [r5] \n\
-        sub r0, #1 \n\
-        strh r0, [r5] \n\
-        b lbl_080591e8 \n\
-    lbl_080591a0: \n\
-        ldrh r0, [r5] \n\
-        sub r0, #1 \n\
-        strh r0, [r5] \n\
-    lbl_080591a6: \n\
-        ldrh r0, [r5, #2] \n\
-        sub r0, #1 \n\
-        strh r0, [r5, #2] \n\
-        b lbl_080591e8 \n\
-    lbl_080591ae: \n\
-        add r0, r5, #0 \n\
-        bl BlockCheckRevealOrDestroyBombBlock \n\
-        add r4, r0, #0 \n\
-        b lbl_080591e8 \n\
-    lbl_080591b8: \n\
-        add r0, r5, #0 \n\
-        bl BlockCheckRevealOrDestroyNonBombBlock \n\
-        add r4, r0, #0 \n\
-        b lbl_080591e8 \n\
-    lbl_080591c2: \n\
-        add r0, r5, #0 \n\
-        bl BlockCheckRevealOrDestroyNonBombBlock \n\
-        b lbl_080591ec \n\
-    lbl_080591ca: \n\
-        movs r6, #0 \n\
-        b lbl_080591e8 \n\
-    lbl_080591ce: \n\
-        movs r6, #1 \n\
-        b lbl_080591e8 \n\
-    lbl_080591d2: \n\
-        movs r6, #2 \n\
-        b lbl_080591e8 \n\
-    lbl_080591d6: \n\
-        movs r6, #3 \n\
-        b lbl_080591e8 \n\
-    lbl_080591da: \n\
-        movs r6, #4 \n\
-        b lbl_080591e8 \n\
-    lbl_080591de: \n\
-        movs r6, #5 \n\
-        b lbl_080591e8 \n\
-    lbl_080591e2: \n\
-        movs r6, #6 \n\
-        b lbl_080591e8 \n\
-    lbl_080591e6: \n\
-        movs r6, #7 \n\
-    lbl_080591e8: \n\
-        cmp r4, #0 \n\
-        bne lbl_080591f0 \n\
-    lbl_080591ec: \n\
-        movs r0, #0 \n\
-        b lbl_080592b0 \n\
-    lbl_080591f0: \n\
-        ldr r1, lbl_08059208 @ =sBlockBehaviors \n\
-        ldrb r0, [r5, #6] \n\
-        lsl r0, r0, #2 \n\
-        add r0, r0, r1 \n\
-        ldrb r1, [r0] \n\
-        cmp r1, #2 \n\
-        beq lbl_08059222 \n\
-        cmp r1, #2 \n\
-        bgt lbl_0805920c \n\
-        cmp r1, #1 \n\
-        beq lbl_08059216 \n\
-        b lbl_080592ae \n\
-        .align 2, 0 \n\
-    lbl_08059208: .4byte sBlockBehaviors \n\
-    lbl_0805920c: \n\
-        cmp r1, #3 \n\
-        beq lbl_08059234 \n\
-        cmp r1, #4 \n\
-        beq lbl_08059274 \n\
-        b lbl_080592ae \n\
-    lbl_08059216: \n\
-        add r0, r5, #0 \n\
-        bl BlockDestroyNonReformBlock \n\
-        cmp r0, #0 \n\
-        beq lbl_080592ae \n\
-        b lbl_080592ac \n\
-    lbl_08059222: \n\
-        ldrb r0, [r0, #2] \n\
-        ldrh r1, [r5] \n\
-        ldrh r2, [r5, #2] \n\
-        movs r3, #0 \n\
-        bl BlockStoreBrokenReformBlock \n\
-        cmp r0, #0 \n\
-        beq lbl_080592ae \n\
-        b lbl_080592ac \n\
-    lbl_08059234: \n\
-        add r0, r5, #0 \n\
-        bl BlockCheckRevealOrDestroyBombBlock \n\
-        cmp r0, #0 \n\
-        beq lbl_080592ae \n\
-        ldr r2, lbl_0805926c @ =gActiveBombChainTypes \n\
-        ldr r1, lbl_08059270 @ =sBombChainReverseData \n\
-        lsl r0, r6, #2 \n\
-        add r0, r0, r1 \n\
-        ldrb r1, [r2] \n\
-        ldrb r0, [r0] \n\
-        and r0, r1 \n\
-        cmp r0, #0 \n\
-        bne lbl_080592ae \n\
-        add r0, r6, #0 \n\
-        ldrh r1, [r5] \n\
-        ldrh r2, [r5, #2] \n\
-        bl BlockStartBombChain \n\
-        cmp r0, #0 \n\
-        beq lbl_080592ae \n\
-        add r0, r5, #0 \n\
-        bl BlockDestroyNonReformBlock \n\
-        cmp r0, #0 \n\
-        beq lbl_080592ae \n\
-        b lbl_080592ac \n\
-        .align 2, 0 \n\
-    lbl_0805926c: .4byte gActiveBombChainTypes \n\
-    lbl_08059270: .4byte sBombChainReverseData \n\
-    lbl_08059274: \n\
-        ldr r1, lbl_080592b8 @ =sClipdataAffectingActionDamageTypes \n\
-        ldr r0, lbl_080592bc @ =gCurrentClipdataAffectingAction \n\
-        ldrb r0, [r0] \n\
-        lsl r0, r0, #1 \n\
-        add r0, r0, r1 \n\
-        ldrh r1, [r0] \n\
-        movs r0, #0x1f \n\
-        and r0, r1 \n\
-        cmp r0, #0 \n\
-        beq lbl_080592ae \n\
-        ldr r1, lbl_080592c0 @ =sTankBehaviors \n\
-        ldrh r0, [r5, #4] \n\
-        sub r0, #0x34 \n\
-        lsl r0, r0, #3 \n\
-        add r0, r0, r1 \n\
-        ldrh r4, [r0, #4] \n\
-        cmp r4, #0 \n\
-        beq lbl_080592ae \n\
-        ldrh r1, [r5, #2] \n\
-        ldrh r2, [r5] \n\
-        add r0, r4, #0 \n\
-        bl BgClipSetBg1BlockValue \n\
-        ldrh r1, [r5, #2] \n\
-        ldrh r2, [r5] \n\
-        add r0, r4, #0 \n\
-        bl BgClipSetClipdataBlockValue \n\
-    lbl_080592ac: \n\
-        movs r7, #1 \n\
-    lbl_080592ae: \n\
-        add r0, r7, #0 \n\
-    lbl_080592b0: \n\
-        pop {r4, r5, r6, r7} \n\
-        pop {r1} \n\
-        bx r1 \n\
-        .align 2, 0 \n\
-    lbl_080592b8: .4byte sClipdataAffectingActionDamageTypes \n\
-    lbl_080592bc: .4byte gCurrentClipdataAffectingAction \n\
-    lbl_080592c0: .4byte sTankBehaviors \n\
-    ");
-}
-#endif
+
+static BlockFunc_T sNonReformDestroyFunctionPointers[BLOCK_SUB_TYPE_COUNT] = {
+    [BLOCK_SUB_TYPE_REFORM] = BlockDestroySingleBreakableBlock,
+    [BLOCK_SUB_TYPE_SQUARE_NO_REFORM] = BlockDestroySquareBlock,
+    [BLOCK_SUB_TYPE_NO_REFORM] = BlockDestroySingleBreakableBlock,
+    [BLOCK_SUB_TYPE_SQUARE_NEVER_REFORM] = BlockDestroySquareBlock,
+    [BLOCK_SUB_TYPE_BOMB_CHAIN] = BlockDestroyBombChainBlock
+};
 
 /**
  * @brief 592c4 | 6c | Handles the destruction of non reform blocks
@@ -563,16 +310,16 @@ u32 BlockStoreSingleNeverReformBlock(u16 xPosition, u16 yPosition)
 
     if (gCurrentArea >= MAX_AMOUNT_OF_AREAS)
         return FALSE;
-    else if (xPosition * yPosition == 0)
+
+    if (xPosition * yPosition == 0)
         return FALSE;
 
     overLimit = TRUE;
-    // 0x2035c00 = gNeverReformBlocks
-    pBlock = (u8*)(0x2035c00 + gCurrentArea * 512);
-    i = gNumberOfNeverReformBlocks[gCurrentArea] * 2;
+    pBlock = gNeverReformBlocks[gCurrentArea];
+    i = gNumberOfNeverReformBlocks[gCurrentArea] * NEVER_REFORM_BLOCK_INFO_SIZE;
 
     // Find empty slot
-    for (; i < 0x1FC; i += 2)
+    for (; i < NEVER_REFORM_BLOCKS_SIZE - 4; i += NEVER_REFORM_BLOCK_INFO_SIZE)
     {
         if (pBlock[i] == UCHAR_MAX)
         {
@@ -601,7 +348,7 @@ void BlockRemoveNeverReformBlocks(void)
     u8* pBlock;
     s32 limit;
 
-    if (gPauseScreenFlag)
+    if (gPauseScreenFlag != PAUSE_SCREEN_NONE)
         i = TRUE;
     else
         i = FALSE;
@@ -612,10 +359,9 @@ void BlockRemoveNeverReformBlocks(void)
     if (i)
         return;
 
-    // 0x2035c00 = gNeverReformBlocks
-    pBlock = (u8*)(0x2035c00 + gCurrentArea * 512);
-    limit = gNumberOfNeverReformBlocks[gCurrentArea] * 2;
-    for (var_0 = 0; i < limit; i += 2)
+    pBlock = gNeverReformBlocks[gCurrentArea];
+    limit = gNumberOfNeverReformBlocks[gCurrentArea] * NEVER_REFORM_BLOCK_INFO_SIZE;
+    for (var_0 = 0; i < limit; i += NEVER_REFORM_BLOCK_INFO_SIZE)
     {
         if (pBlock[i + 0] == 0)
             var_0 = 1;
@@ -672,7 +418,7 @@ void BlockRemoveNeverReformSingleBlock(u8 xPosition, u8 yPosition)
 }
 
 /**
- * @brief 595e4 | 18c | Shifts and re-organizes the never reform blocks when transitionning
+ * @brief 595e4 | 18c | Shifts and reorganizes the never reform blocks when transitioning
  * 
  */
 void BlockShiftNeverReformBlocks(void)
@@ -683,20 +429,19 @@ void BlockShiftNeverReformBlocks(void)
     s32 var_0;
     s32 i;
 
-    // FIXME use symbol
-    src = (u8*)0x2035c00 + gAreaBeforeTransition * 512; // gNeverReformBlocks
-    if (src[gNumberOfNeverReformBlocks[gAreaBeforeTransition] * 2] == UCHAR_MAX)
+    src = (u8*)gNeverReformBlocks[gAreaBeforeTransition];
+    if (src[gNumberOfNeverReformBlocks[gAreaBeforeTransition] * NEVER_REFORM_BLOCK_INFO_SIZE] == UCHAR_MAX)
         return;
 
     dst = EWRAM_BASE;
-    DmaTransfer(3, src, dst, 512, 16);
-    BitFill(3, USHORT_MAX, src, 512, 16);
+    DmaTransfer(3, src, dst, NEVER_REFORM_BLOCKS_SIZE, 16);
+    BitFill(3, USHORT_MAX, src, NEVER_REFORM_BLOCKS_SIZE, 16);
 
     var_0 = 0;
     amount = 0;
     i = 0;
 
-    while (amount < gNumberOfNeverReformBlocks[gAreaBeforeTransition] * 2)
+    while (amount < gNumberOfNeverReformBlocks[gAreaBeforeTransition] * NEVER_REFORM_BLOCK_INFO_SIZE)
     {
         if (dst[amount] == 0)
         {
@@ -733,7 +478,7 @@ void BlockShiftNeverReformBlocks(void)
             src[i++] = gCurrentRoom;
         }
 
-        dst = EWRAM_BASE + gNumberOfNeverReformBlocks[gAreaBeforeTransition] * 2;
+        dst = EWRAM_BASE + gNumberOfNeverReformBlocks[gAreaBeforeTransition] * NEVER_REFORM_BLOCK_INFO_SIZE;
         while (*dst != UCHAR_MAX)
         {
             src[i++] = *dst++;
@@ -741,7 +486,7 @@ void BlockShiftNeverReformBlocks(void)
         }
     }
 
-    gNumberOfNeverReformBlocks[gAreaBeforeTransition] = i >> 1;
+    gNumberOfNeverReformBlocks[gAreaBeforeTransition] = DIV_SHIFT(i, NEVER_REFORM_BLOCK_INFO_SIZE);
 }
 
 /**
@@ -760,13 +505,13 @@ u32 BlockCheckRevealOrDestroyNonBombBlock(struct ClipdataBlockData* pClipBlock)
     // Check for block weakness
     if (sClipdataAffectingActionDamageTypes[gCurrentClipdataAffectingAction] & sBlockWeaknesses[blockType])
     {
-        // Block is weak to current action, hence it that be destroyed
+        // Block is weak to current action, hence it can be destroyed
         return TRUE;
     }
     
     // Check weaknesses to reveal
-    if ((gCurrentClipdataAffectingAction != CAA_BOMB_PISTOL && (gCurrentClipdataAffectingAction != CAA_POWER_BOMB ||
-        gCurrentPowerBomb.owner)))
+    if (gCurrentClipdataAffectingAction != CAA_BOMB_PISTOL && (gCurrentClipdataAffectingAction != CAA_POWER_BOMB ||
+        gCurrentPowerBomb.owner))
         return FALSE;
 
     // Check isn't already revealed
@@ -798,13 +543,12 @@ u32 BlockCheckRevealOrDestroyBombBlock(struct ClipdataBlockData* pClipBlock)
     // Check for block weakness
     if (sClipdataAffectingActionDamageTypes[gCurrentClipdataAffectingAction] & sBlockWeaknesses[blockType])
     {
-        // Block is weak to current action, hence it that be destroyed
+        // Block is weak to current action, hence it can be destroyed
         return TRUE;
     }
 
     // Check weaknesses to reveal and isn't already revealed
-    if (sClipdataAffectingActionDamageTypes[gCurrentClipdataAffectingAction] &
-        (CAA_DAMAGE_TYPE_BEAM | CAA_DAMAGE_TYPE_MISSILE | CAA_DAMAGE_TYPE_SUPER_MISSILE) &&
+    if (sClipdataAffectingActionDamageTypes[gCurrentClipdataAffectingAction] & CAA_REVEAL_BOMB_BLOCKS &&
         pClipBlock->behavior != sReformingBlocksTilemapValue[blockType])
     {
         reveal = TRUE;
@@ -833,7 +577,7 @@ u32 BlockCheckRevealOrDestroyBombBlock(struct ClipdataBlockData* pClipBlock)
  * @param yPosition Y Position
  * @param xPosition X Position
  * @param trueClip True clipdata block value
- * @return u32 1 if a block changed, 0 otherwise
+ * @return u32 bool, block changed
  */
 u32 BlockApplyCcaa(u16 yPosition, u16 xPosition, u16 trueClip)
 {
@@ -858,7 +602,9 @@ u32 BlockApplyCcaa(u16 yPosition, u16 xPosition, u16 trueClip)
             // Check on hatch
             if (gTilemapAndClipPointers.pClipCollisions[trueClip] == CLIPDATA_TYPE_DOOR &&
                 BgClipCheckOpeningHatch(clipBlock.xPosition, clipBlock.yPosition) != 0)
+            {
                 result = TRUE;
+            }
             else
             {
                 // Check on block
@@ -925,7 +671,7 @@ u32 BlockApplyCcaa(u16 yPosition, u16 xPosition, u16 trueClip)
  * @param makeSolid Make solid flag
  * @param xPosition X Position
  * @param yPosition Y Position
- * @return u32 1 if could store, 0 otherwise
+ * @return u32 bool, could store
  */
 u32 BlockUpdateMakeSolidBlocks(u8 makeSolid, u16 xPosition, u16 yPosition)
 {
@@ -941,7 +687,7 @@ u32 BlockUpdateMakeSolidBlocks(u8 makeSolid, u16 xPosition, u16 yPosition)
         pBlocks = gMakeSolidBlocks;
         for (i = MAX_AMOUNT_OF_MAKE_SOLID_BLOCKS; i > 0; i--)
         {
-            if (pBlocks[--i] == (xPosition << 8 | yPosition))
+            if (pBlocks[--i] == C_16_2_8(xPosition, yPosition))
             {
                 // Found in the array, remove
                 pBlocks[i] = 0;
@@ -956,23 +702,26 @@ u32 BlockUpdateMakeSolidBlocks(u8 makeSolid, u16 xPosition, u16 yPosition)
         pBlocks = gMakeSolidBlocks;
         for (i = MAX_AMOUNT_OF_MAKE_SOLID_BLOCKS; i > 0; i--)
         {
-            if (pBlocks[--i] == (xPosition << 8 | yPosition))
+            if (pBlocks[--i] == C_16_2_8(xPosition, yPosition))
             {
                 // Already in the array
                 i = UCHAR_MAX;
                 break;
             }
             else if (pBlocks[i] == 0)
-                break; // Found empty space
+            {
+                // Found empty space
+                break;
+            }
         }
 
         result = FALSE;
         if (i != UCHAR_MAX)
         {
-            if (gBgPointersAndDimensions.pClipDecomp[gBgPointersAndDimensions.clipdataWidth * yPosition + xPosition] == 0)
+            if (gBgPointersAndDimensions.pClipDecomp[gBgPointersAndDimensions.clipdataWidth * yPosition + xPosition] == CLIPDATA_AIR)
             {
                 // Store if no block
-                pBlocks[i] = (xPosition << 8 | yPosition);
+                pBlocks[i] = C_16_2_8(xPosition, yPosition);
                 result = TRUE;
             }
         }
@@ -987,9 +736,9 @@ u32 BlockUpdateMakeSolidBlocks(u8 makeSolid, u16 xPosition, u16 yPosition)
  * @param xPosition X Position
  * @param yPosition Y Position
  * @param action Destructing action
- * @return u32 1 if destroyed, 0
+ * @return u32 bool, block destroyed
  */
-u32 BlockSamusApplyScrewSpeedboosterDamageToEnvironment(u16 xPosition, u16 yPosition, u16 action)
+u32 BlockSamusApplyScrewSpeedboosterDamageToEnvironment(u16 xPosition, u16 yPosition, DestructingAction action)
 {
     u16 blockY;
     u16 blockX;
@@ -1018,7 +767,7 @@ u32 BlockSamusApplyScrewSpeedboosterDamageToEnvironment(u16 xPosition, u16 yPosi
         position = gBgPointersAndDimensions.clipdataWidth * blockY + blockX;
         clipdata = gBgPointersAndDimensions.pClipDecomp[position];
 
-        if (clipdata != 0)
+        if (clipdata != CLIPDATA_AIR)
         {
             // Apply first
             result = BlockApplyCcaa(blockY, blockX, clipdata);
@@ -1030,13 +779,22 @@ u32 BlockSamusApplyScrewSpeedboosterDamageToEnvironment(u16 xPosition, u16 yPosi
                 BlockApplyCcaa(blockY, blockX, clipdata);
             }
         }
+        #ifdef BUGFIX
+        else
+        {
+            result = FALSE;
+        }
+        #endif // BUGFIX
     }
     else
+    {
         return FALSE;
+    }
 
     // Clear Ccaa
     gCurrentClipdataAffectingAction = CAA_NONE;
-    
+
+    // BUG: result is never set if Samus isn't colliding with any non air tile
     return result;
 }
 
@@ -1059,7 +817,7 @@ void BlockUpdateBrokenBlocks(void)
             continue;
 
         // Update timer
-        pBlock->timer++;
+        APPLY_DELTA_TIME_INC(pBlock->timer);
 
         if (pBlock->broken)
         {
@@ -1096,6 +854,7 @@ void BlockUpdateBrokenBlocks(void)
             {
                 if (pBlock->stage == 1)
                     BlockBrokenBlockRemoveCollision(pBlock->yPosition, pBlock->xPosition);
+
                 updateStage = TRUE;
             }
 
@@ -1134,7 +893,7 @@ void BlockUpdateBrokenBlockAnimation(struct BrokenBlock* pBlock)
     u16 value;
     u16* dst;
     u16* src;
-    u32 offset;
+    s32 offset;
 
     value = CLIPDATA_TILEMAP_AIR;
 
@@ -1185,12 +944,12 @@ void BlockUpdateBrokenBlockAnimation(struct BrokenBlock* pBlock)
         pBlock->xPosition] = value;
 
     // Check is on screen, no need to update the tilemap if off screen, that can be delegated to the room tilemap update functions
-    offset = gBg1YPosition / BLOCK_SIZE;
-    if ((s32)(offset - 4) > pBlock->yPosition || pBlock->yPosition > (s32)(offset + 13))
+    offset = SUB_PIXEL_TO_BLOCK(gBg1YPosition);
+    if (offset - 4 > pBlock->yPosition || pBlock->yPosition > offset + 13)
         return;
 
-    offset = gBg1XPosition / BLOCK_SIZE;
-    if ((s32)(offset - 4) > pBlock->xPosition || pBlock->xPosition > (s32)(offset + 18))
+    offset = SUB_PIXEL_TO_BLOCK(gBg1XPosition);
+    if (offset - 4 > pBlock->xPosition || pBlock->xPosition > offset + 18)
         return;
 
     // Apply to tilemap
@@ -1275,7 +1034,9 @@ u32 BlockStoreBrokenReformBlock(u8 type, u16 xPosition, u16 yPosition, u8 advanc
             BlockUpdateBrokenBlockAnimation(pBlock);
         }
         else
+        {
             pBlock->stage = 1;
+        }
 
         result = TRUE;
     }
@@ -1391,7 +1152,7 @@ u32 BlockCheckRevealBombChainBlock(u8 type, u16 xPosition, u16 yPosition)
  * 
  * @param xPosition X Position
  * @param yPosition Y Position
- * @return u32 1 if in block, 0 otherwise
+ * @return u32 bool, in block
  */
 u32 BlockCheckSamusInReformingBlock(u8 xPosition, u8 yPosition)
 {
@@ -1401,15 +1162,19 @@ u32 BlockCheckSamusInReformingBlock(u8 xPosition, u8 yPosition)
 
     // Check in X
     inX = FALSE;
-    if ((gSamusData.xPosition + gSamusPhysics.drawDistanceLeftOffset) >> 6 <= xPosition &&
-        xPosition <= (gSamusData.xPosition + gSamusPhysics.drawDistanceRightOffset) >> 6)
+    if (SUB_PIXEL_TO_BLOCK_(gSamusData.xPosition + gSamusPhysics.hitboxLeft) <= xPosition &&
+        xPosition <= SUB_PIXEL_TO_BLOCK_(gSamusData.xPosition + gSamusPhysics.hitboxRight))
+    {
         inX = TRUE;
+    }
 
     // Check in Y
     inY = FALSE;
-    if ((gSamusData.yPosition + gSamusPhysics.drawDistanceTop) >> 6 <= yPosition &&
-        yPosition <= (gSamusData.yPosition + gSamusPhysics.drawDistanceBottom) >> 6)
+    if (SUB_PIXEL_TO_BLOCK_(gSamusData.yPosition + gSamusPhysics.hitboxTop) <= yPosition &&
+        yPosition <= SUB_PIXEL_TO_BLOCK_(gSamusData.yPosition + gSamusPhysics.hitboxBottom))
+    {
         inY = TRUE;
+    }
 
     inBlock = FALSE;
     if (inX)
@@ -1424,7 +1189,7 @@ u32 BlockCheckSamusInReformingBlock(u8 xPosition, u8 yPosition)
  * @param type Bomb chain type
  * @param xPosition X Position
  * @param yPosition Y Position
- * @return u32 1 if could start, 0 otherwise
+ * @return u32 bool, could start
  */
 u32 BlockStartBombChain(u8 type, u16 xPosition, u16 yPosition)
 {
@@ -1471,9 +1236,9 @@ void BlockProcessBombChains(void)
     struct BombChain* pChain;
     u16 clipdata;
 
-    // Update each bomb chain every 4 frames
     pChain = gBombChains;
-    pChain += (gFrameCounter8Bit & 3);
+    // Update a single bomb chain at a time
+    pChain += MOD_AND(gFrameCounter8Bit, ARRAY_SIZE(gBombChains));
 
     if (pChain->currentOffset == 0)
         return;
@@ -1497,7 +1262,9 @@ void BlockProcessBombChains(void)
             // Going up
             clipBlock.yPosition = pChain->srcYPosition - pChain->currentOffset;
             if (clipBlock.yPosition <= 1)
+            {
                 pChain->flipped = FALSE;
+            }
             else
             {
                 clipdata = gBgPointersAndDimensions.pClipDecomp[clipBlock.yPosition * gBgPointersAndDimensions.clipdataWidth + clipBlock.xPosition];
@@ -1519,7 +1286,9 @@ void BlockProcessBombChains(void)
             // Going down
             clipBlock.yPosition = pChain->srcYPosition + pChain->currentOffset;
             if (clipBlock.yPosition >= gBgPointersAndDimensions.clipdataHeight - 2)
+            {
                 pChain->unk = FALSE;
+            }
             else
             {
                 clipdata = gBgPointersAndDimensions.pClipDecomp[clipBlock.yPosition * gBgPointersAndDimensions.clipdataWidth + clipBlock.xPosition];
@@ -1544,7 +1313,9 @@ void BlockProcessBombChains(void)
             // Going left
             clipBlock.xPosition = pChain->srcXPosition - pChain->currentOffset;
             if (clipBlock.xPosition <= 1)
+            {
                 pChain->flipped = FALSE;
+            }
             else
             {
                 clipdata = gBgPointersAndDimensions.pClipDecomp[clipBlock.yPosition * gBgPointersAndDimensions.clipdataWidth + clipBlock.xPosition];
@@ -1566,7 +1337,9 @@ void BlockProcessBombChains(void)
             // Going right
             clipBlock.xPosition = pChain->srcXPosition + pChain->currentOffset;
             if (clipBlock.xPosition >= gBgPointersAndDimensions.clipdataWidth - 2)
+            {
                 pChain->unk = FALSE;
+            }
             else
             {
                 clipdata = gBgPointersAndDimensions.pClipDecomp[clipBlock.yPosition * gBgPointersAndDimensions.clipdataWidth + clipBlock.xPosition];
@@ -1586,7 +1359,9 @@ void BlockProcessBombChains(void)
 
     // Check update offset
     if (pChain->flipped || pChain->unk)
+    {
         pChain->currentOffset++;
+    }
     else
     {
         // Bomb chain ended
@@ -1622,7 +1397,7 @@ void BlockCheckStartNewSubBombChain(u8 type, u8 xPosition, u8 yPosition)
 
     // Check the current position
     clipdata = gBgPointersAndDimensions.pClipDecomp[yPosition * gBgPointersAndDimensions.clipdataWidth + xPosition];
-    if (clipdata != 0)
+    if (clipdata != CLIPDATA_AIR)
         BlockApplyCcaa(yPosition, xPosition, clipdata);
 
     for (i = 0; i < ARRAY_SIZE(sSubBombChainPositionOffset[0]) / 2; i++)
@@ -1641,7 +1416,7 @@ void BlockCheckStartNewSubBombChain(u8 type, u8 xPosition, u8 yPosition)
         clipdata = gBgPointersAndDimensions.pClipDecomp[offset];
 
         // Apply to block
-        if (clipdata != 0)
+        if (clipdata != CLIPDATA_AIR)
             BlockApplyCcaa(yOffset, xOffset, clipdata);
     }
 

@@ -4,6 +4,7 @@
 #include "macros.h"
 #include "structs/minimap.h"
 
+#if !defined(REGION_EU) || defined(REGION_EU_BETA)
 static const u8 sBuffer_754ab4[256] = {
     UCHAR_MAX, UCHAR_MAX, UCHAR_MAX, UCHAR_MAX, UCHAR_MAX, UCHAR_MAX, UCHAR_MAX, UCHAR_MAX,
     UCHAR_MAX, UCHAR_MAX, UCHAR_MAX, UCHAR_MAX, UCHAR_MAX, UCHAR_MAX, UCHAR_MAX, UCHAR_MAX,
@@ -38,6 +39,7 @@ static const u8 sBuffer_754ab4[256] = {
     UCHAR_MAX, UCHAR_MAX, UCHAR_MAX, UCHAR_MAX, UCHAR_MAX, UCHAR_MAX, UCHAR_MAX, UCHAR_MAX,
     UCHAR_MAX, UCHAR_MAX, UCHAR_MAX, UCHAR_MAX, UCHAR_MAX, UCHAR_MAX, UCHAR_MAX, UCHAR_MAX,
 };
+#endif // !REGION_EU || REGION_EU_BETA
 
 FORCE_RODATA
 union EwramData* sEwramPointer = (union EwramData*)EWRAM_BASE;
@@ -46,9 +48,9 @@ u16* sBgPalramPointer = PALRAM_BASE;
 FORCE_RODATA
 u16* sObjPalramPointer = PALRAM_OBJ;
 FORCE_RODATA
-u32* sVisitedMinimapTilesPointer = gVisitedMinimapTiles;
+u32* sVisitedMinimapTilesPointer = (u32*)gVisitedMinimapTiles;
 FORCE_RODATA
-union NonGameplayRAM* sNonGameplayRamPointer = &gNonGameplayRAM;
+union NonGameplayRam* sNonGameplayRamPointer = &gNonGameplayRam;
 FORCE_RODATA
 struct Sram* sSramEwramPointer = EWRAM_BASE + 0x38000;
 FORCE_RODATA

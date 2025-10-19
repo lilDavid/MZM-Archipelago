@@ -39,46 +39,46 @@ const struct OamArray sEnterTourianOam[7] = {
         .preAction = OAM_ARRAY_PRE_ACTION_RESET_FRAME
     },
     [2] = {
-        .pOam = sMetroidShellOAM_Idle,
+        .pOam = sMetroidShellOam_Idle,
         .preAction = OAM_ARRAY_PRE_ACTION_CHANGE_FRAME
     },
     [3] = {
-        .pOam = sMetroidOAM_Moving,
+        .pOam = sMetroidOam_Moving,
         .preAction = OAM_ARRAY_PRE_ACTION_CHANGE_FRAME
     },
     [4] = {
-        .pOam = sMetroidOAM_Moving,
+        .pOam = sMetroidOam_Moving,
         .preAction = OAM_ARRAY_PRE_ACTION_LOOP_ON_LAST_FRAME
     },
     [5] = {
-        .pOam = sMetroidOAM_Moving,
+        .pOam = sMetroidOam_Moving,
         .preAction = OAM_ARRAY_PRE_ACTION_RESET_FRAME
     },
     [6] = {
-        .pOam = sMetroidOAM_SamusGrabbed,
+        .pOam = sMetroidOam_SamusGrabbed,
         .preAction = OAM_ARRAY_PRE_ACTION_CHANGE_FRAME
     }
 };
 
 const u16 sEnterTourianOAM_SpacePirate_Frame0[OAM_DATA_SIZE(5)] = {
-    0x5,
-    OBJ_SHAPE_HORIZONTAL | 0xf8, OBJ_SIZE_32x16 | 0x1d8, 0x4000,
-    OBJ_SHAPE_HORIZONTAL | 0xf8, OBJ_SIZE_32x16 | 0x1f8, 0x4004,
-    0xf8, OBJ_SIZE_16x16 | 0x18, 0x4008,
-    OBJ_SHAPE_HORIZONTAL | 0x8, OBJ_SIZE_32x8 | 0x1d8, 0x4040,
-    OBJ_SHAPE_HORIZONTAL | 0x8, OBJ_SIZE_32x8 | 0x1f8, 0x4044
+    5,
+    OAM_ENTRY(-40, -8, OAM_DIMS_32x16, OAM_NO_FLIP, 0x0, 4, 0),
+    OAM_ENTRY(-8, -8, OAM_DIMS_32x16, OAM_NO_FLIP, 0x4, 4, 0),
+    OAM_ENTRY(24, -8, OAM_DIMS_16x16, OAM_NO_FLIP, 0x8, 4, 0),
+    OAM_ENTRY(-40, 8, OAM_DIMS_32x8, OAM_NO_FLIP, 0x40, 4, 0),
+    OAM_ENTRY(-8, 8, OAM_DIMS_32x8, OAM_NO_FLIP, 0x44, 4, 0),
 };
 
 const struct FrameData sEnterTourianOAM_Empty[1] = {
     [0] = FRAME_DATA_TERMINATOR
 };
 
-const u16 sEnterTourianBackgroundPal[10 * 16] = INCBIN_U16("data/cutscenes/EnterTourian/Background.pal");
-const u16 sEnterTourianMetroidPal[6 * 16] = INCBIN_U16("data/cutscenes/EnterTourian/Metroid.pal");
-const u32 sEnterTourianBackgroundGfx[3110] = INCBIN_U32("data/cutscenes/EnterTourian/Background.gfx.lz");
-const u32 sEnterTourianForegroundGfx[2483] = INCBIN_U32("data/cutscenes/EnterTourian/Foreground.gfx.lz");
-const u32 sEnterTourianDeadSpacePirateGfx_1[55] = INCBIN_U32("data/cutscenes/EnterTourian/DeadSpacePirate_1.gfx.lz");
-const u32 sEnterTourianDeadSpacePirateGfx_2[77] = INCBIN_U32("data/cutscenes/EnterTourian/DeadSpacePirate_2.gfx.lz");
-const u32 sEnterTourianDeadSpacePirateGfx_3[32] = INCBIN_U32("data/cutscenes/EnterTourian/DeadSpacePirate_3.gfx.lz");
-const u32 sEnterTourianBackgroundTileTable[385] = INCBIN_U32("data/cutscenes/EnterTourian/Background.tt");
-const u32 sEnterTourianForegroundTileTable[385] = INCBIN_U32("data/cutscenes/EnterTourian/Foreground.tt");
+const u16 sEnterTourianBackgroundPal[10 * 16] = INCBIN_U16("data/cutscenes/enter_tourian/background.pal");
+const u16 sEnterTourianMetroidPal[6 * 16] = INCBIN_U16("data/cutscenes/enter_tourian/metroid.pal");
+const u32 sEnterTourianBackgroundGfx[3110] = INCBIN_U32("data/cutscenes/enter_tourian/background.gfx.lz");
+const u32 sEnterTourianForegroundGfx[2483] = INCBIN_U32("data/cutscenes/enter_tourian/foreground.gfx.lz");
+const u32 sEnterTourianDeadSpacePirateGfx_1[55] = INCBIN_U32("data/cutscenes/enter_tourian/dead_space_pirate_1.gfx.lz");
+const u32 sEnterTourianDeadSpacePirateGfx_2[77] = INCBIN_U32("data/cutscenes/enter_tourian/dead_space_pirate_2.gfx.lz");
+const u32 sEnterTourianDeadSpacePirateGfx_3[32] = INCBIN_U32("data/cutscenes/enter_tourian/dead_space_pirate_3.gfx.lz");
+const u32 sEnterTourianBackgroundTileTable[385] = INCBIN_U32("data/cutscenes/enter_tourian/background.tt");
+const u32 sEnterTourianForegroundTileTable[385] = INCBIN_U32("data/cutscenes/enter_tourian/foreground.tt");

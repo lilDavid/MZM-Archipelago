@@ -1,9 +1,9 @@
 #include "ending_and_gallery.h"
 #include "callbacks.h"
+#include "dma.h"
 
 #include "data/shortcut_pointers.h"
 #include "data/ending_and_gallery_data.h"
-#include "data/internal_ending_and_gallery_data.h"
 
 #include "constants/audio.h"
 #include "constants/ending_and_gallery.h"
@@ -17,12 +17,36 @@
 
 #include "rando/item.h"
 
+#define SETUP_ENDING_TEXT_OAM(endingOam, i) \
+{ \
+    ENDING_DATA.oamLength = ARRAY_SIZE(endingOam) + 6; \
+    for (i = 0; i < ARRAY_SIZE(endingOam); i++) \
+    { \
+        ENDING_DATA.oamTypes[i + 6] = endingOam[i].type; \
+        ENDING_DATA.endingLettersSpawnDelay[i + 6] = endingOam[i].spawnDelay; \
+        ENDING_DATA.unk_160[i + 6] = endingOam[i].unk_2; \
+        ENDING_DATA.oamXPositions[i + 6] = endingOam[i].xPosition; \
+        ENDING_DATA.oamYPositions[i + 6] = endingOam[i].yPosition; \
+        ENDING_DATA.oamFramePointers[i + 6] = endingOam[i].pFrame; \
+    } \
+}
+
+#define SETUP_ENDING_FULL_LINES_OAM(endingOam) \
+{ \
+    ENDING_DATA.oamTypes[line] = endingOam[line].type; \
+    ENDING_DATA.endingLettersSpawnDelay[line] = endingOam[line].spawnDelay; \
+    ENDING_DATA.unk_160[line] = endingOam[line].unk_2; \
+    ENDING_DATA.oamXPositions[line] = endingOam[line].xPosition; \
+    ENDING_DATA.oamYPositions[line] = endingOam[line].yPosition; \
+    ENDING_DATA.oamFramePointers[line] = endingOam[line].pFrame; \
+}
+
 /**
  * @brief 84c34 | 48 | Checks if an ending letter should display
  * 
  * @param offset Offset, to document
  */
-void EndingImageUpdateLettersSpawnDelay(u32 offset)
+static void EndingImageUpdateLettersSpawnDelay(u32 offset)
 {
     if (ENDING_DATA.oamTypes[offset] == ENDING_OAM_TYPE_NONE)
         return;
@@ -40,125 +64,165 @@ void EndingImageUpdateLettersSpawnDelay(u32 offset)
  * 
  * @param set Set to load
  */
-void EndingImageLoadTextOAM(u32 set)
+static void EndingImageLoadTextOAM(u32 set)
 {
     s32 i;
 
+    #ifdef REGION_EU
+    switch (ENDING_DATA.language)
+    {
+        case LANGUAGE_GERMAN:
+            if (set == ENDING_IMAGE_OAM_SET_CLEAR_TIME)
+            {
+                SETUP_ENDING_TEXT_OAM(sEndingImageOam_ClearTime_German, i);
+            }
+            else
+            {
+                SETUP_ENDING_TEXT_OAM(sEndingImageOam_Collecting_German, i);
+            }
+            break;
+
+        case LANGUAGE_FRENCH:
+            if (set == ENDING_IMAGE_OAM_SET_CLEAR_TIME)
+            {
+                SETUP_ENDING_TEXT_OAM(sEndingImageOam_ClearTime_French, i);
+            }
+            else
+            {
+                SETUP_ENDING_TEXT_OAM(sEndingImageOam_Collecting_French, i);
+            }
+            break;
+
+        case LANGUAGE_ITALIAN:
+            if (set == ENDING_IMAGE_OAM_SET_CLEAR_TIME)
+            {
+                SETUP_ENDING_TEXT_OAM(sEndingImageOam_ClearTime_Italian, i);
+            }
+            else if (set == ENDING_IMAGE_OAM_SET_YOUR_RATE)
+            {
+                SETUP_ENDING_TEXT_OAM(sEndingImageOam_YourRate_Italian, i);
+            }
+            else
+            {
+                SETUP_ENDING_TEXT_OAM(sEndingImageOam_Collecting_Italian, i);
+            }
+            break;
+
+        case LANGUAGE_SPANISH:
+            if (set == ENDING_IMAGE_OAM_SET_CLEAR_TIME)
+            {
+                SETUP_ENDING_TEXT_OAM(sEndingImageOam_ClearTime_Spanish, i);
+            }
+            else
+            {
+                SETUP_ENDING_TEXT_OAM(sEndingImageOam_Collecting_Spanish, i);
+            }
+            break;
+
+        case LANGUAGE_HIRAGANA:
+            if (set == ENDING_IMAGE_OAM_SET_CLEAR_TIME)
+            {
+                SETUP_ENDING_TEXT_OAM(sEndingImageOam_ClearTime_Hiragana, i);
+            }
+            else
+            {
+                SETUP_ENDING_TEXT_OAM(sEndingImageOam_Collecting_Hiragana, i);
+            }
+            break;
+
+        default:
+            // Japanese and English
+            if (set == ENDING_IMAGE_OAM_SET_CLEAR_TIME)
+            {
+                SETUP_ENDING_TEXT_OAM(sEndingImageOam_ClearTime_English, i);
+            }
+            else if (set == ENDING_IMAGE_OAM_SET_YOUR_RATE)
+            {
+                SETUP_ENDING_TEXT_OAM(sEndingImageOam_YourRate_English, i);
+            }
+            else
+            {
+                SETUP_ENDING_TEXT_OAM(sEndingImageOam_Collecting_English, i);
+            }
+            break;
+    }
+    #else // !REGION_EU
     if (ENDING_DATA.language == LANGUAGE_HIRAGANA)
     {
         if (set == ENDING_IMAGE_OAM_SET_CLEAR_TIME)
         {
-            ENDING_DATA.oamLength = ARRAY_SIZE(sEndingImageOam_ClearTime_Hiragana) + 6;
-
-            for (i = 0; i < ARRAY_SIZE(sEndingImageOam_ClearTime_Hiragana); i++)
-            {
-                ENDING_DATA.oamTypes[i + 6] = sEndingImageOam_ClearTime_Hiragana[i].type;
-                ENDING_DATA.endingLettersSpawnDelay[i + 6] = sEndingImageOam_ClearTime_Hiragana[i].spawnDelay;
-                ENDING_DATA.unk_160[i + 6] = sEndingImageOam_ClearTime_Hiragana[i].unk_2;
-
-                ENDING_DATA.oamXPositions[i + 6] = sEndingImageOam_ClearTime_Hiragana[i].xPosition;
-                ENDING_DATA.oamYPositions[i + 6] = sEndingImageOam_ClearTime_Hiragana[i].yPosition;
-
-                ENDING_DATA.oamFramePointers[i + 6] = sEndingImageOam_ClearTime_Hiragana[i].pFrame;
-            }
+            SETUP_ENDING_TEXT_OAM(sEndingImageOam_ClearTime_Hiragana, i);
         }
         else
         {
-            ENDING_DATA.oamLength = ARRAY_SIZE(sEndingImageOam_Collecting_Hiragana) + 6;
-
-            for (i = 0; i < ARRAY_SIZE(sEndingImageOam_Collecting_Hiragana); i++)
-            {
-                ENDING_DATA.oamTypes[i + 6] = sEndingImageOam_Collecting_Hiragana[i].type;
-                ENDING_DATA.endingLettersSpawnDelay[i + 6] = sEndingImageOam_Collecting_Hiragana[i].spawnDelay;
-                ENDING_DATA.unk_160[i + 6] = sEndingImageOam_Collecting_Hiragana[i].unk_2;
-
-                ENDING_DATA.oamXPositions[i + 6] = sEndingImageOam_Collecting_Hiragana[i].xPosition;
-                ENDING_DATA.oamYPositions[i + 6] = sEndingImageOam_Collecting_Hiragana[i].yPosition;
-
-                ENDING_DATA.oamFramePointers[i + 6] = sEndingImageOam_Collecting_Hiragana[i].pFrame;
-            }
+            SETUP_ENDING_TEXT_OAM(sEndingImageOam_Collecting_Hiragana, i);
         }
     }
     else
     {
+        // Japanese and English
         if (set == ENDING_IMAGE_OAM_SET_CLEAR_TIME)
         {
-            ENDING_DATA.oamLength = ARRAY_SIZE(sEndingImageOam_ClearTime_English) + 6;
-
-            for (i = 0; i < ARRAY_SIZE(sEndingImageOam_ClearTime_English); i++)
-            {
-                ENDING_DATA.oamTypes[i + 6] = sEndingImageOam_ClearTime_English[i].type;
-                ENDING_DATA.endingLettersSpawnDelay[i + 6] = sEndingImageOam_ClearTime_English[i].spawnDelay;
-                ENDING_DATA.unk_160[i + 6] = sEndingImageOam_ClearTime_English[i].unk_2;
-
-                ENDING_DATA.oamXPositions[i + 6] = sEndingImageOam_ClearTime_English[i].xPosition;
-                ENDING_DATA.oamYPositions[i + 6] = sEndingImageOam_ClearTime_English[i].yPosition;
-
-                ENDING_DATA.oamFramePointers[i + 6] = sEndingImageOam_ClearTime_English[i].pFrame;
-            }
+            SETUP_ENDING_TEXT_OAM(sEndingImageOam_ClearTime_English, i);
         }
         else if (set == ENDING_IMAGE_OAM_SET_YOUR_RATE)
         {
-            ENDING_DATA.oamLength = ARRAY_SIZE(sEndingImageOam_YourRate_English) + 6;
-
-            for (i = 0; i < ARRAY_SIZE(sEndingImageOam_YourRate_English); i++)
-            {
-                ENDING_DATA.oamTypes[i + 6] = sEndingImageOam_YourRate_English[i].type;
-                ENDING_DATA.endingLettersSpawnDelay[i + 6] = sEndingImageOam_YourRate_English[i].spawnDelay;
-                ENDING_DATA.unk_160[i + 6] = sEndingImageOam_YourRate_English[i].unk_2;
-
-                ENDING_DATA.oamXPositions[i + 6] = sEndingImageOam_YourRate_English[i].xPosition;
-                ENDING_DATA.oamYPositions[i + 6] = sEndingImageOam_YourRate_English[i].yPosition;
-
-                ENDING_DATA.oamFramePointers[i + 6] = sEndingImageOam_YourRate_English[i].pFrame;
-            }
+            SETUP_ENDING_TEXT_OAM(sEndingImageOam_YourRate_English, i);
         }
         else
         {
-            ENDING_DATA.oamLength = ARRAY_SIZE(sEndingImageOam_Collecting_English) + 6;
-
-            for (i = 0; i < ARRAY_SIZE(sEndingImageOam_Collecting_English); i++)
-            {
-                ENDING_DATA.oamTypes[i + 6] = sEndingImageOam_Collecting_English[i].type;
-                ENDING_DATA.endingLettersSpawnDelay[i + 6] = sEndingImageOam_Collecting_English[i].spawnDelay;
-                ENDING_DATA.unk_160[i + 6] = sEndingImageOam_Collecting_English[i].unk_2;
-
-                ENDING_DATA.oamXPositions[i + 6] = sEndingImageOam_Collecting_English[i].xPosition;
-                ENDING_DATA.oamYPositions[i + 6] = sEndingImageOam_Collecting_English[i].yPosition;
-
-                ENDING_DATA.oamFramePointers[i + 6] = sEndingImageOam_Collecting_English[i].pFrame;
-            }
+            SETUP_ENDING_TEXT_OAM(sEndingImageOam_Collecting_English, i);
         }
     }
+    #endif // REGION_EU
 }
 
 /**
- * @brief 84ee8 | c8 | Display a line of text of an ending image permanetly
+ * @brief 84ee8 | c8 | Display a line of text of an ending image permanently
  * 
  * @param line Line
  */
-void EndingImageDisplayLinePermanently(u32 line)
+static void EndingImageDisplayLinePermanently(u32 line)
 {
     s32 i;
 
+    #ifdef REGION_EU
+    switch (ENDING_DATA.language)
+    {
+        case LANGUAGE_GERMAN:
+            SETUP_ENDING_FULL_LINES_OAM(sEndingImageOam_FullLines_German);
+            break;
+
+        case LANGUAGE_FRENCH:
+            SETUP_ENDING_FULL_LINES_OAM(sEndingImageOam_FullLines_French);
+            break;
+
+        case LANGUAGE_ITALIAN:
+            SETUP_ENDING_FULL_LINES_OAM(sEndingImageOam_FullLines_Italian);
+            break;
+
+        case LANGUAGE_SPANISH:
+            SETUP_ENDING_FULL_LINES_OAM(sEndingImageOam_FullLines_Spanish);
+            break;
+
+        case LANGUAGE_HIRAGANA:
+            SETUP_ENDING_FULL_LINES_OAM(sEndingImageOam_FullLines_Hiragana);
+            break;
+
+        default:
+            SETUP_ENDING_FULL_LINES_OAM(sEndingImageOam_FullLines_English);
+            break;
+    }
+    #else // !REGION_EU
     if (ENDING_DATA.language == LANGUAGE_HIRAGANA)
     {
-        ENDING_DATA.oamTypes[line] = sEndingImageOam_FullLines_Hiragana[line].type;
-        ENDING_DATA.endingLettersSpawnDelay[line] = sEndingImageOam_FullLines_Hiragana[line].spawnDelay;
-        ENDING_DATA.unk_160[line] = sEndingImageOam_FullLines_Hiragana[line].unk_2;
-        ENDING_DATA.oamXPositions[line] = sEndingImageOam_FullLines_Hiragana[line].xPosition;
-        ENDING_DATA.oamYPositions[line] = sEndingImageOam_FullLines_Hiragana[line].yPosition;
-        ENDING_DATA.oamFramePointers[line] = sEndingImageOam_FullLines_Hiragana[line].pFrame;
+        SETUP_ENDING_FULL_LINES_OAM(sEndingImageOam_FullLines_Hiragana);
     }
     else
     {
-        ENDING_DATA.oamTypes[line] = sEndingImageOam_FullLines_English[line].type;
-        ENDING_DATA.endingLettersSpawnDelay[line] = sEndingImageOam_FullLines_English[line].spawnDelay;
-        ENDING_DATA.unk_160[line] = sEndingImageOam_FullLines_English[line].unk_2;
-        ENDING_DATA.oamXPositions[line] = sEndingImageOam_FullLines_English[line].xPosition;
-        ENDING_DATA.oamYPositions[line] = sEndingImageOam_FullLines_English[line].yPosition;
-        ENDING_DATA.oamFramePointers[line] = sEndingImageOam_FullLines_English[line].pFrame;
+        SETUP_ENDING_FULL_LINES_OAM(sEndingImageOam_FullLines_English);
     }
+    #endif // REGION_EU
 
     for (i  = 0; i < ENDING_DATA.oamLength - 6; i++)
         ENDING_DATA.oamTypes[i + 6] = ENDING_OAM_TYPE_NONE;
@@ -166,11 +230,12 @@ void EndingImageDisplayLinePermanently(u32 line)
     ENDING_DATA.oamLength = 6;
 }
 
-#ifdef NON_MATCHING
-void EndingImageLoadIGTAndPercentageGraphics(void)
+/**
+ * @brief 84fb0 | 204 | To document
+ * 
+ */
+static void EndingImageLoadIGTAndPercentageGraphics(void)
 {
-    // https://decomp.me/scratch/KHUC4
-
     s32 hoursTens;
     s32 hoursOnes;
     s32 minutesTens;
@@ -214,428 +279,212 @@ void EndingImageLoadIGTAndPercentageGraphics(void)
     if (hoursTens != 0)
     {
         offset = hoursTens * 64;
+        #ifdef REGION_EU
+        DmaTransfer(3, &sEndingImageNumbersGfx_Upper[offset], VRAM_OBJ, 64, 16);
+        DmaTransfer(3, &sEndingImageNumbersGfx_Lower[offset], VRAM_OBJ + 0x400, 64, 16);
+        #else // !REGION_EU
         DMA_SET(3, &sEndingImageNumbersGfx_Upper[offset], VRAM_OBJ, C_32_2_16(DMA_ENABLE, 64 / 2));
         DMA_SET(3, &sEndingImageNumbersGfx_Lower[offset], VRAM_OBJ + 0x400, C_32_2_16(DMA_ENABLE, 64 / 2));
+        #endif // REGION_EU
     }
 
     offset = hoursOnes * 64;
+    #ifdef REGION_EU
+    DmaTransfer(3, &sEndingImageNumbersGfx_Upper[offset], VRAM_OBJ + 0x040, 64, 16);
+    DmaTransfer(3, &sEndingImageNumbersGfx_Lower[offset], VRAM_OBJ + 0x440, 64, 16);
+    #else // !REGION_EU
     DMA_SET(3, &sEndingImageNumbersGfx_Upper[offset], VRAM_OBJ + 0x040, C_32_2_16(DMA_ENABLE, 64 / 2));
     DMA_SET(3, &sEndingImageNumbersGfx_Lower[offset], VRAM_OBJ + 0x440, C_32_2_16(DMA_ENABLE, 64 / 2));
+    #endif // REGION_EU
 
     offset = minutesTens * 64;
+    #ifdef REGION_EU
+    DmaTransfer(3, &sEndingImageNumbersGfx_Upper[offset], VRAM_OBJ + 0x0A0, 64, 16);
+    DmaTransfer(3, &sEndingImageNumbersGfx_Lower[offset], VRAM_OBJ + 0x4A0, 64, 16);
+    #else // !REGION_EU
     DMA_SET(3, &sEndingImageNumbersGfx_Upper[offset], VRAM_OBJ + 0x0A0, C_32_2_16(DMA_ENABLE, 64 / 2));
     DMA_SET(3, &sEndingImageNumbersGfx_Lower[offset], VRAM_OBJ + 0x4A0, C_32_2_16(DMA_ENABLE, 64 / 2));
+    #endif // REGION_EU
 
     offset = minutesOnes * 64;
+    #ifdef REGION_EU
+    DmaTransfer(3, &sEndingImageNumbersGfx_Upper[offset], VRAM_OBJ + 0x0E0, 64, 16);
+    DmaTransfer(3, &sEndingImageNumbersGfx_Lower[offset], VRAM_OBJ + 0x4E0, 64, 16);
+    #else // !REGION_EU
     DMA_SET(3, &sEndingImageNumbersGfx_Upper[offset], VRAM_OBJ + 0x0E0, C_32_2_16(DMA_ENABLE, 64 / 2));
     DMA_SET(3, &sEndingImageNumbersGfx_Lower[offset], VRAM_OBJ + 0x4E0, C_32_2_16(DMA_ENABLE, 64 / 2));
+    #endif // REGION_EU
 
     offset = secondsTens * 64;
+    #ifdef REGION_EU
+    DmaTransfer(3, &sEndingImageNumbersGfx_Upper[offset], VRAM_OBJ + 0x140, 64, 16);
+    DmaTransfer(3, &sEndingImageNumbersGfx_Lower[offset], VRAM_OBJ + 0x540, 64, 16);
+    #else // !REGION_EU
     DMA_SET(3, &sEndingImageNumbersGfx_Upper[offset], VRAM_OBJ + 0x140, C_32_2_16(DMA_ENABLE, 64 / 2));
     DMA_SET(3, &sEndingImageNumbersGfx_Lower[offset], VRAM_OBJ + 0x540, C_32_2_16(DMA_ENABLE, 64 / 2));
+    #endif // REGION_EU
 
     offset = secondsOnes * 64;
+    #ifdef REGION_EU
+    DmaTransfer(3, &sEndingImageNumbersGfx_Upper[offset], VRAM_OBJ + 0x180, 64, 16);
+    DmaTransfer(3, &sEndingImageNumbersGfx_Lower[offset], VRAM_OBJ + 0x580, 64, 16);
+    #else // !REGION_EU
     DMA_SET(3, &sEndingImageNumbersGfx_Upper[offset], VRAM_OBJ + 0x180, C_32_2_16(DMA_ENABLE, 64 / 2));
     DMA_SET(3, &sEndingImageNumbersGfx_Lower[offset], VRAM_OBJ + 0x580, C_32_2_16(DMA_ENABLE, 64 / 2));
+    #endif // REGION_EU
 
     percentageHundreds = 0;
-    percentageTens = 0;
-    percentageOnes = ENDING_DATA.completionPercentage;
+    hoursOnes = 0; // percentageTens
+    minutesTens = ENDING_DATA.completionPercentage; // percentageOnes
 
-    while (percentageOnes >= 100)
+    while (minutesTens >= 100)
     {
-        percentageOnes -= 100;
+        minutesTens -= 100;
         percentageHundreds++;
     }
 
-    while (percentageOnes >= 10)
+    while (minutesTens >= 10)
     {
-        percentageOnes -= 10;
-        percentageTens++;
+        minutesTens -= 10;
+        hoursOnes++;
     }
 
     if (percentageHundreds != 0)
     {
         offset = percentageHundreds * 64;
+        #ifdef REGION_EU
+        DmaTransfer(3, &sEndingImageNumbersGfx_Upper[offset], VRAM_OBJ + 0x1C0, 64, 16);
+        DmaTransfer(3, &sEndingImageNumbersGfx_Lower[offset], VRAM_OBJ + 0x5C0, 64, 16);
+        #else // !REGION_EU
         DMA_SET(3, &sEndingImageNumbersGfx_Upper[offset], VRAM_OBJ + 0x1C0, C_32_2_16(DMA_ENABLE, 64 / 2));
         DMA_SET(3, &sEndingImageNumbersGfx_Lower[offset], VRAM_OBJ + 0x5C0, C_32_2_16(DMA_ENABLE, 64 / 2));
+        #endif // REGION_EU
     }
     
-    if (percentageHundreds != 0 || percentageTens != 0)
+    if (percentageHundreds != 0 || hoursOnes != 0)
     {
-        offset = percentageTens * 64;
+        offset = hoursOnes * 64;
+        #ifdef REGION_EU
+        DmaTransfer(3, &sEndingImageNumbersGfx_Upper[offset], VRAM_OBJ + 0x200, 64, 16);
+        DmaTransfer(3, &sEndingImageNumbersGfx_Lower[offset], VRAM_OBJ + 0x600, 64, 16);
+        #else // !REGION_EU
         DMA_SET(3, &sEndingImageNumbersGfx_Upper[offset], VRAM_OBJ + 0x200, C_32_2_16(DMA_ENABLE, 64 / 2));
         DMA_SET(3, &sEndingImageNumbersGfx_Lower[offset], VRAM_OBJ + 0x600, C_32_2_16(DMA_ENABLE, 64 / 2));
+        #endif // REGION_EU
     }
 
-    offset = percentageOnes * 64;
+    offset = minutesTens * 64;
+    #ifdef REGION_EU
+    DmaTransfer(3, &sEndingImageNumbersGfx_Upper[offset], VRAM_OBJ + 0x240, 64, 16);
+    DmaTransfer(3, &sEndingImageNumbersGfx_Lower[offset], VRAM_OBJ + 0x640, 64, 16);
+    #else // !REGION_EU
     DMA_SET(3, &sEndingImageNumbersGfx_Upper[offset], VRAM_OBJ + 0x240, C_32_2_16(DMA_ENABLE, 64 / 2));
     DMA_SET(3, &sEndingImageNumbersGfx_Lower[offset], VRAM_OBJ + 0x640, C_32_2_16(DMA_ENABLE, 64 / 2));
+    #endif // REGION_EU
 }
-#else
-NAKED_FUNCTION
-void EndingImageLoadIGTAndPercentageGraphics(void)
-{
-    asm(" \n\
-    push {r4, r5, r6, r7, lr} \n\
-    mov r7, sl \n\
-    mov r6, sb \n\
-    mov r5, r8 \n\
-    push {r5, r6, r7} \n\
-    movs r1, #0 \n\
-    ldr r0, lbl_080850c8 @ =gInGameTimer \n\
-    ldrb r4, [r0] \n\
-    ldr r6, lbl_080850cc @ =sEndingImageNumbersGfx_Upper \n\
-    ldr r7, lbl_080850d0 @ =sEndingImageNumbersGfx_Lower \n\
-    ldr r2, lbl_080850d4 @ =sNonGameplayRamPointer \n\
-    mov sl, r2 \n\
-    cmp r4, #9 \n\
-    ble lbl_08084fd4 \n\
-lbl_08084fcc: \n\
-    sub r4, #0xa \n\
-    add r1, #1 \n\
-    cmp r4, #9 \n\
-    bgt lbl_08084fcc \n\
-lbl_08084fd4: \n\
-    movs r5, #0 \n\
-    ldrb r2, [r0, #1] \n\
-    lsl r4, r4, #6 \n\
-    mov r8, r4 \n\
-    cmp r2, #9 \n\
-    ble lbl_08084fe8 \n\
-lbl_08084fe0: \n\
-    sub r2, #0xa \n\
-    add r5, #1 \n\
-    cmp r2, #9 \n\
-    bgt lbl_08084fe0 \n\
-lbl_08084fe8: \n\
-    movs r3, #0 \n\
-    mov ip, r3 \n\
-    ldrb r4, [r0, #2] \n\
-    lsl r5, r5, #6 \n\
-    lsl r2, r2, #6 \n\
-    mov sb, r2 \n\
-    cmp r4, #9 \n\
-    ble lbl_08085002 \n\
-lbl_08084ff8: \n\
-    sub r4, #0xa \n\
-    movs r0, #1 \n\
-    add ip, r0 \n\
-    cmp r4, #9 \n\
-    bgt lbl_08084ff8 \n\
-lbl_08085002: \n\
-    cmp r1, #0 \n\
-    beq lbl_08085024 \n\
-    lsl r3, r1, #6 \n\
-    ldr r0, lbl_080850d8 @ =0x040000d4 \n\
-    add r1, r3, r6 \n\
-    str r1, [r0] \n\
-    ldr r1, lbl_080850dc @ =0x06010000 \n\
-    str r1, [r0, #4] \n\
-    ldr r2, lbl_080850e0 @ =0x80000020 \n\
-    str r2, [r0, #8] \n\
-    ldr r1, [r0, #8] \n\
-    add r1, r3, r7 \n\
-    str r1, [r0] \n\
-    ldr r1, lbl_080850e4 @ =0x06010400 \n\
-    str r1, [r0, #4] \n\
-    str r2, [r0, #8] \n\
-    ldr r0, [r0, #8] \n\
-lbl_08085024: \n\
-    mov r3, r8 \n\
-    ldr r0, lbl_080850d8 @ =0x040000d4 \n\
-    add r1, r3, r6 \n\
-    str r1, [r0] \n\
-    ldr r1, lbl_080850e8 @ =0x06010040 \n\
-    str r1, [r0, #4] \n\
-    ldr r2, lbl_080850e0 @ =0x80000020 \n\
-    str r2, [r0, #8] \n\
-    ldr r1, [r0, #8] \n\
-    add r1, r3, r7 \n\
-    str r1, [r0] \n\
-    ldr r1, lbl_080850ec @ =0x06010440 \n\
-    str r1, [r0, #4] \n\
-    str r2, [r0, #8] \n\
-    ldr r1, [r0, #8] \n\
-    add r3, r5, #0 \n\
-    add r1, r3, r6 \n\
-    str r1, [r0] \n\
-    ldr r1, lbl_080850f0 @ =0x060100a0 \n\
-    str r1, [r0, #4] \n\
-    str r2, [r0, #8] \n\
-    ldr r1, [r0, #8] \n\
-    add r1, r3, r7 \n\
-    str r1, [r0] \n\
-    ldr r1, lbl_080850f4 @ =0x060104a0 \n\
-    str r1, [r0, #4] \n\
-    str r2, [r0, #8] \n\
-    ldr r1, [r0, #8] \n\
-    mov r3, sb \n\
-    add r1, r3, r6 \n\
-    str r1, [r0] \n\
-    ldr r1, lbl_080850f8 @ =0x060100e0 \n\
-    str r1, [r0, #4] \n\
-    str r2, [r0, #8] \n\
-    ldr r1, [r0, #8] \n\
-    add r1, r3, r7 \n\
-    str r1, [r0] \n\
-    ldr r1, lbl_080850fc @ =0x060104e0 \n\
-    str r1, [r0, #4] \n\
-    str r2, [r0, #8] \n\
-    ldr r1, [r0, #8] \n\
-    mov r1, ip \n\
-    lsl r3, r1, #6 \n\
-    add r1, r3, r6 \n\
-    str r1, [r0] \n\
-    ldr r1, lbl_08085100 @ =0x06010140 \n\
-    str r1, [r0, #4] \n\
-    str r2, [r0, #8] \n\
-    ldr r1, [r0, #8] \n\
-    add r1, r3, r7 \n\
-    str r1, [r0] \n\
-    ldr r1, lbl_08085104 @ =0x06010540 \n\
-    str r1, [r0, #4] \n\
-    str r2, [r0, #8] \n\
-    ldr r1, [r0, #8] \n\
-    lsl r3, r4, #6 \n\
-    add r1, r3, r6 \n\
-    str r1, [r0] \n\
-    ldr r1, lbl_08085108 @ =0x06010180 \n\
-    str r1, [r0, #4] \n\
-    str r2, [r0, #8] \n\
-    ldr r1, [r0, #8] \n\
-    add r1, r3, r7 \n\
-    str r1, [r0] \n\
-    ldr r1, lbl_0808510c @ =0x06010580 \n\
-    str r1, [r0, #4] \n\
-    str r2, [r0, #8] \n\
-    ldr r0, [r0, #8] \n\
-    movs r1, #0 \n\
-    movs r4, #0 \n\
-    mov r2, sl \n\
-    ldr r0, [r2] \n\
-    add r0, #0x99 \n\
-    ldrb r5, [r0] \n\
-    cmp r5, #0x63 \n\
-    ble lbl_08085114 \n\
-lbl_080850bc: \n\
-    sub r5, #0x64 \n\
-    add r1, #1 \n\
-    cmp r5, #0x63 \n\
-    bgt lbl_080850bc \n\
-    b lbl_08085114 \n\
-    .align 2, 0 \n\
-lbl_080850c8: .4byte gInGameTimer \n\
-lbl_080850cc: .4byte sEndingImageNumbersGfx_Upper \n\
-lbl_080850d0: .4byte sEndingImageNumbersGfx_Lower \n\
-lbl_080850d4: .4byte sNonGameplayRamPointer \n\
-lbl_080850d8: .4byte 0x040000d4 \n\
-lbl_080850dc: .4byte 0x06010000 \n\
-lbl_080850e0: .4byte 0x80000020 \n\
-lbl_080850e4: .4byte 0x06010400 \n\
-lbl_080850e8: .4byte 0x06010040 \n\
-lbl_080850ec: .4byte 0x06010440 \n\
-lbl_080850f0: .4byte 0x060100a0 \n\
-lbl_080850f4: .4byte 0x060104a0 \n\
-lbl_080850f8: .4byte 0x060100e0 \n\
-lbl_080850fc: .4byte 0x060104e0 \n\
-lbl_08085100: .4byte 0x06010140 \n\
-lbl_08085104: .4byte 0x06010540 \n\
-lbl_08085108: .4byte 0x06010180 \n\
-lbl_0808510c: .4byte 0x06010580 \n\
-lbl_08085110: \n\
-    sub r5, #0xa \n\
-    add r4, #1 \n\
-lbl_08085114: \n\
-    cmp r5, #9 \n\
-    bgt lbl_08085110 \n\
-    cmp r1, #0 \n\
-    beq lbl_0808514c \n\
-    lsl r3, r1, #6 \n\
-    ldr r0, lbl_0808513c @ =0x040000d4 \n\
-    add r1, r3, r6 \n\
-    str r1, [r0] \n\
-    ldr r1, lbl_08085140 @ =0x060101c0 \n\
-    str r1, [r0, #4] \n\
-    ldr r2, lbl_08085144 @ =0x80000020 \n\
-    str r2, [r0, #8] \n\
-    ldr r1, [r0, #8] \n\
-    add r1, r3, r7 \n\
-    str r1, [r0] \n\
-    ldr r1, lbl_08085148 @ =0x060105c0 \n\
-    str r1, [r0, #4] \n\
-    str r2, [r0, #8] \n\
-    ldr r0, [r0, #8] \n\
-    b lbl_08085150 \n\
-    .align 2, 0 \n\
-lbl_0808513c: .4byte 0x040000d4 \n\
-lbl_08085140: .4byte 0x060101c0 \n\
-lbl_08085144: .4byte 0x80000020 \n\
-lbl_08085148: .4byte 0x060105c0 \n\
-lbl_0808514c: \n\
-    cmp r4, #0 \n\
-    beq lbl_0808516e \n\
-lbl_08085150: \n\
-    lsl r3, r4, #6 \n\
-    ldr r0, lbl_0808519c @ =0x040000d4 \n\
-    add r1, r3, r6 \n\
-    str r1, [r0] \n\
-    ldr r1, lbl_080851a0 @ =0x06010200 \n\
-    str r1, [r0, #4] \n\
-    ldr r2, lbl_080851a4 @ =0x80000020 \n\
-    str r2, [r0, #8] \n\
-    ldr r1, [r0, #8] \n\
-    add r1, r3, r7 \n\
-    str r1, [r0] \n\
-    ldr r1, lbl_080851a8 @ =0x06010600 \n\
-    str r1, [r0, #4] \n\
-    str r2, [r0, #8] \n\
-    ldr r0, [r0, #8] \n\
-lbl_0808516e: \n\
-    lsl r3, r5, #6 \n\
-    ldr r0, lbl_0808519c @ =0x040000d4 \n\
-    add r1, r3, r6 \n\
-    str r1, [r0] \n\
-    ldr r1, lbl_080851ac @ =0x06010240 \n\
-    str r1, [r0, #4] \n\
-    ldr r2, lbl_080851a4 @ =0x80000020 \n\
-    str r2, [r0, #8] \n\
-    ldr r1, [r0, #8] \n\
-    add r1, r3, r7 \n\
-    str r1, [r0] \n\
-    ldr r1, lbl_080851b0 @ =0x06010640 \n\
-    str r1, [r0, #4] \n\
-    str r2, [r0, #8] \n\
-    ldr r0, [r0, #8] \n\
-    pop {r3, r4, r5} \n\
-    mov r8, r3 \n\
-    mov sb, r4 \n\
-    mov sl, r5 \n\
-    pop {r4, r5, r6, r7} \n\
-    pop {r0} \n\
-    bx r0 \n\
-    .align 2, 0 \n\
-lbl_0808519c: .4byte 0x040000d4 \n\
-lbl_080851a0: .4byte 0x06010200 \n\
-lbl_080851a4: .4byte 0x80000020 \n\
-lbl_080851a8: .4byte 0x06010600 \n\
-lbl_080851ac: .4byte 0x06010240 \n\
-lbl_080851b0: .4byte 0x06010640 \n\
-    ");
-}
-#endif
 
 /**
  * @brief 851b4 | 164 | V-blank code for gallery, ending image and credits
  * 
  */
-void GalleryVBlank(void)
+static void GalleryVBlank(void)
 {
     u32 buffer;
     u32 bgPos;
 
     DMA_SET(3, gOamData, OAM_BASE, (DMA_ENABLE | DMA_32BIT) << 16 | OAM_SIZE / sizeof(u32));
 
+    // On even length lines
     if (ENDING_DATA.unk_6 == 1)
     {
         DMA_SET(3, ENDING_DATA.creditLineTilemap_1, VRAM_BASE + ENDING_DATA.creditLineOffset_1,
-            DMA_ENABLE << 16 | ARRAY_SIZE(ENDING_DATA.creditLineTilemap_1));
+            C_32_2_16(DMA_ENABLE, ARRAY_SIZE(ENDING_DATA.creditLineTilemap_1)));
         DMA_SET(3, ENDING_DATA.creditLineTilemap_2, VRAM_BASE + ENDING_DATA.creditLineOffset_2,
-            DMA_ENABLE << 16 | ARRAY_SIZE(ENDING_DATA.creditLineTilemap_2));
+            C_32_2_16(DMA_ENABLE, ARRAY_SIZE(ENDING_DATA.creditLineTilemap_2)));
 
-        buffer = 0;
-        DMA_SET(3, &buffer, VRAM_BASE + 0x800 + ENDING_DATA.creditLineOffset_1,
-            (DMA_ENABLE | DMA_32BIT | DMA_SRC_FIXED) << 16 | ARRAY_SIZE(ENDING_DATA.creditLineTilemap_1) / 2);
-        buffer = 0;
-        DMA_SET(3, &buffer, VRAM_BASE + 0x800 + ENDING_DATA.creditLineOffset_2,
-            (DMA_ENABLE | DMA_32BIT | DMA_SRC_FIXED) << 16 | ARRAY_SIZE(ENDING_DATA.creditLineTilemap_2) / 2);
+        DMA_FILL_32(3, 0, VRAM_BASE + 0x800 + ENDING_DATA.creditLineOffset_1, ARRAY_SIZE(ENDING_DATA.creditLineTilemap_1) * 2);
+        DMA_FILL_32(3, 0, VRAM_BASE + 0x800 + ENDING_DATA.creditLineOffset_2, ARRAY_SIZE(ENDING_DATA.creditLineTilemap_2) * 2);
     }
+    // On odd length lines
     else if (ENDING_DATA.unk_6 != 0)
     {
         DMA_SET(3, ENDING_DATA.creditLineTilemap_1, VRAM_BASE + 0x800 + ENDING_DATA.creditLineOffset_1,
-            DMA_ENABLE << 16 | ARRAY_SIZE(ENDING_DATA.creditLineTilemap_1));
+            C_32_2_16(DMA_ENABLE, ARRAY_SIZE(ENDING_DATA.creditLineTilemap_1)));
         DMA_SET(3, ENDING_DATA.creditLineTilemap_2, VRAM_BASE + 0x800 + ENDING_DATA.creditLineOffset_2,
-            DMA_ENABLE << 16 | ARRAY_SIZE(ENDING_DATA.creditLineTilemap_2));
+            C_32_2_16(DMA_ENABLE, ARRAY_SIZE(ENDING_DATA.creditLineTilemap_2)));
 
-        buffer = 0;
-        DMA_SET(3, &buffer, VRAM_BASE + ENDING_DATA.creditLineOffset_1,
-            (DMA_ENABLE | DMA_32BIT | DMA_SRC_FIXED) << 16 | ARRAY_SIZE(ENDING_DATA.creditLineTilemap_1) / 2);
-        buffer = 0;
-        DMA_SET(3, &buffer, VRAM_BASE + ENDING_DATA.creditLineOffset_2,
-            (DMA_ENABLE | DMA_32BIT | DMA_SRC_FIXED) << 16 | ARRAY_SIZE(ENDING_DATA.creditLineTilemap_2) / 2);
+        DMA_FILL_32(3, 0, VRAM_BASE + ENDING_DATA.creditLineOffset_1, ARRAY_SIZE(ENDING_DATA.creditLineTilemap_1) * 2);
+        DMA_FILL_32(3, 0, VRAM_BASE + ENDING_DATA.creditLineOffset_2, ARRAY_SIZE(ENDING_DATA.creditLineTilemap_2) * 2);
     }
 
-    write16(REG_DISPCNT, ENDING_DATA.dispcnt);
-    write16(REG_BLDCNT, ENDING_DATA.bldcnt);
+    WRITE_16(REG_DISPCNT, ENDING_DATA.dispcnt);
+    WRITE_16(REG_BLDCNT, ENDING_DATA.bldcnt);
 
-    write16(REG_BLDALPHA, gWrittenToBLDALPHA_H << 8 | gWrittenToBLDALPHA_L);
-    write16(REG_BLDY, gWrittenToBLDY_NonGameplay);
+    WRITE_16(REG_BLDALPHA, C_16_2_8(gWrittenToBldalpha_H, gWrittenToBldalpha_L));
+    WRITE_16(REG_BLDY, gWrittenToBldy_NonGameplay);
 
-    write16(REG_BG0VOFS, bgPos = gBg0YPosition / 16 & 0x1FF);
-    write16(REG_BG1VOFS, bgPos);
-    write16(REG_BG2VOFS, gBg2YPosition / 16 & 0x1FF);
-    write16(REG_BG3VOFS, gBg3YPosition / 16 & 0x1FF);
+    WRITE_16(REG_BG0VOFS, bgPos = MOD_AND(gBg0YPosition / 16, 0x200));
+    WRITE_16(REG_BG1VOFS, bgPos);
+    WRITE_16(REG_BG2VOFS, MOD_AND(gBg2YPosition / 16, 0x200));
+    WRITE_16(REG_BG3VOFS, MOD_AND(gBg3YPosition / 16, 0x200));
 }
 
 /**
  * @brief 85318 | a8 | V-blank code for the end screen
  * 
  */
-void EndScreenVBlank(void)
+static void EndScreenVBlank(void)
 {
-    DMA_SET(3, gOamData, OAM_BASE, (DMA_ENABLE | DMA_32BIT) << 16 | OAM_SIZE / sizeof(u32));
+    DMA_SET(3, gOamData, OAM_BASE, C_32_2_16(DMA_ENABLE | DMA_32BIT, OAM_SIZE / sizeof(u32)));
 
-    write16(REG_DISPCNT, ENDING_DATA.dispcnt);
-    write16(REG_BLDCNT, ENDING_DATA.bldcnt);
+    WRITE_16(REG_DISPCNT, ENDING_DATA.dispcnt);
+    WRITE_16(REG_BLDCNT, ENDING_DATA.bldcnt);
 
-    write16(REG_BLDALPHA, gWrittenToBLDALPHA_H << 8 | gWrittenToBLDALPHA_L);
-    write16(REG_BLDY, gWrittenToBLDY_NonGameplay);
+    WRITE_16(REG_BLDALPHA, C_16_2_8(gWrittenToBldalpha_H, gWrittenToBldalpha_L));
+    WRITE_16(REG_BLDY, gWrittenToBldy_NonGameplay);
 
-    write16(REG_BG1HOFS, gBg1XPosition & 0x1FF);
-    write16(REG_BG2HOFS, gBg2XPosition & 0x1FF);
-    write16(REG_BG3HOFS, gBg3XPosition & 0x1FF);
+    WRITE_16(REG_BG1HOFS, MOD_AND(gBg1XPosition, 0x200));
+    WRITE_16(REG_BG2HOFS, MOD_AND(gBg2XPosition, 0x200));
+    WRITE_16(REG_BG3HOFS, MOD_AND(gBg3XPosition, 0x200));
 }
 
 /**
  * @brief 853c0 | a8 | V-blank code for the unlocked options
  * 
  */
-void UnlockedOptionsVBlank(void)
+static void UnlockedOptionsVBlank(void)
 {
-    DMA_SET(3, gOamData, OAM_BASE, (DMA_ENABLE | DMA_32BIT) << 16 | OAM_SIZE / sizeof(u32));
+    DMA_SET(3, gOamData, OAM_BASE, C_32_2_16(DMA_ENABLE | DMA_32BIT, OAM_SIZE / sizeof(u32)));
 
-    write16(REG_DISPCNT, ENDING_DATA.dispcnt);
-    write16(REG_BLDCNT, ENDING_DATA.bldcnt);
+    WRITE_16(REG_DISPCNT, ENDING_DATA.dispcnt);
+    WRITE_16(REG_BLDCNT, ENDING_DATA.bldcnt);
 
-    write16(REG_BLDALPHA, gWrittenToBLDALPHA_H << 8 | gWrittenToBLDALPHA_L);
-    write16(REG_BLDY, gWrittenToBLDY_NonGameplay);
+    WRITE_16(REG_BLDALPHA, C_16_2_8(gWrittenToBldalpha_H, gWrittenToBldalpha_L));
+    WRITE_16(REG_BLDY, gWrittenToBldy_NonGameplay);
 
-    write16(REG_WIN0H, ENDING_DATA.oamXPositions[0] << 8 | ENDING_DATA.oamXPositions[1]);
-    write16(REG_WIN0V, ENDING_DATA.oamYPositions[0] << 8 | ENDING_DATA.oamYPositions[1]);
+    WRITE_16(REG_WIN0H, C_16_2_8(ENDING_DATA.oamXPositions[0], ENDING_DATA.oamXPositions[1]));
+    WRITE_16(REG_WIN0V, C_16_2_8(ENDING_DATA.oamYPositions[0], ENDING_DATA.oamYPositions[1]));
 }
 
 /**
  * @brief 85464 | 1f8 | Initializes the credits
  * 
  */
-void CreditsInit(void)
+static void CreditsInit(void)
 {
-    u32 zero;
+    WRITE_16(REG_IME, FALSE);
+    WRITE_16(REG_DISPSTAT, READ_16(REG_DISPSTAT) & ~DSTAT_IF_HBLANK);
+    WRITE_16(REG_IE, READ_16(REG_IE) & ~IF_HBLANK);
+    WRITE_16(REG_IF, IF_HBLANK);
 
-    write16(REG_IME, FALSE);
-    write16(REG_DISPSTAT, read16(REG_DISPSTAT) & ~DSTAT_IF_HBLANK);
-    write16(REG_IE, read16(REG_IE) & ~IF_HBLANK);
-    write16(REG_IF, IF_HBLANK);
+    WRITE_16(REG_IME, TRUE);
+    WRITE_16(REG_DISPCNT, 0);
 
-    write16(REG_IME, TRUE);
-    write16(REG_DISPCNT, 0);
+    WRITE_16(REG_IME, FALSE);
+    CallbackSetVblank(GalleryVBlank);
+    WRITE_16(REG_IME, TRUE);
 
-    write16(REG_IME, FALSE);
-    CallbackSetVBlank(GalleryVBlank);
-    write16(REG_IME, TRUE);
-
-    zero = 0;
-    DMA_SET(3, &zero, &gNonGameplayRAM, (DMA_ENABLE | DMA_32BIT | DMA_SRC_FIXED) << 16 | sizeof(gNonGameplayRAM) / 4);
+    DMA_FILL_32(3, 0, &gNonGameplayRam, sizeof(gNonGameplayRam))
 
     ClearGfxRam();
 
@@ -644,13 +493,18 @@ void CreditsInit(void)
     LZ77UncompVRAM(sCreditsChozoWallBottomTileTable, VRAM_BASE + 0xD800);
     LZ77UncompVRAM(sCreditsCharactersGfx, VRAM_BASE + 0x8000);
 
-    DMA_SET(3, sCreditsChozoWallPal, PALRAM_BASE, DMA_ENABLE << 16 | sizeof(sCreditsChozoWallPal) / 2);
-    DMA_SET(3, sCreditsCharactersPal, PALRAM_BASE + 0x1A0, DMA_ENABLE << 16 | sizeof(sCreditsCharactersPal) / 2);
+    #ifdef REGION_EU
+    DmaTransfer(3, sCreditsChozoWallPal, PALRAM_BASE, sizeof(sCreditsChozoWallPal), 16);
+    DmaTransfer(3, sCreditsCharactersPal, PALRAM_BASE + 13 * PAL_ROW_SIZE, sizeof(sCreditsCharactersPal), 16);
+    #else // !REGION_EU
+    DMA_SET(3, sCreditsChozoWallPal, PALRAM_BASE, C_32_2_16(DMA_ENABLE, ARRAY_SIZE(sCreditsChozoWallPal)));
+    DMA_SET(3, sCreditsCharactersPal, PALRAM_BASE + 13 * PAL_ROW_SIZE, C_32_2_16(DMA_ENABLE, ARRAY_SIZE(sCreditsCharactersPal)));
+    #endif // REGION_EU
 
-    write16(REG_BG0CNT, 0x1E08);
-    write16(REG_BG1CNT, 0x1F09);
-    write16(REG_BG2CNT, 0x9C02);
-    write16(REG_BG3CNT, 0x9A0B);
+    WRITE_16(REG_BG0CNT, CREATE_BGCNT(2, 30, BGCNT_HIGH_PRIORITY, BGCNT_SIZE_256x256));
+    WRITE_16(REG_BG1CNT, CREATE_BGCNT(2, 31, BGCNT_HIGH_MID_PRIORITY, BGCNT_SIZE_256x256));
+    WRITE_16(REG_BG2CNT, CREATE_BGCNT(0, 28, BGCNT_LOW_MID_PRIORITY, BGCNT_SIZE_256x512));
+    WRITE_16(REG_BG3CNT, CREATE_BGCNT(2, 26, BGCNT_LOW_PRIORITY, BGCNT_SIZE_256x512));
 
     gNextOamSlot = 0;
     ResetFreeOam();
@@ -664,22 +518,22 @@ void CreditsInit(void)
     gBg3XPosition = 0;
     gBg3YPosition = 0;
 
-    write16(REG_BG0HOFS, 0);
-    write16(REG_BG0VOFS, 0x1000);
-    write16(REG_BG1HOFS, 4);
-    write16(REG_BG1VOFS, 0x1000);
-    write16(REG_BG2HOFS, 0);
-    write16(REG_BG2VOFS, 0);
-    write16(REG_BG3HOFS, 0);
-    write16(REG_BG3VOFS, 0);
+    WRITE_16(REG_BG0HOFS, 0);
+    WRITE_16(REG_BG0VOFS, 0x1000);
+    WRITE_16(REG_BG1HOFS, 4);
+    WRITE_16(REG_BG1VOFS, 0x1000);
+    WRITE_16(REG_BG2HOFS, 0);
+    WRITE_16(REG_BG2VOFS, 0);
+    WRITE_16(REG_BG3HOFS, 0);
+    WRITE_16(REG_BG3VOFS, 0);
 
     ENDING_DATA.unk_E = 0x80;
     ENDING_DATA.dispcnt = DCNT_BG0 | DCNT_BG1 | DCNT_BG2 | DCNT_BG3;
     ENDING_DATA.bldcnt = BLDCNT_BG2_FIRST_TARGET_PIXEL | BLDCNT_BRIGHTNESS_DECREASE_EFFECT;
 
-    gWrittenToBLDALPHA_L = 16;
-    gWrittenToBLDALPHA_H = 0;
-    gWrittenToBLDY_NonGameplay = BLDY_MAX_VALUE;
+    gWrittenToBldalpha_L = BLDALPHA_MAX_VALUE;
+    gWrittenToBldalpha_H = 0;
+    gWrittenToBldy_NonGameplay = BLDY_MAX_VALUE;
 
     GalleryVBlank();
     PlayMusic(MUSIC_CREDITS, 0);
@@ -691,7 +545,7 @@ void CreditsInit(void)
  * @param line Line
  * @return u8 To document
  */
-u8 CreditsDisplayLine(u32 line)
+static u8 CreditsDisplayLine(u32 line)
 {
     u8 i;
     s32 tile;
@@ -828,12 +682,12 @@ u8 CreditsDisplayLine(u32 line)
                     break;
                 }
                 
-                if ((u8)(pCredits->text[i] - 0x41) < 0x1A)
+                if (pCredits->text[i] >= 'A' && pCredits->text[i] <= 'Z')
                 {
                     ENDING_DATA.creditLineTilemap_1[tilemapOffset] = pCredits->text[i] + (tile - 1);
                     ENDING_DATA.creditLineTilemap_2[tilemapOffset] = pCredits->text[i] + (tile + 0x1F);
                 }
-                else if ((u8)(pCredits->text[i] - 0x61) < 0x1A)
+                else if (pCredits->text[i] >= 'a' && pCredits->text[i] <= 'z')
                 {
                     ENDING_DATA.creditLineTilemap_1[tilemapOffset] = pCredits->text[i] + (tile + 0x1F);
                     ENDING_DATA.creditLineTilemap_2[tilemapOffset] = pCredits->text[i] + (tile + 0x3F);
@@ -855,6 +709,22 @@ u8 CreditsDisplayLine(u32 line)
                     ENDING_DATA.creditLineTilemap_1[tilemapOffset] = tile + 0x9A;
                     ENDING_DATA.creditLineTilemap_2[tilemapOffset] = tile + 0xBA;
                 }
+                #ifdef REGION_EU
+                else if (pCredits->text[i] == 0x23) // ó
+                {
+                    ENDING_DATA.creditLineTilemap_1[tilemapOffset] = tile + 0x9B;
+                    ENDING_DATA.creditLineTilemap_2[tilemapOffset] = tile + 0xBB;
+                }
+                else if (pCredits->text[i] == 0x24) // ß
+                {
+                    ENDING_DATA.creditLineTilemap_1[tilemapOffset] = tile + 0x5D;
+                    ENDING_DATA.creditLineTilemap_2[tilemapOffset] = tile + 0x7D;
+                }
+                else if (pCredits->text[i] == 0x25) // acute accent (´)
+                {
+                    ENDING_DATA.creditLineTilemap_2[tilemapOffset] = tile + 0x7E;
+                }
+                #endif // REGION_EU
 
                 i++;
                 tilemapOffset++;
@@ -871,7 +741,7 @@ u8 CreditsDisplayLine(u32 line)
  * 
  * @return u8 bool, ended
  */
-u8 CreditsDisplay(void)
+static u8 CreditsDisplay(void)
 {
     u8 ended;
     s32 temp;
@@ -885,17 +755,17 @@ u8 CreditsDisplay(void)
         ended = FALSE;
         switch (ENDING_DATA.timer++)
         {
-            case 464:
+            case CONVERT_SECONDS(7.f) + CONVERT_SECONDS(11.f / 15.f):
                 ENDING_DATA.unk_1++;
                 break;
 
-            case 528:
+            case CONVERT_SECONDS(8.8f):
                 ENDING_DATA.bldcnt = BLDCNT_BG0_FIRST_TARGET_PIXEL | BLDCNT_ALPHA_BLENDING_EFFECT | BLDCNT_BG2_SECOND_TARGET_PIXEL;
-                gWrittenToBLDY_NonGameplay = 0;
+                gWrittenToBldy_NonGameplay = 0;
                 ENDING_DATA.unk_1++;
                 break;
 
-            case 560:
+            case CONVERT_SECONDS(9.f) + ONE_THIRD_SECOND:
                 ENDING_DATA.dispcnt = DCNT_BG2 | DCNT_BG3;
                 ENDING_DATA.bldcnt = 0;
                 ended = TRUE;
@@ -904,20 +774,20 @@ u8 CreditsDisplay(void)
 
         if (ENDING_DATA.unk_1 == 2)
         {
-            if (!(ENDING_DATA.endScreenTimer++ & 3))
+            if (MOD_AND(ENDING_DATA.endScreenTimer++, 4) == 0)
             {
-                if (gWrittenToBLDY_NonGameplay)
-                    gWrittenToBLDY_NonGameplay--;
+                if (gWrittenToBldy_NonGameplay)
+                    gWrittenToBldy_NonGameplay--;
             }
         }
         else if (ENDING_DATA.unk_1 == 3)
         {
-            if (ENDING_DATA.timer & 1)
+            if (MOD_AND(ENDING_DATA.timer, 2))
             {
-                if (gWrittenToBLDALPHA_L)
+                if (gWrittenToBldalpha_L)
                 {
-                    gWrittenToBLDALPHA_L--;
-                    gWrittenToBLDALPHA_H = 16 - gWrittenToBLDALPHA_L;
+                    gWrittenToBldalpha_L--;
+                    gWrittenToBldalpha_H = BLDALPHA_MAX_VALUE - gWrittenToBldalpha_L;
                 }
                 else
                     ENDING_DATA.unk_1++;
@@ -927,9 +797,9 @@ u8 CreditsDisplay(void)
         return ended;
     }
 
-    if (ENDING_DATA.unk_E > 127)
+    if (ENDING_DATA.unk_E > 0x7F)
     {
-        ENDING_DATA.unk_E &= 127;
+        ENDING_DATA.unk_E &= 0x7F;
 
         if (ENDING_DATA.unk_8 == ENDING_DATA.unk_A)
         {
@@ -967,8 +837,14 @@ u8 CreditsDisplay(void)
         ENDING_DATA.unk_8++;
     }
 
+    #ifdef REGION_EU
+    ENDING_DATA.unk_E += 9;
+    gBg0YPosition += 9;
+    #else // !REGION_EU
     ENDING_DATA.unk_E += 7;
     gBg0YPosition += 7;
+    #endif // REGION_EU
+
     return FALSE;
 }
 
@@ -977,7 +853,7 @@ u8 CreditsDisplay(void)
  * 
  * @return u8 bool, ended
  */
-u8 CreditsChozoWallMovement(void)
+static u8 CreditsChozoWallMovement(void)
 {
     u8 ended;
 
@@ -995,8 +871,8 @@ u8 CreditsChozoWallMovement(void)
             ENDING_DATA.unk_1++;
             break;
 
-        case 512:
-            write16(REG_BG1HOFS, 0);
+        case CONVERT_SECONDS(8.f) + CONVERT_SECONDS(8.f / 15.f):
+            WRITE_16(REG_BG1HOFS, 0);
             ended = TRUE;
             break;
     }
@@ -1019,7 +895,7 @@ u8 CreditsChozoWallMovement(void)
  * 
  * @return u8 bool, ended (0/2)
  */
-u8 CreditsChozoWallZoom(void)
+static u8 CreditsChozoWallZoom(void)
 {
     u8 ended;
 
@@ -1029,15 +905,19 @@ u8 CreditsChozoWallZoom(void)
     {
         case 0:
             LZ77UncompVRAM(sCreditsChozoWallBottomZoomedGfx, VRAM_BASE);
+            #ifdef REGION_EU
+            DmaTransfer(3, sCreditsChozoWallPal, PALRAM_BASE, sizeof(sCreditsChozoWallPal), 16);
+            #else // !REGION_EU
             DMA_SET(3, sCreditsChozoWallPal, PALRAM_BASE, DMA_ENABLE << 16 | ARRAY_SIZE(sCreditsChozoWallPal));
+            #endif // REGION_EU
             gBg0YPosition = 0;
-            gWrittenToBLDALPHA_L = 0;
-            gWrittenToBLDALPHA_H = 16;
+            gWrittenToBldalpha_L = 0;
+            gWrittenToBldalpha_H = 16;
             break;
 
         case 1:
             LZ77UncompVRAM(sCreditsChozoWallBottomZoomedTileTable, VRAM_BASE + 0xF000);
-            write16(REG_BG0CNT, 0x1E00);
+            WRITE_16(REG_BG0CNT, CREATE_BGCNT(0, 30, BGCNT_HIGH_PRIORITY, BGCNT_SIZE_256x256));
             ENDING_DATA.dispcnt = DCNT_BG0 | DCNT_BG2 | DCNT_BG3;
             ENDING_DATA.bldcnt = BLDCNT_BG0_FIRST_TARGET_PIXEL | BLDCNT_ALPHA_BLENDING_EFFECT |
                 BLDCNT_BG2_SECOND_TARGET_PIXEL | BLDCNT_BG3_SECOND_TARGET_PIXEL;
@@ -1045,20 +925,20 @@ u8 CreditsChozoWallZoom(void)
             ENDING_DATA.unk_1++;
             break;
 
-        case 192:
+        case CONVERT_SECONDS(3.2f):
             ENDING_DATA.dispcnt = DCNT_BG0;
             ENDING_DATA.bldcnt = 0;
             ENDING_DATA.unk_1++;
             gBg1YPosition = 0;
-            gWrittenToBLDALPHA_L = 16;
-            gWrittenToBLDALPHA_H = 0;
+            gWrittenToBldalpha_L = 16;
+            gWrittenToBldalpha_H = 0;
             break;
 
-        case 193:
+        case CONVERT_SECONDS(3.2f) + CONVERT_SECONDS(1.f / 60):
             LZ77UncompVRAM(sCreditsChozoDrawingGfx, VRAM_BASE + 0x8000);
             break;
 
-        case 194:
+        case CONVERT_SECONDS(3.2f) + CONVERT_SECONDS(2.f / 60):
             LZ77UncompVRAM(sCreditsChozoDrawingTileTable, VRAM_BASE + 0xF800);
             ENDING_DATA.dispcnt = DCNT_BG0 | DCNT_BG1;
             ENDING_DATA.bldcnt = BLDCNT_BG0_FIRST_TARGET_PIXEL | BLDCNT_ALPHA_BLENDING_EFFECT | BLDCNT_BG1_SECOND_TARGET_PIXEL;
@@ -1066,46 +946,46 @@ u8 CreditsChozoWallZoom(void)
             ENDING_DATA.unk_1++;
             break;
 
-        case 800:
+        case CONVERT_SECONDS(13.f) + ONE_THIRD_SECOND:
             ENDING_DATA.dispcnt = DCNT_BG1;
             ENDING_DATA.bldcnt = BLDCNT_SCREEN_FIRST_TARGET | BLDCNT_BRIGHTNESS_DECREASE_EFFECT;
 
             ENDING_DATA.unk_1++;
             break;
 
-        case 960:
+        case CONVERT_SECONDS(16.f):
             ended = 2;
             break;
     }
 
     if (ENDING_DATA.unk_1 == 1)
     {
-        if (!(ENDING_DATA.timer & 7))
+        if (MOD_AND(ENDING_DATA.timer, 8) == 0)
         {
-            if (gWrittenToBLDALPHA_L < 16)
-                gWrittenToBLDALPHA_L++;
+            if (gWrittenToBldalpha_L < BLDALPHA_MAX_VALUE)
+                gWrittenToBldalpha_L++;
 
-            if (gWrittenToBLDALPHA_H != 0)
-                gWrittenToBLDALPHA_H--;
+            if (gWrittenToBldalpha_H != 0)
+                gWrittenToBldalpha_H--;
         }
     }
     else if (ENDING_DATA.unk_1 == 3)
     {
-        if (!(ENDING_DATA.timer & 7))
+        if (MOD_AND(ENDING_DATA.timer, 8) == 0)
         {
-            if (gWrittenToBLDALPHA_L != 0)
-                gWrittenToBLDALPHA_L--;
+            if (gWrittenToBldalpha_L != 0)
+                gWrittenToBldalpha_L--;
 
-            if (gWrittenToBLDALPHA_H < 16)
-                gWrittenToBLDALPHA_H++;
+            if (gWrittenToBldalpha_H < BLDALPHA_MAX_VALUE)
+                gWrittenToBldalpha_H++;
         }
     }
     else if (ENDING_DATA.unk_1 == 4)
     {
-        if (!(ENDING_DATA.timer & 7))
+        if (MOD_AND(ENDING_DATA.timer, 8) == 0)
         {
-            if (gWrittenToBLDY_NonGameplay < BLDY_MAX_VALUE)
-                gWrittenToBLDY_NonGameplay++;
+            if (gWrittenToBldy_NonGameplay < BLDY_MAX_VALUE)
+                gWrittenToBldy_NonGameplay++;
         }
     }
 
@@ -1116,21 +996,19 @@ u8 CreditsChozoWallZoom(void)
  * @brief 85e08 | 248 | Initializes the end screen (samus posing)
  * 
  */
-void EndScreenInit(void)
+static void EndScreenInit(void)
 {
-    u32 zero;
+    WRITE_16(REG_IME, FALSE);
+    WRITE_16(REG_DISPSTAT, READ_16(REG_DISPSTAT) & ~DSTAT_IF_HBLANK);
+    WRITE_16(REG_IE, READ_16(REG_IE) & ~IF_HBLANK);
+    WRITE_16(REG_IF, IF_HBLANK);
 
-    write16(REG_IME, FALSE);
-    write16(REG_DISPSTAT, read16(REG_DISPSTAT) & ~DSTAT_IF_HBLANK);
-    write16(REG_IE, read16(REG_IE) & ~IF_HBLANK);
-    write16(REG_IF, IF_HBLANK);
+    WRITE_16(REG_IME, TRUE);
+    WRITE_16(REG_DISPCNT, 0);
 
-    write16(REG_IME, TRUE);
-    write16(REG_DISPCNT, 0);
-
-    write16(REG_IME, FALSE);
-    CallbackSetVBlank(EndScreenVBlank);
-    write16(REG_IME, TRUE);
+    WRITE_16(REG_IME, FALSE);
+    CallbackSetVblank(EndScreenVBlank);
+    WRITE_16(REG_IME, TRUE);
 
     LZ77UncompVRAM(sEndingSamusPosingSpaceBackgroundGfx, VRAM_BASE + 0x3000);
     LZ77UncompVRAM(sEndingLightGfx, VRAM_BASE + 0xB000);
@@ -1145,16 +1023,24 @@ void EndScreenInit(void)
     BitFill(3, 0, VRAM_BASE + 0xD800, 0x800, 32);
     BitFill(3, 0, VRAM_BASE + 0xE800, 0x800, 32);
 
-    DMA_SET(3, sEndingPosingPal, PALRAM_BASE, DMA_ENABLE << 16 | ARRAY_SIZE(sEndingPosingPal));
+    #ifdef REGION_EU
+    DmaTransfer(3, sEndingPosingPal, PALRAM_BASE, sizeof(sEndingPosingPal), 16);
+    #else // !REGION_EU
+    DMA_SET(3, sEndingPosingPal, PALRAM_BASE, C_32_2_16(DMA_ENABLE, ARRAY_SIZE(sEndingPosingPal)));
+    #endif // REGION_EU
 
-    write16(REG_BG0CNT, 0x1E08);
-    write16(REG_BG1CNT, 0x5A01);
-    write16(REG_BG2CNT, 0x5C0A);
-    write16(REG_BG3CNT, 0x1F03);
+    WRITE_16(REG_BG0CNT, CREATE_BGCNT(2, 30, BGCNT_HIGH_PRIORITY, BGCNT_SIZE_256x256));
+    WRITE_16(REG_BG1CNT, CREATE_BGCNT(0, 26, BGCNT_HIGH_MID_PRIORITY, BGCNT_SIZE_512x256));
+    WRITE_16(REG_BG2CNT, CREATE_BGCNT(2, 28, BGCNT_LOW_MID_PRIORITY, BGCNT_SIZE_512x256));
+    WRITE_16(REG_BG3CNT, CREATE_BGCNT(0, 31, BGCNT_LOW_PRIORITY, BGCNT_SIZE_256x256));
     
     gNextOamSlot = 0;
     ResetFreeOam();
-    DMA_SET(3, gOamData, OAM_BASE, (DMA_ENABLE | DMA_32BIT) << 16 | OAM_SIZE / sizeof(u32));
+    #ifdef REGION_EU
+    DmaTransfer(3, gOamData, OAM_BASE, OAM_SIZE, 32);
+    #else // !REGION_EU
+    DMA_SET(3, gOamData, OAM_BASE, C_32_2_16(DMA_ENABLE | DMA_32BIT, OAM_SIZE / sizeof(u32)));
+    #endif // REGION_EU
 
     gBg0XPosition = 0;
     gBg0YPosition = 0;
@@ -1165,24 +1051,23 @@ void EndScreenInit(void)
     gBg3XPosition = 0;
     gBg3YPosition = 0;
 
-    write16(REG_BG0HOFS, 0);
-    write16(REG_BG0VOFS, 0);
-    write16(REG_BG1HOFS, 0x100);
-    write16(REG_BG1VOFS, 0);
-    write16(REG_BG2HOFS, 0x100);
-    write16(REG_BG2VOFS, 0);
-    write16(REG_BG3HOFS, 0);
-    write16(REG_BG3VOFS, 0);
+    WRITE_16(REG_BG0HOFS, 0);
+    WRITE_16(REG_BG0VOFS, 0);
+    WRITE_16(REG_BG1HOFS, 0x100);
+    WRITE_16(REG_BG1VOFS, 0);
+    WRITE_16(REG_BG2HOFS, 0x100);
+    WRITE_16(REG_BG2VOFS, 0);
+    WRITE_16(REG_BG3HOFS, 0);
+    WRITE_16(REG_BG3VOFS, 0);
 
-    zero = 0;
-    DMA_SET(3, &zero, &gNonGameplayRAM, (DMA_ENABLE | DMA_32BIT | DMA_SRC_FIXED) << 16 | sizeof(gNonGameplayRAM) / 4);
+    DMA_FILL_32(3, 0, &gNonGameplayRam, sizeof(gNonGameplayRam));
 
     ENDING_DATA.endingNumber = PEN_GET_ENDING(ChozodiaEscapeGetItemCountAndEndingNumber()) & 7;
     ENDING_DATA.dispcnt = DCNT_BG1 | DCNT_BG2 | DCNT_BG3 | DCNT_OBJ;
 
-    gWrittenToBLDALPHA_L = 16;
-    gWrittenToBLDALPHA_H = 0;
-    gWrittenToBLDY_NonGameplay = BLDY_MAX_VALUE;
+    gWrittenToBldalpha_L = BLDALPHA_MAX_VALUE;
+    gWrittenToBldalpha_H = 0;
+    gWrittenToBldy_NonGameplay = BLDY_MAX_VALUE;
 
     EndScreenVBlank();
 }
@@ -1192,7 +1077,7 @@ void EndScreenInit(void)
  * 
  * @return u8 bool, ended
  */
-u8 EndScreenSamusPosing(void)
+static u8 EndScreenSamusPosing(void)
 {
     u8 ended;
     u32 temp;
@@ -1303,15 +1188,15 @@ u8 EndScreenSamusPosing(void)
         case 1:
             if (ENDING_DATA.endScreenTimer & 1)
             {
-                if (gWrittenToBLDALPHA_L != 0)
-                    gWrittenToBLDALPHA_L--;
+                if (gWrittenToBldalpha_L != 0)
+                    gWrittenToBldalpha_L--;
                 else
                 {
                     ENDING_DATA.oamTypes[0] = 0;
                     ENDING_DATA.oamTypes[1]++;
                 }
 
-                gWrittenToBLDALPHA_H = 16 - gWrittenToBLDALPHA_L;
+                gWrittenToBldalpha_H = BLDALPHA_MAX_VALUE - gWrittenToBldalpha_L;
             }
             break;
 
@@ -1319,8 +1204,8 @@ u8 EndScreenSamusPosing(void)
             if (ENDING_DATA.endScreenTimer & 3)
                 break;
 
-            if (gWrittenToBLDALPHA_L < 16)
-                gWrittenToBLDALPHA_L++;
+            if (gWrittenToBldalpha_L < BLDALPHA_MAX_VALUE)
+                gWrittenToBldalpha_L++;
             else
             {
                 ENDING_DATA.oamTypes[0] = 0;
@@ -1337,26 +1222,31 @@ u8 EndScreenSamusPosing(void)
                 ENDING_DATA.oamTypes[1] = 16;
                 break;
             }
+            #ifdef REGION_EU
+            DmaTransfer(3, sEndingWhitePalPointers[(u8)temp / 4],
+                PALRAM_BASE, sizeof(sEndingPosingPal_White1), 16);
+            #else // !REGION_EU
             DMA_SET(3, sEndingWhitePalPointers[(u8)temp / 4],
                 PALRAM_BASE, DMA_ENABLE << 16 | ARRAY_SIZE(sEndingPosingPal_White1));
+            #endif // REGION_EU
             break;
 
         case 4:
-            if (!(ENDING_DATA.endScreenTimer & 1))
+            if (MOD_AND(ENDING_DATA.endScreenTimer, 2) == 0)
                 break;
 
-            if (gWrittenToBLDY_NonGameplay < BLDY_MAX_VALUE)
-                gWrittenToBLDY_NonGameplay++;
+            if (gWrittenToBldy_NonGameplay < BLDY_MAX_VALUE)
+                gWrittenToBldy_NonGameplay++;
             else
                 ENDING_DATA.oamTypes[1]++;
             break;
 
         case 5:
-            if (ENDING_DATA.endScreenTimer & 3)
+            if (MOD_AND(ENDING_DATA.endScreenTimer, 4))
                 break;
 
-            if (gWrittenToBLDY_NonGameplay)
-                gWrittenToBLDY_NonGameplay--;
+            if (gWrittenToBldy_NonGameplay)
+                gWrittenToBldy_NonGameplay--;
             else
             {
                 ENDING_DATA.oamTypes[0] = 0;
@@ -1368,50 +1258,50 @@ u8 EndScreenSamusPosing(void)
     switch (ENDING_DATA.oamTypes[1])
     {
         case 1:
-            write16(REG_BG1CNT, 0x5A02);
-            write16(REG_BG2CNT, 0x5C09);
+            WRITE_16(REG_BG1CNT, CREATE_BGCNT(0, 26, BGCNT_LOW_MID_PRIORITY, BGCNT_SIZE_512x256));
+            WRITE_16(REG_BG2CNT, CREATE_BGCNT(2, 28, BGCNT_HIGH_MID_PRIORITY, BGCNT_SIZE_512x256));
 
             LZ77UncompVRAM(sEndingSamusPosingGfx_3, VRAM_BASE);
             LZ77UncompVRAM(sEndingSamusPosingTileTable_3, VRAM_BASE + 0xD000);
 
             ENDING_DATA.bldcnt = 0;
-            gWrittenToBLDALPHA_L = 16;
-            gWrittenToBLDALPHA_H = 0;
+            gWrittenToBldalpha_L = BLDALPHA_MAX_VALUE;
+            gWrittenToBldalpha_H = 0;
             gBg1XPosition = BLOCK_SIZE * 4;
             ENDING_DATA.oamTypes[1]++;
             break;
 
         case 3:
-            write16(REG_BG1CNT, 0x5A01);
-            write16(REG_BG2CNT, 0x5C0A);
+            WRITE_16(REG_BG1CNT, CREATE_BGCNT(0, 26, BGCNT_HIGH_MID_PRIORITY, BGCNT_SIZE_512x256));
+            WRITE_16(REG_BG2CNT, CREATE_BGCNT(2, 28, BGCNT_LOW_MID_PRIORITY, BGCNT_SIZE_512x256));
 
             LZ77UncompVRAM(sEndingSamusPosingGfx_4, VRAM_BASE + 0x8000);
             LZ77UncompVRAM(sEndingSamusPosingTileTable_4, VRAM_BASE + 0xE000);
 
             ENDING_DATA.bldcnt = 0;
-            gWrittenToBLDALPHA_L = 16;
-            gWrittenToBLDALPHA_H = 0;
+            gWrittenToBldalpha_L = BLDALPHA_MAX_VALUE;
+            gWrittenToBldalpha_H = 0;
             gBg2XPosition = BLOCK_SIZE * 4;
             ENDING_DATA.oamTypes[1]++;
             break;
 
         case 5:
-            write16(REG_BG1CNT, 0x5A02);
-            write16(REG_BG2CNT, 0x5C09);
+            WRITE_16(REG_BG1CNT, CREATE_BGCNT(0, 26, BGCNT_LOW_MID_PRIORITY, BGCNT_SIZE_512x256));
+            WRITE_16(REG_BG2CNT, CREATE_BGCNT(2, 28, BGCNT_HIGH_MID_PRIORITY, BGCNT_SIZE_512x256));
 
             LZ77UncompVRAM(sEndingSamusPosingGfx_5, VRAM_BASE);
             LZ77UncompVRAM(sEndingSamusPosingTileTable_5, VRAM_BASE + 0xD000);
 
             ENDING_DATA.bldcnt = 0;
-            gWrittenToBLDALPHA_L = 16;
-            gWrittenToBLDALPHA_H = 0;
+            gWrittenToBldalpha_L = BLDALPHA_MAX_VALUE;
+            gWrittenToBldalpha_H = 0;
             gBg1XPosition = BLOCK_SIZE * 4;
             ENDING_DATA.oamTypes[1]++;
             break;
 
         case 7:
-            write16(REG_BG1CNT, 0x5A01);
-            write16(REG_BG2CNT, 0x5C0A);
+            WRITE_16(REG_BG1CNT, CREATE_BGCNT(0, 26, BGCNT_HIGH_MID_PRIORITY, BGCNT_SIZE_512x256));
+            WRITE_16(REG_BG2CNT, CREATE_BGCNT(2, 28, BGCNT_LOW_MID_PRIORITY, BGCNT_SIZE_512x256));
 
             if (ENDING_DATA.endingNumber == 0)
             {
@@ -1431,8 +1321,8 @@ u8 EndScreenSamusPosing(void)
 
             ENDING_DATA.dispcnt = DCNT_BG1 | DCNT_BG3;
             ENDING_DATA.bldcnt = 0;
-            gWrittenToBLDALPHA_L = 16;
-            gWrittenToBLDALPHA_H = 0;
+            gWrittenToBldalpha_L = BLDALPHA_MAX_VALUE;
+            gWrittenToBldalpha_H = 0;
             gBg2XPosition = 0;
 
             ENDING_DATA.oamTypes[1]++;
@@ -1443,8 +1333,8 @@ u8 EndScreenSamusPosing(void)
             ENDING_DATA.bldcnt = BLDCNT_BG0_FIRST_TARGET_PIXEL | BLDCNT_ALPHA_BLENDING_EFFECT |
                 BLDCNT_BG2_SECOND_TARGET_PIXEL | BLDCNT_BG3_SECOND_TARGET_PIXEL;
             
-            gWrittenToBLDALPHA_L = 0;
-            gWrittenToBLDALPHA_H = 16;
+            gWrittenToBldalpha_L = 0;
+            gWrittenToBldalpha_H = BLDALPHA_MAX_VALUE;
             ENDING_DATA.oamTypes[0] = 2;
             ENDING_DATA.oamTypes[1]++;
             break;
@@ -1468,7 +1358,11 @@ u8 EndScreenSamusPosing(void)
             break;
 
         case 19:
-            DMA_SET(3, sEndingPosingPal, PALRAM_BASE, DMA_ENABLE << 16 | 0x50);
+            #ifdef REGION_EU
+            DmaTransfer(3, sEndingPosingPal, PALRAM_BASE, 5 * PAL_ROW_SIZE, 16);
+            #else // !REGION_EU
+            DMA_SET(3, sEndingPosingPal, PALRAM_BASE, C_32_2_16(DMA_ENABLE, 0x50));
+            #endif // REGION_EU
             ENDING_DATA.oamTypes[1]++;
             break;
 
@@ -1476,25 +1370,24 @@ u8 EndScreenSamusPosing(void)
             ENDING_DATA.dispcnt = DCNT_BG2 | DCNT_BG3;
             ENDING_DATA.bldcnt = BLDCNT_SCREEN_FIRST_TARGET | BLDCNT_BRIGHTNESS_DECREASE_EFFECT;
 
-            gWrittenToBLDALPHA_L = 16;
-            gWrittenToBLDALPHA_H = 0;
+            gWrittenToBldalpha_L = BLDALPHA_MAX_VALUE;
+            gWrittenToBldalpha_H = 0;
             ended++;
             break;
     }
 
-    if (!(ENDING_DATA.endScreenTimer & 7))
+    if (MOD_AND(ENDING_DATA.endScreenTimer, 8) == 0)
         gBg3XPosition++;
 
     return ended;
 }
 
 /**
- * @brief 867b4 | 29c | Initiliazes the ending image sequence
+ * @brief 867b4 | 29c | Initializes the ending image sequence
  * 
  */
-void EndingImageInit(void)
+static void EndingImageInit(void)
 {
-    u32 zero;
     u32 endingNbr;
     u32 energyNbr;
     u32 missilesNbr;
@@ -1503,19 +1396,18 @@ void EndingImageInit(void)
     u32 abilityCount;
     u32 pen;
 
-    write16(REG_IME, FALSE);
-    write16(REG_DISPSTAT, read16(REG_DISPSTAT) & ~DSTAT_IF_HBLANK);
-    write16(REG_IE, read16(REG_IE) & ~IF_HBLANK);
-    write16(REG_IF, IF_HBLANK);
-    write16(REG_IME, TRUE);
-    write16(REG_DISPCNT, 0);
-    write16(REG_IME, FALSE);
+    WRITE_16(REG_IME, FALSE);
+    WRITE_16(REG_DISPSTAT, READ_16(REG_DISPSTAT) & ~DSTAT_IF_HBLANK);
+    WRITE_16(REG_IE, READ_16(REG_IE) & ~IF_HBLANK);
+    WRITE_16(REG_IF, IF_HBLANK);
+    WRITE_16(REG_IME, TRUE);
+    WRITE_16(REG_DISPCNT, 0);
+    WRITE_16(REG_IME, FALSE);
 
-    CallbackSetVBlank(GalleryVBlank);
-    write16(REG_IME, TRUE);
+    CallbackSetVblank(GalleryVBlank);
+    WRITE_16(REG_IME, TRUE);
 
-    zero = 0;
-    DMA_SET(3, &zero, &gNonGameplayRAM, (DMA_ENABLE | DMA_32BIT | DMA_SRC_FIXED) << 16 | sizeof(gNonGameplayRAM) / 4);
+    DMA_FILL_32(3, 0, &gNonGameplayRam, sizeof(gNonGameplayRam));
 
     pen = ChozodiaEscapeGetItemCountAndEndingNumber();
 
@@ -1531,26 +1423,72 @@ void EndingImageInit(void)
     LZ77UncompVRAM(sEndingImagesTopTileTablePointers[endingNbr], VRAM_BASE + 0xE000);
     LZ77UncompVRAM(sEndingImagesHalfTileTablePointers[endingNbr], VRAM_BASE + 0xF800);
     BitFill(3, 0x4FF04FF, VRAM_BASE + 0xE800, 0x800, 0x20);
-    DMA_SET(3, sEndingImagesPalPointers[endingNbr], PALRAM_BASE, DMA_ENABLE << 16 | 0x100);
+    #ifdef REGION_EU
+    DmaTransfer(3, sEndingImagesPalPointers[endingNbr], PALRAM_BASE, PAL_SIZE, 16);
+    #else // !REGION_EU
+    DMA_SET(3, sEndingImagesPalPointers[endingNbr], PALRAM_BASE, C_32_2_16(DMA_ENABLE, 0x100));
+    #endif // REGION_EU
 
     ENDING_DATA.completionPercentage = RandoGetFinalCompletionPercentage();
 
-    LZ77UncompVRAM(sEndingImageNumbersMiscGfx, VRAM_OBJ);
+    #ifndef REGION_EU
+    LZ77UncompVRAM(sEndingImageNumbersMiscEnglishGfx, VRAM_OBJ);
+    #endif // !REGION_EU
 
     ENDING_DATA.language = gLanguage;
+
+    #ifdef REGION_EU
+    switch (ENDING_DATA.language)
+    {
+        case LANGUAGE_GERMAN:
+            LZ77UncompVRAM(sEndingImageNumbersMiscGermanGfx, VRAM_OBJ);
+            LZ77UncompVRAM(sEndingImageTextGermanGfx, VRAM_BASE + 0x11000);
+            break;
+        
+        case LANGUAGE_FRENCH:
+            LZ77UncompVRAM(sEndingImageNumbersMiscFrenchGfx, VRAM_OBJ);
+            LZ77UncompVRAM(sEndingImageTextFrenchGfx, VRAM_BASE + 0x11000);
+            break;
+
+        case LANGUAGE_ITALIAN:
+            LZ77UncompVRAM(sEndingImageNumbersMiscItalianGfx, VRAM_OBJ);
+            LZ77UncompVRAM(sEndingImageTextItalianGfx, VRAM_BASE + 0x11000);
+            break;
+
+        case LANGUAGE_SPANISH:
+            LZ77UncompVRAM(sEndingImageNumbersMiscSpanishGfx, VRAM_OBJ);
+            LZ77UncompVRAM(sEndingImageTextSpanishGfx, VRAM_BASE + 0x11000);
+            break;
+
+        case LANGUAGE_HIRAGANA:
+            LZ77UncompVRAM(sEndingImageNumbersMiscEnglishGfx, VRAM_OBJ);
+            LZ77UncompVRAM(sEndingImageTextHiraganaGfx, VRAM_BASE + 0x11000);
+            break;
+
+        default:
+            LZ77UncompVRAM(sEndingImageNumbersMiscEnglishGfx, VRAM_OBJ);
+            LZ77UncompVRAM(sEndingImageTextEnglishGfx, VRAM_BASE + 0x11000);
+            break;
+    }
+    #else // !REGION_EU
     if (gLanguage > LANGUAGE_ENGLISH)
         ENDING_DATA.language = LANGUAGE_ENGLISH;
 
     if (ENDING_DATA.language == LANGUAGE_HIRAGANA)
-        LZ77UncompVRAM(sEndingImageTextJapGfx, VRAM_BASE + 0x11000);
+        LZ77UncompVRAM(sEndingImageTextHiraganaGfx, VRAM_BASE + 0x11000);
     else
-        LZ77UncompVRAM(sEndingImageTextGfx, VRAM_BASE + 0x11000);
+        LZ77UncompVRAM(sEndingImageTextEnglishGfx, VRAM_BASE + 0x11000);
+    #endif // REGION_EU
 
-    DMA_SET(3, sEndingImageTextPal, PALRAM_OBJ, DMA_ENABLE << 16 | sizeof(sEndingImageTextPal) / 2);
+    #ifdef REGION_EU
+    DmaTransfer(3, sEndingImageTextPal, PALRAM_OBJ, sizeof(sEndingImageTextPal), 16);
+    #else // !REGION_EU
+    DMA_SET(3, sEndingImageTextPal, PALRAM_OBJ, C_32_2_16(DMA_ENABLE, ARRAY_SIZE(sEndingImageTextPal)));
+    #endif // REGION_EU
 
     EndingImageLoadIGTAndPercentageGraphics();
-    write16(REG_BG0CNT, 0x9C00);
-    write16(REG_BG1CNT, 0x9E09);
+    WRITE_16(REG_BG0CNT, CREATE_BGCNT(0, 28, BGCNT_HIGH_PRIORITY, BGCNT_SIZE_256x512));
+    WRITE_16(REG_BG1CNT, CREATE_BGCNT(2, 30, BGCNT_HIGH_MID_PRIORITY, BGCNT_SIZE_256x512));
 
     gNextOamSlot = 0;
     ResetFreeOam();
@@ -1564,21 +1502,21 @@ void EndingImageInit(void)
     gBg3XPosition = 0;
     gBg3YPosition = 0;
 
-    write16(REG_BG0HOFS, 0);
-    write16(REG_BG0VOFS, 0);
-    write16(REG_BG1HOFS, 0);
-    write16(REG_BG1VOFS, 0);
-    write16(REG_BG2HOFS, 0);
-    write16(REG_BG2VOFS, 0);
-    write16(REG_BG3HOFS, 0);
-    write16(REG_BG3VOFS, 0);
+    WRITE_16(REG_BG0HOFS, 0);
+    WRITE_16(REG_BG0VOFS, 0);
+    WRITE_16(REG_BG1HOFS, 0);
+    WRITE_16(REG_BG1VOFS, 0);
+    WRITE_16(REG_BG2HOFS, 0);
+    WRITE_16(REG_BG2VOFS, 0);
+    WRITE_16(REG_BG3HOFS, 0);
+    WRITE_16(REG_BG3VOFS, 0);
 
     ENDING_DATA.dispcnt = DCNT_OBJ | DCNT_BG0 | DCNT_BG1;
     ENDING_DATA.bldcnt = BLDCNT_SCREEN_FIRST_TARGET | BLDCNT_BRIGHTNESS_DECREASE_EFFECT;
 
-    gWrittenToBLDALPHA_L = 16;
-    gWrittenToBLDALPHA_H = 0;
-    gWrittenToBLDY_NonGameplay = BLDY_MAX_VALUE;
+    gWrittenToBldalpha_L = BLDALPHA_MAX_VALUE;
+    gWrittenToBldalpha_H = 0;
+    gWrittenToBldy_NonGameplay = BLDY_MAX_VALUE;
 
     GalleryVBlank();
 }
@@ -1587,7 +1525,7 @@ void EndingImageInit(void)
  * @brief 86a50 | 23c | Display the text on an ending image
  * 
  */
-void EndingImageDisplayText(void)
+static void EndingImageDisplayText(void)
 {
     u16* dst;
     const u16* src;
@@ -1627,7 +1565,7 @@ void EndingImageDisplayText(void)
 
         src = ENDING_DATA.oamFramePointers[i];
         part = *src++;
-        nextSlot += part & 0xFF;
+        nextSlot += MOD_AND(part, 0x100);
 
         for (; currSlot < nextSlot; currSlot++)
         {
@@ -1639,7 +1577,7 @@ void EndingImageDisplayText(void)
             part = *src++;
             *dst++ = part;
 
-            gOamData[currSlot].split.x = (part + ENDING_DATA.oamXPositions[i]) & 0x1FF;
+            gOamData[currSlot].split.x = MOD_AND(part + ENDING_DATA.oamXPositions[i], 0x200);
 
             *dst++ = *src++;
             gOamData[currSlot].split.paletteNum = palette;
@@ -1655,9 +1593,14 @@ void EndingImageDisplayText(void)
             
         palette = sEndingImageNewRecordPalettes[ENDING_DATA.newRecordPaletteTimer / 6];
 
-        src = sEndingImageOam_NewRecord;
+        #ifdef REGION_EU
+        src = sEndingImageOamPointers_NewRecord[ENDING_DATA.language];
+        #else // !REGION_EU
+        src = sEndingImageOam_NewRecordEnglish;
+        #endif // REGION_EU
+
         part = *src++;
-        nextSlot += part & 0xFF;
+        nextSlot += MOD_AND(part, 0x100);
 
         for (; currSlot < nextSlot; currSlot++)
         {
@@ -1669,7 +1612,7 @@ void EndingImageDisplayText(void)
             part = *src++;
             *dst++ = part;
 
-            gOamData[currSlot].split.x = (part + 48) & 0x1FF;
+            gOamData[currSlot].split.x = MOD_AND(part + 48, 0x200);
 
             *dst++ = *src++;
             gOamData[currSlot].split.paletteNum = palette;
@@ -1686,7 +1629,7 @@ void EndingImageDisplayText(void)
  * 
  * @return u8 bool, ended
  */
-u8 EndingImageDisplay(void)
+static u8 EndingImageDisplay(void)
 {
     u8 ended;
     u8 i;
@@ -1699,58 +1642,58 @@ u8 EndingImageDisplay(void)
             ENDING_DATA.unk_8++;
             break;
 
-        case 30:
+        case CONVERT_SECONDS(.5f):
             EndingImageLoadTextOAM(ENDING_IMAGE_OAM_SET_CLEAR_TIME);
             ENDING_DATA.unk_1 = TRUE;
             break;
 
-        case 110:
+        case CONVERT_SECONDS(1.f) + CONVERT_SECONDS(5.f / 6.f):
             EndingImageDisplayLinePermanently(ENDING_IMAGE_LINE_CLEAR_TIME);
             break;
 
-        case 180:
+        case CONVERT_SECONDS(3.f):
             EndingImageDisplayLinePermanently(ENDING_IMAGE_LINE_TIMER);
             if (gEndingFlags & ENDING_FLAG_NEW_TIME_ATTACK_RECORD)
                 ENDING_DATA.hasNewRecord++;
             break;
 
-        case 330:
+        case CONVERT_SECONDS(5.5f):
             EndingImageLoadTextOAM(ENDING_IMAGE_OAM_SET_YOUR_RATE);
             break;
 
-        case 375:
+        case CONVERT_SECONDS(6.25f):
             if (ENDING_DATA.language == LANGUAGE_JAPANESE || ENDING_DATA.language == LANGUAGE_ENGLISH ||
                 ENDING_DATA.language == LANGUAGE_ITALIAN)
                 EndingImageDisplayLinePermanently(ENDING_IMAGE_LINE_YOUR_RATE);
             break;
 
-        case 380:
+        case CONVERT_SECONDS(6.f) + ONE_THIRD_SECOND:
             if (ENDING_DATA.language == LANGUAGE_JAPANESE || ENDING_DATA.language == LANGUAGE_ENGLISH ||
                 ENDING_DATA.language == LANGUAGE_ITALIAN)
                 EndingImageLoadTextOAM(ENDING_IMAGE_OAM_SET_COLLECTING);
             break;
 
-        case 460:
+        case CONVERT_SECONDS(7.f) + TWO_THIRD_SECOND:
             EndingImageDisplayLinePermanently(ENDING_IMAGE_LINE_COLLECTING);
             break;
 
-        case 530:
+        case CONVERT_SECONDS(8.f) + CONVERT_SECONDS(5.f / 6.f):
             EndingImageDisplayLinePermanently(ENDING_IMAGE_LINE_PERCENTAGE);
             break;
 
-        case 780:
+        case CONVERT_SECONDS(13.f):
             if (ENDING_DATA.language != LANGUAGE_HIRAGANA)
                 EndingImageDisplayLinePermanently(ENDING_IMAGE_LINE_NEXT_MISSION);
             break;
 
-        case 1376:
+        case CONVERT_SECONDS(22.f) + CONVERT_SECONDS(14.f / 15.f):
             if (gChangedInput & (KEY_A | KEY_B | KEY_START))
-                FadeMusic(CONVERT_SECONDS(4.f) + CONVERT_SECONDS(4.f / 15)); // 4.25 + 1 * DELTA_TIME
+                FadeMusic(CONVERT_SECONDS(4.25f) + CONVERT_SECONDS(1.f / 60));
             else
                 ENDING_DATA.timer--;
             break;
 
-        case 1664:
+        case CONVERT_SECONDS(27.f) + CONVERT_SECONDS(11.f / 15.f):
             ended = TRUE;
     }
 
@@ -1769,10 +1712,10 @@ u8 EndingImageDisplay(void)
         }
     }
 
-    if (ENDING_DATA.timer > 1380)
+    if (ENDING_DATA.timer > CONVERT_SECONDS(23.f))
         return ended;
 
-    if (ENDING_DATA.timer > 809 && gButtonInput & (KEY_R | KEY_L))
+    if (ENDING_DATA.timer >= CONVERT_SECONDS(13.5f) && gButtonInput & (KEY_R | KEY_L))
         return ended;
 
     if (ENDING_DATA.unk_1 == TRUE)
@@ -1790,58 +1733,59 @@ u8 EndingImageDisplay(void)
  * @brief 86e78 | 158 | Initializes the unlocked options
  * 
  */
-void UnlockedOptionsInit(void)
+static void UnlockedOptionsInit(void)
 {
-    u32 zero;
+    WRITE_16(REG_IME, FALSE);
+    WRITE_16(REG_DISPSTAT, READ_16(REG_DISPSTAT) & ~DSTAT_IF_HBLANK);
+    WRITE_16(REG_IE, READ_16(REG_IE) & ~IF_HBLANK);
+    WRITE_16(REG_IF, IF_HBLANK);
 
-    write16(REG_IME, FALSE);
-    write16(REG_DISPSTAT, read16(REG_DISPSTAT) & ~DSTAT_IF_HBLANK);
-    write16(REG_IE, read16(REG_IE) & ~IF_HBLANK);
-    write16(REG_IF, IF_HBLANK);
+    WRITE_16(REG_IME, TRUE);
+    WRITE_16(REG_DISPCNT, 0);
 
-    write16(REG_IME, TRUE);
-    write16(REG_DISPCNT, 0);
+    WRITE_16(REG_IME, FALSE);
+    CallbackSetVblank(UnlockedOptionsVBlank);
+    WRITE_16(REG_IME, TRUE);
 
-    write16(REG_IME, FALSE);
-    CallbackSetVBlank(UnlockedOptionsVBlank);
-    write16(REG_IME, TRUE);
-
-    zero = 0;
-    DMA_SET(3, &zero, &gNonGameplayRAM, (DMA_ENABLE | DMA_32BIT | DMA_SRC_FIXED) << 16 | sizeof(gNonGameplayRAM) / 4);
+    DMA_FILL_32(3, 0, &gNonGameplayRam, sizeof(gNonGameplayRam));
     ClearGfxRam();
 
     LZ77UncompVRAM(sUnlockedOptionsTileTable, VRAM_BASE + 0x8000);
     BitFill(3, -1, VRAM_BASE + 0x7FE0, 0x20, 32);
     BitFill(3, 0xF3FFF3FF, VRAM_BASE + 0x8800, 0x800, 32);
 
-    DMA_SET(3, sUnlockedOptionsPal, PALRAM_BASE + 0x1E0, DMA_ENABLE << 16 | ARRAY_SIZE(sUnlockedOptionsPal));
+    #ifdef REGION_EU
+    DmaTransfer(3, sUnlockedOptionsPal, PALRAM_BASE + 15 * PAL_ROW_SIZE, sizeof(sUnlockedOptionsPal), 16);
+    #else // !REGION_EU
+    DMA_SET(3, sUnlockedOptionsPal, PALRAM_BASE + 15 * PAL_ROW_SIZE, C_32_2_16(DMA_ENABLE, ARRAY_SIZE(sUnlockedOptionsPal)));
+    #endif // REGION_EU
 
-    write16(REG_BG0CNT, 0x1000);
-    write16(REG_BG1CNT, 0x1101);
+    WRITE_16(REG_BG0CNT, CREATE_BGCNT(0, 16, BGCNT_HIGH_PRIORITY, BGCNT_SIZE_256x256));
+    WRITE_16(REG_BG1CNT, CREATE_BGCNT(0, 17, BGCNT_HIGH_MID_PRIORITY, BGCNT_SIZE_256x256));
 
     gNextOamSlot = 0;
     ResetFreeOam();
 
-    write16(REG_BG0HOFS, 0);
-    write16(REG_BG0VOFS, 0);
+    WRITE_16(REG_BG0HOFS, 0);
+    WRITE_16(REG_BG0VOFS, 0);
 
     ENDING_DATA.dispcnt = 0;
     ENDING_DATA.bldcnt = 0;
 
-    gWrittenToBLDALPHA_L = 16;
-    gWrittenToBLDALPHA_H = 0;
+    gWrittenToBldalpha_L = BLDALPHA_MAX_VALUE;
+    gWrittenToBldalpha_H = 0;
 
-    gWrittenToBLDY_NonGameplay = BLDY_MAX_VALUE;
+    gWrittenToBldy_NonGameplay = BLDY_MAX_VALUE;
 
     UnlockedOptionsVBlank();
 }
 
 /**
- * @brief 86fd0 | 20c | Handlkes the pop up displaying what's been unlocked
+ * @brief 86fd0 | 20c | Handles the pop up displaying what's been unlocked
  * 
  * @return u8 0, 1 pop up ended, 2 ended
  */
-u8 UnlockedOptionsPopUp(void)
+static u8 UnlockedOptionsPopUp(void)
 {
     u32 msgNumber;
     u8 ended;
@@ -1866,19 +1810,19 @@ u8 UnlockedOptionsPopUp(void)
             ENDING_DATA.oamTypes[0] = 0;
             break;
 
-        case 32:
+        case CONVERT_SECONDS(.5f) + CONVERT_SECONDS(1.f / 30):
             ENDING_DATA.dispcnt = DCNT_BG1 | DCNT_WIN0;
-            write16(REG_WININ, 3);
-            write16(REG_WINOUT, 0);
+            WRITE_16(REG_WININ, 3);
+            WRITE_16(REG_WINOUT, 0);
             ENDING_DATA.unk_1++;
 
-            ENDING_DATA.oamXPositions[0] = 0x78;
-            ENDING_DATA.oamXPositions[1] = 0x78;
-            ENDING_DATA.oamYPositions[0] = 0x50;
-            ENDING_DATA.oamYPositions[1] = 0x50;
+            ENDING_DATA.oamXPositions[0] = SCREEN_X_MIDDLE;
+            ENDING_DATA.oamXPositions[1] = SCREEN_X_MIDDLE;
+            ENDING_DATA.oamYPositions[0] = SCREEN_Y_MIDDLE;
+            ENDING_DATA.oamYPositions[1] = SCREEN_Y_MIDDLE;
             break;
 
-        case 128:
+        case CONVERT_SECONDS(2.f) + CONVERT_SECONDS(2.f / 15.f):
             ENDING_DATA.timer--;
             break;
     }
@@ -1938,6 +1882,25 @@ u8 UnlockedOptionsPopUp(void)
     return ended;
 }
 
+static CreditsFunc_T sCreditsFunctionPointers[3] = {
+    [0] = CreditsDisplay,
+    [1] = CreditsChozoWallMovement,
+    [2] = CreditsChozoWallZoom
+};
+
+static CreditsFunc_T sEndScreenFunctionPointers[1] = {
+    [0] = EndScreenSamusPosing
+};
+
+static CreditsFunc_T sEndingImageFunctionPointers[1] = {
+    [0] = EndingImageDisplay
+};
+
+static CreditsFunc_T sUnlockedOptionsFunctionPointers[2] = {
+    [0] = UnlockedOptionsPopUp,
+    [1] = UnlockedOptionsPopUp
+};
+
 /**
  * @brief 871dc | 208 | Subroutine for the credits
  * 
@@ -1952,14 +1915,24 @@ u32 CreditsSubroutine(void)
     ENDING_DATA.unk_6 = 0;
     gNextOamSlot = 0;
 
-    switch (gGameModeSub1)
+    switch (gSubGameMode1)
     {
         case 0:
             CreditsInit();
-            gGameModeSub1++;
+            gSubGameMode1++;
             break;
 
         case 2:
+            #if defined(DEBUG) && !defined(REGION_US_BETA)
+            // This is a debug feature that lets you skip the credits by pressing L.
+            // It's part of the EU beta ROM but not the US beta ROM
+            if (gChangedInput & KEY_L)
+            {
+                ENDING_DATA.bldcnt = UCHAR_MAX;
+                gSubGameMode1++;
+                break;
+            }
+            #endif // DEBUG && !REGION_US_BETA
             subroutineResult = sCreditsFunctionPointers[ENDING_DATA.stage]();
             if (subroutineResult)
             {
@@ -1969,7 +1942,7 @@ u32 CreditsSubroutine(void)
                 ENDING_DATA.timer = 0;
 
                 if (subroutineResult > 1)
-                    gGameModeSub1++;
+                    gSubGameMode1++;
             }
 
             ResetFreeOam();
@@ -1977,36 +1950,36 @@ u32 CreditsSubroutine(void)
 
         case 7:
         case 11:
-            if (gWrittenToBLDY_NonGameplay < BLDY_MAX_VALUE)
-                gWrittenToBLDY_NonGameplay++;
+            if (gWrittenToBldy_NonGameplay < BLDY_MAX_VALUE)
+                gWrittenToBldy_NonGameplay++;
             else
-                gGameModeSub1++;
+                gSubGameMode1++;
             break;
 
         case 4:
             EndScreenInit();
-            gGameModeSub1++;
+            gSubGameMode1++;
             break;
 
         case 6:
             if (sEndScreenFunctionPointers[ENDING_DATA.stage]())
-                gGameModeSub1++;
+                gSubGameMode1++;
             break;
 
         case 8:
             EndingImageInit();
-            gGameModeSub1++;
+            gSubGameMode1++;
             break;
 
         case 5:
         case 9:
         case 13:
-            if (gWrittenToBLDY_NonGameplay != 0)
-                gWrittenToBLDY_NonGameplay--;
+            if (gWrittenToBldy_NonGameplay != 0)
+                gWrittenToBldy_NonGameplay--;
             else
             {
                 ENDING_DATA.bldcnt = 0;
-                gGameModeSub1++;
+                gSubGameMode1++;
             }
             break;
 
@@ -2018,12 +1991,12 @@ u32 CreditsSubroutine(void)
                 {
                     ENDING_DATA.bldcnt = BLDCNT_SCREEN_FIRST_TARGET | BLDCNT_BRIGHTNESS_DECREASE_EFFECT;
 
-                    gWrittenToBLDY_NonGameplay = 0;
-                    gGameModeSub1++;
+                    gWrittenToBldy_NonGameplay = 0;
+                    gSubGameMode1++;
                 }
                 else
                 {
-                    gDisableSoftreset = FALSE;
+                    gDisableSoftReset = FALSE;
                     ended++;
                 }
             }
@@ -2033,24 +2006,24 @@ u32 CreditsSubroutine(void)
 
         case 1:
         case 3:
-            gGameModeSub1++;
+            gSubGameMode1++;
             break;
 
         case 15:
             if (gEndingFlags & (ENDING_FLAG_UNKNOWN | ENDING_FLAG_FIRST_TIME_ATTACK_CLEAR |
                 ENDING_FLAG_FIRST_HARD_MODE_CLEAR | ENDING_FLAG_FIRST_CLEAR))
             {
-                gGameModeSub1++;
+                gSubGameMode1++;
                 break;
             }
 
-            gDisableSoftreset = FALSE;
+            gDisableSoftReset = FALSE;
             ended++;
             break;
 
         case 12:
             UnlockedOptionsInit();
-            gGameModeSub1++;
+            gSubGameMode1++;
             break;
 
         case 14:
@@ -2064,7 +2037,7 @@ u32 CreditsSubroutine(void)
                 ENDING_DATA.timer = 0;
 
                 if (subroutineResult > 1)
-                    gGameModeSub1++;
+                    gSubGameMode1++;
             }
 
             ResetFreeOam();
@@ -2078,31 +2051,28 @@ u32 CreditsSubroutine(void)
  * @brief 873e4 | 238 | Initializes the gallery
  * 
  */
-void GalleryInit(void)
+static void GalleryInit(void)
 {
-    u32 zero;
     u32 endingNbr;
     u32 i;
     u32 bit;
 
-    write16(REG_IME, FALSE);
-    write16(REG_DISPSTAT, read16(REG_DISPSTAT) & ~DSTAT_IF_HBLANK);
-    write16(REG_IE, read16(REG_IE) & ~IF_HBLANK);
-    write16(REG_IF, IF_HBLANK);
+    WRITE_16(REG_IME, FALSE);
+    WRITE_16(REG_DISPSTAT, READ_16(REG_DISPSTAT) & ~DSTAT_IF_HBLANK);
+    WRITE_16(REG_IE, READ_16(REG_IE) & ~IF_HBLANK);
+    WRITE_16(REG_IF, IF_HBLANK);
 
-    write16(REG_IME, TRUE);
-    write16(REG_DISPCNT, 0);
+    WRITE_16(REG_IME, TRUE);
+    WRITE_16(REG_DISPCNT, 0);
 
-    write16(REG_IME, FALSE);
-    CallbackSetVBlank(GalleryVBlank);
-    write16(REG_IME, TRUE);
+    WRITE_16(REG_IME, FALSE);
+    CallbackSetVblank(GalleryVBlank);
+    WRITE_16(REG_IME, TRUE);
 
-    if (gGameModeSub1 == 0)
+    if (gSubGameMode1 == 0)
     {
         ClearGfxRam();
-
-        zero = 0;
-        DMA_SET(3, &zero, &gNonGameplayRAM, (DMA_ENABLE | DMA_32BIT | DMA_SRC_FIXED) << 16 | sizeof(gNonGameplayRAM) / 4);
+        DMA_FILL_32(3, 0, &gNonGameplayRam, sizeof(gNonGameplayRam));
     }
 
     endingNbr = ENDING_DATA.endingNumber;
@@ -2138,10 +2108,14 @@ void GalleryInit(void)
 
     BitFill(3, 0x4FF04FF, VRAM_BASE + 0xE800, 0x800, 32);
 
-    DMA_SET(3, sEndingImagesPalPointers[endingNbr], PALRAM_BASE, DMA_ENABLE << 16 | PALRAM_SIZE / 4);
+    #ifdef REGION_EU
+    DmaTransfer(3, sEndingImagesPalPointers[endingNbr], PALRAM_BASE, PAL_SIZE, 16);
+    #else // !REGION_EU
+    DMA_SET(3, sEndingImagesPalPointers[endingNbr], PALRAM_BASE, C_32_2_16(DMA_ENABLE, COLORS_IN_PAL));
+    #endif // REGION_EU
 
-    write16(REG_BG0CNT, 0x9C00);
-    write16(REG_BG1CNT, 0x9E09);
+    WRITE_16(REG_BG0CNT, CREATE_BGCNT(0, 28, BGCNT_HIGH_PRIORITY, BGCNT_SIZE_256x512));
+    WRITE_16(REG_BG1CNT, CREATE_BGCNT(2, 30, BGCNT_HIGH_MID_PRIORITY, BGCNT_SIZE_256x512));
 
     gNextOamSlot = 0;
     ResetFreeOam();
@@ -2155,14 +2129,14 @@ void GalleryInit(void)
     gBg3XPosition = 0;
     gBg3YPosition = 0;
 
-    write16(REG_BG0HOFS, 0);
-    write16(REG_BG0VOFS, 0x1000);
-    write16(REG_BG1HOFS, 0);
-    write16(REG_BG1VOFS, 0x1000);
-    write16(REG_BG2HOFS, 0);
-    write16(REG_BG2VOFS, 0);
-    write16(REG_BG3HOFS, 0);
-    write16(REG_BG3VOFS, 0);
+    WRITE_16(REG_BG0HOFS, 0);
+    WRITE_16(REG_BG0VOFS, 0x1000);
+    WRITE_16(REG_BG1HOFS, 0);
+    WRITE_16(REG_BG1VOFS, 0x1000);
+    WRITE_16(REG_BG2HOFS, 0);
+    WRITE_16(REG_BG2VOFS, 0);
+    WRITE_16(REG_BG3HOFS, 0);
+    WRITE_16(REG_BG3VOFS, 0);
 
     ENDING_DATA.unk_8 = 0;
 
@@ -2177,7 +2151,7 @@ void GalleryInit(void)
  * 
  * @return u32 
  */
-u32 GalleryDisplay(void)
+static u32 GalleryDisplay(void)
 {
     u8 endingNbr;
     u32 ended;
@@ -2196,7 +2170,7 @@ u32 GalleryDisplay(void)
     {
         ENDING_DATA.bldcnt = BLDCNT_SCREEN_FIRST_TARGET | BLDCNT_BRIGHTNESS_DECREASE_EFFECT;
 
-        gWrittenToBLDY_NonGameplay = 0;
+        gWrittenToBldy_NonGameplay = 0;
         ended = TRUE;
     }
     else if (gChangedInput & (KEY_A | KEY_RIGHT))
@@ -2229,8 +2203,8 @@ u32 GalleryDisplay(void)
 
         ENDING_DATA.bldcnt = BLDCNT_SCREEN_FIRST_TARGET | BLDCNT_BRIGHTNESS_DECREASE_EFFECT;
 
-        gWrittenToBLDY_NonGameplay = 0;
-        gGameModeSub1 = 5;
+        gWrittenToBldy_NonGameplay = 0;
+        gSubGameMode1 = 5;
     }
 
     change = FALSE;
@@ -2284,44 +2258,44 @@ u32 GallerySubroutine(void)
     ended = FALSE;
     ENDING_DATA.unk_6 = 0;
 
-    switch (gGameModeSub1)
+    switch (gSubGameMode1)
     {
         case 0:
         case 4:
             GalleryInit();
-            gGameModeSub1 = 1;
+            gSubGameMode1 = 1;
             break;
 
         case 1:
-            if (gWrittenToBLDY_NonGameplay != 0)
+            if (gWrittenToBldy_NonGameplay != 0)
             {
-                gWrittenToBLDY_NonGameplay--;
+                gWrittenToBldy_NonGameplay--;
                 break;
             }
 
             ENDING_DATA.bldcnt = 0;
-            gGameModeSub1++;
+            gSubGameMode1++;
             break;
 
         case 2:
             if (GalleryDisplay())
-                gGameModeSub1++;
+                gSubGameMode1++;
             break;
 
         case 3:
         case 5:
-            if (gWrittenToBLDY_NonGameplay < BLDY_MAX_VALUE)
+            if (gWrittenToBldy_NonGameplay < BLDY_MAX_VALUE)
             {
-                if (ENDING_DATA.timer++ & 1)
-                    gWrittenToBLDY_NonGameplay++;
+                if (MOD_AND(ENDING_DATA.timer++, 2))
+                    gWrittenToBldy_NonGameplay++;
 
                 break;
             }
 
-            if (gGameModeSub1 == 3)
+            if (gSubGameMode1 == 3)
                 ended++;
             else
-                gGameModeSub1 = 4;
+                gSubGameMode1 = 4;
             break;
     }
 

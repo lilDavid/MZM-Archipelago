@@ -1,6 +1,9 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+// Include this here to make sure it's basically included everywhere
+#include "config.h"
+
 #define TRUE 1
 #define FALSE 0
 #define NULL ((void *)0)
@@ -11,12 +14,23 @@ typedef unsigned short u16;
 typedef signed short s16;
 typedef unsigned int u32;
 typedef signed int s32;
+typedef unsigned long long u64;
+typedef signed long long s64;
 typedef volatile unsigned char vu8;
 typedef volatile signed char vs8;
 typedef volatile unsigned short vu16;
 typedef volatile signed short vs16;
 typedef volatile unsigned int vu32;
 typedef volatile signed int vs32;
+typedef volatile unsigned long long vu64;
+typedef volatile signed long long vs64;
+
+typedef u8 boolu8;
+typedef u16 boolu16;
+typedef u32 boolu32;
+typedef s8 bools8;
+typedef s16 bools16;
+typedef s32 bools32;
 
 #define SCHAR_MIN (-128)
 #define SCHAR_MAX (127)
@@ -41,12 +55,18 @@ typedef volatile signed int vs32;
 #define HALF_BLOCK_SIZE (BLOCK_SIZE / 2)
 // Shorthand for a quarter of a block, in sub pixels
 #define QUARTER_BLOCK_SIZE (BLOCK_SIZE / 4)
+// Shorthand for three quarters of a block, in sub pixels
+#define THREE_QUARTER_BLOCK_SIZE (HALF_BLOCK_SIZE + QUARTER_BLOCK_SIZE)
 // Shorthand for an eighth of a block, in sub pixels
 #define EIGHTH_BLOCK_SIZE (BLOCK_SIZE / 8)
 // Size of a visible pixel, in sub pixels
 #define PIXEL_SIZE (BLOCK_SIZE / PIXEL_PER_BLOCK)
 // Size of a single sub pixel
 #define ONE_SUB_PIXEL (PIXEL_SIZE / PIXEL_SIZE)
+// Mask to filter out the sub pixel coordinates, effectively clamping to a pixel
+#define PIXEL_POSITION_FLAG ((u16)~PIXEL_SIZE + ONE_SUB_PIXEL)
+// Mask to filter out the sub pixel coordinates, effectively clamping to half of a block
+#define HALF_BLOCK_POSITION_FLAG ((u16)~HALF_BLOCK_SIZE + ONE_SUB_PIXEL)
 // Mask to filter out the sub pixel coordinates, effectively clamping to a block
 #define BLOCK_POSITION_FLAG ((u16)~BLOCK_SIZE + ONE_SUB_PIXEL)
 // Mask to filter out the block coordinates, resulting in only the sub pixels coordinates in the current block

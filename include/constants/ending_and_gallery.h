@@ -28,7 +28,7 @@ enum CreditLineType {
     CREDIT_LINE_TYPE_WHITE_BIG,
     CREDIT_LINE_TYPE_WHITE_SMALL,
 
-    CREDIT_LINE_TYPE_UNK_5 = 5,
+    CREDIT_LINE_TYPE_BLANK = 5,
     CREDIT_LINE_TYPE_END,
 
     CREDIT_LINE_TYPE_ALL_RIGHTS = 10,
@@ -54,4 +54,11 @@ enum EndingImage {
 #define ENDING_OAM_TYPE_CHAR 1
 #define ENDING_OAM_TYPE_LINE 2
 
-#endif
+#define PEN_GET_ENDING(pen) ((pen) & 0xF)
+#define PEN_GET_ABILITY(pen) ((pen) >> 4 & 0xF)
+#define PEN_GET_POWER_BOMB(pen) ((pen) >> 8 & 0xF)
+#define PEN_GET_SUPER_MISSILE(pen) ((pen) >> 12 & 0xF)
+#define PEN_GET_MISSILE(pen) (LOW_BYTE((pen) >> 16))
+#define PEN_GET_ENERGY(pen) (LOW_BYTE((pen) >> 24))
+
+#endif /* ENDING_AND_GALLERY_CONSTANTS_H */

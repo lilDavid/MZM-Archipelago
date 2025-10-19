@@ -10,7 +10,7 @@
 #include "imago_cocoon.h"
 #include "map_station.h"
 #include "metroid.h"
-#include "item_banner.h"
+#include "message_banner.h"
 #include "zoomer.h"
 #include "zeela.h"
 #include "ripper.h"

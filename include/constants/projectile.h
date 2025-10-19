@@ -1,17 +1,22 @@
 #ifndef PROJECTILE_CONSTANTS_H
 #define PROJECTILE_CONSTANTS_H
 
-#define PROJ_STATUS_NONE                   0
-#define PROJ_STATUS_EXISTS                 (1 << 0)
-#define PROJ_STATUS_ON_SCREEN              (1 << 1)
-#define PROJ_STATUS_NOT_DRAWN              (1 << 2)
-#define PROJ_STATUS_HIGH_PRIORITY          (1 << 3)
-#define PROJ_STATUS_CAN_AFFECT_ENVIRONMENT (1 << 4)
-#define PROJ_STATUS_Y_FLIP                 (1 << 5)
-#define PROJ_STATUS_X_FLIP                 (1 << 6)
-#define PROJ_STATUS_UNKNOWN_80             (1 << 7)
+#include "types.h"
+#include "macros.h"
 
-enum ProjectileCategory {
+MAKE_ENUM(u8, ProjectileStatus) ENUM_FLAG {
+    PROJ_STATUS_NONE                   = 0 << 0,
+    PROJ_STATUS_EXISTS                 = 1 << 0,
+    PROJ_STATUS_ON_SCREEN              = 1 << 1,
+    PROJ_STATUS_NOT_DRAWN              = 1 << 2,
+    PROJ_STATUS_ABOVE_BG1              = 1 << 3,
+    PROJ_STATUS_CAN_AFFECT_ENVIRONMENT = 1 << 4,
+    PROJ_STATUS_Y_FLIP                 = 1 << 5,
+    PROJ_STATUS_X_FLIP                 = 1 << 6,
+    PROJ_STATUS_LOW_OAM_PRIORITY       = 1 << 7,
+};
+
+MAKE_ENUM(u8, ProjectileCategory) {
     PROJECTILE_CATEGORY_NONE,
     PROJECTILE_CATEGORY_BEAM,
     PROJECTILE_CATEGORY_MISSILE,
@@ -20,10 +25,10 @@ enum ProjectileCategory {
     PROJECTILE_CATEGORY_POWER_BOMB,
     PROJECTILE_CATEGORY_CHARGED_BEAM,
 
-    PROJECTILE_CATEGORY_END,
+    PROJECTILE_CATEGORY_COUNT,
 };
 
-enum ProjectileType {
+MAKE_ENUM(u8, ProjectileType) {
     PROJ_TYPE_BEAM,
     PROJ_TYPE_LONG_BEAM,
     PROJ_TYPE_ICE_BEAM,
@@ -41,7 +46,7 @@ enum ProjectileType {
     PROJ_TYPE_BOMB,
     PROJ_TYPE_POWER_BOMB,
 
-    PROJ_TYPE_END
+    PROJ_TYPE_COUNT
 };
 
 // Normal beam

@@ -2,10 +2,11 @@
 #include "callbacks.h"
 #include "macros.h"
 #include "complex_oam.h" // Required
+#include "text.h"
+#include "dma.h"
 
 #include "data/shortcut_pointers.h"
 #include "data/intro_data.h"
-#include "data/internal_intro_data.h"
 
 #include "constants/audio.h"
 #include "constants/game_state.h"
@@ -21,56 +22,65 @@
  * @brief 800f4 | 90 | V-blank code for the intro
  * 
  */
-void IntroVBlank(void)
+static void IntroVBlank(void)
 {
+    #ifdef REGION_EU
+    DmaTransfer(3, gOamData, OAM_BASE, OAM_SIZE, 32);
+    #else // !REGION_EU
     DMA_SET(3, gOamData, OAM_BASE, C_32_2_16(DMA_ENABLE | DMA_32BIT, OAM_SIZE / sizeof(u32)));
+    #endif // REGION_EU
 
-    write16(REG_DISPCNT, INTRO_DATA.dispcnt);
-    write16(REG_BLDCNT, INTRO_DATA.bldcnt);
+    WRITE_16(REG_DISPCNT, INTRO_DATA.dispcnt);
+    WRITE_16(REG_BLDCNT, INTRO_DATA.bldcnt);
 
-    write16(REG_BLDALPHA, C_16_2_8(gWrittenToBLDALPHA_H, gWrittenToBLDALPHA_L));
-    write16(REG_BLDY, gWrittenToBLDY_NonGameplay);
-    write16(REG_BG0HOFS, MOD_AND(gBg0XPosition, 512));
-    write16(REG_BG0VOFS, MOD_AND(gBg0YPosition, 512));
+    WRITE_16(REG_BLDALPHA, C_16_2_8(gWrittenToBldalpha_H, gWrittenToBldalpha_L));
+    WRITE_16(REG_BLDY, gWrittenToBldy_NonGameplay);
+    WRITE_16(REG_BG0HOFS, MOD_AND(gBg0XPosition, 512));
+    WRITE_16(REG_BG0VOFS, MOD_AND(gBg0YPosition, 512));
 }
 
 /**
  * @brief 80184 | 58 | V-blank code for the intro fuzz
  * 
  */
-void IntroFuzzVBlank(void)
+static void IntroFuzzVBlank(void)
 {
+    #ifdef REGION_EU
+    DmaTransfer(3, gOamData, OAM_BASE, OAM_SIZE, 32);
+    #else // !REGION_EU
     DMA_SET(3, gOamData, OAM_BASE, C_32_2_16(DMA_ENABLE | DMA_32BIT, OAM_SIZE / sizeof(u32)));
+    #endif // REGION_EU
 
-    write16(REG_DISPCNT, INTRO_DATA.dispcnt);
-    write16(REG_BLDCNT, INTRO_DATA.bldcnt);
+    WRITE_16(REG_DISPCNT, INTRO_DATA.dispcnt);
+    WRITE_16(REG_BLDCNT, INTRO_DATA.bldcnt);
 
+    #ifdef REGION_EU
+    DmaTransfer(3, INTRO_DATA.fuzzPalette, PALRAM_OBJ, sizeof(INTRO_DATA.fuzzPalette), 16);
+    #else // !REGION_EU
     DMA_SET(3, INTRO_DATA.fuzzPalette, PALRAM_OBJ, C_32_2_16(DMA_ENABLE, ARRAY_SIZE(INTRO_DATA.fuzzPalette)));
+    #endif // REGION_EU
 }
 
 /**
  * @brief 801dc | 1d4 | Initializes the intro
  * 
  */
-void IntroInit(void)
+static void IntroInit(void)
 {
-    u32 zero;
+    WRITE_16(REG_IME, FALSE);
+    WRITE_16(REG_DISPSTAT, READ_16(REG_DISPSTAT) & ~DSTAT_IF_HBLANK);
+    WRITE_16(REG_IE, READ_16(REG_IE) & ~IF_HBLANK);
 
-    write16(REG_IME, FALSE);
-    write16(REG_DISPSTAT, read16(REG_DISPSTAT) & ~DSTAT_IF_HBLANK);
-    write16(REG_IE, read16(REG_IE) & ~IF_HBLANK);
+    WRITE_16(REG_IF, IF_HBLANK);
+    WRITE_16(REG_IME, TRUE);
+    WRITE_16(REG_DISPCNT, 0);
+    WRITE_16(REG_IME, FALSE);
 
-    write16(REG_IF, IF_HBLANK);
-    write16(REG_IME, TRUE);
-    write16(REG_DISPCNT, 0);
-    write16(REG_IME, FALSE);
+    CallbackSetVblank(IntroVBlank);
 
-    CallbackSetVBlank(IntroVBlank);
+    WRITE_16(REG_IME, TRUE);
 
-    write16(REG_IME, TRUE);
-
-    zero = 0;
-    DMA_SET(3, &zero, &gNonGameplayRAM, C_32_2_16(DMA_ENABLE | DMA_SRC_FIXED | DMA_32BIT, sizeof(gNonGameplayRAM) / 4));
+    DMA_FILL_32(3, 0, &gNonGameplayRam, sizeof(gNonGameplayRam));
 
     INTRO_DATA.scaling = Q_8_8(.125f);
     INTRO_DATA.charDrawerX = SCREEN_SIZE_X / 5 + 8;
@@ -83,12 +93,18 @@ void IntroInit(void)
     LZ77UncompVRAM(sIntroSpaceBackgroundTileTable, VRAM_BASE + 0x8000);
     LZ77UncompVRAM(sIntro_47920c, VRAM_BASE + 0x9000);
 
+    #ifdef REGION_EU
+    DmaTransfer(3, sIntroTextAndShipPal, PALRAM_OBJ, sizeof(sIntroTextAndShipPal), 16);
+    DmaTransfer(3, sIntroTextAndShipPal, PALRAM_BASE, sizeof(sIntroTextAndShipPal), 16);
+    DmaTransfer(3, sIntroPal_45f9d4, PALRAM_BASE + 15 * PAL_ROW_SIZE, sizeof(sIntroPal_45f9d4), 16);
+    #else // !REGION_EU
     DMA_SET(3, sIntroTextAndShipPal, PALRAM_OBJ, C_32_2_16(DMA_ENABLE, ARRAY_SIZE(sIntroTextAndShipPal)));
     DMA_SET(3, sIntroTextAndShipPal, PALRAM_BASE, C_32_2_16(DMA_ENABLE, ARRAY_SIZE(sIntroTextAndShipPal)));
     DMA_SET(3, sIntroPal_45f9d4, PALRAM_BASE + 15 * PAL_ROW_SIZE, C_32_2_16(DMA_ENABLE, ARRAY_SIZE(sIntroPal_45f9d4)));
+    #endif // REGION_EU
 
-    write16(REG_BG0CNT, CREATE_BGCNT(0, 16, BGCNT_HIGH_PRIORITY, BGCNT_SIZE_256x256));
-    write16(REG_BG1CNT, CREATE_BGCNT(0, 18, BGCNT_HIGH_MID_PRIORITY, BGCNT_SIZE_256x256));
+    WRITE_16(REG_BG0CNT, CREATE_BGCNT(0, 16, BGCNT_HIGH_PRIORITY, BGCNT_SIZE_256x256));
+    WRITE_16(REG_BG1CNT, CREATE_BGCNT(0, 18, BGCNT_HIGH_MID_PRIORITY, BGCNT_SIZE_256x256));
 
     gNextOamSlot = 0;
     ResetFreeOam();
@@ -102,26 +118,26 @@ void IntroInit(void)
     gBg3XPosition = 0;
     gBg3YPosition = 0;
 
-    write16(REG_BG0HOFS, gBg0XPosition);
-    write16(REG_BG0VOFS, gBg0YPosition);
-    write16(REG_BG1HOFS, gBg1XPosition);
-    write16(REG_BG1VOFS, gBg1YPosition);
-    write16(REG_BG2HOFS, gBg2XPosition);
-    write16(REG_BG2VOFS, gBg2YPosition);
-    write16(REG_BG3HOFS, gBg3XPosition);
-    write16(REG_BG3VOFS, gBg3YPosition);
+    WRITE_16(REG_BG0HOFS, gBg0XPosition);
+    WRITE_16(REG_BG0VOFS, gBg0YPosition);
+    WRITE_16(REG_BG1HOFS, gBg1XPosition);
+    WRITE_16(REG_BG1VOFS, gBg1YPosition);
+    WRITE_16(REG_BG2HOFS, gBg2XPosition);
+    WRITE_16(REG_BG2VOFS, gBg2YPosition);
+    WRITE_16(REG_BG3HOFS, gBg3XPosition);
+    WRITE_16(REG_BG3VOFS, gBg3YPosition);
 
     UpdateMusicPriority(1);
 
     INTRO_DATA.dispcnt = DCNT_OBJ;
     INTRO_DATA.bldcnt = BLDCNT_SCREEN_FIRST_TARGET | BLDCNT_BRIGHTNESS_DECREASE_EFFECT;
 
-    gWrittenToBLDY_NonGameplay = BLDY_MAX_VALUE;
+    gWrittenToBldy_NonGameplay = BLDY_MAX_VALUE;
 
     IntroVBlank();
 }
 
-void IntroTextProcessOam(void)
+static void IntroTextProcessOam(void)
 {
     const u16* src;
     u16* dst;
@@ -219,7 +235,7 @@ void IntroTextProcessOam(void)
  * @param indent Indent
  * @return u8 To document
  */
-u8 IntroProcessText(u8 action, u16 indent)
+static u8 IntroProcessText(u8 action, u16 indent)
 {
     u8 dontProcess;
     u8 skipCharacter;
@@ -334,7 +350,7 @@ u8 IntroProcessText(u8 action, u16 indent)
  * 
  * @return u8 FALSE
  */
-u8 IntroEmergencyOrder(void)
+static u8 IntroEmergencyOrder(void)
 {
     u8 textResult;
 
@@ -384,7 +400,7 @@ u8 IntroEmergencyOrder(void)
  * @brief 807b8 | 134 | Processes the OAM for the ship flying towards the camera
  * 
  */
-void IntroShipFlyingTowardsCameraProcessOam(void)
+static void IntroShipFlyingTowardsCameraProcessOam(void)
 {
     const u16* src;
     u16* dst;
@@ -446,7 +462,7 @@ void IntroShipFlyingTowardsCameraProcessOam(void)
  * 
  * @return u8 FALSE
  */
-u8 IntroShipFlyingTowardsCamera(void)
+static u8 IntroShipFlyingTowardsCamera(void)
 {
     u8 ended;
 
@@ -456,8 +472,8 @@ u8 IntroShipFlyingTowardsCamera(void)
     {
         case 0:
             INTRO_DATA.bldcnt = BLDCNT_ALPHA_BLENDING_EFFECT | BLDCNT_BG0_SECOND_TARGET_PIXEL | BLDCNT_OBJ_SECOND_TARGET_PIXEL;
-            gWrittenToBLDALPHA_L = 9;
-            gWrittenToBLDALPHA_H = 7;
+            gWrittenToBldalpha_L = BLDALPHA_MAX_VALUE / 2 + 1;
+            gWrittenToBldalpha_H = BLDALPHA_MAX_VALUE / 2 - 1;
             break;
 
         case DELTA_TIME:
@@ -487,7 +503,7 @@ u8 IntroShipFlyingTowardsCamera(void)
  * 
  * @return u8 FALSE
  */
-u8 IntroSamusInHerShip(void)
+static u8 IntroSamusInHerShip(void)
 {
     u8 ended;
 
@@ -504,7 +520,11 @@ u8 IntroSamusInHerShip(void)
             break;
 
         case DELTA_TIME * 2:
+            #ifdef REGION_EU
+            DmaTransfer(3, sIntroSamusInHerShipPal, PALRAM_BASE, sizeof(sIntroSamusInHerShipPal), 16);
+            #else // !REGION_EU
             DMA_SET(3, sIntroSamusInHerShipPal, PALRAM_BASE, C_32_2_16(DMA_ENABLE, ARRAY_SIZE(sIntroSamusInHerShipPal)));
+            #endif // REGION_EU
             break;
 
         case DELTA_TIME * 3:
@@ -549,7 +569,7 @@ u8 IntroSamusInHerShip(void)
  * 
  * @return u8 
  */
-u8 IntroExterminate(void)
+static u8 IntroExterminate(void)
 {
     u8 textResult;
 
@@ -599,7 +619,7 @@ u8 IntroExterminate(void)
  * @brief 80b78 | 154 | Processes the OAM for the view of zebes part of the intro
  * 
  */
-void IntroViewOfZebesProcessOAM(void)
+static void IntroViewOfZebesProcessOAM(void)
 {
     const u16* src;
     u16* dst;
@@ -676,7 +696,7 @@ void IntroViewOfZebesProcessOAM(void)
  * 
  * @return u8 FALSE
  */
-u8 IntroViewOfZebes(void)
+static u8 IntroViewOfZebes(void)
 {
     u8 ended;
 
@@ -694,13 +714,18 @@ u8 IntroViewOfZebes(void)
 
         case DELTA_TIME * 2:
             LZ77UncompVRAM(sIntroViewOfZebesTileTable, VRAM_BASE + 0x8000);
+            #ifdef REGION_EU
+            DmaTransfer(3, sIntroViewOfZebesPal, PALRAM_BASE, sizeof(sIntroViewOfZebesPal), 16);
+            DmaTransfer(3, sIntroViewOfZebesPal, PALRAM_OBJ, sizeof(sIntroViewOfZebesPal), 16);
+            #else // !REGION_EU
             DMA_SET(3, sIntroViewOfZebesPal, PALRAM_BASE, C_32_2_16(DMA_ENABLE, ARRAY_SIZE(sIntroViewOfZebesPal)));
             DMA_SET(3, sIntroViewOfZebesPal, PALRAM_OBJ, C_32_2_16(DMA_ENABLE, ARRAY_SIZE(sIntroViewOfZebesPal)));
+            #endif // REGION_EU
             gBg0XPosition = QUARTER_BLOCK_SIZE;
             break;
 
         case DELTA_TIME * 3:
-            write16(REG_BLDALPHA, C_16_2_8(7, 9));
+            WRITE_16(REG_BLDALPHA, C_16_2_8(BLDALPHA_MAX_VALUE / 2 - 1, BLDALPHA_MAX_VALUE / 2 + 1));
             INTRO_DATA.dispcnt = DCNT_BG0 | DCNT_OBJ;
             INTRO_DATA.bldcnt = BLDCNT_ALPHA_BLENDING_EFFECT | BLDCNT_BG0_SECOND_TARGET_PIXEL | BLDCNT_OBJ_SECOND_TARGET_PIXEL;
             SoundPlay(SOUND_INTRO_SHIP_FLYING_DOWN);
@@ -738,7 +763,7 @@ u8 IntroViewOfZebes(void)
  * 
  * @return u8 FALSE
  */
-u8 IntroDefeat(void)
+static u8 IntroDefeat(void)
 {
     u8 textResult;
 
@@ -791,7 +816,7 @@ u8 IntroDefeat(void)
  * 
  * @return u8 FALSE
  */
-u8 IntroMotherBrain(void)
+static u8 IntroMotherBrain(void)
 {
     u8 ended;
 
@@ -814,7 +839,11 @@ u8 IntroMotherBrain(void)
             break;
 
         case 3 * DELTA_TIME:
+            #ifdef REGION_EU
+            DmaTransfer(3, sIntroMotherBrainPal, PALRAM_BASE, sizeof(sIntroMotherBrainPal), 16);
+            #else // !REGION_EU
             DMA_SET(3, sIntroMotherBrainPal, PALRAM_BASE, C_32_2_16(DMA_ENABLE, ARRAY_SIZE(sIntroMotherBrainPal)));
+            #endif // REGION_EU
             INTRO_DATA.dispcnt = DCNT_BG0;
             SoundPlay(SOUND_INTRO_MOTHER_BRAIN_JAR);
             SoundPlay(MUSIC_INTRO_MOTHER_BRAIN);
@@ -825,7 +854,7 @@ u8 IntroMotherBrain(void)
             break;
 
         case CONVERT_SECONDS(3.2f):
-            CallbackSetVBlank(IntroFuzzVBlank);
+            CallbackSetVblank(IntroFuzzVBlank);
             INTRO_DATA.dispcnt = DCNT_BG0 | DCNT_OBJ;
             INTRO_DATA.stage++;
             ended = TRUE;
@@ -846,7 +875,7 @@ u8 IntroMotherBrain(void)
  * @brief 81018 | 88 | Processes the OAM for the intro fuzz
  * 
  */
-void IntroFuzzProcessOAM(void)
+static void IntroFuzzProcessOAM(void)
 {
     u16* dst;
     const u16* src;
@@ -883,7 +912,7 @@ void IntroFuzzProcessOAM(void)
  * 
  * @return u8 bool, ended
  */
-u8 IntroFuzz(void)
+static u8 IntroFuzz(void)
 {
     switch (INTRO_DATA.timer++)
     {
@@ -905,19 +934,35 @@ u8 IntroFuzz(void)
     switch (MOD_AND(INTRO_DATA.unk_A, 8))
     {
         case 0:
+            #ifdef REGION_EU
+            DmaTransfer(3, sIntroFuzzRandomValues_1, INTRO_DATA.fuzzPalette, sizeof(INTRO_DATA.fuzzPalette), 16);
+            #else // !REGION_EU
             DMA_SET(3, sIntroFuzzRandomValues_1, INTRO_DATA.fuzzPalette, C_32_2_16(DMA_ENABLE, ARRAY_SIZE(INTRO_DATA.fuzzPalette)));
+            #endif // REGION_EU
             break;
 
         case 2:
+            #ifdef REGION_EU
+            DmaTransfer(3, sIntroFuzzRandomValues_2, INTRO_DATA.fuzzPalette, sizeof(INTRO_DATA.fuzzPalette), 16);
+            #else // !REGION_EU
             DMA_SET(3, sIntroFuzzRandomValues_2, INTRO_DATA.fuzzPalette, C_32_2_16(DMA_ENABLE, ARRAY_SIZE(INTRO_DATA.fuzzPalette)));
+            #endif // REGION_EU
             break;
 
         case 4:
+            #ifdef REGION_EU
+            DmaTransfer(3, sTimeAttackPasswordCharacters, INTRO_DATA.fuzzPalette, sizeof(INTRO_DATA.fuzzPalette), 16);
+            #else // !REGION_EU
             DMA_SET(3, sTimeAttackPasswordCharacters, INTRO_DATA.fuzzPalette, C_32_2_16(DMA_ENABLE, ARRAY_SIZE(INTRO_DATA.fuzzPalette)));
+            #endif // REGION_EU
             break;
 
         case 6:
-            DMA_SET(3, sArray_45fd30[1], INTRO_DATA.fuzzPalette, C_32_2_16(DMA_ENABLE, ARRAY_SIZE(INTRO_DATA.fuzzPalette)));
+            #ifdef REGION_EU
+            DmaTransfer(3, sSpriteYHalfRadius[1], INTRO_DATA.fuzzPalette, sizeof(INTRO_DATA.fuzzPalette), 16);
+            #else // !REGION_EU
+            DMA_SET(3, sSpriteYHalfRadius[1], INTRO_DATA.fuzzPalette, C_32_2_16(DMA_ENABLE, ARRAY_SIZE(INTRO_DATA.fuzzPalette)));
+            #endif // REGION_EU
             break;
     }
 
@@ -925,6 +970,17 @@ u8 IntroFuzz(void)
     IntroFuzzProcessOAM();
     return FALSE;
 }
+
+static IntroFunc_T sIntroSubroutinesFunctionsPointer[8] = {
+    [0] = IntroEmergencyOrder,
+    [1] = IntroShipFlyingTowardsCamera,
+    [2] = IntroSamusInHerShip,
+    [3] = IntroExterminate,
+    [4] = IntroViewOfZebes,
+    [5] = IntroDefeat,
+    [6] = IntroMotherBrain,
+    [7] = IntroFuzz
+};
 
 /**
  * @brief 8117c | cc | Subroutine for the intro
@@ -938,36 +994,36 @@ u32 IntroSubroutine(void)
     ended = FALSE;
     gNextOamSlot = 0;
 
-    switch (gGameModeSub1)
+    switch (gSubGameMode1)
     {
         case 0:
             IntroInit();
-            gGameModeSub1++;
+            gSubGameMode1++;
             break;
 
         case 1:
-            if (gWrittenToBLDY_NonGameplay != 0)
+            if (gWrittenToBldy_NonGameplay != 0)
             {
-                gWrittenToBLDY_NonGameplay--;
+                gWrittenToBldy_NonGameplay--;
                 break;
             }
             
             INTRO_DATA.bldcnt = 0;
-            gGameModeSub1++;
+            gSubGameMode1++;
             break;
 
         case 2:
             if (gChangedInput & (KEY_A | KEY_B | KEY_START))
             {
-                gGameModeSub1++;
-                gGameModeSub2 = 1;
+                gSubGameMode1++;
+                gSubGameMode2 = 1;
                 FadeAllSounds(CONVERT_SECONDS(1.f / 6));
                 FadeMusic(CONVERT_SECONDS(1.f / 6));
             }
             else if (sIntroSubroutinesFunctionsPointer[INTRO_DATA.stage]())
             {
-                gGameModeSub1++;
-                gGameModeSub2 = 0;
+                gSubGameMode1++;
+                gSubGameMode2 = 0;
             }
 
             ResetFreeOam();

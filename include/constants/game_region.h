@@ -1,0 +1,20 @@
+#ifndef GAME_REGION_CONSTANTS_H
+#define GAME_REGION_CONSTANTS_H
+
+enum GameRegion {
+    GAME_REGION_JPN,
+    GAME_REGION_EUR,
+    GAME_REGION_USA,
+
+    GAME_REGION_END
+};
+
+#if defined(REGION_JP) || defined(REGION_CN)
+#define GAME_REGION GAME_REGION_JPN
+#elif defined(REGION_EU)
+#define GAME_REGION GAME_REGION_EUR
+#else // REGION_US
+#define GAME_REGION GAME_REGION_USA
+#endif
+
+#endif // GAME_REGION_CONSTANTS_H

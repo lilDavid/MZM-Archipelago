@@ -10,7 +10,6 @@
 #define ESCAPE_GATE_POSE_OPENED 0x25
 #define ESCAPE_GATE_POSE_ESCAPING 0x27
 
-void EscapeGateChangeCcaa(u8 caa);
 void EscapeGate(void);
 
 #endif /* ESCAPE_GATE_AI_H */

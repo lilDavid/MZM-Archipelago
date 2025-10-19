@@ -4,7 +4,6 @@
 
 #include "data/shortcut_pointers.h"
 #include "data/menus/erase_sram_data.h"
-#include "data/menus/internal_erase_sram_data.h"
 #include "data/menus/title_screen_data.h"
 #include "data/menus/pause_screen_data.h"
 
@@ -15,6 +14,66 @@
 #include "structs/display.h"
 #include "structs/game_state.h"
 #include "structs/menus/erase_sram.h"
+
+static u32 EraseSramProcessInput(void);
+static void EraseSramApplyInput(void);
+static u32 EraseSramCheckForInput(void);
+static void EraseSramInit(void);
+static void EraseSramResetOam(void);
+static void EraseSramUpdateCursorPosition(void);
+static void EraseSramVBlank(void);
+static void EraseSramVBlank_Empty(void);
+static void EraseSramProcessOAM(void);
+
+static const u32* sEraseSramTextGfxPointers[LANGUAGE_END][2] = {
+    [LANGUAGE_JAPANESE] = {
+        sEraseSramMenuQuestionJapaneseGfx,
+        sEraseSramMenuConfirmJapaneseGfx
+    },
+    [LANGUAGE_HIRAGANA] = {
+        sEraseSramMenuQuestionJapaneseGfx,
+        sEraseSramMenuConfirmJapaneseGfx
+    },
+    [LANGUAGE_ENGLISH] = {
+        sEraseSramMenuQuestionEnglishGfx,
+        sEraseSramMenuConfirmEnglishGfx
+    },
+    #if defined(REGION_EU) || defined(REGION_US_BETA)
+    [LANGUAGE_GERMAN] = {
+        sEraseSramMenuQuestionGermanGfx,
+        sEraseSramMenuConfirmGermanGfx
+    },
+    [LANGUAGE_FRENCH] = {
+        sEraseSramMenuQuestionFrenchGfx,
+        sEraseSramMenuConfirmFrenchGfx
+    },
+    [LANGUAGE_ITALIAN] = {
+        sEraseSramMenuQuestionItalianGfx,
+        sEraseSramMenuConfirmItalianGfx
+    },
+    [LANGUAGE_SPANISH] = {
+        sEraseSramMenuQuestionSpanishGfx,
+        sEraseSramMenuConfirmSpanishGfx
+    }
+    #else // !(REGION_EU || REGION_US_BETA)
+    [LANGUAGE_GERMAN] = {
+        sEraseSramMenuQuestionEnglishGfx,
+        sEraseSramMenuConfirmEnglishGfx
+    },
+    [LANGUAGE_FRENCH] = {
+        sEraseSramMenuQuestionEnglishGfx,
+        sEraseSramMenuConfirmEnglishGfx
+    },
+    [LANGUAGE_ITALIAN] = {
+        sEraseSramMenuQuestionEnglishGfx,
+        sEraseSramMenuConfirmEnglishGfx
+    },
+    [LANGUAGE_SPANISH] = {
+        sEraseSramMenuQuestionEnglishGfx,
+        sEraseSramMenuConfirmEnglishGfx
+    }
+    #endif // REGION_EU || REGION_US_BETA
+};
 
 /**
  * @brief 75c30 | 14c | Subroutine for the erase sram menu
@@ -28,39 +87,37 @@ u32 EraseSramSubroutine(void)
     leaving = FALSE;
 
     APPLY_DELTA_TIME_INC(ERASE_SRAM_DATA.timer);
-    switch (gGameModeSub1)
+    switch (gSubGameMode1)
     {
         case 0:
             EraseSramInit();
-            gGameModeSub1++;
+            gSubGameMode1++;
             break;
 
         case 1:
-            if (gWrittenToBLDY_NonGameplay != 0)
+            if (gWrittenToBldy_NonGameplay != 0)
             {
-                gWrittenToBLDY_NonGameplay--;
+                gWrittenToBldy_NonGameplay--;
                 break;
             }
 
-            ERASE_SRAM_DATA.bldcnt = BLDCNT_BG0_FIRST_TARGET_PIXEL | BLDCNT_BG1_FIRST_TARGET_PIXEL | BLDCNT_BG2_FIRST_TARGET_PIXEL |
-                BLDCNT_BG3_FIRST_TARGET_PIXEL | BLDCNT_BACKDROP_FIRST_TARGET_PIXEL | BLDCNT_BRIGHTNESS_DECREASE_EFFECT;
+            ERASE_SRAM_DATA.bldcnt = (BLDCNT_SCREEN_FIRST_TARGET | BLDCNT_BRIGHTNESS_DECREASE_EFFECT) & ~BLDCNT_OBJ_FIRST_TARGET_PIXEL;
+            ERASE_SRAM_DATA.bldyTarget = gWrittenToBldy_NonGameplay;
 
-            ERASE_SRAM_DATA.bldyTarget = gWrittenToBLDY_NonGameplay;
-
-            gGameModeSub1++;
+            gSubGameMode1++;
             ERASE_SRAM_DATA.timer = 0;
             break;
 
         case 2:
-            gGameModeSub2 = EraseSramProcessInput();
-            if (gGameModeSub2 == 0)
+            gSubGameMode2 = EraseSramProcessInput();
+            if (gSubGameMode2 == 0)
                 break;
 
             ERASE_SRAM_DATA.timer = 0;
-            if (gGameModeSub2 == ERASE_SRAM_INPUT_ACTION_ERASING)
-                gGameModeSub1 = 5;
+            if (gSubGameMode2 == ERASE_SRAM_INPUT_ACTION_ERASING)
+                gSubGameMode1 = 5;
             else
-                gGameModeSub1 = 3;
+                gSubGameMode1 = 3;
             break;
 
         case 3:
@@ -70,13 +127,13 @@ u32 EraseSramSubroutine(void)
             ERASE_SRAM_DATA.bldcnt = BLDCNT_SCREEN_FIRST_TARGET | BLDCNT_BRIGHTNESS_DECREASE_EFFECT;
 
             ERASE_SRAM_DATA.timer = 0;
-            gGameModeSub1++;
+            gSubGameMode1++;
             break;
 
         case 4:
-            if (gWrittenToBLDY_NonGameplay < BLDY_MAX_VALUE)
+            if (gWrittenToBldy_NonGameplay < BLDY_MAX_VALUE)
             {
-                gWrittenToBLDY_NonGameplay++;
+                gWrittenToBldy_NonGameplay++;
                 break;
             }
 
@@ -91,17 +148,17 @@ u32 EraseSramSubroutine(void)
             ERASE_SRAM_DATA.bldcnt = BLDCNT_SCREEN_FIRST_TARGET | BLDCNT_BRIGHTNESS_INCREASE_EFFECT;
 
             ERASE_SRAM_DATA.timer = 0;
-            gGameModeSub1++;
+            gSubGameMode1++;
             break;
 
         case 6:
-            if (gWrittenToBLDY_NonGameplay < BLDY_MAX_VALUE)
+            if (gWrittenToBldy_NonGameplay < BLDY_MAX_VALUE)
             {
-                gWrittenToBLDY_NonGameplay++;
+                gWrittenToBldy_NonGameplay++;
                 break;
             }
 
-            gGameModeSub1++;
+            gSubGameMode1++;
             ERASE_SRAM_DATA.dispcnt = DCNT_BLANK;
             break;
 
@@ -122,7 +179,7 @@ u32 EraseSramSubroutine(void)
  * 
  * @return u32 action
  */
-u32 EraseSramProcessInput(void)
+static u32 EraseSramProcessInput(void)
 {
     u32 result;
 
@@ -134,12 +191,12 @@ u32 EraseSramProcessInput(void)
         result = EraseSramCheckForInput();
 
     // Update BLDY based on target
-    if (ERASE_SRAM_DATA.bldyTarget != gWrittenToBLDY_NonGameplay)
+    if (ERASE_SRAM_DATA.bldyTarget != gWrittenToBldy_NonGameplay)
     {
-        if (ERASE_SRAM_DATA.bldyTarget > gWrittenToBLDY_NonGameplay)
-            gWrittenToBLDY_NonGameplay++;
+        if (ERASE_SRAM_DATA.bldyTarget > gWrittenToBldy_NonGameplay)
+            gWrittenToBldy_NonGameplay++;
         else
-            gWrittenToBLDY_NonGameplay--;
+            gWrittenToBldy_NonGameplay--;
     }
     
     EraseSramUpdateCursorPosition();
@@ -151,7 +208,7 @@ u32 EraseSramProcessInput(void)
  * @brief 75dd0 | ac | Applies the input
  * 
  */
-void EraseSramApplyInput(void)
+static void EraseSramApplyInput(void)
 {
     if (ERASE_SRAM_DATA.oam[0].oamID == ERASE_SRAM_OAM_ID_CURSOR_SELECTING)
         return;
@@ -192,7 +249,7 @@ void EraseSramApplyInput(void)
  * 
  * @return u32 action
  */
-u32 EraseSramCheckForInput(void)
+static u32 EraseSramCheckForInput(void)
 {
     u32 sound;
     u32 result;
@@ -292,37 +349,50 @@ u32 EraseSramCheckForInput(void)
  * @brief 75f88 | 24c | Initializes the erase sram menu
  * 
  */
-void EraseSramInit(void)
+static void EraseSramInit(void)
 {
-    u32 zero;
-
-    write16(REG_IME, FALSE);
-    write16(REG_DISPSTAT, read16(REG_DISPSTAT) & ~DSTAT_IF_HBLANK);
-    write16(REG_IE, read16(REG_IE) & ~IF_HBLANK);
-    write16(REG_IF, IF_HBLANK);
-    write16(REG_IME, TRUE);
+    WRITE_16(REG_IME, FALSE);
+    WRITE_16(REG_DISPSTAT, READ_16(REG_DISPSTAT) & ~DSTAT_IF_HBLANK);
+    WRITE_16(REG_IE, READ_16(REG_IE) & ~IF_HBLANK);
+    WRITE_16(REG_IF, IF_HBLANK);
+    WRITE_16(REG_IME, TRUE);
     
-    CallbackSetVBlank(EraseSramVBlank_Empty);
+    CallbackSetVblank(EraseSramVBlank_Empty);
 
-    write16(REG_BLDCNT, BLDCNT_SCREEN_FIRST_TARGET | BLDCNT_BRIGHTNESS_INCREASE_EFFECT);
+    WRITE_16(REG_BLDCNT, BLDCNT_SCREEN_FIRST_TARGET | BLDCNT_BRIGHTNESS_INCREASE_EFFECT);
 
-    write16(REG_BLDY, gWrittenToBLDY_NonGameplay = BLDY_MAX_VALUE);
+    WRITE_16(REG_BLDY, gWrittenToBldy_NonGameplay = BLDY_MAX_VALUE);
 
-    zero = 0;
-    DMA_SET(3, &zero, &gNonGameplayRAM, C_32_2_16(DMA_ENABLE | DMA_32BIT | DMA_SRC_FIXED, sizeof(gNonGameplayRAM) / sizeof(u32)));
+    DMA_FILL_32(3, 0, &gNonGameplayRam, sizeof(gNonGameplayRam));
 
     ClearGfxRam();
     gNextOamSlot = 0;
     ResetFreeOam();
 
     ERASE_SRAM_DATA.language = gLanguage;
-    if ((u8)(ERASE_SRAM_DATA.language - 2) > LANGUAGE_SPANISH - 2)
-        ERASE_SRAM_DATA.language = LANGUAGE_ENGLISH;
+    // This code sets the language to the region's default if the language is invalid for that region.
+    // Debug allows any language, US allows any European language, and JP allows Japanese or hiragana.
+    #if defined(DEBUG)
+    if (ERASE_SRAM_DATA.language >= LANGUAGE_END)
+    #elif defined(REGION_JP)
+    if (ERASE_SRAM_DATA.language > LANGUAGE_HIRAGANA)
+    #else // !(DEBUG || REGION_JP)
+    if (INVALID_EU_LANGUAGE(ERASE_SRAM_DATA.language))
+    #endif
+    {
+        ERASE_SRAM_DATA.language = LANGUAGE_DEFAULT;
+    }
 
-    while ((u16)(read16(REG_VCOUNT) - 21) < 140); // read16(REG_VCOUNT) <= SCREEN_SIZE_Y
+    while (READ_16(REG_VCOUNT) >= 21 && READ_16(REG_VCOUNT) <= SCREEN_SIZE_Y);
 
+    #ifdef REGION_EU
+    DmaTransfer(3, sEraseSramMenuBackgroundPal, PALRAM_BASE, 13 * PAL_ROW_SIZE, 16);
+    DmaTransfer(3, sEraseSramMenuObjectsPal, PALRAM_OBJ, sizeof(sEraseSramMenuObjectsPal), 16);
+    #else // !REGION_EU
     DMA_SET(3, sEraseSramMenuBackgroundPal, PALRAM_BASE, C_32_2_16(DMA_ENABLE, (13 * PAL_ROW_SIZE) / sizeof(u16)));
     DMA_SET(3, sEraseSramMenuObjectsPal, PALRAM_OBJ, C_32_2_16(DMA_ENABLE, sizeof(sEraseSramMenuObjectsPal) / sizeof(u16)));
+    #endif // REGION_EU
+    
     SET_BACKDROP_COLOR(COLOR_BLACK);
 
     LZ77UncompVRAM(sEraseSramMenuFirstBoxGfx, VRAM_BASE + 0x1000);
@@ -337,16 +407,16 @@ void EraseSramInit(void)
     LZ77UncompVRAM(sEraseSramMenuBoxTileTable, VRAM_BASE + 0xD000);
     LZ77UncompVRAM(sEraseSramMenuBackgroundTileTable, VRAM_BASE + 0xF000);
 
-    write16(REG_BG0CNT, 0);
-    write16(REG_BG2CNT, 0);
+    WRITE_16(REG_BG0CNT, 0);
+    WRITE_16(REG_BG2CNT, 0);
     
-    write16(REG_BG1CNT, CREATE_BGCNT(0, 26, BGCNT_HIGH_MID_PRIORITY, BGCNT_SIZE_256x256));
-    write16(REG_BG3CNT, CREATE_BGCNT(0, 30, BGCNT_LOW_PRIORITY, BGCNT_SIZE_256x256));
+    WRITE_16(REG_BG1CNT, CREATE_BGCNT(0, 26, BGCNT_HIGH_MID_PRIORITY, BGCNT_SIZE_256x256));
+    WRITE_16(REG_BG3CNT, CREATE_BGCNT(0, 30, BGCNT_LOW_PRIORITY, BGCNT_SIZE_256x256));
 
-    gWrittenToBLDALPHA_H = 0;
-    write16(REG_BLDALPHA, 0);
+    gWrittenToBldalpha_H = 0;
+    WRITE_16(REG_BLDALPHA, 0);
 
-    gGameModeSub3 = 0;
+    gSubGameMode3 = 0;
 
     gBg1HOFS_NonGameplay = 0;
     gBg1VOFS_NonGameplay = 0;
@@ -358,18 +428,18 @@ void EraseSramInit(void)
     EraseSramProcessOAM();
     EraseSramVBlank();
 
-    ERASE_SRAM_DATA.bldcnt = read16(REG_BLDCNT);
+    ERASE_SRAM_DATA.bldcnt = READ_16(REG_BLDCNT);
     ERASE_SRAM_DATA.dispcnt = DCNT_BG1 | DCNT_BG3 | DCNT_OBJ;
-    write16(REG_DISPCNT, ERASE_SRAM_DATA.dispcnt);
+    WRITE_16(REG_DISPCNT, ERASE_SRAM_DATA.dispcnt);
 
-    CallbackSetVBlank(EraseSramVBlank);
+    CallbackSetVblank(EraseSramVBlank);
 }
 
 /**
  * @brief 761d4 | c4 | Initializes the OAM for the erase sram menu
  * 
  */
-void EraseSramResetOam(void)
+static void EraseSramResetOam(void)
 {
     s32 i;
     
@@ -400,7 +470,7 @@ void EraseSramResetOam(void)
  * @brief 76298 | 48 | Updates the cursor position based on the current option
  * 
  */
-void EraseSramUpdateCursorPosition(void)
+static void EraseSramUpdateCursorPosition(void)
 {
     // Panel position + option position
     ERASE_SRAM_DATA.oam[0].yPosition = sEraseSramMenuCursorPosition[DIV_SHIFT(ERASE_SRAM_DATA.currentOption, 2)][1] +
@@ -414,27 +484,27 @@ void EraseSramUpdateCursorPosition(void)
  * @brief 762e0 | 78 | Erase sram menu V-blank code
  * 
  */
-void EraseSramVBlank(void)
+static void EraseSramVBlank(void)
 {
     DMA_SET(3, gOamData, OAM_BASE, C_32_2_16(DMA_ENABLE | DMA_32BIT, OAM_SIZE / sizeof(u32)));
 
-    write16(REG_BLDY, gWrittenToBLDY_NonGameplay);
+    WRITE_16(REG_BLDY, gWrittenToBldy_NonGameplay);
 
-    write16(REG_BG1HOFS, SUB_PIXEL_TO_PIXEL(gBg1HOFS_NonGameplay));
-    write16(REG_BG1VOFS, SUB_PIXEL_TO_PIXEL(gBg1VOFS_NonGameplay));
+    WRITE_16(REG_BG1HOFS, SUB_PIXEL_TO_PIXEL(gBg1HOFS_NonGameplay));
+    WRITE_16(REG_BG1VOFS, SUB_PIXEL_TO_PIXEL(gBg1VOFS_NonGameplay));
 
-    write16(REG_BG3HOFS, SUB_PIXEL_TO_PIXEL(gBg3HOFS_NonGameplay));
-    write16(REG_BG3VOFS, SUB_PIXEL_TO_PIXEL(gBg3VOFS_NonGameplay));
+    WRITE_16(REG_BG3HOFS, SUB_PIXEL_TO_PIXEL(gBg3HOFS_NonGameplay));
+    WRITE_16(REG_BG3VOFS, SUB_PIXEL_TO_PIXEL(gBg3VOFS_NonGameplay));
 
-    write16(REG_BLDCNT, ERASE_SRAM_DATA.bldcnt);
-    write16(REG_DISPCNT, ERASE_SRAM_DATA.dispcnt);
+    WRITE_16(REG_BLDCNT, ERASE_SRAM_DATA.bldcnt);
+    WRITE_16(REG_DISPCNT, ERASE_SRAM_DATA.dispcnt);
 }
 
 /**
  * @brief 76358 | c | Empty v-blank for the erase sram menu
  * 
  */
-void EraseSramVBlank_Empty(void)
+static void EraseSramVBlank_Empty(void)
 {
     vu8 c = 0;
 }
@@ -443,7 +513,7 @@ void EraseSramVBlank_Empty(void)
  * @brief 76364 | 2c | Processes the OAM for the erase sram menu
  * 
  */
-void EraseSramProcessOAM(void)
+static void EraseSramProcessOAM(void)
 {
     gNextOamSlot = 0;
     ProcessMenuOam(ARRAY_SIZE(ERASE_SRAM_DATA.oam), ERASE_SRAM_DATA.oam, sEraseSramMenuOam);

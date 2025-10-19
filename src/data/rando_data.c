@@ -361,7 +361,7 @@ const u8 sRandoPaletteSlots[79 * 2] = {
     /* 78 */ 3, 6,
 };
 
-const u16 sRevealedBlockTilemapValues[MAX_AMOUNT_OF_BLOCKS] = {
+const u16 sRevealedBlockTilemapValues[BEHAVIOR_BLOCK_AMOUNT] = {
     [BEHAVIOR_TO_BLOCK(CLIP_BEHAVIOR_SHOT_BLOCK_NEVER_REFORM)]              = CLIPDATA_TILEMAP_FLAG | CLIPDATA_TILEMAP_SHOT_BLOCK_REFORM,
     [BEHAVIOR_TO_BLOCK(CLIP_BEHAVIOR_TOP_LEFT_SHOT_BLOCK_NEVER_REFORM)]     = CLIPDATA_TILEMAP_FLAG | CLIPDATA_TILEMAP_SHOT_BLOCK_REFORM,
     [BEHAVIOR_TO_BLOCK(CLIP_BEHAVIOR_TOP_RIGHT_SHOT_BLOCK_NEVER_REFORM)]    = CLIPDATA_TILEMAP_FLAG | CLIPDATA_TILEMAP_SHOT_BLOCK_REFORM,
@@ -413,6 +413,6 @@ const u8 sRandoStatusScreenData[RANDO_ABILITY_GROUP_COUNT][3] = {
     [RANDO_ABILITY_GROUP_REQUIRED_DNA] = {2, 16, 17},
 };
 
-const u16 sRandoText_MetroidDNAAcquired[] = INCTEXT("{WIDTH(53)}{COLOR(5)}Metroid DNA acquired.\n{WIDTH(47)}Collect ?? more samples.");
-const u16 sRandoText_MetroidDNAAcquired1Remaining[] = INCTEXT("{WIDTH(53)}{COLOR(5)}Metroid DNA acquired.\n{WIDTH(52)}Collect 1 more sample.");
-const u16 sRandoText_AllMetroidDNAAcquired[] = INCTEXT("{WIDTH(14)}{COLOR(5)}All necessary Metroid DNA acquired.\n{WIDTH(31)}Mecha Ridley's door unlocked.");
+const u16 sRandoText_MetroidDNAAcquired[] = INCTEXT("{GAP(53)}{COLOR(5)}Metroid DNA acquired.\n{GAP(47)}Collect ?? more samples.");
+const u16 sRandoText_MetroidDNAAcquired1Remaining[] = INCTEXT("{GAP(53)}{COLOR(5)}Metroid DNA acquired.\n{GAP(52)}Collect 1 more sample.");
+const u16 sRandoText_AllMetroidDNAAcquired[] = INCTEXT("{GAP(14)}{COLOR(5)}All necessary Metroid DNA acquired.\n{GAP(31)}Mecha Ridley's door unlocked.");

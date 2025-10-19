@@ -1,5 +1,6 @@
 #include "demo.h"
 #include "callbacks.h"
+#include "dma.h"
 
 #include "data/demo_data.h"
 
@@ -11,6 +12,25 @@
 #include "structs/game_state.h"
 #include "structs/minimap.h"
 #include "structs/save_file.h"
+
+const struct SaveDemo* sDemoRamDataPointers[MAX_AMOUNT_OF_DEMOS] = {
+    [0] = &sDemo0_Ram,
+    [1] = &sDemo1_Ram,
+    [2] = &sDemo2_Ram,
+    [3] = &sDemo3_Ram,
+    [4] = &sDemo4_Ram,
+    [5] = &sDemo5_Ram,
+    [6] = &sDemo6_Ram,
+    [7] = &sDemo7_Ram,
+    [8] = &sDemo8_Ram,
+    [9] = &sDemo9_Ram,
+    [10] = &sDemo10_Ram,
+    [11] = &sDemo11_Ram,
+    [12] = &sDemo12_Ram,
+    [13] = &sDemo13_Ram,
+    [14] = &sDemo14_Ram,
+    [15] = &sDemo15_Ram,
+};
 
 /**
  * @brief 60b14 | c | Demo v-blank, empty
@@ -55,7 +75,7 @@ void DemoInit(void)
 {
     s32 demoNbr;
 
-    CallbackSetVBlank(DemoVBlank);
+    CallbackSetVblank(DemoVBlank);
 
     // Get demo number
     if (gCurrentDemo.noDemoShuffle)
@@ -71,7 +91,7 @@ void DemoInit(void)
     }
 
     // Load ram values
-    unk_7584c(0x1);
+    unk_7584c(1);
     SramLoad_DemoRamValues(FALSE, demoNbr);
 
     if (gDemoState == DEMO_STATE_STARTING)
@@ -102,7 +122,7 @@ void DemoInit(void)
             break;
 
         case 11:
-            write32(&gMinimapTilesWithObtainedItems[AREA_BRINSTAR * MINIMAP_SIZE + 15], 1);
+            gMinimapTilesWithObtainedItems[AREA_BRINSTAR][15] = 1;
             break;
     }
 
@@ -118,7 +138,7 @@ void DemoInit(void)
     gFrameCounter8Bit = 0;
     gFrameCounter16Bit = 0;
 
-    CallbackSetVBlank(DemoVBlank);
+    CallbackSetVblank(DemoVBlank);
 }
 
 /**
@@ -161,28 +181,37 @@ void DemoEnd(void)
 {
     gCurrentDemo.active = FALSE;
 
-    if (gDemoState == DEMO_STATE_IN_CONTROL_DEBUG)
+    if (gDemoState == DEMO_STATE_RECORDING_DEBUG)
     {
         // Debug, forward demo input and duration to SRAM, and save it flash
-        DMA_SET(3, gDemoInputData, gSramDemoInputData, C_32_2_16(DMA_ENABLE, DEMO_MAX_DURATION));
-        DMA_SET(3, gDemoInputDuration, gSramDemoInputDuration, C_32_2_16(DMA_ENABLE, DEMO_MAX_DURATION));
+        #ifdef REGION_EU
+        DmaTransfer(3, gDemoInputData, gSramDemoInputData, sizeof(gSramDemoInputData), 16);
+        DmaTransfer(3, gDemoInputDuration, gSramDemoInputDuration, sizeof(gSramDemoInputDuration), 16);
+        #else // !REGION_EU
+        DMA_SET(3, gDemoInputData, gSramDemoInputData, C_32_2_16(DMA_ENABLE, sizeof(gSramDemoInputData) / 2));
+        DMA_SET(3, gDemoInputDuration, gSramDemoInputDuration, C_32_2_16(DMA_ENABLE, sizeof(gSramDemoInputDuration) / 2));
+        #endif // REGION_EU
     
         DoSramOperation(SRAM_OPERATION_SAVE_RECORDED_DEMO);
 
         // Debug leftover
-        gGameModeSub2 = 16;
+        gSubGameMode2 = 16;
 
         // End demo
         gDemoState = DEMO_STATE_NONE;
         return;
     }
 
-    gGameModeSub2 = 11;
+    gSubGameMode2 = 11;
 
     if (gCurrentDemo.noDemoShuffle)
     {
         gDemoState = DEMO_STATE_NONE;
-        gGameModeSub2 = 2;
+        #ifdef DEBUG
+        gSubGameMode2 = 16;
+        #else // !DEBUG
+        gSubGameMode2 = 2;
+        #endif // DEBUG
     }
     else if (gCurrentDemo.endedWithInput)
     {
@@ -197,7 +226,7 @@ void DemoEnd(void)
 
         // Sets to no demo
         gDemoState = DEMO_STATE_NONE;
-        gGameModeSub2 = 2;
+        gSubGameMode2 = 2;
         return;
     }
     else
@@ -210,7 +239,7 @@ void DemoEnd(void)
         {
             gDemoState = DEMO_STATE_NONE;
             gCurrentDemo.number = 0;
-            gGameModeSub2 = 1;
+            gSubGameMode2 = 1;
         }
         else
         {
@@ -219,7 +248,7 @@ void DemoEnd(void)
             {
                 // End, go back to intro
                 gDemoState = DEMO_STATE_NONE;
-                gGameModeSub2 = 2;
+                gSubGameMode2 = 2;
             }
             else
             {

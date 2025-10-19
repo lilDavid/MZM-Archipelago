@@ -21,7 +21,7 @@
  */
 void HudGenericLoadCommonSpriteGfx(void)
 {
-    DMA_SET(3, sCommonSpritesGfx, VRAM_OBJ + 0x800, C_32_2_16(DMA_ENABLE, 0x1C00));
+    DMA_SET(3, sCommonSpritesGfx, VRAM_OBJ + 0x800, C_32_2_16(DMA_ENABLE, sizeof(sCommonSpritesGfx) / sizeof(u16)));
 }
 
 /**
@@ -44,7 +44,7 @@ void HudGenericResetHUDData(void)
 {
     struct ParticleEffect* pParticle;
 
-    if (gGameModeSub3 == 0 || gTourianEscapeCutsceneStage != 0)
+    if (gSubGameMode3 == 0 || gTourianEscapeCutsceneStage != 0)
     {
         for (pParticle = gParticleEffects; pParticle < gParticleEffects + MAX_AMOUNT_OF_PARTICLES; pParticle++)
             pParticle->status = 0;

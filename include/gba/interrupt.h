@@ -1,8 +1,7 @@
 #ifndef GBA_INTERRUPT_H
 #define GBA_INTERRUPT_H
 
-#include "memory.h"
-#include "types.h"
+#include "gba/memory.h"
 
 #define REG_IME (REG_BASE + 0x208)
 #define REG_IE (REG_BASE + 0x200)

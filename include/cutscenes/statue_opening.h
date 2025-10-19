@@ -2,7 +2,6 @@
 #define STATUE_OPENING_CUTSCENE
 
 #include "types.h"
-#include "structs/cutscene.h"
 
 enum StatueOpeningOamId {
     STATUE_OPENING_OAM_ID_KRAID_IDLE = 1,
@@ -17,9 +16,6 @@ enum StatueOpeningOamId {
     STATUE_OPENING_OAM_ID_END
 };
 
-u8 StatueOpeningOpening(void);
-u8 StatueOpeningInit(void);
 u8 StatueOpeningSubroutine(void);
-void StatueOpeningProcessOAM(void);
 
 #endif /* STATUE_OPENING_CUTSCENE */

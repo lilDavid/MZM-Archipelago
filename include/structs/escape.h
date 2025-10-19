@@ -2,10 +2,13 @@
 #define ESCAPE_STRUCT_H
 
 #include "types.h"
+#include "macros.h"
+
+#include "constants/escape.h"
 
 // Structs
 
-struct __attribute__((packed)) EscapeDigits {
+struct PACKED EscapeDigits {
     u8 hundredths;
     u8 tenths;
     u8 secondsOnes;
@@ -16,7 +19,7 @@ struct __attribute__((packed)) EscapeDigits {
 
 // Globals
 
-extern u8 gCurrentEscapeStatus;
+extern EscapeStatus gCurrentEscapeStatus;
 extern u8 gEscapeTimerCounter;
 extern struct EscapeDigits gEscapeTimerDigits;
 

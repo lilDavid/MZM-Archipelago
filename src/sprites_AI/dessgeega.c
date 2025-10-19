@@ -15,12 +15,21 @@
 #include "structs/connection.h"
 #include "structs/sprite.h"
 
+#define DESSGEEGA_POSE_JUMP_WARNING_INIT 0x8
+#define DESSGEEGA_POSE_JUMP_WARNING 0x9
+#define DESSGEEGA_POSE_IDLE 0xF
+#define DESSGEEGA_POSE_LONG_BEAM_DETECT 0x11
+#define DESSGEEGA_POSE_FALLING 0x1F
+#define DESSGEEGA_POSE_JUMPING 0x23
+#define DESSGEEGA_POSE_LANDING 0x25
+#define DESSGEEGA_POSE_LONG_BEAM_SPAWNING 0x33
+
 /**
  * @brief 23b4c | 20 | Checks if samus is near the dessgeega on the sides in a 5 block range
  * 
  * @return u8 1 if near, 0 otherwise
  */
-u8 DessgeegaCheckSamusNearLeftRight(void)
+static u8 DessgeegaCheckSamusNearLeftRight(void)
 {
     u8 result;
 
@@ -37,7 +46,7 @@ u8 DessgeegaCheckSamusNearLeftRight(void)
  * @brief 23b6c | 10c | Initializes a dessgeega sprite
  * 
  */
-void DessgeegaInit(void)
+static void DessgeegaInit(void)
 {
     u8 spriteId;
 
@@ -70,8 +79,12 @@ void DessgeegaInit(void)
         gCurrentSprite.pose = DESSGEEGA_POSE_IDLE;
     }
 
-    // Set hitbox and draw distances based on direction
     gCurrentSprite.work0 = 0;
+    #ifdef BUGFIX
+    gCurrentSprite.work1 = MOD_AND(gSpriteRng, 4);
+    #endif // BUGFIX
+
+    // Set hitbox and draw distances based on direction
     if (gCurrentSprite.status & SPRITE_STATUS_Y_FLIP)
     {
         gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(HALF_BLOCK_SIZE);
@@ -91,7 +104,7 @@ void DessgeegaInit(void)
     gCurrentSprite.hitboxLeft = -BLOCK_SIZE;
     gCurrentSprite.hitboxRight = BLOCK_SIZE;
 
-    gCurrentSprite.pOam = sDessgeegaOAM_Idle;
+    gCurrentSprite.pOam = sDessGeegaOam_Idle;
     gCurrentSprite.animationDurationCounter = 0;
     gCurrentSprite.currentAnimationFrame = 0;
 
@@ -104,25 +117,25 @@ void DessgeegaInit(void)
  * @brief 23c78 | 20 | Initializes a dessgeega to do the warning before a jump
  * 
  */
-void DessgeegaJumpWarningInit(void)
+static void DessgeegaJumpWarningInit(void)
 {
     gCurrentSprite.pose = DESSGEEGA_POSE_JUMP_WARNING;
     gCurrentSprite.animationDurationCounter = 0;
     gCurrentSprite.currentAnimationFrame = 0;
-    gCurrentSprite.pOam = sDessgeegaOAM_JumpWarning;
+    gCurrentSprite.pOam = sDessGeegaOam_JumpWarning;
 }
 
 /**
  * @brief 23c98 | 64 | Initializes a dessgeega to be jumping
  * 
  */
-void DessgeegaJumpingInit(void)
+static void DessgeegaJumpingInit(void)
 {
     gCurrentSprite.pose = DESSGEEGA_POSE_JUMPING;
     gCurrentSprite.animationDurationCounter = 0;
     gCurrentSprite.currentAnimationFrame = 0;
     gCurrentSprite.work3 = 0;
-    gCurrentSprite.pOam = sDessgeegaOAM_Jumping;
+    gCurrentSprite.pOam = sDessGeegaOam_Jumping;
 
     // Set high or low jump depending on RNG
     if (MOD_AND(gSpriteRng, 2) != 0)
@@ -138,12 +151,12 @@ void DessgeegaJumpingInit(void)
  * @brief 23cfc | 38 | Initializes a dessgeega to be landing
  * 
  */
-void DessgeegaLandingInit(void)
+static void DessgeegaLandingInit(void)
 {
     gCurrentSprite.pose = DESSGEEGA_POSE_LANDING;
     gCurrentSprite.animationDurationCounter = 0;
     gCurrentSprite.currentAnimationFrame = 0;
-    gCurrentSprite.pOam = sDessgeegaOAM_Landing;
+    gCurrentSprite.pOam = sDessGeegaOam_Landing;
 
     if (gCurrentSprite.status & SPRITE_STATUS_ONSCREEN)
         SoundPlayNotAlreadyPlaying(SOUND_DESSGEEGA_LANDING);
@@ -153,7 +166,7 @@ void DessgeegaLandingInit(void)
  * @brief 23d34 | 74 | Initializes a dessgeega to be idle
  * 
  */
-void DessgeegaIdleInit(void)
+static void DessgeegaIdleInit(void)
 {
     if (DessgeegaCheckSamusNearLeftRight())
         DessgeegaJumpWarningInit(); // Jump if samus near
@@ -168,10 +181,10 @@ void DessgeegaIdleInit(void)
 
         // Set screaming or idle
         if (gSpriteRng >= 8)
-            gCurrentSprite.pOam = sDessgeegaOAM_Idle;
+            gCurrentSprite.pOam = sDessGeegaOam_Idle;
         else
         {
-            gCurrentSprite.pOam = sDessgeegaOAM_Screaming;
+            gCurrentSprite.pOam = sDessGeegaOam_Screaming;
             if (gCurrentSprite.status & SPRITE_STATUS_ONSCREEN)
                 SoundPlayNotAlreadyPlaying(SOUND_DESSGEEGA_SCREAMING);
         }
@@ -182,20 +195,20 @@ void DessgeegaIdleInit(void)
  * @brief 23da8 | 24 | Initializes a dessgeega to be falling
  * 
  */
-void DessgeegaFallingInit(void)
+static void DessgeegaFallingInit(void)
 {
     gCurrentSprite.pose = DESSGEEGA_POSE_FALLING;
     gCurrentSprite.animationDurationCounter = 0;
     gCurrentSprite.currentAnimationFrame = 0;
     gCurrentSprite.work3 = 0;
-    gCurrentSprite.pOam = sDessgeegaOAM_Jumping; // Use same animation as jumping
+    gCurrentSprite.pOam = sDessGeegaOam_Jumping; // Use same animation as jumping
 }
 
 /**
  * @brief 23dcc | 5c | Handles the jump warning of a dessgeega on the ground
  * 
  */
-void DessgeegaJumpWarningGround(void)
+static void DessgeegaJumpWarningGround(void)
 {
     // Check should fall
     if (SpriteUtilGetCollisionAtPosition(gCurrentSprite.yPosition, gCurrentSprite.xPosition) == COLLISION_AIR)
@@ -214,7 +227,7 @@ void DessgeegaJumpWarningGround(void)
         }
     }
     
-    if (SpriteUtilCheckEndCurrentSpriteAnim())
+    if (SpriteUtilHasCurrentAnimationEnded())
         DessgeegaJumpingInit(); // Jump if anim ended
 }
 
@@ -222,9 +235,9 @@ void DessgeegaJumpWarningGround(void)
  * @brief 23e28 | 14 | Handles the jump warning of a dessgeega on the ceiling
  * 
  */
-void DessgeegaJumpWarningCeiling(void)
+static void DessgeegaJumpWarningCeiling(void)
 {
-    if (SpriteUtilCheckEndCurrentSpriteAnim())
+    if (SpriteUtilHasCurrentAnimationEnded())
         DessgeegaJumpingInit(); // Jump if anim ended
 }
 
@@ -232,7 +245,7 @@ void DessgeegaJumpWarningCeiling(void)
  * @brief 23e3c | 1e8 | Handles the dessgeega jumping from the ground
  * 
  */
-void DessgeegaJumpingGround(void)
+static void DessgeegaJumpingGround(void)
 {
     u8 collision;
     s32 yVelocity;
@@ -356,7 +369,7 @@ void DessgeegaJumpingGround(void)
  * @brief 24024 | 1fc | Handles the dessgeega jumping from the ceiling
  * 
  */
-void DessgeegaJumpingCeiling(void)
+static void DessgeegaJumpingCeiling(void)
 {
     u8 collision;
     s32 yVelocity;
@@ -480,9 +493,9 @@ void DessgeegaJumpingCeiling(void)
  * @brief 24220 | 14 | Checks if the landing animation as ended
  * 
  */
-void DessgeegaCheckLandingAnimEnded(void)
+static void DessgeegaCheckLandingAnimEnded(void)
 {
-    if (SpriteUtilCheckEndCurrentSpriteAnim())
+    if (SpriteUtilHasCurrentAnimationEnded())
         DessgeegaIdleInit(); // Set idle
 }
 
@@ -490,7 +503,7 @@ void DessgeegaCheckLandingAnimEnded(void)
  * @brief 24234 | a4 | Handles a dessgeega falling from the ground
  * 
  */
-void DessgeegaFallingGround(void)
+static void DessgeegaFallingGround(void)
 {
     u8 colliding;
     u32 topEdge;
@@ -545,7 +558,7 @@ void DessgeegaFallingGround(void)
  * @brief 242d8 | a8 | Handles a dessgeega falling from the ceiling
  * 
  */
-void DessgeegaFallingCeiling(void)
+static void DessgeegaFallingCeiling(void)
 {
     u8 colliding;
     u32 topEdge;
@@ -598,7 +611,7 @@ void DessgeegaFallingCeiling(void)
  * @brief 24380 | 98 | Handles a dessgeega being idle on the ground
  * 
  */
-void DessgeegaIdleGround(void)
+static void DessgeegaIdleGround(void)
 {
     if (DessgeegaCheckSamusNearLeftRight())
         DessgeegaJumpWarningInit();
@@ -614,13 +627,13 @@ void DessgeegaIdleGround(void)
                 return;
             }
         }
-        if (SpriteUtilCheckEndCurrentSpriteAnim())
+        if (SpriteUtilHasCurrentAnimationEnded())
         {
             if (gCurrentSprite.work0++ == gCurrentSprite.work1)
                 DessgeegaJumpWarningInit();
             else
             {
-                if (gCurrentSprite.pOam == sDessgeegaOAM_Screaming && gCurrentSprite.status & SPRITE_STATUS_ONSCREEN)
+                if (gCurrentSprite.pOam == sDessGeegaOam_Screaming && gCurrentSprite.status & SPRITE_STATUS_ONSCREEN)
                     SoundPlayNotAlreadyPlaying(SOUND_DESSGEEGA_SCREAMING);
             }
         }
@@ -631,19 +644,19 @@ void DessgeegaIdleGround(void)
  * @brief 24418 | 5c | Handles a dessgeega being idle on the ceiling
  * 
  */
-void DessgeegaIdleCeiling(void)
+static void DessgeegaIdleCeiling(void)
 {
     if (DessgeegaCheckSamusNearLeftRight())
         DessgeegaJumpWarningInit();
     else
     {
-        if (SpriteUtilCheckEndCurrentSpriteAnim())
+        if (SpriteUtilHasCurrentAnimationEnded())
         {
             if (gCurrentSprite.work0++ == gCurrentSprite.work1)
                 DessgeegaJumpWarningInit();
             else
             {
-                if (gCurrentSprite.pOam == sDessgeegaOAM_Screaming && gCurrentSprite.status & SPRITE_STATUS_ONSCREEN)
+                if (gCurrentSprite.pOam == sDessGeegaOam_Screaming && gCurrentSprite.status & SPRITE_STATUS_ONSCREEN)
                     SoundPlayNotAlreadyPlaying(SOUND_DESSGEEGA_SCREAMING);
             }
         }
@@ -654,19 +667,27 @@ void DessgeegaIdleCeiling(void)
  * @brief 24474 | 58 | Handles the death of a dessgeega
  * 
  */
-void DessgeegaDeath(void)
+static void DessgeegaDeath(void)
 {
     u16 yPosition;
 
     if (gCurrentSprite.status & SPRITE_STATUS_Y_FLIP)
-        yPosition = gCurrentSprite.yPosition + (HALF_BLOCK_SIZE + QUARTER_BLOCK_SIZE);
+    {
+        yPosition = gCurrentSprite.yPosition + THREE_QUARTER_BLOCK_SIZE;
+    }
     else
     {
-        // Set event every time a ground dessgeega is killed instead of checking for the sprite ID ?
-        EventFunction(EVENT_ACTION_SETTING, EVENT_LONG_BEAM_DESSGEEGA_KILLED);
-        // Unlock doors
-        gDoorUnlockTimer = -ONE_THIRD_SECOND;
-        yPosition = gCurrentSprite.yPosition - (HALF_BLOCK_SIZE + QUARTER_BLOCK_SIZE);
+        // BUG: There's no check for the sprite id, so the event set and door unlock is done for every "ground" dessgeega
+        #ifdef BUGFIX
+        if (gCurrentSprite.spriteId == PSPRITE_DESSGEEGA_AFTER_LONG_BEAM)
+        #endif
+        {
+            // Set event
+            EventFunction(EVENT_ACTION_SETTING, EVENT_LONG_BEAM_DESSGEEGA_KILLED);
+            // Unlock doors
+            gDoorUnlockTimer = -ONE_THIRD_SECOND;
+        }
+        yPosition = gCurrentSprite.yPosition - THREE_QUARTER_BLOCK_SIZE;
     }
 
     // Kill sprite
@@ -677,7 +698,7 @@ void DessgeegaDeath(void)
  * @brief 244cc | b8 | Handles the detection of samus for the long beam dessgeega
  * 
  */
-void DessgeegaLongBeamDetectSamus(void)
+static void DessgeegaLongBeamDetectSamus(void)
 {
     u16 yPosition;
     u16 xPosition;
@@ -690,7 +711,7 @@ void DessgeegaLongBeamDetectSamus(void)
         SpriteUtilCheckSamusNearSpriteLeftRight(BLOCK_SIZE * 12, BLOCK_SIZE * 4 - QUARTER_BLOCK_SIZE) != NSLR_OUT_OF_RANGE)
     {
         gCurrentSprite.pose = DESSGEEGA_POSE_LONG_BEAM_SPAWNING;
-        gCurrentSprite.pOam = sDessgeegaOAM_Jumping;
+        gCurrentSprite.pOam = sDessGeegaOam_Jumping;
         gCurrentSprite.animationDurationCounter = 0;
         gCurrentSprite.currentAnimationFrame = 0;
         gCurrentSprite.work3 = FALSE;
@@ -701,7 +722,7 @@ void DessgeegaLongBeamDetectSamus(void)
         yPosition = gCurrentSprite.yPosition;
         xPosition = gCurrentSprite.xPosition;
 
-        SpriteDebrisInit(0, 5, yPosition + (HALF_BLOCK_SIZE + QUARTER_BLOCK_SIZE), xPosition + (BLOCK_SIZE + QUARTER_BLOCK_SIZE));
+        SpriteDebrisInit(0, 5, yPosition + THREE_QUARTER_BLOCK_SIZE, xPosition + (BLOCK_SIZE + QUARTER_BLOCK_SIZE));
         SpriteDebrisInit(0, 7, yPosition + QUARTER_BLOCK_SIZE, xPosition + (3 * EIGHTH_BLOCK_SIZE + PIXEL_SIZE / 2));
         SpriteDebrisInit(0, 8, yPosition + BLOCK_SIZE, xPosition - (BLOCK_SIZE + 3 * EIGHTH_BLOCK_SIZE + PIXEL_SIZE / 2));
         SpriteDebrisInit(0, 6, yPosition + HALF_BLOCK_SIZE, xPosition - QUARTER_BLOCK_SIZE);
@@ -713,7 +734,7 @@ void DessgeegaLongBeamDetectSamus(void)
  * @brief 24584 | dc | Handles the spawning of the dessgeega long beam
  * 
  */
-void DessgeegaLongBeamSpawning(void)
+static void DessgeegaLongBeamSpawning(void)
 {
     u32 topEdge;
     u16 yPosition;
@@ -782,63 +803,64 @@ void Dessgeega(void)
     }
 
     if (gCurrentSprite.freezeTimer != 0)
-        SpriteUtilUpdateFreezeTimer();
-    else
     {
-        if (SpriteUtilIsSpriteStunned())
-            return;
+        SpriteUtilUpdateFreezeTimer();
+        return;
+    }
 
-        switch (gCurrentSprite.pose)
-        {
-            case 0:
-                DessgeegaInit();
-                break;
+    if (SpriteUtilIsSpriteStunned())
+        return;
 
-            case DESSGEEGA_POSE_LONG_BEAM_DETECT:
-                DessgeegaLongBeamDetectSamus();
-                break;
+    switch (gCurrentSprite.pose)
+    {
+        case SPRITE_POSE_UNINITIALIZED:
+            DessgeegaInit();
+            break;
 
-            case DESSGEEGA_POSE_LONG_BEAM_SPAWNING:
-                DessgeegaLongBeamSpawning();
-                break;
+        case DESSGEEGA_POSE_LONG_BEAM_DETECT:
+            DessgeegaLongBeamDetectSamus();
+            break;
 
-            case DESSGEEGA_POSE_JUMP_WARNING_INIT:
-                DessgeegaJumpWarningInit();
+        case DESSGEEGA_POSE_LONG_BEAM_SPAWNING:
+            DessgeegaLongBeamSpawning();
+            break;
 
-            case DESSGEEGA_POSE_JUMP_WARNING:
-                if (gCurrentSprite.status & SPRITE_STATUS_Y_FLIP)
-                    DessgeegaJumpWarningCeiling();
-                else
-                    DessgeegaJumpWarningGround();
-                break;
+        case DESSGEEGA_POSE_JUMP_WARNING_INIT:
+            DessgeegaJumpWarningInit();
 
-            case DESSGEEGA_POSE_JUMPING:
-                if (gCurrentSprite.status & SPRITE_STATUS_Y_FLIP)
-                    DessgeegaJumpingCeiling();
-                else
-                    DessgeegaJumpingGround();
-                break;
+        case DESSGEEGA_POSE_JUMP_WARNING:
+            if (gCurrentSprite.status & SPRITE_STATUS_Y_FLIP)
+                DessgeegaJumpWarningCeiling();
+            else
+                DessgeegaJumpWarningGround();
+            break;
 
-            case DESSGEEGA_POSE_LANDING:
-                DessgeegaCheckLandingAnimEnded();
-                break;
+        case DESSGEEGA_POSE_JUMPING:
+            if (gCurrentSprite.status & SPRITE_STATUS_Y_FLIP)
+                DessgeegaJumpingCeiling();
+            else
+                DessgeegaJumpingGround();
+            break;
 
-            case DESSGEEGA_POSE_IDLE:
-                if (gCurrentSprite.status & SPRITE_STATUS_Y_FLIP)
-                    DessgeegaIdleCeiling();
-                else
-                    DessgeegaIdleGround();
-                break;
+        case DESSGEEGA_POSE_LANDING:
+            DessgeegaCheckLandingAnimEnded();
+            break;
 
-            case DESSGEEGA_POSE_FALLING:
-                if (gCurrentSprite.status & SPRITE_STATUS_Y_FLIP)
-                    DessgeegaFallingCeiling();
-                else
-                    DessgeegaFallingGround();
-                break;
+        case DESSGEEGA_POSE_IDLE:
+            if (gCurrentSprite.status & SPRITE_STATUS_Y_FLIP)
+                DessgeegaIdleCeiling();
+            else
+                DessgeegaIdleGround();
+            break;
 
-            default:
-                DessgeegaDeath();
-        }
+        case DESSGEEGA_POSE_FALLING:
+            if (gCurrentSprite.status & SPRITE_STATUS_Y_FLIP)
+                DessgeegaFallingCeiling();
+            else
+                DessgeegaFallingGround();
+            break;
+
+        default:
+            DessgeegaDeath();
     }
 }

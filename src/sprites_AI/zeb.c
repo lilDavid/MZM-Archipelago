@@ -12,13 +12,18 @@
 #include "structs/sprite.h"
 #include "structs/samus.h"
 
+#define ZEB_POSE_IDLE_INIT 0x8
+#define ZEB_POSE_IDLE 0x9
+#define ZEB_POSE_GOING_UP 0x23
+#define ZEB_POSE_MOVING 0x25
+
 /**
  * @brief 1c238 | 60 | Initializes a zeb sprite
  * 
  */
-void ZebInit(void)
+static void ZebInit(void)
 {
-    gCurrentSprite.hitboxTop = -(EIGHTH_BLOCK_SIZE);
+    gCurrentSprite.hitboxTop = -EIGHTH_BLOCK_SIZE;
     gCurrentSprite.hitboxBottom = QUARTER_BLOCK_SIZE + PIXEL_SIZE;
     gCurrentSprite.hitboxLeft = -(QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE + PIXEL_SIZE);
     gCurrentSprite.hitboxRight = QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE + PIXEL_SIZE;
@@ -41,12 +46,12 @@ void ZebInit(void)
  * @brief 1c298 | 3c | Initializes a zeb to be idle
  * 
  */
-void ZebIdleInit(void)
+static void ZebIdleInit(void)
 {
     gCurrentSprite.samusCollision = SSC_NONE;
     gCurrentSprite.pose = ZEB_POSE_IDLE;
 
-    gCurrentSprite.pOam = sZebOAM_Idle;
+    gCurrentSprite.pOam = sZebOam_Idle;
     gCurrentSprite.currentAnimationFrame = 0;
     gCurrentSprite.animationDurationCounter = 0;
 
@@ -58,7 +63,7 @@ void ZebIdleInit(void)
  * @brief 1c2d4 | 98 | Handles a zeb being idle
  * 
  */
-void ZebIdle(void)
+static void ZebIdle(void)
 {
     u16 samusX;
     u16 samusY;
@@ -66,37 +71,38 @@ void ZebIdle(void)
     u16 spriteY;
     s32 offset;
 
-    if (!SpriteUtilCheckHasDrops())
+    if (SpriteUtilCheckHasDrops())
+        return;
+
+    if (gCurrentSprite.work1 != 0)
     {
-        if (gCurrentSprite.work1 != 0)
-            gCurrentSprite.work1--;
-        else
-        {
-            samusY = gSamusData.yPosition;
-            samusX = gSamusData.xPosition;
-            spriteY = gCurrentSprite.yPosition;
-            spriteX = gCurrentSprite.xPosition;
+        APPLY_DELTA_TIME_DEC(gCurrentSprite.work1);
+        return;
+    }
 
-            if (samusY <= spriteY - (HALF_BLOCK_SIZE - PIXEL_SIZE / 2))
-            {
-                if (ABS_DIFF(spriteX, samusX) <= (HALF_BLOCK_SIZE + PIXEL_SIZE) ||
-                    SpriteUtilCheckSamusNearSpriteAboveBelow(BLOCK_SIZE * 5, BLOCK_SIZE * 5) != NSAB_ABOVE)
-                    return;
-                else
-                {
-                    // Samus in range
-                    gCurrentSprite.scaling = gSamusData.yPosition;
-                    gCurrentSprite.pose = ZEB_POSE_GOING_UP;
-                    gCurrentSprite.work0 = 2 * DELTA_TIME;
-                    gCurrentSprite.status &= ~(SPRITE_STATUS_NOT_DRAWN | SPRITE_STATUS_IGNORE_PROJECTILES);
+    samusY = gSamusData.yPosition;
+    samusX = gSamusData.xPosition;
+    spriteY = gCurrentSprite.yPosition;
+    spriteX = gCurrentSprite.xPosition;
 
-                    SpriteUtilMakeSpriteFaceSamusXFlip();
+    if (samusY <= spriteY - (HALF_BLOCK_SIZE - PIXEL_SIZE / 2))
+    {
+        if (ABS_DIFF(spriteX, samusX) <= HALF_BLOCK_SIZE + PIXEL_SIZE)
+            return;
 
-                    if (gCurrentSprite.status & SPRITE_STATUS_ONSCREEN)
-                        SoundPlay(SOUND_ZEB_RISING);
-                }
-            }   
-        }
+        if (SpriteUtilCheckSamusNearSpriteAboveBelow(BLOCK_SIZE * 5, BLOCK_SIZE * 5) != NSAB_ABOVE)
+            return;
+    
+        // Samus in range
+        gCurrentSprite.scaling = gSamusData.yPosition;
+        gCurrentSprite.pose = ZEB_POSE_GOING_UP;
+        gCurrentSprite.work0 = 2 * DELTA_TIME;
+        gCurrentSprite.status &= ~(SPRITE_STATUS_NOT_DRAWN | SPRITE_STATUS_IGNORE_PROJECTILES);
+
+        SpriteUtilMakeSpriteFaceSamusXFlip();
+
+        if (gCurrentSprite.status & SPRITE_STATUS_ONSCREEN)
+            SoundPlay(SOUND_ZEB_RISING);
     }
 }
 
@@ -104,35 +110,36 @@ void ZebIdle(void)
  * @brief 1c36c | 80 | Handles a zeb going up
  * 
  */
-void ZebGoingUp(void)
+static void ZebGoingUp(void)
 {
     u16 yPosition;
 
     gCurrentSprite.yPosition -= EIGHTH_BLOCK_SIZE;
     if (gCurrentSprite.work0 != 0)
     {
-        if (--gCurrentSprite.work0 == 0)
+        APPLY_DELTA_TIME_DEC(gCurrentSprite.work0);
+        if (gCurrentSprite.work0 == 0)
             gCurrentSprite.samusCollision = SSC_HURTS_SAMUS;
+
+        return;
     }
+
+    if (gCurrentSprite.scaling < gSamusData.yPosition && gSamusData.yPosition > gCurrentSprite.yPositionSpawn - BLOCK_SIZE * 2)
+        yPosition = gCurrentSprite.scaling;
     else
+        yPosition = gSamusData.yPosition;
+
+    if (yPosition - (BLOCK_SIZE + HALF_BLOCK_SIZE + PIXEL_SIZE) > gCurrentSprite.yPosition)
     {
-        if (gCurrentSprite.scaling < gSamusData.yPosition && gSamusData.yPosition > gCurrentSprite.yPositionSpawn - BLOCK_SIZE * 2)
-            yPosition = gCurrentSprite.scaling;
-        else
-            yPosition = gSamusData.yPosition;
+        // Reached samus, set moving
+        gCurrentSprite.pose = ZEB_POSE_MOVING;
+        gCurrentSprite.work0 = CONVERT_SECONDS(1.f / 6);
 
-        if (yPosition - (BLOCK_SIZE + HALF_BLOCK_SIZE + PIXEL_SIZE) > gCurrentSprite.yPosition)
-        {
-            // Reached samus, set moving
-            gCurrentSprite.pose = ZEB_POSE_MOVING;
-            gCurrentSprite.work0 = CONVERT_SECONDS(1.f / 6);
+        gCurrentSprite.pOam = sZebOam_Moving;
+        gCurrentSprite.currentAnimationFrame = 0;
+        gCurrentSprite.animationDurationCounter = 0;
 
-            gCurrentSprite.pOam = sZebOAM_Moving;
-            gCurrentSprite.currentAnimationFrame = 0;
-            gCurrentSprite.animationDurationCounter = 0;
-
-            gCurrentSprite.bgPriority = 1;
-        }
+        gCurrentSprite.bgPriority = 1;
     }
 }
 
@@ -140,7 +147,7 @@ void ZebGoingUp(void)
  * @brief 1c3ec | 58 | Handles a zeb respawning
  * 
  */
-void ZebRespawn(void)
+static void ZebRespawn(void)
 {
     // Set spawn position
     gCurrentSprite.yPosition = gCurrentSprite.yPositionSpawn;
@@ -162,46 +169,47 @@ void ZebRespawn(void)
  * @brief 1c444 | c8 | Handles a zeb moving
  * 
  */
-void ZebMove(void)
+static void ZebMove(void)
 {
     if (gCurrentSprite.work0 != 0)
     {
-        if (--gCurrentSprite.work0 == 0)
+        APPLY_DELTA_TIME_DEC(gCurrentSprite.work0);
+        if (gCurrentSprite.work0 == 0)
         {
             if (gCurrentSprite.status & SPRITE_STATUS_ONSCREEN)
                 SoundPlay(SOUND_ZEB_MOVING);
             gCurrentSprite.work1 = 0;
         }
+
+        return;
+    }
+
+    APPLY_DELTA_TIME_INC(gCurrentSprite.work1);
+    if (gCurrentSprite.status & SPRITE_STATUS_X_FLIP)
+    {
+        // Check should respawn
+        if (gCurrentSprite.xPosition - gSamusData.xPosition > (SCREEN_SIZE_X_SUB_PIXEL + BLOCK_SIZE) || gCurrentSprite.xPosition & 0x8000) // xPos < 0
+        {
+            ZebRespawn();
+            return;
+        }
+        else
+            gCurrentSprite.xPosition += EIGHTH_BLOCK_SIZE + PIXEL_SIZE; // Move
     }
     else
     {
-        gCurrentSprite.work1++;
-        if (gCurrentSprite.status & SPRITE_STATUS_X_FLIP)
+        // Check should respawn
+        if (gSamusData.xPosition - gCurrentSprite.xPosition > (SCREEN_SIZE_X_SUB_PIXEL + BLOCK_SIZE) || gCurrentSprite.xPosition & 0x8000) // xPos < 0
         {
-            // Check should respawn
-            if (gCurrentSprite.xPosition - gSamusData.xPosition > (SCREEN_SIZE_X_SUB_PIXEL + BLOCK_SIZE) || gCurrentSprite.xPosition & 0x8000) // xPos < 0
-            {
-                ZebRespawn();
-                return;
-            }
-            else
-                gCurrentSprite.xPosition += EIGHTH_BLOCK_SIZE + 1 * PIXEL_SIZE; // Move
+            ZebRespawn();
+            return;
         }
         else
-        {
-            // Check should respawn
-            if (gSamusData.xPosition - gCurrentSprite.xPosition > (SCREEN_SIZE_X_SUB_PIXEL + BLOCK_SIZE) || gCurrentSprite.xPosition & 0x8000) // xPos < 0
-            {
-                ZebRespawn();
-                return;
-            }
-            else
-                gCurrentSprite.xPosition -= EIGHTH_BLOCK_SIZE + 1 * PIXEL_SIZE; // Move
-        }
-        // CONVERT_SECONDS(.25f) + DELTA_TIME
-        if (MOD_AND(gCurrentSprite.work1, 16) == 0 && gCurrentSprite.status & SPRITE_STATUS_ONSCREEN)
-            SoundPlay(SOUND_ZEB_MOVING);
+            gCurrentSprite.xPosition -= EIGHTH_BLOCK_SIZE + PIXEL_SIZE; // Move
     }
+    // CONVERT_SECONDS(.25f) + DELTA_TIME
+    if (MOD_AND(gCurrentSprite.work1, 16) == 0 && gCurrentSprite.status & SPRITE_STATUS_ONSCREEN)
+        SoundPlay(SOUND_ZEB_MOVING);
 }
 
 /**
@@ -218,35 +226,36 @@ void Zeb(void)
     }
 
     if (gCurrentSprite.freezeTimer != 0)
-        SpriteUtilUpdateFreezeTimer();
-    else
     {
-        if (SpriteUtilIsSpriteStunned())
-            return;
-        
-        switch (gCurrentSprite.pose)
-        {
-            case 0:
-                ZebInit();
+        SpriteUtilUpdateFreezeTimer();
+        return;
+    }
 
-            case ZEB_POSE_IDLE_INIT:
-                ZebIdleInit();
+    if (SpriteUtilIsSpriteStunned())
+        return;
+    
+    switch (gCurrentSprite.pose)
+    {
+        case SPRITE_POSE_UNINITIALIZED:
+            ZebInit();
 
-            case ZEB_POSE_IDLE:
-                ZebIdle();
-                break;
+        case ZEB_POSE_IDLE_INIT:
+            ZebIdleInit();
 
-            case ZEB_POSE_GOING_UP:
-                ZebGoingUp();
-                break;
+        case ZEB_POSE_IDLE:
+            ZebIdle();
+            break;
 
-            case ZEB_POSE_MOVING:
-                ZebMove();
-                break;
+        case ZEB_POSE_GOING_UP:
+            ZebGoingUp();
+            break;
 
-            default:
-                SpriteUtilSpriteDeath(DEATH_RESPAWNING, gCurrentSprite.yPosition, gCurrentSprite.xPosition, TRUE, PE_SPRITE_EXPLOSION_MEDIUM);
-                ZebRespawn();
-        }
+        case ZEB_POSE_MOVING:
+            ZebMove();
+            break;
+
+        default:
+            SpriteUtilSpriteDeath(DEATH_RESPAWNING, gCurrentSprite.yPosition, gCurrentSprite.xPosition, TRUE, PE_SPRITE_EXPLOSION_MEDIUM);
+            ZebRespawn();
     }
 }

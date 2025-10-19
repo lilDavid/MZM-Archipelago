@@ -2,7 +2,6 @@
 #include "gba.h"
 #include "macros.h"
 
-#include "data/frame_data_pointers.h"
 #include "data/sprites/kraid.h"
 #include "data/sprite_data.h"
 
@@ -28,11 +27,97 @@
 #include "structs/scroll.h"
 #include "structs/projectile.h"
 
+#define KRAID_POSE_GO_UP 0x1
+#define KRAID_POSE_CHECK_FULLY_UP 0x2
+#define KRAID_POSE_FIRST_STEP_INIT 0x8
+#define KRAID_POSE_FIRST_STEP 0x9
+#define KRAID_POSE_STANDING_INIT 0xE
+#define KRAID_POSE_STANDING 0xF
+#define KRAID_POSE_STANDING_BETWEEN_STEPS_INIT 0x10
+#define KRAID_POSE_STANDING_BETWEEN_STEPS 0x11
+#define KRAID_POSE_SECOND_STEP_INIT 0x22
+#define KRAID_POSE_SECOND_STEP 0x23
+#define KRAID_POSE_DYING_INIT 0x62
+#define KRAID_POSE_DYING 0x67
+#define KRAID_POSE_DEAD_STATIONARY 0x68
+
+// Kraid part
+
+#define KRAID_PART_POSE_IDLE 0xE
+#define KRAID_PART_POSE_CHECK_ATTACK 0x12
+#define KRAID_PART_POSE_CHECK_THROW_NAILS 0x10
+#define KRAID_PART_POSE_CHECK_SPAWN_SPIKES 0x42
+#define KRAID_PART_POSE_SPAWN_SPIKES 0x43
+#define KRAID_PART_POSE_CHECK_PROJECTILES 0x44
+#define KRAID_PART_POSE_DYING_INIT 0x62
+#define KRAID_PART_POSE_ARM_DYING 0x67
+#define KRAID_PART_POSE_DYING_STATIONNARY 0x68
+
+// Kraid spike
+
+#define KRAID_SPIKE_POSE_DELAY_BEFORE_MOVING 0x9
+#define KRAID_SPIKE_POSE_MOVING 0x23
+#define KRAID_SPIKE_POSE_IN_WALL 0x25
+
+#define DESTROYED_BLOCK_STATUS_TOP (1 << 0)
+#define DESTROYED_BLOCK_STATUS_MIDDLE (1 << 1)
+#define DESTROYED_BLOCK_STATUS_BOTTOM (1 << 2)
+
+// Kraid nail
+
+enum KraidNailType {
+    KRAID_NAIL_TYPE_SLOW_ROTATION,
+    KRAID_NAIL_TYPE_FAST_ROTATION
+};
+
+#define KRAID_NAIL_POSE_MOVING 0x9
+
+static const struct FrameData* sKraidFrameDataPointers[KRAID_OAM_END] = {
+    [KRAID_OAM_MOUTH_CLOSED] = sKraidOam_MouthClosed,
+    [KRAID_OAM_MOUTH_CLOSED_BLINK] = sKraidOam_MouthClosedBlink,
+    [KRAID_OAM_OPENING_MOUTH] = sKraidOam_OpeningMouth,
+    [KRAID_OAM_MOUTH_OPENED] = sKraidOam_MouthOpened,
+    [KRAID_OAM_RISING] = sKraidOam_Rising,
+    [KRAID_OAM_CLOSING_MOUTH] = sKraidOam_ClosingMouth,
+    [KRAID_OAM_2cac5c] = sKraidPartOam_2cac5c,
+    [KRAID_OAM_LEFT_ARM_IDLE] = sKraidPartOam_LeftArmIdle,
+    [KRAID_OAM_LEFT_ARM_DYING] = sKraidPartOam_LeftArmDying,
+    [KRAID_OAM_LEFT_ARM_THROWING_NAILS] = sKraidPartOam_LeftArmThrowingNails,
+    [KRAID_OAM_2cadc4] = sKraidPartOam_2cadc4,
+    [KRAID_OAM_RIGHT_ARM_IDLE] = sKraidPartOam_RightArmIdle,
+    [KRAID_OAM_RIGHT_ARM_Attacking] = sKraidPartOam_RightArmAttacking,
+    [KRAID_OAM_RIGHT_ARM_DYING] = sKraidPartOam_RightArmDying,
+    [KRAID_OAM_LEFT_FEET_RISING] = sKraidPartOam_LeftFeetRising,
+    [KRAID_OAM_LEFT_FEET_IDLE_1] = sKraidPartOam_LeftFeetIdle1,
+    [KRAID_OAM_LEFT_FEET_MOVING_RIGHT] = sKraidPartOam_LeftFeetMovingRight,
+    [KRAID_OAM_LEFT_FEET_IDLE_2] = sKraidPartOam_LeftFeetIdle2,
+    [KRAID_OAM_LEFT_FEET_MOVED_RIGHT] = sKraidPartOam_LeftFeetMovedRight,
+    [KRAID_OAM_LEFT_FEET_MOVING_LEFT] = sKraidPartOam_LeftFeetMovingLeft,
+    [KRAID_OAM_LEFT_FEET_MOVED_LEFT] = sKraidPartOam_LeftFeetMovedLeft,
+    [KRAID_OAM_RIGHT_FEET_RISING] = sKraidPartOam_RightFeetRising,
+    [KRAID_OAM_RIGHT_FEET_IDLE_1] = sKraidPartOam_RightFeetIdle1,
+    [KRAID_OAM_RIGHT_FEET_MOVED_RIGHT] = sKraidPartOam_RightFeetMovedRight,
+    [KRAID_OAM_RIGHT_FEET_IDLE_2] = sKraidPartOam_RightFeetIdle2,
+    [KRAID_OAM_RIGHT_FEET_MOVING_RIGHT] = sKraidPartOam_RightFeetMovingRight,
+    [KRAID_OAM_RIGHT_FEET_MOVED_LEFT] = sKraidPartOam_RightFeetMovedLeft,
+    [KRAID_OAM_RIGHT_FEET_MOVING_LEFT] = sKraidPartOam_RightFeetMovingLeft,
+    [KRAID_OAM_TOP_HOLE_LEFT] = sKraidPartOam_TopHoleLeft,
+    [KRAID_OAM_TOP_HOLE_RIGHT] = sKraidPartOam_TopHoleRight,
+    [KRAID_OAM_MIDDLE_HOLE_LEFT] = sKraidPartOam_MiddleHoleLeft,
+    [KRAID_OAM_MIDDLE_HOLE_RIGHT] = sKraidPartOam_MiddleHoleRight,
+    [KRAID_OAM_BOTTOM_HOLE_LEFT] = sKraidPartOam_BottomHoleLeft,
+    [KRAID_OAM_BOTTOM_HOLE_RIGHT] = sKraidPartOam_BottomHoleRight,
+    [KRAID_OAM_NAIL] = sKraidNailOam,
+    [KRAID_OAM_2cb29c] = sKraidOam_2cb29c,
+    [KRAID_OAM_2cb2ac] = sKraidOam_2cb2ac,
+    [KRAID_OAM_SPIKE] = sKraidSpikeOam
+};
+
 /**
  * @brief 183d8 | 68 | Synchronize the sub sprites of Kraid
  * 
  */
-void KraidSyncSubSprites(void)
+static void KraidSyncSubSprites(void)
 {
     MultiSpriteDataInfo_T pData;
     u16 oamIdx;
@@ -55,7 +140,7 @@ void KraidSyncSubSprites(void)
  * @brief 18440 | 1ac | Checks if a projectile is colliding with Kraid's belly
  * 
  */
-void KraidCheckProjectilesCollidingWithBelly(void)
+static void KraidCheckProjectilesCollidingWithBelly(void)
 {
     u16 spriteY;
     u16 spriteX;
@@ -76,10 +161,21 @@ void KraidCheckProjectilesCollidingWithBelly(void)
 
     for (pProj = gProjectileData; pProj < gProjectileData + MAX_AMOUNT_OF_PROJECTILES; pProj++)
     {
-        // Check can collide and colliding
-        if (pProj->status & PROJ_STATUS_EXISTS && pProj->status & PROJ_STATUS_CAN_AFFECT_ENVIRONMENT &&
-            pProj->movementStage > 0x1 && pProj->type < PROJ_TYPE_BOMB &&
-            pProj->xPosition > spriteLeft && pProj->xPosition < spriteRight &&
+        if (!(pProj->status & PROJ_STATUS_EXISTS))
+            continue;
+
+        if (!(pProj->status & PROJ_STATUS_CAN_AFFECT_ENVIRONMENT))
+            continue;
+
+        if (pProj->movementStage <= PROJECTILE_STAGE_SPAWNING)
+            continue;
+
+        // Ignore all non beam and non missile projectiles
+        if (pProj->type >= PROJ_TYPE_BOMB)
+            continue;
+
+        // Check colliding
+        if (pProj->xPosition > spriteLeft && pProj->xPosition < spriteRight &&
             pProj->yPosition > spriteTop && pProj->yPosition < spriteBottom)
         {
             // Kill projectile
@@ -88,15 +184,17 @@ void KraidCheckProjectilesCollidingWithBelly(void)
             projX = pProj->xPosition;
 
             // Set effects
-            if (gSpriteRng & 0x1)
+            if (MOD_AND(gSpriteRng, 2))
             {
-                SpriteDebrisInit(0, 0x12, projY + 0x10, projX - 0x8);
-                SpriteDebrisInit(0, 0x13, projY - 0x2A, projX + 0x14);
+                SpriteDebrisInit(0, 0x12, projY + QUARTER_BLOCK_SIZE, projX - EIGHTH_BLOCK_SIZE);
+                SpriteDebrisInit(0, 0x13, projY - (HALF_BLOCK_SIZE + EIGHTH_BLOCK_SIZE + PIXEL_SIZE / 2),
+                    projX + QUARTER_BLOCK_SIZE + PIXEL_SIZE);
             }
             else
             {
-                SpriteDebrisInit(0, 0x12, projY, projX + 0xC);
-                SpriteDebrisInit(0, 0x13, projY - 0x18, projX - 0x1E);
+                SpriteDebrisInit(0, 0x12, projY, projX + QUARTER_BLOCK_SIZE - PIXEL_SIZE);
+                SpriteDebrisInit(0, 0x13, projY - (QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE),
+                    projX - (HALF_BLOCK_SIZE - PIXEL_SIZE / 2));
             }
 
             ScreenShakeStartHorizontal(CONVERT_SECONDS(1.f / 6), 0x80 | 1);
@@ -136,7 +234,7 @@ void KraidCheckProjectilesCollidingWithBelly(void)
     }
 }
 
-void KraidOpenCloseRoutineAndProjectileCollision(void)
+static void KraidOpenCloseRoutineAndProjectileCollision(void)
 {
     struct SpriteData* pSprite;
     struct ProjectileData* pProj;
@@ -159,8 +257,8 @@ void KraidOpenCloseRoutineAndProjectileCollision(void)
     pSprite = &gCurrentSprite;
 
     // Update opening mouth timer
-    if (gSubSpriteData1.workVariable2 != 0)
-        gSubSpriteData1.workVariable2--;
+    if (gSubSpriteData1.work2 != 0)
+        gSubSpriteData1.work2--;
 
     // Update animations and check whether or not the mouth is open
 
@@ -168,7 +266,7 @@ void KraidOpenCloseRoutineAndProjectileCollision(void)
     {
         // Closed
         closed = TRUE;
-        if (gSubSpriteData1.workVariable2 != 0)
+        if (gSubSpriteData1.work2 != 0)
         {
             // Opening mouth timer active, set opening
             pSprite->pOam = sKraidOam_OpeningMouth;
@@ -177,7 +275,7 @@ void KraidOpenCloseRoutineAndProjectileCollision(void)
 
             SoundPlay(SOUND_KRAID_OPENING_MOUTH);
         }
-        else if (SpriteUtilCheckEndCurrentSpriteAnim() && gSpriteRng < 5)
+        else if (SpriteUtilHasCurrentAnimationEnded() && gSpriteRng < SPRITE_RNG_PROB(5.f / 16))
         {
             // Random blinking animation
             pSprite->pOam = sKraidOam_MouthClosedBlink;
@@ -188,7 +286,7 @@ void KraidOpenCloseRoutineAndProjectileCollision(void)
     else if (pSprite->pOam == sKraidOam_MouthClosedBlink)
     {
         closed = TRUE;
-        if (gSubSpriteData1.workVariable2 != 0)
+        if (gSubSpriteData1.work2 != 0)
         {
             // Opening mouth timer active, set opening
             pSprite->pOam = sKraidOam_OpeningMouth;
@@ -197,7 +295,7 @@ void KraidOpenCloseRoutineAndProjectileCollision(void)
 
             SoundPlay(SOUND_KRAID_OPENING_MOUTH);
         }
-        else if (SpriteUtilCheckEndCurrentSpriteAnim())
+        else if (SpriteUtilHasCurrentAnimationEnded())
         {
             // Back to normal animation
             pSprite->pOam = sKraidOam_MouthClosed;
@@ -207,11 +305,11 @@ void KraidOpenCloseRoutineAndProjectileCollision(void)
     }
     else if (pSprite->pOam == sKraidOam_OpeningMouth)
     {
-        if (pSprite->currentAnimationFrame > 5)
+        if (pSprite->currentAnimationFrame >= (s32)(FRAME_DATA_NBR_OF_FRAMES(sKraidOam_OpeningMouth) * .75f))
         {
             // Enable projectile collision
             closed = FALSE;
-            if (SpriteUtilCheckEndCurrentSpriteAnim())
+            if (SpriteUtilHasCurrentAnimationEnded())
             {
                 // Set opened
                 pSprite->pOam = sKraidOam_MouthOpened;
@@ -236,7 +334,7 @@ void KraidOpenCloseRoutineAndProjectileCollision(void)
         {
             // Closed
             closed = TRUE;
-            if (gSubSpriteData1.workVariable2 != 0)
+            if (gSubSpriteData1.work2 != 0)
             {
                 // Opening mouth timer active, set opening
                 pSprite->pOam = sKraidOam_OpeningMouth;
@@ -245,10 +343,10 @@ void KraidOpenCloseRoutineAndProjectileCollision(void)
 
                 SoundPlay(SOUND_KRAID_OPENING_MOUTH);
             }
-            else if (SpriteUtilCheckEndCurrentSpriteAnim())
+            else if (SpriteUtilHasCurrentAnimationEnded())
             {
                 // Random animation
-                if (gSpriteRng & 1)
+                if (MOD_AND(gSpriteRng, 2))
                     pSprite->pOam = sKraidOam_MouthClosed;
                 else
                     pSprite->pOam = sKraidOam_MouthClosedBlink;
@@ -262,7 +360,7 @@ void KraidOpenCloseRoutineAndProjectileCollision(void)
     {
         pOam = sKraidOam_Rising;
         closed = FALSE;
-        if (pSprite->pOam != pOam && gSubSpriteData1.workVariable2 == 0)
+        if (pSprite->pOam != pOam && gSubSpriteData1.work2 == 0)
         {
             pSprite->pOam = sKraidOam_ClosingMouth;
             pSprite->animationDurationCounter = 0;
@@ -273,13 +371,13 @@ void KraidOpenCloseRoutineAndProjectileCollision(void)
     // Get Y size of mouth
     if (!closed)
     {
-        yTopOffset = BLOCK_SIZE + 12;
+        yTopOffset = BLOCK_SIZE + QUARTER_BLOCK_SIZE - PIXEL_SIZE;
         yBottomOffset = QUARTER_BLOCK_SIZE;
     }
     else
     {
-        yTopOffset = BLOCK_SIZE + 4;
-        yBottomOffset = QUARTER_BLOCK_SIZE + 4;
+        yTopOffset = BLOCK_SIZE + PIXEL_SIZE;
+        yBottomOffset = QUARTER_BLOCK_SIZE + PIXEL_SIZE;
     }
 
     spriteY = pSprite->yPosition;
@@ -292,12 +390,16 @@ void KraidOpenCloseRoutineAndProjectileCollision(void)
     // Loop through every projectile for custom collision
     for (pProj = gProjectileData; pProj < gProjectileData + MAX_AMOUNT_OF_PROJECTILES; pProj++)
     {
-        // Check :
-        // - Exists and has collision
-        // - Has been initialized
-        // - Is colliding with the head
-        if (pProj->status & PROJ_STATUS_EXISTS && pProj->status & PROJ_STATUS_CAN_AFFECT_ENVIRONMENT &&
-            pProj->movementStage > 1 && pProj->xPosition > spriteLeft && pProj->xPosition < spriteRight &&
+        if (!(pProj->status & PROJ_STATUS_EXISTS))
+            continue;
+
+        if (!(pProj->status & PROJ_STATUS_CAN_AFFECT_ENVIRONMENT))
+            continue;
+
+        if (pProj->movementStage <= PROJECTILE_STAGE_SPAWNING)
+            continue;
+
+        if (pProj->xPosition > spriteLeft && pProj->xPosition < spriteRight &&
             pProj->yPosition > spriteTop && pProj->yPosition < spriteBottom)
         {
             projY = pProj->yPosition;
@@ -305,7 +407,7 @@ void KraidOpenCloseRoutineAndProjectileCollision(void)
             damaged = FALSE;
 
             // Check collide with mouth interior
-            if (projY > (spriteY - yTopOffset) && projY < (spriteY + yBottomOffset) &&
+            if (projY > spriteY - yTopOffset && projY < spriteY + yBottomOffset &&
                 pProj->direction == ACD_FORWARD && !(pProj->status & PROJ_STATUS_X_FLIP))
             {
                 // Get damage and particle effect
@@ -377,11 +479,11 @@ void KraidOpenCloseRoutineAndProjectileCollision(void)
                 else
                 {
                     pProj->status = 0;
-                    if ((pSprite->invincibilityStunFlashTimer & 0x7F) <= 0x2)
+                    if (SPRITE_GET_ISFT(*pSprite) < CONVERT_SECONDS(.05f))
                     {
-                        pSprite->invincibilityStunFlashTimer &= 0x80;
-                        pSprite->invincibilityStunFlashTimer |= 0x3;
+                        SPRITE_CLEAR_AND_SET_ISFT(*pSprite, CONVERT_SECONDS(.05f));
                     }
+
                     ParticleSet(projY, projX, PE_HITTING_SOMETHING_INVINCIBLE);
                     break;
                 }
@@ -391,17 +493,15 @@ void KraidOpenCloseRoutineAndProjectileCollision(void)
                 
                 if (!closed)
                 {
-                    pSprite->invincibilityStunFlashTimer &= 0x80;
-                    pSprite->invincibilityStunFlashTimer |= 0x11;
+                    SPRITE_CLEAR_AND_SET_ISFT(*pSprite, CONVERT_SECONDS(.25f + 1.f / 30));
                     SoundPlay(SOUND_KRAID_DAMAGED);
                 }
                 else
                 {
-                    pSprite->invincibilityStunFlashTimer &= 0x80;
-                    pSprite->invincibilityStunFlashTimer |= 0x2;
+                    SPRITE_CLEAR_AND_SET_ISFT(*pSprite, CONVERT_SECONDS(1.f / 30));
 
                     // Set opening mouth timer to 3 seconds
-                    gSubSpriteData1.workVariable2 = 60 * 3;
+                    gSubSpriteData1.work2 = CONVERT_SECONDS(3.f);
                     damage = 0;
                 }
 
@@ -411,23 +511,23 @@ void KraidOpenCloseRoutineAndProjectileCollision(void)
                     pSprite->health -= damage;
 
                     // Check update palette (both sprite and BG2)
-                    if (pSprite->health < GET_PSPRITE_HEALTH(PSPRITE_KRAID) >> 2)
+                    if (pSprite->health < DIV_SHIFT(GET_PSPRITE_HEALTH(PSPRITE_KRAID), 4))
                     {
                         pSprite->absolutePaletteRow = 3;
 
-                        DMA_SET(3, sKraidPal + 0xE0, PALRAM_BASE + 0x140, (DMA_ENABLE << 16) | 16);
+                        DMA_SET(3, &sKraidPal[PAL_ROW * 4 + PAL_ROW * 3], PALRAM_BASE + PAL_ROW_SIZE * 10, C_32_2_16(DMA_ENABLE, PAL_ROW));
                     }
                     else if (pSprite->health < GET_PSPRITE_HEALTH(PSPRITE_KRAID) / 3)
                     {
                         pSprite->absolutePaletteRow = 2;
 
-                        DMA_SET(3, sKraidPal + 0xC0, PALRAM_BASE + 0x140, (DMA_ENABLE << 16) | 16);
+                        DMA_SET(3, &sKraidPal[PAL_ROW * 4 + PAL_ROW * 2], PALRAM_BASE + PAL_ROW_SIZE * 10, C_32_2_16(DMA_ENABLE, PAL_ROW));
                     }
-                    else if (pSprite->health < (GET_PSPRITE_HEALTH(PSPRITE_KRAID) >> 2) * 3)
+                    else if (pSprite->health < DIV_SHIFT(GET_PSPRITE_HEALTH(PSPRITE_KRAID), 4) * 3)
                     {
                         pSprite->absolutePaletteRow = 1;
 
-                        DMA_SET(3, sKraidPal + 0xA0, PALRAM_BASE + 0x140, (DMA_ENABLE << 16) | 16);
+                        DMA_SET(3, &sKraidPal[PAL_ROW * 4 + PAL_ROW * 1], PALRAM_BASE + PAL_ROW_SIZE * 10, C_32_2_16(DMA_ENABLE, PAL_ROW));
                     }
                 }
                 else
@@ -437,7 +537,7 @@ void KraidOpenCloseRoutineAndProjectileCollision(void)
                     pSprite->properties |= SP_DESTROYED;
                     pSprite->freezeTimer = 0;
                     pSprite->pose = KRAID_POSE_DYING_INIT;
-                    pSprite->ignoreSamusCollisionTimer = 1;
+                    pSprite->ignoreSamusCollisionTimer = DELTA_TIME;
                 }
 
                 pSprite->properties |= SP_DAMAGED;
@@ -455,11 +555,11 @@ void KraidOpenCloseRoutineAndProjectileCollision(void)
             else
                 pProj->status = 0;
 
-            if ((pSprite->invincibilityStunFlashTimer & 0x7F) <= 0x2)
+            if (SPRITE_GET_ISFT(*pSprite) < CONVERT_SECONDS(.05f))
             {
-                pSprite->invincibilityStunFlashTimer &= 0x80;
-                pSprite->invincibilityStunFlashTimer |= 0x3;
+                SPRITE_CLEAR_AND_SET_ISFT(*pSprite, CONVERT_SECONDS(.05f));
             }
+
             ParticleSet(projY, projX, PE_HITTING_SOMETHING_INVINCIBLE);
             break;
         }
@@ -471,7 +571,7 @@ void KraidOpenCloseRoutineAndProjectileCollision(void)
  * 
  * @param timer Timer
  */
-void KraidRandomSpriteDebrisOnCeiling(u8 timer)
+static void KraidRandomSpriteDebrisOnCeiling(u8 timer)
 {
     u16 yPosition;
     u16 xPosition;
@@ -485,51 +585,56 @@ void KraidRandomSpriteDebrisOnCeiling(u8 timer)
     }
     else
     {
-        yPosition = gBg1YPosition - 0x3C;
+        yPosition = gBg1YPosition - (BLOCK_SIZE - PIXEL_SIZE);
         xPosition = gSubSpriteData1.xPosition + BLOCK_SIZE * 3;
     }
 
     rng = gSpriteRng;
-    rng2 = gFrameCounter8Bit & 0x7;
+    rng2 = MOD_AND(gFrameCounter8Bit, 8);
 
-    if (gFrameCounter8Bit & 0x1)
+    if (MOD_AND(gFrameCounter8Bit, 2))
     {
-        SpriteDebrisInit(0, 0x5, yPosition + rng, xPosition - 0x12C + rng * 0x10);
-        SpriteDebrisInit(0, 0x5, yPosition, xPosition - 0x2BC + rng2 * 0x4);
+        SpriteDebrisInit(0, 0x5, yPosition + rng,
+            xPosition - (BLOCK_SIZE * 4 + THREE_QUARTER_BLOCK_SIZE - PIXEL_SIZE) + rng * QUARTER_BLOCK_SIZE);
+        SpriteDebrisInit(0, 0x5, yPosition, xPosition - (BLOCK_SIZE * 11 - PIXEL_SIZE) + rng2 * PIXEL_SIZE);
     }
     else
     {
-        SpriteDebrisInit(0, 0x7, yPosition - rng, xPosition + 0xA0 - rng * 0x20);
-        SpriteDebrisInit(0, 0x7, yPosition, xPosition - 0x190 - rng2 * 0x10);
+        SpriteDebrisInit(0, 0x7, yPosition - rng, xPosition + (BLOCK_SIZE * 2 + HALF_BLOCK_SIZE) - rng * HALF_BLOCK_SIZE);
+        SpriteDebrisInit(0, 0x7, yPosition, xPosition - (BLOCK_SIZE * 6 + QUARTER_BLOCK_SIZE) - rng2 * QUARTER_BLOCK_SIZE);
     }
 
-    if (rng > 0x7)
+    if (rng >= SPRITE_RNG_PROB(.5f))
     {
-        SpriteDebrisInit(0, 0x8, yPosition, xPosition - 0xFA + rng2 * 0x10);
-        SpriteDebrisInit(0, 0x6, yPosition, xPosition + 0x12C - rng2 * 0x10);
+        SpriteDebrisInit(0, 0x8, yPosition,
+            xPosition - (BLOCK_SIZE * 3 + THREE_QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE + PIXEL_SIZE / 2) + rng2 * QUARTER_BLOCK_SIZE);
+        SpriteDebrisInit(0, 0x6, yPosition,
+            xPosition + (BLOCK_SIZE * 4 + THREE_QUARTER_BLOCK_SIZE - PIXEL_SIZE) - rng2 * QUARTER_BLOCK_SIZE);
     }
     else
     {
-        SpriteDebrisInit(0, 0x5, yPosition, xPosition + 0xC8 - rng2 * 0x10);
-        SpriteDebrisInit(0, 0x5, yPosition, xPosition - 0x15E + rng2 * 0x10);
+        SpriteDebrisInit(0, 0x5, yPosition, xPosition + BLOCK_SIZE * 3 + EIGHTH_BLOCK_SIZE - rng2 * QUARTER_BLOCK_SIZE);
+        SpriteDebrisInit(0, 0x5, yPosition,
+            xPosition - (BLOCK_SIZE * 5 + HALF_BLOCK_SIZE - PIXEL_SIZE / 2) + rng2 * QUARTER_BLOCK_SIZE);
     }
 
-    if (!(timer & 0x3))
+    if (MOD_AND(timer, 4) == 0)
     {
-        if (rng & 0x1)
-            SpriteDebrisInit(0, 0x6, yPosition, xPosition - 0xA0 + rng2 * 0x10);
+        if (MOD_AND(rng, 2))
+            SpriteDebrisInit(0, 0x6, yPosition, xPosition - (BLOCK_SIZE * 2 + HALF_BLOCK_SIZE) + rng2 * QUARTER_BLOCK_SIZE);
         else
-            SpriteDebrisInit(0, 0x8, yPosition, xPosition + 0xA0 - rng2 * 0x10);
+            SpriteDebrisInit(0, 0x8, yPosition, xPosition + (BLOCK_SIZE * 2 + HALF_BLOCK_SIZE) - rng2 * QUARTER_BLOCK_SIZE);
 
-        if (rng > 0x7)
+        if (rng >= SPRITE_RNG_PROB(.5f))
         {
-            SpriteDebrisInit(0, 0x7, yPosition, xPosition - rng2 * 0x20);
-            SpriteDebrisInit(0, 0x8, yPosition, xPosition + 0x40 - rng2 * 0x10);
+            SpriteDebrisInit(0, 0x7, yPosition, xPosition - rng2 * HALF_BLOCK_SIZE);
+            SpriteDebrisInit(0, 0x8, yPosition, xPosition + BLOCK_SIZE - rng2 * QUARTER_BLOCK_SIZE);
         }
         else
         {
-            SpriteDebrisInit(0, 0x5, yPosition, xPosition - 0x10E + rng2 * 0x10);
-            SpriteDebrisInit(0, 0x6, yPosition, xPosition + rng2 * 0x4);
+            SpriteDebrisInit(0, 0x5, yPosition,
+                xPosition - (BLOCK_SIZE * 4 + QUARTER_BLOCK_SIZE - PIXEL_SIZE / 2) + rng2 * QUARTER_BLOCK_SIZE);
+            SpriteDebrisInit(0, 0x6, yPosition, xPosition + rng2 * PIXEL_SIZE);
         }
     }
 }
@@ -538,93 +643,93 @@ void KraidRandomSpriteDebrisOnCeiling(u8 timer)
  * @brief 18bfc | 1c | Changes the hitbox of something
  * 
  */
-void KraidPartHitboxChange_1Unused(void)
+static void KraidPartHitboxChange_1Unused(void)
 {
-    gCurrentSprite.hitboxTop = -0x60;
-    gCurrentSprite.hitboxBottom = 0x20;
-    gCurrentSprite.hitboxLeft = 0xE0;
-    gCurrentSprite.hitboxRight = 0x108;
+    gCurrentSprite.hitboxTop = -(BLOCK_SIZE + HALF_BLOCK_SIZE);
+    gCurrentSprite.hitboxBottom = HALF_BLOCK_SIZE;
+    gCurrentSprite.hitboxLeft = BLOCK_SIZE * 3 + HALF_BLOCK_SIZE;
+    gCurrentSprite.hitboxRight = BLOCK_SIZE * 4 + EIGHTH_BLOCK_SIZE;
 }
 
 /**
  * @brief 18c18 | 11c | Updates the arm (idling) hitbox
  * 
  */
-void KraidPartUpdateRightArmIdlingHitbox(void)
+static void KraidPartUpdateRightArmIdlingHitbox(void)
 {
-    if (gCurrentSprite.animationDurationCounter != 0x1)
+    if (gCurrentSprite.animationDurationCounter != DELTA_TIME)
         return;
 
     switch (gCurrentSprite.currentAnimationFrame)
     {
         case 0:
-            gCurrentSprite.hitboxTop = -0x60;
-            gCurrentSprite.hitboxBottom = 0x20;
-            gCurrentSprite.hitboxLeft = 0xE0;
-            gCurrentSprite.hitboxRight = 0x108;
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE + HALF_BLOCK_SIZE);
+            gCurrentSprite.hitboxBottom = HALF_BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = BLOCK_SIZE * 3 + HALF_BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 4 + EIGHTH_BLOCK_SIZE;
             break;
 
-        case 0x1:
-            gCurrentSprite.hitboxTop = -0x48;
-            gCurrentSprite.hitboxBottom = 0x20;
-            gCurrentSprite.hitboxLeft = 0xE0;
-            gCurrentSprite.hitboxRight = 0x15C;
+        case 1:
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE + EIGHTH_BLOCK_SIZE);
+            gCurrentSprite.hitboxBottom = HALF_BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = BLOCK_SIZE * 3 + HALF_BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 5 + HALF_BLOCK_SIZE - PIXEL_SIZE;
             break;
 
-        case 0x2:
-            gCurrentSprite.hitboxTop = -0x30;
-            gCurrentSprite.hitboxBottom = 0x20;
-            gCurrentSprite.hitboxLeft = 0xE0;
-            gCurrentSprite.hitboxRight = 0x15C;
+        case 2:
+            gCurrentSprite.hitboxTop = -THREE_QUARTER_BLOCK_SIZE;
+            gCurrentSprite.hitboxBottom = HALF_BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = BLOCK_SIZE * 3 + HALF_BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 5 + HALF_BLOCK_SIZE - PIXEL_SIZE;
             break;
 
-        case 0x3:
-            gCurrentSprite.hitboxTop = -0x18;
-            gCurrentSprite.hitboxBottom = 0x40;
-            gCurrentSprite.hitboxLeft = 0xE0;
-            gCurrentSprite.hitboxRight = 0x15C;
+        case 3:
+            gCurrentSprite.hitboxTop = -(QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE);
+            gCurrentSprite.hitboxBottom = BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = BLOCK_SIZE * 3 + HALF_BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 5 + HALF_BLOCK_SIZE - PIXEL_SIZE;
             break;
 
-        case 0x4:
-            gCurrentSprite.hitboxTop = -0x18;
-            gCurrentSprite.hitboxBottom = 0x40;
-            gCurrentSprite.hitboxLeft = 0xE0;
-            gCurrentSprite.hitboxRight = 0x15C;
+        case 4:
+            gCurrentSprite.hitboxTop = -(QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE);
+            gCurrentSprite.hitboxBottom = BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = BLOCK_SIZE * 3 + HALF_BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 5 + HALF_BLOCK_SIZE - PIXEL_SIZE;
             break;
 
-        case 0x5:
-            gCurrentSprite.hitboxTop = -0x18;
-            gCurrentSprite.hitboxBottom = 0x40;
-            gCurrentSprite.hitboxLeft = 0x100;
-            gCurrentSprite.hitboxRight = 0x15C;
+        case 5:
+            gCurrentSprite.hitboxTop = -(QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE);
+            gCurrentSprite.hitboxBottom = BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = BLOCK_SIZE * 4;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 5 + HALF_BLOCK_SIZE - PIXEL_SIZE;
             break;
 
-        case 0x6:
-            gCurrentSprite.hitboxTop = -0x28;
-            gCurrentSprite.hitboxBottom = 0x20;
-            gCurrentSprite.hitboxLeft = 0xE0;
-            gCurrentSprite.hitboxRight = 0x15C;
+        case 6:
+            gCurrentSprite.hitboxTop = -(HALF_BLOCK_SIZE + EIGHTH_BLOCK_SIZE);
+            gCurrentSprite.hitboxBottom = HALF_BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = BLOCK_SIZE * 3 + HALF_BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 5 + HALF_BLOCK_SIZE - PIXEL_SIZE;
             break;
 
-        case 0x7:
-            gCurrentSprite.hitboxTop = -0x40;
-            gCurrentSprite.hitboxBottom = 0x20;
-            gCurrentSprite.hitboxLeft = 0xE0;
-            gCurrentSprite.hitboxRight = 0x15C;
+        case 7:
+            gCurrentSprite.hitboxTop = -BLOCK_SIZE;
+            gCurrentSprite.hitboxBottom = HALF_BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = BLOCK_SIZE * 3 + HALF_BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 5 + HALF_BLOCK_SIZE - PIXEL_SIZE;
             break;
 
-        case 0x8:
-            gCurrentSprite.hitboxTop = -0x60;
-            gCurrentSprite.hitboxBottom = 0x20;
-            gCurrentSprite.hitboxLeft = 0xE0;
-            gCurrentSprite.hitboxRight = 0x110;
+        case 8:
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE + HALF_BLOCK_SIZE);
+            gCurrentSprite.hitboxBottom = HALF_BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = BLOCK_SIZE * 3 + HALF_BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 4 + QUARTER_BLOCK_SIZE;
             break;
 
-        case 0x9:
-            gCurrentSprite.hitboxTop = -0x60;
-            gCurrentSprite.hitboxBottom = 0x20;
-            gCurrentSprite.hitboxLeft = 0xE0;
-            gCurrentSprite.hitboxRight = 0x120;
+        case 9:
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE + HALF_BLOCK_SIZE);
+            gCurrentSprite.hitboxBottom = HALF_BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = BLOCK_SIZE * 3 + HALF_BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 4 + HALF_BLOCK_SIZE;
             break;
     }
 }
@@ -633,97 +738,97 @@ void KraidPartUpdateRightArmIdlingHitbox(void)
  * @brief 18d34 | 154 | Updates the arm (attacking) hitbox
  * 
  */
-void KraidPartUpdateRightArmAttackingHitbox(void)
+static void KraidPartUpdateRightArmAttackingHitbox(void)
 {
-    if (gCurrentSprite.animationDurationCounter != 0x1)
+    if (gCurrentSprite.animationDurationCounter != DELTA_TIME)
         return;
 
     switch (gCurrentSprite.currentAnimationFrame)
     {
         case 0:
-            gCurrentSprite.hitboxTop = -0x60;
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE + HALF_BLOCK_SIZE);
             gCurrentSprite.hitboxBottom = 0;
-            gCurrentSprite.hitboxLeft = 0xD0;
-            gCurrentSprite.hitboxRight = 0x120;
+            gCurrentSprite.hitboxLeft = BLOCK_SIZE * 3 + QUARTER_BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 4 + HALF_BLOCK_SIZE;
             SoundPlay(SOUND_KRAID_RIGHT_ARM_DYING_1);
             break;
 
-        case 0x1:
-            gCurrentSprite.hitboxTop = -0x80;
-            gCurrentSprite.hitboxBottom = -0x40;
-            gCurrentSprite.hitboxLeft = 0xC0;
-            gCurrentSprite.hitboxRight = 0x120;
+        case 1:
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 2);
+            gCurrentSprite.hitboxBottom = -BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = BLOCK_SIZE * 3;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 4 + HALF_BLOCK_SIZE;
             break;
 
-        case 0x2:
-            gCurrentSprite.hitboxTop = -0xC0;
-            gCurrentSprite.hitboxBottom = -0x40;
-            gCurrentSprite.hitboxLeft = 0x98;
-            gCurrentSprite.hitboxRight = 0xC8;
+        case 2:
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 3);
+            gCurrentSprite.hitboxBottom = -BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = BLOCK_SIZE * 2 + QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 3 + EIGHTH_BLOCK_SIZE;
             break;
 
-        case 0x3:
-            gCurrentSprite.hitboxTop = -0x100;
-            gCurrentSprite.hitboxBottom = -0x60;
-            gCurrentSprite.hitboxLeft = 0x80;
-            gCurrentSprite.hitboxRight = 0xB8;
+        case 3:
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 4);
+            gCurrentSprite.hitboxBottom = -(BLOCK_SIZE + HALF_BLOCK_SIZE);
+            gCurrentSprite.hitboxLeft = BLOCK_SIZE * 2;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 3 - EIGHTH_BLOCK_SIZE;
             break;
 
-        case 0x4:
-            gCurrentSprite.hitboxTop = -0x140;
-            gCurrentSprite.hitboxBottom = -0xA0;
-            gCurrentSprite.hitboxLeft = 0x70;
-            gCurrentSprite.hitboxRight = 0xA0;
+        case 4:
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 5);
+            gCurrentSprite.hitboxBottom = -(BLOCK_SIZE * 2 + HALF_BLOCK_SIZE);
+            gCurrentSprite.hitboxLeft = BLOCK_SIZE + THREE_QUARTER_BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 2 + HALF_BLOCK_SIZE;
             SoundPlay(SOUND_KRAID_RIGHT_ARM_DYING_2);
             break;
 
-        case 0x5:
-            gCurrentSprite.hitboxTop = -0x140;
-            gCurrentSprite.hitboxBottom = -0xC0;
-            gCurrentSprite.hitboxLeft = 0x100;
-            gCurrentSprite.hitboxRight = 0x128;
+        case 5:
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 5);
+            gCurrentSprite.hitboxBottom = -(BLOCK_SIZE * 3);
+            gCurrentSprite.hitboxLeft = BLOCK_SIZE * 4;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 4 + HALF_BLOCK_SIZE + EIGHTH_BLOCK_SIZE;
             break;
 
-        case 0x6:
-            gCurrentSprite.hitboxTop = -0x140;
+        case 6:
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 5);
             gCurrentSprite.hitboxBottom = 0;
-            gCurrentSprite.hitboxLeft = 0x120;
-            gCurrentSprite.hitboxRight = 0x1B8;
+            gCurrentSprite.hitboxLeft = BLOCK_SIZE * 4 + HALF_BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 6 + THREE_QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE;
             break;
 
-        case 0x7:
-            gCurrentSprite.hitboxTop = 0x8;
-            gCurrentSprite.hitboxBottom = 0x40;
-            gCurrentSprite.hitboxLeft = 0x100;
-            gCurrentSprite.hitboxRight = 0x1A0;
+        case 7:
+            gCurrentSprite.hitboxTop = EIGHTH_BLOCK_SIZE;
+            gCurrentSprite.hitboxBottom = BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = BLOCK_SIZE * 4;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 6 + HALF_BLOCK_SIZE;
             break;
 
-        case 0x8:
-            gCurrentSprite.hitboxTop = 0x60;
-            gCurrentSprite.hitboxBottom = 0x80;
-            gCurrentSprite.hitboxLeft = 0xE0;
-            gCurrentSprite.hitboxRight = 0x180;
+        case 8:
+            gCurrentSprite.hitboxTop = BLOCK_SIZE + HALF_BLOCK_SIZE;
+            gCurrentSprite.hitboxBottom = BLOCK_SIZE * 2;
+            gCurrentSprite.hitboxLeft = BLOCK_SIZE * 3 + HALF_BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 6;
             break;
 
-        case 0x9:
-            gCurrentSprite.hitboxTop = 0x68;
-            gCurrentSprite.hitboxBottom = 0xA0;
-            gCurrentSprite.hitboxLeft = 0xE0;
-            gCurrentSprite.hitboxRight = 0x140;
+        case 9:
+            gCurrentSprite.hitboxTop = BLOCK_SIZE + HALF_BLOCK_SIZE + EIGHTH_BLOCK_SIZE;
+            gCurrentSprite.hitboxBottom = BLOCK_SIZE * 2 + HALF_BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = BLOCK_SIZE * 3 + HALF_BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 5;
             break;
 
-        case 0xA:
-            gCurrentSprite.hitboxTop = 0x20;
-            gCurrentSprite.hitboxBottom = 0xA0;
-            gCurrentSprite.hitboxLeft = 0xE0;
-            gCurrentSprite.hitboxRight = 0x120;
+        case 10:
+            gCurrentSprite.hitboxTop = HALF_BLOCK_SIZE;
+            gCurrentSprite.hitboxBottom = BLOCK_SIZE * 2 + HALF_BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = BLOCK_SIZE * 3 + HALF_BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 4 + HALF_BLOCK_SIZE;
             break;
 
-        case 0xB:
+        case 11:
             gCurrentSprite.hitboxTop = 0;
-            gCurrentSprite.hitboxBottom = 0x80;
-            gCurrentSprite.hitboxLeft = 0xE8;
-            gCurrentSprite.hitboxRight = 0x118;
+            gCurrentSprite.hitboxBottom = BLOCK_SIZE * 2;
+            gCurrentSprite.hitboxLeft = BLOCK_SIZE * 3 + HALF_BLOCK_SIZE + EIGHTH_BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 4 + QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE;
             break;
     }
 }
@@ -732,14 +837,14 @@ void KraidPartUpdateRightArmAttackingHitbox(void)
  * @brief 18e88 | 28 | Changes the hitbox of something
  * 
  */
-void KraidPartHitboxChange_2Unused(void)
+static void KraidPartHitboxChange_2Unused(void)
 {
-    if (gCurrentSprite.animationDurationCounter == 0x1)
+    if (gCurrentSprite.animationDurationCounter == DELTA_TIME)
     {
-        gCurrentSprite.hitboxTop = -0xA0;
-        gCurrentSprite.hitboxBottom = -0x20;
-        gCurrentSprite.hitboxLeft = 0x8;
-        gCurrentSprite.hitboxRight = 0x88;
+        gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 2 + HALF_BLOCK_SIZE);
+        gCurrentSprite.hitboxBottom = -HALF_BLOCK_SIZE;
+        gCurrentSprite.hitboxLeft = EIGHTH_BLOCK_SIZE;
+        gCurrentSprite.hitboxRight = BLOCK_SIZE * 2 + EIGHTH_BLOCK_SIZE;
     }
 }
 
@@ -747,82 +852,82 @@ void KraidPartHitboxChange_2Unused(void)
  * @brief 18eb0 | 11c | Updates the left arm (idling) hitbox
  * 
  */
-void KraidPartUpdateLeftArmIdlingHitbox(void)
+static void KraidPartUpdateLeftArmIdlingHitbox(void)
 {
     
-    if (gCurrentSprite.animationDurationCounter != 0x1)
+    if (gCurrentSprite.animationDurationCounter != DELTA_TIME)
         return;
 
     switch (gCurrentSprite.currentAnimationFrame)
     {
         case 0:
-            gCurrentSprite.hitboxTop = -0xA0;
-            gCurrentSprite.hitboxBottom = -0x20;
-            gCurrentSprite.hitboxLeft = 0x8;
-            gCurrentSprite.hitboxRight = 0x88;
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 2 + HALF_BLOCK_SIZE);
+            gCurrentSprite.hitboxBottom = -HALF_BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = EIGHTH_BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 2 + EIGHTH_BLOCK_SIZE;
             break;
 
-        case 0x1:
-            gCurrentSprite.hitboxTop = -0xA0;
-            gCurrentSprite.hitboxBottom = -0x40;
-            gCurrentSprite.hitboxLeft = 0x8;
-            gCurrentSprite.hitboxRight = 0x90;
+        case 1:
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 2 + HALF_BLOCK_SIZE);
+            gCurrentSprite.hitboxBottom = -BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = EIGHTH_BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 2 + QUARTER_BLOCK_SIZE;
             break;
 
-        case 0x2:
-            gCurrentSprite.hitboxTop = -0xA4;
-            gCurrentSprite.hitboxBottom = -0x20;
-            gCurrentSprite.hitboxLeft = 0x8;
-            gCurrentSprite.hitboxRight = 0x90;
+        case 2:
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 2 + HALF_BLOCK_SIZE + PIXEL_SIZE);
+            gCurrentSprite.hitboxBottom = -HALF_BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = EIGHTH_BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 2 + QUARTER_BLOCK_SIZE;
             break;
 
-        case 0x3:
-            gCurrentSprite.hitboxTop = -0xA8;
-            gCurrentSprite.hitboxBottom = -0x20;
-            gCurrentSprite.hitboxLeft = 0x10;
-            gCurrentSprite.hitboxRight = 0x90;
+        case 3:
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 2 + HALF_BLOCK_SIZE + EIGHTH_BLOCK_SIZE);
+            gCurrentSprite.hitboxBottom = -HALF_BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = QUARTER_BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 2 + QUARTER_BLOCK_SIZE;
             break;
 
-        case 0x4:
-            gCurrentSprite.hitboxTop = -0xA8;
-            gCurrentSprite.hitboxBottom = -0x20;
-            gCurrentSprite.hitboxLeft = 0x10;
-            gCurrentSprite.hitboxRight = 0xA0;
+        case 4:
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 2 + HALF_BLOCK_SIZE + EIGHTH_BLOCK_SIZE);
+            gCurrentSprite.hitboxBottom = -HALF_BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = QUARTER_BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 2 + HALF_BLOCK_SIZE;
             break;
 
-        case 0x5:
-            gCurrentSprite.hitboxTop = -0xA8;
-            gCurrentSprite.hitboxBottom = -0x20;
-            gCurrentSprite.hitboxLeft = 0x10;
-            gCurrentSprite.hitboxRight = 0x90;
+        case 5:
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 2 + HALF_BLOCK_SIZE + EIGHTH_BLOCK_SIZE);
+            gCurrentSprite.hitboxBottom = -HALF_BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = QUARTER_BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 2 + QUARTER_BLOCK_SIZE;
             break;
 
-        case 0x6:
-            gCurrentSprite.hitboxTop = -0xA8;
-            gCurrentSprite.hitboxBottom = -0x28;
-            gCurrentSprite.hitboxLeft = 0x10;
-            gCurrentSprite.hitboxRight = 0x90;
+        case 6:
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 2 + HALF_BLOCK_SIZE + EIGHTH_BLOCK_SIZE);
+            gCurrentSprite.hitboxBottom = -(HALF_BLOCK_SIZE + EIGHTH_BLOCK_SIZE);
+            gCurrentSprite.hitboxLeft = QUARTER_BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 2 + QUARTER_BLOCK_SIZE;
             break;
 
-        case 0x7:
-            gCurrentSprite.hitboxTop = -0x98;
-            gCurrentSprite.hitboxBottom = -0x40;
-            gCurrentSprite.hitboxLeft = 0x4;
-            gCurrentSprite.hitboxRight = 0x90;
+        case 7:
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 2 + QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE);
+            gCurrentSprite.hitboxBottom = -BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = PIXEL_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 2 + QUARTER_BLOCK_SIZE;
             break;
 
-        case 0x8:
-            gCurrentSprite.hitboxTop = -0xA0;
-            gCurrentSprite.hitboxBottom = -0x20;
-            gCurrentSprite.hitboxLeft = 0x4;
-            gCurrentSprite.hitboxRight = 0x90;
+        case 8:
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 2 + HALF_BLOCK_SIZE);
+            gCurrentSprite.hitboxBottom = -HALF_BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = PIXEL_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 2 + QUARTER_BLOCK_SIZE;
             break;
 
-        case 0x9:
-            gCurrentSprite.hitboxTop = -0xA0;
-            gCurrentSprite.hitboxBottom = -0x20;
+        case 9:
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 2 + HALF_BLOCK_SIZE);
+            gCurrentSprite.hitboxBottom = -HALF_BLOCK_SIZE;
             gCurrentSprite.hitboxLeft = 0;
-            gCurrentSprite.hitboxRight = 0x90;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 2 + QUARTER_BLOCK_SIZE;
             break;
     }
 }
@@ -831,83 +936,83 @@ void KraidPartUpdateLeftArmIdlingHitbox(void)
  * @brief 18fcc | 138 | Updates the arm (dying) hitbox
  * 
  */
-void KraidPartUpdateLeftArmDyingHitbox(void)
+static void KraidPartUpdateLeftArmDyingHitbox(void)
 {
-    if (gCurrentSprite.animationDurationCounter != 0x1)
+    if (gCurrentSprite.animationDurationCounter != DELTA_TIME)
         return;
 
     switch (gCurrentSprite.currentAnimationFrame)
     {
         case 0:
-            gCurrentSprite.hitboxTop = -0xA0;
-            gCurrentSprite.hitboxBottom = -0x40;
-            gCurrentSprite.hitboxLeft = 0x8;
-            gCurrentSprite.hitboxRight = 0x80;
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 2 + HALF_BLOCK_SIZE);
+            gCurrentSprite.hitboxBottom = -BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = EIGHTH_BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 2;
             SoundPlay(SOUND_KRAID_LEFT_ARM_DYING_1);
             break;
 
-        case 0x1:
-            gCurrentSprite.hitboxTop = -0xC0;
-            gCurrentSprite.hitboxBottom = -0x60;
-            gCurrentSprite.hitboxLeft = -0x20;
-            gCurrentSprite.hitboxRight = 0x60;
+        case 1:
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 3);
+            gCurrentSprite.hitboxBottom = -(BLOCK_SIZE + HALF_BLOCK_SIZE);
+            gCurrentSprite.hitboxLeft = -HALF_BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE + HALF_BLOCK_SIZE;
             break;
 
-        case 0x2:
-            gCurrentSprite.hitboxTop = -0xE0;
-            gCurrentSprite.hitboxBottom = -0x60;
-            gCurrentSprite.hitboxLeft = -0x40;
-            gCurrentSprite.hitboxRight = 0x50;
+        case 2:
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 3 + HALF_BLOCK_SIZE);
+            gCurrentSprite.hitboxBottom = -(BLOCK_SIZE + HALF_BLOCK_SIZE);
+            gCurrentSprite.hitboxLeft = -BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE + QUARTER_BLOCK_SIZE;
             break;
 
-        case 0x3:
-            gCurrentSprite.hitboxTop = -0x160;
-            gCurrentSprite.hitboxBottom = -0xE0;
-            gCurrentSprite.hitboxLeft = -0x40;
-            gCurrentSprite.hitboxRight = 0x30;
+        case 3:
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 5 + HALF_BLOCK_SIZE);
+            gCurrentSprite.hitboxBottom = -(BLOCK_SIZE * 3 + HALF_BLOCK_SIZE);
+            gCurrentSprite.hitboxLeft = -BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = THREE_QUARTER_BLOCK_SIZE;
             break;
 
-        case 0x4:
-            gCurrentSprite.hitboxTop = -0x1E0;
-            gCurrentSprite.hitboxBottom = -0x180;
-            gCurrentSprite.hitboxLeft = -0x40;
-            gCurrentSprite.hitboxRight = 0x40;
+        case 4:
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 7 + HALF_BLOCK_SIZE);
+            gCurrentSprite.hitboxBottom = -(BLOCK_SIZE * 6);
+            gCurrentSprite.hitboxLeft = -BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE;
             SoundPlay(SOUND_KRAID_LEFT_ARM_DYING_2);
             break;
 
-        case 0x5:
-            gCurrentSprite.hitboxTop = -0x1C0;
-            gCurrentSprite.hitboxBottom = -0x140;
-            gCurrentSprite.hitboxLeft = 0x60;
-            gCurrentSprite.hitboxRight = 0xE0;
+        case 5:
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 7);
+            gCurrentSprite.hitboxBottom = -(BLOCK_SIZE * 5);
+            gCurrentSprite.hitboxLeft = BLOCK_SIZE + HALF_BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 3 + HALF_BLOCK_SIZE;
             break;
 
-        case 0x6:
-            gCurrentSprite.hitboxTop = -0x120;
-            gCurrentSprite.hitboxBottom = -0xC0;
-            gCurrentSprite.hitboxLeft = 0xC0;
-            gCurrentSprite.hitboxRight = 0x120;
+        case 6:
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 4 + HALF_BLOCK_SIZE);
+            gCurrentSprite.hitboxBottom = -(BLOCK_SIZE * 3);
+            gCurrentSprite.hitboxLeft = BLOCK_SIZE * 3;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 4 + HALF_BLOCK_SIZE;
             break;
 
-        case 0x7:
-            gCurrentSprite.hitboxTop = -0xE0;
-            gCurrentSprite.hitboxBottom = -0x60;
-            gCurrentSprite.hitboxLeft = 0x40;
-            gCurrentSprite.hitboxRight = 0xC0;
+        case 7:
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 3 + HALF_BLOCK_SIZE);
+            gCurrentSprite.hitboxBottom = -(BLOCK_SIZE + HALF_BLOCK_SIZE);
+            gCurrentSprite.hitboxLeft = BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 3;
             break;
 
-        case 0x8:
-            gCurrentSprite.hitboxTop = -0xA0;
-            gCurrentSprite.hitboxBottom = -0x40;
-            gCurrentSprite.hitboxLeft = 0x4;
-            gCurrentSprite.hitboxRight = 0x80;
+        case 8:
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 2 + HALF_BLOCK_SIZE);
+            gCurrentSprite.hitboxBottom = -BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = PIXEL_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 2;
             break;
 
-        case 0x9:
-            gCurrentSprite.hitboxTop = -0xA0;
-            gCurrentSprite.hitboxBottom = -0x20;
-            gCurrentSprite.hitboxLeft = -0x10;
-            gCurrentSprite.hitboxRight = 0x70;
+        case 9:
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 2 + HALF_BLOCK_SIZE);
+            gCurrentSprite.hitboxBottom = -HALF_BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = -QUARTER_BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE + THREE_QUARTER_BLOCK_SIZE;
             break;
     }
 }
@@ -916,154 +1021,154 @@ void KraidPartUpdateLeftArmDyingHitbox(void)
  * @brief 19104 | 22c | Updates the arm (attacking) hitbox
  * 
  */
-void KraidPartUpdateLeftArmAttackingHitbox(void)
+static void KraidPartUpdateLeftArmAttackingHitbox(void)
 {
-    if (gCurrentSprite.animationDurationCounter != 0x1)
+    if (gCurrentSprite.animationDurationCounter != DELTA_TIME)
         return;
 
     switch (gCurrentSprite.currentAnimationFrame)
     {
         case 0:
-            gCurrentSprite.hitboxTop = -0xA0;
-            gCurrentSprite.hitboxBottom = -0x20;
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 2 + HALF_BLOCK_SIZE);
+            gCurrentSprite.hitboxBottom = -HALF_BLOCK_SIZE;
             gCurrentSprite.hitboxLeft = 0;
-            gCurrentSprite.hitboxRight = 0x80;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 2;
             SoundPlay(SOUND_KRAID_LEFT_ARM_ATTACKING_1);
             break;
 
-        case 0x1:
-            gCurrentSprite.hitboxTop = -0x98;
-            gCurrentSprite.hitboxBottom = -0x38;
-            gCurrentSprite.hitboxLeft = -0x20;
-            gCurrentSprite.hitboxRight = 0x60;
+        case 1:
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 2 + QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE);
+            gCurrentSprite.hitboxBottom = -(BLOCK_SIZE - EIGHTH_BLOCK_SIZE);
+            gCurrentSprite.hitboxLeft = -HALF_BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE + HALF_BLOCK_SIZE;
             break;
 
-        case 0x2:
-            gCurrentSprite.hitboxTop = -0xB0;
-            gCurrentSprite.hitboxBottom = -0x30;
-            gCurrentSprite.hitboxLeft = -0x60;
-            gCurrentSprite.hitboxRight = 0x20;
+        case 2:
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 2 + THREE_QUARTER_BLOCK_SIZE);
+            gCurrentSprite.hitboxBottom = -THREE_QUARTER_BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = -(BLOCK_SIZE + HALF_BLOCK_SIZE);
+            gCurrentSprite.hitboxRight = HALF_BLOCK_SIZE;
             break;
 
-        case 0x3:
-            gCurrentSprite.hitboxTop = -0xE0;
-            gCurrentSprite.hitboxBottom = -0x60;
-            gCurrentSprite.hitboxLeft = -0x80;
-            gCurrentSprite.hitboxRight = -0x20;
+        case 3:
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 3 + HALF_BLOCK_SIZE);
+            gCurrentSprite.hitboxBottom = -(BLOCK_SIZE + HALF_BLOCK_SIZE);
+            gCurrentSprite.hitboxLeft = -(BLOCK_SIZE * 2);
+            gCurrentSprite.hitboxRight = -HALF_BLOCK_SIZE;
             break;
 
-        case 0x4:
-            gCurrentSprite.hitboxTop = -0x100;
-            gCurrentSprite.hitboxBottom = -0x80;
-            gCurrentSprite.hitboxLeft = -0x80;
-            gCurrentSprite.hitboxRight = -0x20;
+        case 4:
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 4);
+            gCurrentSprite.hitboxBottom = -(BLOCK_SIZE * 2);
+            gCurrentSprite.hitboxLeft = -(BLOCK_SIZE * 2);
+            gCurrentSprite.hitboxRight = -HALF_BLOCK_SIZE;
             break;
 
-        case 0x5:
-            gCurrentSprite.hitboxTop = -0x100;
-            gCurrentSprite.hitboxBottom = -0xA0;
-            gCurrentSprite.hitboxLeft = -0x80;
-            gCurrentSprite.hitboxRight = -0x20;
+        case 5:
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 4);
+            gCurrentSprite.hitboxBottom = -(BLOCK_SIZE * 2 + HALF_BLOCK_SIZE);
+            gCurrentSprite.hitboxLeft = -(BLOCK_SIZE * 2);
+            gCurrentSprite.hitboxRight = -HALF_BLOCK_SIZE;
             break;
 
-        case 0x6:
-            gCurrentSprite.hitboxTop = -0x180;
-            gCurrentSprite.hitboxBottom = -0x100;
-            gCurrentSprite.hitboxLeft = -0x80;
-            gCurrentSprite.hitboxRight = -0x8;
+        case 6:
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 6);
+            gCurrentSprite.hitboxBottom = -(BLOCK_SIZE * 4);
+            gCurrentSprite.hitboxLeft = -(BLOCK_SIZE * 2);
+            gCurrentSprite.hitboxRight = -EIGHTH_BLOCK_SIZE;
             SoundPlay(SOUND_KRAID_LEFT_ARM_ATTACKING_2);
             break;
 
-        case 0x7:
-            gCurrentSprite.hitboxTop = -0x160;
-            gCurrentSprite.hitboxBottom = -0x108;
-            gCurrentSprite.hitboxLeft = 0x8;
-            gCurrentSprite.hitboxRight = 0x80;
+        case 7:
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 5 + HALF_BLOCK_SIZE);
+            gCurrentSprite.hitboxBottom = -(BLOCK_SIZE * 4 + EIGHTH_BLOCK_SIZE);
+            gCurrentSprite.hitboxLeft = EIGHTH_BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 2;
             break;
 
-        case 0x8:
-            gCurrentSprite.hitboxTop = -0x100;
-            gCurrentSprite.hitboxBottom = -0xC0;
-            gCurrentSprite.hitboxLeft = 0x40;
-            gCurrentSprite.hitboxRight = 0xA0;
+        case 8:
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 4);
+            gCurrentSprite.hitboxBottom = -(BLOCK_SIZE * 3);
+            gCurrentSprite.hitboxLeft = BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 2 + HALF_BLOCK_SIZE;
             break;
 
-        case 0x9:
-            gCurrentSprite.hitboxTop = -0xA0;
-            gCurrentSprite.hitboxBottom = -0x30;
-            gCurrentSprite.hitboxLeft = 0x60;
-            gCurrentSprite.hitboxRight = 0xA0;
+        case 9:
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 2 + HALF_BLOCK_SIZE);
+            gCurrentSprite.hitboxBottom = -THREE_QUARTER_BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = BLOCK_SIZE + HALF_BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 2 + HALF_BLOCK_SIZE;
             break;
 
-        case 0xA:
-            gCurrentSprite.hitboxTop = -0x60;
-            gCurrentSprite.hitboxBottom = -0x4;
-            gCurrentSprite.hitboxLeft = 0x10;
-            gCurrentSprite.hitboxRight = 0x60;
+        case 10:
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE + HALF_BLOCK_SIZE);
+            gCurrentSprite.hitboxBottom = -PIXEL_SIZE;
+            gCurrentSprite.hitboxLeft = QUARTER_BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE + HALF_BLOCK_SIZE;
             break;
 
-        case 0xB:
-            gCurrentSprite.hitboxTop = -0xA0;
-            gCurrentSprite.hitboxBottom = -0x40;
-            gCurrentSprite.hitboxLeft = 0x4;
-            gCurrentSprite.hitboxRight = 0x60;
+        case 11:
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 2 + HALF_BLOCK_SIZE);
+            gCurrentSprite.hitboxBottom = -BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = PIXEL_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE + HALF_BLOCK_SIZE;
             break;
 
-        case 0xC:
-            gCurrentSprite.hitboxTop = -0x80;
-            gCurrentSprite.hitboxBottom = -0x40;
-            gCurrentSprite.hitboxLeft = 0x4;
-            gCurrentSprite.hitboxRight = 0x60;
+        case 12:
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 2);
+            gCurrentSprite.hitboxBottom = -BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = PIXEL_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE + HALF_BLOCK_SIZE;
             break;
 
-        case 0xD:
-            gCurrentSprite.hitboxTop = -0xA0;
-            gCurrentSprite.hitboxBottom = -0x40;
-            gCurrentSprite.hitboxLeft = 0x10;
-            gCurrentSprite.hitboxRight = 0x70;
+        case 13:
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 2 + HALF_BLOCK_SIZE);
+            gCurrentSprite.hitboxBottom = -BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = QUARTER_BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE + THREE_QUARTER_BLOCK_SIZE;
             break;
 
-        case 0xE:
-            gCurrentSprite.hitboxTop = -0xA0;
-            gCurrentSprite.hitboxBottom = -0x40;
-            gCurrentSprite.hitboxLeft = 0x10;
-            gCurrentSprite.hitboxRight = 0x80;
+        case 14:
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 2 + HALF_BLOCK_SIZE);
+            gCurrentSprite.hitboxBottom = -BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = QUARTER_BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 2;
             break;
 
-        case 0xF:
-            gCurrentSprite.hitboxTop = -0xA0;
-            gCurrentSprite.hitboxBottom = -0x40;
-            gCurrentSprite.hitboxLeft = 0x10;
-            gCurrentSprite.hitboxRight = 0x90;
+        case 15:
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 2 + HALF_BLOCK_SIZE);
+            gCurrentSprite.hitboxBottom = -BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = QUARTER_BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 2 + QUARTER_BLOCK_SIZE;
             SoundPlay(SOUND_KRAID_LEFT_ARM_ATTACKING_3);
             break;
 
-        case 0x10:
-            gCurrentSprite.hitboxTop = -0xA0;
-            gCurrentSprite.hitboxBottom = -0x40;
-            gCurrentSprite.hitboxLeft = 0x10;
-            gCurrentSprite.hitboxRight = 0xA0;
+        case 16:
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 2 + HALF_BLOCK_SIZE);
+            gCurrentSprite.hitboxBottom = -BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = QUARTER_BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 2 + HALF_BLOCK_SIZE;
             break;
 
-        case 0x11:
-            gCurrentSprite.hitboxTop = -0xA0;
-            gCurrentSprite.hitboxBottom = -0x40;
-            gCurrentSprite.hitboxLeft = 0x10;
-            gCurrentSprite.hitboxRight = 0x98;
+        case 17:
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 2 + HALF_BLOCK_SIZE);
+            gCurrentSprite.hitboxBottom = -BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = QUARTER_BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 2 + QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE;
             break;
 
-        case 0x12:
-            gCurrentSprite.hitboxTop = -0x98;
-            gCurrentSprite.hitboxBottom = -0x40;
-            gCurrentSprite.hitboxLeft = 0x4;
-            gCurrentSprite.hitboxRight = 0x80;
+        case 18:
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 2 + QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE);
+            gCurrentSprite.hitboxBottom = -BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = PIXEL_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 2;
             break;
 
-        case 0x13:
-            gCurrentSprite.hitboxTop = -0xA0;
-            gCurrentSprite.hitboxBottom = -0x20;
-            gCurrentSprite.hitboxLeft = 0x4;
-            gCurrentSprite.hitboxRight = 0x90;
+        case 19:
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 2 + HALF_BLOCK_SIZE);
+            gCurrentSprite.hitboxBottom = -HALF_BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = PIXEL_SIZE;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 2 + QUARTER_BLOCK_SIZE;
             break;
     }
 }
@@ -1073,7 +1178,7 @@ void KraidPartUpdateLeftArmAttackingHitbox(void)
  * 
  * @param movement Movement
  */
-void KraidMoveBG2ToRight(u8 movement)
+static void KraidMoveBg2ToRight(u8 movement)
 {
     gSubSpriteData1.xPosition += movement;
     gBg2Movement.xOffset -= movement;
@@ -1084,7 +1189,7 @@ void KraidMoveBG2ToRight(u8 movement)
  * 
  * @param movement Movement
  */
-void KraidMoveBG2ToLeft(u8 movement)
+static void KraidMoveBg2ToLeft(u8 movement)
 {
     gSubSpriteData1.xPosition -= movement;
     gBg2Movement.xOffset += movement;
@@ -1094,7 +1199,7 @@ void KraidMoveBG2ToLeft(u8 movement)
  * @brief 19370 | 22c | Initializes a Kraid sprite
  * 
  */
-void KraidInit(void)
+static void KraidInit(void)
 {
     u16 yPosition;
     u16 xPosition;
@@ -1103,8 +1208,8 @@ void KraidInit(void)
     u8 partSlot;
 
     LOCK_DOORS();
-    gCurrentSprite.yPosition -= 0x28;
-    gCurrentSprite.xPosition -= 0x20;
+    gCurrentSprite.yPosition -= HALF_BLOCK_SIZE + EIGHTH_BLOCK_SIZE;
+    gCurrentSprite.xPosition -= HALF_BLOCK_SIZE;
 
     gSubSpriteData1.yPosition = gCurrentSprite.yPosition;
     gSubSpriteData1.xPosition = gCurrentSprite.xPosition;
@@ -1113,16 +1218,16 @@ void KraidInit(void)
     gCurrentSprite.yPositionSpawn = yPosition;
     gCurrentSprite.xPositionSpawn = xPosition;
 
-    gCurrentSprite.drawDistanceTop = 0x30;
-    gCurrentSprite.drawDistanceBottom = 0x1A;
-    gCurrentSprite.drawDistanceHorizontal = 0x38;
+    gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 3);
+    gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE + HALF_BLOCK_SIZE + EIGHTH_BLOCK_SIZE);
+    gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 3 + HALF_BLOCK_SIZE);
 
-    gCurrentSprite.hitboxTop = -0x70;
-    gCurrentSprite.hitboxBottom = 0x70;
-    gCurrentSprite.hitboxLeft = -0xA0;
-    gCurrentSprite.hitboxRight = 0x70;
+    gCurrentSprite.hitboxTop = -(BLOCK_SIZE + THREE_QUARTER_BLOCK_SIZE);
+    gCurrentSprite.hitboxBottom = BLOCK_SIZE + THREE_QUARTER_BLOCK_SIZE;
+    gCurrentSprite.hitboxLeft = -(BLOCK_SIZE * 2 + HALF_BLOCK_SIZE);
+    gCurrentSprite.hitboxRight = BLOCK_SIZE + THREE_QUARTER_BLOCK_SIZE;
     
-    gCurrentSprite.work0 = 0x78;
+    gCurrentSprite.work0 = CONVERT_SECONDS(2.f);
     gCurrentSprite.work1 = 0;
     gCurrentSprite.samusCollision = SSC_HURTS_KNOCKBACK_IF_INVINCIBLE;
 
@@ -1133,9 +1238,9 @@ void KraidInit(void)
     gCurrentSprite.health = GET_PSPRITE_HEALTH(PSPRITE_KRAID);
     gSubSpriteData1.health = gCurrentSprite.health;
 
-    gSubSpriteData1.workVariable3 = 0;
-    gSubSpriteData1.workVariable2 = 0;
-    gSubSpriteData1.workVariable1 = 0;
+    gSubSpriteData1.work3 = 0;
+    gSubSpriteData1.work2 = 0;
+    gSubSpriteData1.work1 = 0;
 
     gSubSpriteData1.pMultiOam = sKraidMultiSpriteData_Rising;
     gSubSpriteData1.animationDurationCounter = 0;
@@ -1171,8 +1276,8 @@ void KraidInit(void)
     SpriteSpawnSecondary(SSPRITE_KRAID_PART, KRAID_PART_RIGHT_ARM, gfxSlot, ramSlot, yPosition, xPosition, 0);
     SpriteSpawnSecondary(SSPRITE_KRAID_PART, KRAID_PART_RIGHT_FEET, gfxSlot, ramSlot, yPosition, xPosition, 0);
 
-    gSubSpriteData1.yPosition += (BLOCK_SIZE * 2);
-    gBg2Movement.yOffset -= (BLOCK_SIZE * 2);
+    gSubSpriteData1.yPosition += BLOCK_SIZE * 2;
+    gBg2Movement.yOffset -= BLOCK_SIZE * 2;
 }
 
 /**
@@ -1180,35 +1285,37 @@ void KraidInit(void)
  * 
  * @return u8 1 if done rising, 0 otherwise
  */
-u8 KraidMoveUp(void)
+static u8 KraidMoveUp(void)
 {
     KraidRandomSpriteDebrisOnCeiling(gCurrentSprite.work1);
-    if (!(gSubSpriteData1.yPosition & 0xF))
+
+    if (MOD_AND(gSubSpriteData1.yPosition, QUARTER_BLOCK_SIZE) == 0)
         ScreenShakeStartVertical(CONVERT_SECONDS(1.f / 6), 0x80 | 1);
 
     if (gSubSpriteData1.yPosition > gCurrentSprite.yPositionSpawn)
     {
-        gSubSpriteData1.yPosition--;
-        gBg2Movement.yOffset++;
+        gSubSpriteData1.yPosition -= ONE_SUB_PIXEL;
+        gBg2Movement.yOffset += ONE_SUB_PIXEL;
         return FALSE;
     }
-    else
-        return TRUE;
+
+    return TRUE;
 }
 
 /**
  * @brief 19640 | 2c | Makes kraid go up at the beginning of the fight
  * 
  */
-void KraidGoUp(void)
+static void KraidGoUp(void)
 {
     if (gCurrentSprite.work1 == 0)
         SoundPlay(SOUND_KRAID_RISING);
 
-    gCurrentSprite.work1++;
+    APPLY_DELTA_TIME_INC(gCurrentSprite.work1);
 
     KraidMoveUp();
-    gCurrentSprite.work0--;
+
+    APPLY_DELTA_TIME_DEC(gCurrentSprite.work0);
     if (gCurrentSprite.work0 == 0)
     {
         gCurrentSprite.pose = KRAID_POSE_CHECK_FULLY_UP;
@@ -1222,11 +1329,11 @@ void KraidGoUp(void)
  * @brief 19640 | 2c | Checks if kraid is fully up
  * 
  */
-void KraidCheckFullyUp(void)
+static void KraidCheckFullyUp(void)
 {
-    gCurrentSprite.work1++;
+    APPLY_DELTA_TIME_INC(gCurrentSprite.work1);
     if (KraidMoveUp())
-        gCurrentSprite.pose = 0xE;
+        gCurrentSprite.pose = KRAID_POSE_STANDING_INIT;
 }
 
 /**
@@ -1234,7 +1341,7 @@ void KraidCheckFullyUp(void)
  * 
  * @return u8 
  */
-u8 KraidMoveFeet(void)
+static u8 KraidMoveFeet(void)
 {
     u8 offset;
     u16 yPosition;
@@ -1250,11 +1357,11 @@ u8 KraidMoveFeet(void)
             offset = BLOCK_SIZE * 3;
 
         if (gCurrentSprite.xPositionSpawn + offset < gSubSpriteData1.xPosition)
-            return 0x2;
+            return 2;
 
-        if (gSubSpriteData1.currentAnimationFrame < 0x5)
+        if (gSubSpriteData1.currentAnimationFrame < 5)
         {
-            KraidMoveBG2ToRight(0x1);
+            KraidMoveBg2ToRight(ONE_SUB_PIXEL);
             yPosition = BLOCK_SIZE * 39 + HALF_BLOCK_SIZE;
             xPosition = gSubSpriteData1.xPosition + BLOCK_SIZE * 5;
 
@@ -1262,24 +1369,33 @@ u8 KraidMoveFeet(void)
             {
                 gCurrentClipdataAffectingAction = CAA_REMOVE_SOLID;
                 ClipdataProcess(yPosition, xPosition);
+
                 ParticleSet(yPosition, xPosition, PE_SPRITE_EXPLOSION_HUGE);
-                SpriteDebrisInit(0, 0x11, yPosition - 0x10, xPosition);
-                SpriteDebrisInit(0, 0x12, yPosition, xPosition + 0xC);
-                SpriteDebrisInit(0, 0x13, yPosition - 0x2A, xPosition + 0x14);
-                SpriteDebrisInit(0, 0x4, yPosition - 0x18, xPosition - 0x1e);
+
+                SpriteDebrisInit(0, 0x11, yPosition - QUARTER_BLOCK_SIZE, xPosition);
+                SpriteDebrisInit(0, 0x12, yPosition, xPosition + EIGHTH_BLOCK_SIZE + PIXEL_SIZE);
+                SpriteDebrisInit(0, 0x13, yPosition - (HALF_BLOCK_SIZE + EIGHTH_BLOCK_SIZE + PIXEL_SIZE / 2),
+                    xPosition + QUARTER_BLOCK_SIZE + PIXEL_SIZE);
+                SpriteDebrisInit(0, 0x4, yPosition - (QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE),
+                    xPosition - (HALF_BLOCK_SIZE - PIXEL_SIZE / 2));
+
                 SoundPlay(SOUND_138);
-                yPosition -= (BLOCK_SIZE * 8);
+                yPosition -= BLOCK_SIZE * 8;
                 xPosition -= BLOCK_SIZE;
 
                 if (SpriteUtilGetCollisionAtPosition(yPosition, xPosition) != COLLISION_AIR)
                 {
                     gCurrentClipdataAffectingAction = CAA_REMOVE_SOLID;
                     ClipdataProcess(yPosition, xPosition);
+
                     ParticleSet(yPosition, xPosition, PE_SPRITE_EXPLOSION_MEDIUM);
-                    SpriteDebrisInit(0, 0x11, yPosition - 0x10, xPosition);
-                    SpriteDebrisInit(0, 0x12, yPosition, xPosition + 0xC);
-                    SpriteDebrisInit(0, 0x13, yPosition - 0x2A, xPosition + 0x14);
-                    SpriteDebrisInit(0, 0x4, yPosition - 0x18, xPosition - 0x1E);
+
+                    SpriteDebrisInit(0, 0x11, yPosition - QUARTER_BLOCK_SIZE, xPosition);
+                    SpriteDebrisInit(0, 0x12, yPosition, xPosition + EIGHTH_BLOCK_SIZE + PIXEL_SIZE);
+                    SpriteDebrisInit(0, 0x13, yPosition - (HALF_BLOCK_SIZE + EIGHTH_BLOCK_SIZE + PIXEL_SIZE / 2),
+                        xPosition + QUARTER_BLOCK_SIZE + PIXEL_SIZE);
+                    SpriteDebrisInit(0, 0x4, yPosition - (QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE),
+                        xPosition - (HALF_BLOCK_SIZE - PIXEL_SIZE / 2));
                 }
             }
         }
@@ -1292,11 +1408,11 @@ u8 KraidMoveFeet(void)
             offset = 0;
 
         if (gCurrentSprite.xPositionSpawn + offset > gSubSpriteData1.xPosition)
-            return 0x1;
+            return 1;
 
-        if (gSubSpriteData1.currentAnimationFrame < 0x5)
+        if (gSubSpriteData1.currentAnimationFrame < 5)
         {
-            KraidMoveBG2ToLeft(0x1);
+            KraidMoveBg2ToLeft(ONE_SUB_PIXEL);
         }
     }
 
@@ -1307,12 +1423,13 @@ u8 KraidMoveFeet(void)
  * @brief 19810 | 44 | Initializes Kraid to do the first step
  * 
  */
-void KraidFirstStepInit(void)
+static void KraidFirstStepInit(void)
 {
     if (gCurrentSprite.status & SPRITE_STATUS_FACING_RIGHT)
         gSubSpriteData1.pMultiOam = sKraidMultiSpriteData_MovingLeftFeetToRight;
     else
         gSubSpriteData1.pMultiOam = sKraidMultiSpriteData_MovingRightFeetToLeft;
+
     gSubSpriteData1.animationDurationCounter = 0;
     gSubSpriteData1.currentAnimationFrame = 0;
 
@@ -1323,25 +1440,25 @@ void KraidFirstStepInit(void)
  * @brief 19854 | e0 | Handles Kraid doing the first step
  * 
  */
-void KraidFirstStep(void)
+static void KraidFirstStep(void)
 {
     u8 feetStatus;
 
     feetStatus = KraidMoveFeet();
-    if (SpriteUtilCheckNearEndSubSprite1Anim())
+    if (SpriteUtilHasSubSprite1AnimationNearlyEnded())
     {
-        if (gSubSpriteData1.workVariable1 != 0)
+        if (gSubSpriteData1.work1 != 0)
         {
-            if (gSubSpriteData1.workVariable1 <= 0x3)
+            if (gSubSpriteData1.work1 <= CONVERT_SECONDS(.05f))
             {
-                gSubSpriteData1.workVariable1++;
+                APPLY_DELTA_TIME_INC(gSubSpriteData1.work1);
                 if (gCurrentSprite.status & SPRITE_STATUS_FACING_RIGHT)
                     gCurrentSprite.status &= ~SPRITE_STATUS_FACING_RIGHT;
                 gCurrentSprite.pose = KRAID_POSE_SECOND_STEP_INIT;
             }
             else
             {
-                gSubSpriteData1.workVariable1 = 0;
+                gSubSpriteData1.work1 = 0;
                 gCurrentSprite.status |= SPRITE_STATUS_FACING_RIGHT;
                 gCurrentSprite.pose = KRAID_POSE_STANDING_BETWEEN_STEPS_INIT;
             }
@@ -1355,7 +1472,7 @@ void KraidFirstStep(void)
             
             if (feetStatus != 0)
             {
-                if (gSubSpriteData1.health < GET_PSPRITE_HEALTH(PSPRITE_KRAID) / 3 && feetStatus == 0x2)
+                if (gSubSpriteData1.health < GET_PSPRITE_HEALTH(PSPRITE_KRAID) / 3 && feetStatus == 2)
                     gCurrentSprite.pose = KRAID_POSE_STANDING_BETWEEN_STEPS_INIT;
                 else
                     gCurrentSprite.status ^= SPRITE_STATUS_FACING_RIGHT;
@@ -1368,7 +1485,7 @@ void KraidFirstStep(void)
  * @brief 19934 | 44 | Initializes Kraid to do the second step
  * 
  */
-void KraidSecondStepInit(void)
+static void KraidSecondStepInit(void)
 {
     if (gCurrentSprite.status & SPRITE_STATUS_FACING_RIGHT)
         gSubSpriteData1.pMultiOam = sKraidMultiSpriteData_MovingRightFeetToRight;
@@ -1384,25 +1501,25 @@ void KraidSecondStepInit(void)
  * @brief 19978 | e0 | Handles Kraid doing the second step
  * 
  */
-void KraidSecondStep(void)
+static void KraidSecondStep(void)
 {
     u8 feetStatus;
 
     feetStatus = KraidMoveFeet();
-    if (SpriteUtilCheckNearEndSubSprite1Anim())
+    if (SpriteUtilHasSubSprite1AnimationNearlyEnded())
     {
-        if (gSubSpriteData1.workVariable1 != 0)
+        if (gSubSpriteData1.work1 != 0)
         {
-            if (gSubSpriteData1.workVariable1 <= 0x3)
+            if (gSubSpriteData1.work1 <= CONVERT_SECONDS(.05f))
             {
-                gSubSpriteData1.workVariable1++;
+                APPLY_DELTA_TIME_INC(gSubSpriteData1.work1);
                 if (gCurrentSprite.status & SPRITE_STATUS_FACING_RIGHT)
                     gCurrentSprite.status &= ~SPRITE_STATUS_FACING_RIGHT;
                 gCurrentSprite.pose = KRAID_POSE_FIRST_STEP_INIT;
             }
             else
             {
-                gSubSpriteData1.workVariable1 = 0;
+                gSubSpriteData1.work1 = 0;
                 gCurrentSprite.status |= SPRITE_STATUS_FACING_RIGHT;
                 gCurrentSprite.pose = KRAID_POSE_STANDING_INIT;
             }
@@ -1416,7 +1533,7 @@ void KraidSecondStep(void)
             
             if (feetStatus != 0)
             {
-                if (gSubSpriteData1.health < GET_PSPRITE_HEALTH(PSPRITE_KRAID) / 3 && feetStatus == 0x2)
+                if (gSubSpriteData1.health < GET_PSPRITE_HEALTH(PSPRITE_KRAID) / 3 && feetStatus == 2)
                     gCurrentSprite.pose = KRAID_POSE_STANDING_INIT;
                 else
                     gCurrentSprite.status ^= SPRITE_STATUS_FACING_RIGHT;
@@ -1429,7 +1546,7 @@ void KraidSecondStep(void)
  * @brief 19a58 | 24 | Initializes Kraid to be standing
  * 
  */
-void KraidStandingInit(void)
+static void KraidStandingInit(void)
 {
     gSubSpriteData1.pMultiOam = sKraidMultiSpriteData_Standing;
     gSubSpriteData1.animationDurationCounter = 0;
@@ -1441,14 +1558,14 @@ void KraidStandingInit(void)
  * @brief 19a7c | 38 | Handles Kraid standing
  * 
  */
-void KraidStanding(void)
+static void KraidStanding(void)
 {
-    if (SpriteUtilCheckNearEndSubSprite1Anim())
+    if (SpriteUtilHasSubSprite1AnimationNearlyEnded())
     {
         gCurrentSprite.pose = KRAID_POSE_FIRST_STEP_INIT;
-        if (gSubSpriteData1.workVariable1 == 0x1)
+        if (gSubSpriteData1.work1 == 1)
         {
-            gSubSpriteData1.workVariable1++;
+            gSubSpriteData1.work1++;
             gCurrentSprite.status &= ~SPRITE_STATUS_FACING_RIGHT;
         }
     }
@@ -1458,7 +1575,7 @@ void KraidStanding(void)
  * @brief 19ab4 | 24 | Initializes Kraid to be standing (between steps)
  * 
  */
-void KraidStandingBetweenStepsInit(void)
+static void KraidStandingBetweenStepsInit(void)
 {
     gSubSpriteData1.pMultiOam = sKraidMultiSpriteData_StandingBetweenSteps;
     gSubSpriteData1.animationDurationCounter = 0;
@@ -1470,15 +1587,15 @@ void KraidStandingBetweenStepsInit(void)
  * @brief 19ad8 | 38 | Handles Kraid (between steps)
  * 
  */
-void KraidStandingBetweenSteps(void)
+static void KraidStandingBetweenSteps(void)
 {
-    if (SpriteUtilCheckNearEndSubSprite1Anim())
+    if (SpriteUtilHasSubSprite1AnimationNearlyEnded())
     {
         // Start second step
         gCurrentSprite.pose = KRAID_POSE_SECOND_STEP_INIT;
-        if (gSubSpriteData1.workVariable1 == 0x1)
+        if (gSubSpriteData1.work1 == 1)
         {
-            gSubSpriteData1.workVariable1++;
+            gSubSpriteData1.work1++;
             gCurrentSprite.status &= ~SPRITE_STATUS_FACING_RIGHT;
         }
     }
@@ -1488,11 +1605,11 @@ void KraidStandingBetweenSteps(void)
  * @brief 19b10 | 24 | Prevents samus from going through Kraid
  * 
  */
-void KraidPreventSamusGoingThrough(void)
+static void KraidPreventSamusGoingThrough(void)
 {
     u16 xPosition;
 
-    xPosition = gSubSpriteData1.xPosition + (BLOCK_SIZE * 3);
+    xPosition = gSubSpriteData1.xPosition + BLOCK_SIZE * 3;
     
     if (gSamusData.xPosition < xPosition)
         gSamusData.xPosition = xPosition;
@@ -1502,7 +1619,7 @@ void KraidPreventSamusGoingThrough(void)
  * @brief 19b34 | b0 | Initializes Kraid to be dying
  * 
  */
-void KraidDyingInit(void)
+static void KraidDyingInit(void)
 {
     if (gSubSpriteData1.pMultiOam == sKraidMultiSpriteData_Standing ||
         gSubSpriteData1.pMultiOam == sKraidMultiSpriteData_MovingRightFeetToRight ||
@@ -1511,7 +1628,9 @@ void KraidDyingInit(void)
         gSubSpriteData1.pMultiOam = sKraidMultiSpriteData_Dying1;
     }
     else
+    {
         gSubSpriteData1.pMultiOam = sKraidMultiSpriteData_Dying2;
+    }
 
     gSubSpriteData1.animationDurationCounter = 0;
     gSubSpriteData1.currentAnimationFrame = 0;
@@ -1524,12 +1643,12 @@ void KraidDyingInit(void)
     }
 
     gCurrentSprite.pose = KRAID_POSE_DYING;
-    gCurrentSprite.work0 = 0x64;
+    gCurrentSprite.work0 = CONVERT_SECONDS(1.f) + TWO_THIRD_SECOND;
     gCurrentSprite.work1 = 0;
-    gCurrentSprite.work2 = 0xC8;
-    gCurrentSprite.health = 0x1;
-    gCurrentSprite.invincibilityStunFlashTimer = 0x8;
-    gCurrentSprite.drawOrder = 0xC;
+    gCurrentSprite.work2 = CONVERT_SECONDS(3.f) + ONE_THIRD_SECOND;
+    gCurrentSprite.health = 1;
+    gCurrentSprite.invincibilityStunFlashTimer = EIGHTH_BLOCK_SIZE;
+    gCurrentSprite.drawOrder = 12;
     EventFunction(EVENT_ACTION_SETTING, EVENT_KRAID_KILLED);
     if (sRandoSeed.options.skipTourianOpening)
         EventFunction(EVENT_ACTION_SETTING, EVENT_KRAID_STATUE_OPENED);
@@ -1541,12 +1660,11 @@ void KraidDyingInit(void)
  * @brief 19be4 | 160 | Handles Kraid dying
  * 
  */
-void KraidDying(void)
+static void KraidDying(void)
 {
     u8 rng;
-    u32 temp;
 
-    if (gCurrentSprite.pOam == sKraidOam_OpeningMouth && SpriteUtilCheckEndCurrentSpriteAnim())
+    if (gCurrentSprite.pOam == sKraidOam_OpeningMouth && SpriteUtilHasCurrentAnimationEnded())
     {
         gCurrentSprite.pOam = sKraidOam_MouthOpened;
         gCurrentSprite.animationDurationCounter = 0;
@@ -1557,55 +1675,55 @@ void KraidDying(void)
     KraidPreventSamusGoingThrough();
 
     gCurrentSprite.ignoreSamusCollisionTimer = DELTA_TIME;
-    gCurrentSprite.work1++;
+    APPLY_DELTA_TIME_INC(gCurrentSprite.work1);
 
     // Set dust effects
-    if (!(gCurrentSprite.work1 & 0x1F))
+    if (MOD_AND(gCurrentSprite.work1, 32) == 0)
     {
-        ParticleSet(BLOCK_SIZE * 40, gSubSpriteData1.xPosition - 0xC0 + gCurrentSprite.work1 * 2, PE_SECOND_MEDIUM_DUST);
-        ParticleSet(BLOCK_SIZE * 40, gSubSpriteData1.xPosition + 0xC0 - gCurrentSprite.work1 * 2, PE_SECOND_TWO_MEDIUM_DUST);
+        ParticleSet(BLOCK_SIZE * 40, gSubSpriteData1.xPosition - (BLOCK_SIZE * 3) + gCurrentSprite.work1 * PIXEL_SIZE / 2, PE_SECOND_MEDIUM_DUST);
+        ParticleSet(BLOCK_SIZE * 40, gSubSpriteData1.xPosition + (BLOCK_SIZE * 3) - gCurrentSprite.work1 * PIXEL_SIZE / 2, PE_SECOND_TWO_MEDIUM_DUST);
     }
 
     if (gCurrentSprite.work0 != 0)
-        gCurrentSprite.work0--;
+    {
+        APPLY_DELTA_TIME_DEC(gCurrentSprite.work0);
+        return;
+    }
+
+    // Check play cutscene
+    if (gCurrentSprite.work2 != 0)
+    {
+        APPLY_DELTA_TIME_DEC(gCurrentSprite.work2);
+        if (gCurrentSprite.work2 == DELTA_TIME && !sRandoSeed.options.skipTourianOpening)
+            StartEffectForCutscene(EFFECT_CUTSCENE_STATUE_OPENING);
+        else if (gCurrentSprite.work2 == 0)
+            SoundPlay(SOUND_KRAID_DYING_3);
+    }
+
+    // Play effects
+    if (MOD_AND(gCurrentSprite.work1, 16) == 0)
+    {
+        ScreenShakeStartVertical(ONE_THIRD_SECOND, 0x80 | 1);
+        ParticleSet(gCurrentSprite.yPosition - (BLOCK_SIZE + HALF_BLOCK_SIZE + PIXEL_SIZE) + gSpriteRng * QUARTER_BLOCK_SIZE,
+            gCurrentSprite.xPosition - (BLOCK_SIZE * 3 + EIGHTH_BLOCK_SIZE) + gCurrentSprite.work1 * ONE_SUB_PIXEL, PE_SPRITE_EXPLOSION_HUGE);
+    }
+
+    if (MOD_AND(gCurrentSprite.work1 - 8, 16) == 0)
+    {
+        ParticleSet(gCurrentSprite.yPosition + BLOCK_SIZE * 2 + QUARTER_BLOCK_SIZE - PIXEL_SIZE - gSpriteRng * QUARTER_BLOCK_SIZE,
+            gCurrentSprite.xPosition + BLOCK_SIZE * 3 + THREE_QUARTER_BLOCK_SIZE - gCurrentSprite.work1 * ONE_SUB_PIXEL, PE_SPRITE_EXPLOSION_SINGLE_THEN_BIG);
+    }
+
+    if (SpriteUtilGetCollisionAtPosition(gSubSpriteData1.yPosition, gSubSpriteData1.xPosition) != COLLISION_AIR)
+    {
+        gCurrentSprite.pose = KRAID_POSE_DEAD_STATIONARY;
+        gCurrentSprite.work0 = CONVERT_SECONDS(2.f);
+        SoundPlay(SOUND_KRAID_DYING_2);
+    }
     else
     {
-        // Check play cutscene
-        if (gCurrentSprite.work2 != 0)
-        {
-            gCurrentSprite.work2--;
-            if (gCurrentSprite.work2 == 0x1 && !sRandoSeed.options.skipTourianOpening)
-                StartEffectForCutscene(EFFECT_CUTSCENE_STATUE_OPENING); // Statue opening
-            else if (gCurrentSprite.work2 == 0)
-                SoundPlay(SOUND_KRAID_DYING_3);
-        }
-
-        // Play effects
-        if (!(gCurrentSprite.work1 & 0xF))
-        {
-            ScreenShakeStartVertical(ONE_THIRD_SECOND, 0x80 | 1);
-            temp = gSpriteRng * 0x10 - 0x64;
-            ParticleSet(gCurrentSprite.yPosition + temp,
-                gCurrentSprite.xPosition - 0xC8 + gCurrentSprite.work1, PE_SPRITE_EXPLOSION_HUGE);
-        }
-
-        if (!((gCurrentSprite.work1 - 0x8) & 0xF))
-        {
-            ParticleSet(gCurrentSprite.yPosition + 0x8C - gSpriteRng * 0x10,
-                gCurrentSprite.xPosition + 0xF0 - gCurrentSprite.work1, PE_SPRITE_EXPLOSION_SINGLE_THEN_BIG);
-        }
-
-        if (SpriteUtilGetCollisionAtPosition(gSubSpriteData1.yPosition, gSubSpriteData1.xPosition) != COLLISION_AIR)
-        {
-            gCurrentSprite.pose = KRAID_POSE_DEAD_STATIONARY;
-            gCurrentSprite.work0 = 0x78;
-            SoundPlay(SOUND_KRAID_DYING_2);
-        }
-        else
-        {
-            gSubSpriteData1.yPosition++;
-            gBg2Movement.yOffset--;
-        }
+        gSubSpriteData1.yPosition += ONE_SUB_PIXEL;
+        gBg2Movement.yOffset -= ONE_SUB_PIXEL;
     }
 }
 
@@ -1613,7 +1731,7 @@ void KraidDying(void)
  * @brief 19d44 | 184 | Handles Kraid being stationary while dying
  * 
  */
-void KraidBeforeDeath(void)
+static void KraidBeforeDeath(void)
 {
     u8 rng;
     u8 timer;
@@ -1628,44 +1746,48 @@ void KraidBeforeDeath(void)
     gCurrentSprite.work1++;
 
     timer = gCurrentSprite.work1;
-    if (!(timer & 0x7))
+    if (MOD_AND(timer, 8) == 0)
     {
-        if (timer & 0x8)
+        if (MOD_BLOCK_AND(timer, 8))
         {
             ScreenShakeStartVertical(ONE_THIRD_SECOND, 0x80 | 1);
-            ParticleSet(gCurrentSprite.yPosition - 0x64 + rng * 0x10, gCurrentSprite.xPosition - 0xA0 + timer * 0x2, PE_SPRITE_EXPLOSION_HUGE);
-            yOffset = (timer * 0x2);
-            ParticleSet(gCurrentSprite.yPosition + 0x8C - rng * 0x10, gCurrentSprite.xPosition + 0xC0 - yOffset, PE_SPRITE_EXPLOSION_SINGLE_THEN_BIG);
+            ParticleSet(gCurrentSprite.yPosition - (BLOCK_SIZE + HALF_BLOCK_SIZE + PIXEL_SIZE) + rng * QUARTER_BLOCK_SIZE,
+                gCurrentSprite.xPosition - (BLOCK_SIZE * 2 + HALF_BLOCK_SIZE) + timer * PIXEL_SIZE / 2, PE_SPRITE_EXPLOSION_HUGE);
+            yOffset = (timer * PIXEL_SIZE / 2);
+            ParticleSet(gCurrentSprite.yPosition + (BLOCK_SIZE * 2 + QUARTER_BLOCK_SIZE - PIXEL_SIZE) - rng * QUARTER_BLOCK_SIZE,
+                gCurrentSprite.xPosition + BLOCK_SIZE * 3 - yOffset, PE_SPRITE_EXPLOSION_SINGLE_THEN_BIG);
         }
         else
         {
-            ParticleSet(gCurrentSprite.yPosition + rng * 0x10, gCurrentSprite.xPosition + 0xA0 - timer * 0x2, PE_SPRITE_EXPLOSION_HUGE);
-            yOffset = (timer * 0x2 - 0x64);
-            ParticleSet(gCurrentSprite.yPosition - rng * 0x8, gCurrentSprite.xPosition + yOffset, PE_SPRITE_EXPLOSION_SINGLE_THEN_BIG);
+            ParticleSet(gCurrentSprite.yPosition + rng * QUARTER_BLOCK_SIZE,
+                gCurrentSprite.xPosition + (BLOCK_SIZE * 2 + HALF_BLOCK_SIZE) - timer * PIXEL_SIZE / 2, PE_SPRITE_EXPLOSION_HUGE);
+            ParticleSet(gCurrentSprite.yPosition - rng * EIGHTH_BLOCK_SIZE,
+                gCurrentSprite.xPosition - (BLOCK_SIZE + HALF_BLOCK_SIZE + PIXEL_SIZE) + timer * PIXEL_SIZE / 2, PE_SPRITE_EXPLOSION_SINGLE_THEN_BIG);
         }
     }
 
-    if (!(timer & 0xF))
+    if (MOD_AND(timer, 16) == 0)
     {
-        if (timer & 0x10)
+        if (MOD_BLOCK_AND(timer, 16))
         {
-            ParticleSet(BLOCK_SIZE * 40, gSubSpriteData1.xPosition - 0x118 + gCurrentSprite.work0 * 0x2, PE_SPRITE_EXPLOSION_MEDIUM);
-            ParticleSet(BLOCK_SIZE * 40, gSubSpriteData1.xPosition + 0x118 - gCurrentSprite.work0 * 0x2, PE_SPRITE_EXPLOSION_BIG);
+            ParticleSet(BLOCK_SIZE * 40, gSubSpriteData1.xPosition - (BLOCK_SIZE * 4 + QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE) + gCurrentSprite.work0 * PIXEL_SIZE / 2, PE_SPRITE_EXPLOSION_MEDIUM);
+            ParticleSet(BLOCK_SIZE * 40, gSubSpriteData1.xPosition + (BLOCK_SIZE * 4 + QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE) - gCurrentSprite.work0 * PIXEL_SIZE / 2, PE_SPRITE_EXPLOSION_BIG);
         }
         else
         {
-            ParticleSet(BLOCK_SIZE * 40, gSubSpriteData1.xPosition - 0xD2 + gCurrentSprite.work0 * 0x2, PE_SPRITE_EXPLOSION_BIG);
-            ParticleSet(BLOCK_SIZE * 40, gSubSpriteData1.xPosition + 0xD2 - gCurrentSprite.work0 * 0x2, PE_SPRITE_EXPLOSION_MEDIUM);
+            ParticleSet(BLOCK_SIZE * 40, gSubSpriteData1.xPosition - (BLOCK_SIZE * 3 + QUARTER_BLOCK_SIZE + PIXEL_SIZE / 2) + gCurrentSprite.work0 * PIXEL_SIZE / 2, PE_SPRITE_EXPLOSION_BIG);
+            ParticleSet(BLOCK_SIZE * 40, gSubSpriteData1.xPosition + (BLOCK_SIZE * 3 + QUARTER_BLOCK_SIZE + PIXEL_SIZE / 2) - gCurrentSprite.work0 * PIXEL_SIZE / 2, PE_SPRITE_EXPLOSION_MEDIUM);
         }
     }
 
-    gCurrentSprite.work0--;
+    APPLY_DELTA_TIME_DEC(gCurrentSprite.work0);
     if (gCurrentSprite.work0 == 0)
     {
         // Set dead
-        SpriteUtilSpriteDeath(DEATH_NORMAL, gSubSpriteData1.yPosition - (BLOCK_SIZE * 3), gSubSpriteData1.xPosition, FALSE, PE_MAIN_BOSS_DEATH);
-        FadeCurrentMusicAndQueueNextMusic(0x14, MUSIC_BOSS_KILLED, 0); // Boss killed
-        IoUpdateDISPCNT(FALSE, DCNT_BG2); // Remove BG2
+        SpriteUtilSpriteDeath(DEATH_NORMAL, gSubSpriteData1.yPosition - BLOCK_SIZE * 3, gSubSpriteData1.xPosition, FALSE, PE_MAIN_BOSS_DEATH);
+        FadeCurrentMusicAndQueueNextMusic(ONE_THIRD_SECOND, MUSIC_BOSS_KILLED, 0);
+        // Remove BG2
+        IoUpdateDispcnt(FALSE, DCNT_BG2);
         gInGameTimerAtBosses[0] = gInGameTimer;
     }
 }
@@ -1674,9 +1796,9 @@ void KraidBeforeDeath(void)
  * @brief 19ec8 | 360 | Initializes a Kraid part sprite
  * 
  */
-void KraidPartInit(void)
+static void KraidPartInit(void)
 {
-    gCurrentSprite.health = 0x3E8;
+    gCurrentSprite.health = 1000;
     gCurrentSprite.status &= ~SPRITE_STATUS_NOT_DRAWN;
     gCurrentSprite.pose = KRAID_PART_POSE_IDLE;
 
@@ -1686,34 +1808,34 @@ void KraidPartInit(void)
             gCurrentSprite.status |= SPRITE_STATUS_NOT_DRAWN;
             gCurrentSprite.samusCollision = SSC_HURTS_KNOCKBACK_IF_INVINCIBLE;
 
-            gCurrentSprite.drawDistanceTop = 0x30;
-            gCurrentSprite.drawDistanceBottom = 0x80;
-            gCurrentSprite.drawDistanceHorizontal = 0x50;
+            gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 3);
+            gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 8);
+            gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 5);
 
-            gCurrentSprite.hitboxTop = -0xA0;
-            gCurrentSprite.hitboxBottom = 0x1E0;
-            gCurrentSprite.hitboxLeft = -0x120;
-            gCurrentSprite.hitboxRight = 0xD0;
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 2 + HALF_BLOCK_SIZE);
+            gCurrentSprite.hitboxBottom = BLOCK_SIZE * 7 + HALF_BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = -(BLOCK_SIZE * 4 + HALF_BLOCK_SIZE);
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 3 + QUARTER_BLOCK_SIZE;
 
-            gCurrentSprite.drawOrder = 0x1;
+            gCurrentSprite.drawOrder = 1;
             gCurrentSprite.pose = KRAID_PART_POSE_CHECK_PROJECTILES;
             gCurrentSprite.status |= SPRITE_STATUS_IGNORE_PROJECTILES;
             break;
 
         case KRAID_PART_TOP_HOLE_LEFT:
             gCurrentSprite.samusCollision = SSC_HURTS_SAMUS;
-            gCurrentSprite.frozenPaletteRowOffset = 0x4;
+            gCurrentSprite.frozenPaletteRowOffset = 4;
 
-            gCurrentSprite.drawDistanceTop = 0x10;
-            gCurrentSprite.drawDistanceBottom = 0x10;
-            gCurrentSprite.drawDistanceHorizontal = 0x8;
+            gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE);
+            gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE);
+            gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(HALF_BLOCK_SIZE);
 
-            gCurrentSprite.hitboxTop = -0x20;
-            gCurrentSprite.hitboxBottom = 0x40;
-            gCurrentSprite.hitboxLeft = -0x20;
-            gCurrentSprite.hitboxRight = 0x20;
+            gCurrentSprite.hitboxTop = -HALF_BLOCK_SIZE;
+            gCurrentSprite.hitboxBottom = BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = -HALF_BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = HALF_BLOCK_SIZE;
 
-            gCurrentSprite.drawOrder = 0xB;
+            gCurrentSprite.drawOrder = 11;
             gCurrentSprite.pose = KRAID_PART_POSE_CHECK_SPAWN_SPIKES;
             gCurrentSprite.status |= SPRITE_STATUS_IGNORE_PROJECTILES;
             break;
@@ -1721,34 +1843,34 @@ void KraidPartInit(void)
         case KRAID_PART_TOP_HOLE_RIGHT:
             gCurrentSprite.status |= SPRITE_STATUS_IGNORE_PROJECTILES;
             gCurrentSprite.samusCollision = SSC_NONE;
-            gCurrentSprite.frozenPaletteRowOffset = 0x4;
+            gCurrentSprite.frozenPaletteRowOffset = 4;
 
-            gCurrentSprite.drawDistanceTop = 0x10;
-            gCurrentSprite.drawDistanceBottom = 0x10;
-            gCurrentSprite.drawDistanceHorizontal = 0x10;
+            gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE);
+            gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE);
+            gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE);
 
-            gCurrentSprite.hitboxTop = -0x4;
-            gCurrentSprite.hitboxBottom = 0x4;
-            gCurrentSprite.hitboxLeft = -0x4;
-            gCurrentSprite.hitboxRight = 0x4;
+            gCurrentSprite.hitboxTop = -PIXEL_SIZE;
+            gCurrentSprite.hitboxBottom = PIXEL_SIZE;
+            gCurrentSprite.hitboxLeft = -PIXEL_SIZE;
+            gCurrentSprite.hitboxRight = PIXEL_SIZE;
 
-            gCurrentSprite.drawOrder = 0xD;
+            gCurrentSprite.drawOrder = 13;
             break;
 
         case KRAID_PART_MIDDLE_HOLE_LEFT:
             gCurrentSprite.samusCollision = SSC_HURTS_SAMUS;
-            gCurrentSprite.frozenPaletteRowOffset = 0x4;
+            gCurrentSprite.frozenPaletteRowOffset = 4;
 
-            gCurrentSprite.drawDistanceTop = 0x14;
-            gCurrentSprite.drawDistanceBottom = 0x10;
-            gCurrentSprite.drawDistanceHorizontal = 0x8;
+            gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE + QUARTER_BLOCK_SIZE);
+            gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE);
+            gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(HALF_BLOCK_SIZE);
 
-            gCurrentSprite.hitboxTop = -0x50;
-            gCurrentSprite.hitboxBottom = 0x50;
-            gCurrentSprite.hitboxLeft = -0x20;
-            gCurrentSprite.hitboxRight = 0x30;
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE + QUARTER_BLOCK_SIZE);
+            gCurrentSprite.hitboxBottom = BLOCK_SIZE + QUARTER_BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = -HALF_BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = THREE_QUARTER_BLOCK_SIZE;
 
-            gCurrentSprite.drawOrder = 0xB;
+            gCurrentSprite.drawOrder = 11;
             gCurrentSprite.pose = KRAID_PART_POSE_CHECK_SPAWN_SPIKES;
             gCurrentSprite.status |= SPRITE_STATUS_IGNORE_PROJECTILES;
             break;
@@ -1756,34 +1878,34 @@ void KraidPartInit(void)
         case KRAID_PART_MIDDLE_HOLE_RIGHT:
             gCurrentSprite.status |= SPRITE_STATUS_IGNORE_PROJECTILES;
             gCurrentSprite.samusCollision = SSC_NONE;
-            gCurrentSprite.frozenPaletteRowOffset = 0x4;
+            gCurrentSprite.frozenPaletteRowOffset = 4;
 
-            gCurrentSprite.drawDistanceTop = 0x14;
-            gCurrentSprite.drawDistanceBottom = 0x10;
-            gCurrentSprite.drawDistanceHorizontal = 0x10;
+            gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE + QUARTER_BLOCK_SIZE);
+            gCurrentSprite.drawDistanceBottom =  SUB_PIXEL_TO_PIXEL(BLOCK_SIZE);
+            gCurrentSprite.drawDistanceHorizontal =  SUB_PIXEL_TO_PIXEL(BLOCK_SIZE);
 
-            gCurrentSprite.hitboxTop = -0x4;
-            gCurrentSprite.hitboxBottom = 0x4;
-            gCurrentSprite.hitboxLeft = -0x4;
-            gCurrentSprite.hitboxRight = 0x4;
+            gCurrentSprite.hitboxTop = -PIXEL_SIZE;
+            gCurrentSprite.hitboxBottom = PIXEL_SIZE;
+            gCurrentSprite.hitboxLeft = -PIXEL_SIZE;
+            gCurrentSprite.hitboxRight = PIXEL_SIZE;
 
-            gCurrentSprite.drawOrder = 0xD;
+            gCurrentSprite.drawOrder = 13;
             break;
 
         case KRAID_PART_BOTTOM_HOLE_LEFT:
             gCurrentSprite.samusCollision = SSC_HURTS_SAMUS;
-            gCurrentSprite.frozenPaletteRowOffset = 0x4;
+            gCurrentSprite.frozenPaletteRowOffset = 4;
 
-            gCurrentSprite.drawDistanceTop = 0x14;
-            gCurrentSprite.drawDistanceBottom = 0x10;
-            gCurrentSprite.drawDistanceHorizontal = 0x10;
+            gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE + QUARTER_BLOCK_SIZE);
+            gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE);
+            gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE);
 
-            gCurrentSprite.hitboxTop = -0x50;
-            gCurrentSprite.hitboxBottom = 0xD0;
-            gCurrentSprite.hitboxLeft = -0x20;
-            gCurrentSprite.hitboxRight = 0x20;
+            gCurrentSprite.hitboxTop = -(BLOCK_SIZE + QUARTER_BLOCK_SIZE);
+            gCurrentSprite.hitboxBottom = BLOCK_SIZE * 3 + QUARTER_BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = -HALF_BLOCK_SIZE;
+            gCurrentSprite.hitboxRight = HALF_BLOCK_SIZE;
 
-            gCurrentSprite.drawOrder = 0xB;
+            gCurrentSprite.drawOrder = 11;
             gCurrentSprite.pose = KRAID_PART_POSE_CHECK_SPAWN_SPIKES;
             gCurrentSprite.status |= SPRITE_STATUS_IGNORE_PROJECTILES;
             break;
@@ -1791,29 +1913,29 @@ void KraidPartInit(void)
         case KRAID_PART_BOTTOM_HOLE_RIGHT:
             gCurrentSprite.status |= SPRITE_STATUS_IGNORE_PROJECTILES;
             gCurrentSprite.samusCollision = SSC_NONE;
-            gCurrentSprite.frozenPaletteRowOffset = 0x4;
+            gCurrentSprite.frozenPaletteRowOffset = 4;
 
-            gCurrentSprite.drawDistanceTop = 0x8;
-            gCurrentSprite.drawDistanceBottom = 0x10;
-            gCurrentSprite.drawDistanceHorizontal = 0x10;
+            gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(HALF_BLOCK_SIZE);
+            gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE);
+            gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE);
 
-            gCurrentSprite.hitboxTop = -0x4;
-            gCurrentSprite.hitboxBottom = 0x4;
-            gCurrentSprite.hitboxLeft = -0x4;
-            gCurrentSprite.hitboxRight = 0x4;
+            gCurrentSprite.hitboxTop = -PIXEL_SIZE;
+            gCurrentSprite.hitboxBottom = PIXEL_SIZE;
+            gCurrentSprite.hitboxLeft = -PIXEL_SIZE;
+            gCurrentSprite.hitboxRight = PIXEL_SIZE;
 
-            gCurrentSprite.drawOrder = 0xD;
+            gCurrentSprite.drawOrder = 13;
             break;
 
         case KRAID_PART_LEFT_ARM:
             gCurrentSprite.properties |= SP_IMMUNE_TO_PROJECTILES;
             gCurrentSprite.samusCollision = SSC_HURTS_SAMUS;
             
-            gCurrentSprite.drawDistanceTop = 0x80;
-            gCurrentSprite.drawDistanceBottom = 0x28;
-            gCurrentSprite.drawDistanceHorizontal = 0x60;
+            gCurrentSprite.drawDistanceTop = BLOCK_SIZE * 2;
+            gCurrentSprite.drawDistanceBottom = (HALF_BLOCK_SIZE + EIGHTH_BLOCK_SIZE);
+            gCurrentSprite.drawDistanceHorizontal = BLOCK_SIZE + HALF_BLOCK_SIZE;
 
-            gCurrentSprite.drawOrder = 0x2;
+            gCurrentSprite.drawOrder = 2;
             gCurrentSprite.pOam = sKraidPartOam_LeftArmIdle;
             gCurrentSprite.animationDurationCounter = 0;
             gCurrentSprite.currentAnimationFrame = 0;
@@ -1825,12 +1947,12 @@ void KraidPartInit(void)
             gCurrentSprite.properties |= SP_IMMUNE_TO_PROJECTILES;
             gCurrentSprite.samusCollision = SSC_HURTS_SAMUS;
 
-            gCurrentSprite.drawDistanceTop = 0x60;
-            gCurrentSprite.drawDistanceBottom = 0x38;
-            gCurrentSprite.drawDistanceHorizontal = 0x78;
+            gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 6);
+            gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 3 + HALF_BLOCK_SIZE);
+            gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 7 + HALF_BLOCK_SIZE);
 
-            gCurrentSprite.drawOrder = 0xF;
-            gCurrentSprite.bgPriority = 0x3;
+            gCurrentSprite.drawOrder = 15;
+            gCurrentSprite.bgPriority = BGCNT_LOW_PRIORITY;
 
             gCurrentSprite.pOam = sKraidPartOam_RightArmIdle;
             gCurrentSprite.animationDurationCounter = 0;
@@ -1844,32 +1966,32 @@ void KraidPartInit(void)
             gCurrentSprite.status |= SPRITE_STATUS_IGNORE_PROJECTILES;
             gCurrentSprite.samusCollision = SSC_NONE;
 
-            gCurrentSprite.drawDistanceTop = 0x36;
-            gCurrentSprite.drawDistanceBottom = 0x28;
-            gCurrentSprite.drawDistanceHorizontal = 0x38;
+            gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 3 + QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE);
+            gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 2 + HALF_BLOCK_SIZE);
+            gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 3 + HALF_BLOCK_SIZE);
 
-            gCurrentSprite.hitboxTop = -0x4;
-            gCurrentSprite.hitboxBottom = 0x4;
-            gCurrentSprite.hitboxLeft = -0x4;
-            gCurrentSprite.hitboxRight = 0x4;
+            gCurrentSprite.hitboxTop = -PIXEL_SIZE;
+            gCurrentSprite.hitboxBottom = PIXEL_SIZE;
+            gCurrentSprite.hitboxLeft = -PIXEL_SIZE;
+            gCurrentSprite.hitboxRight = PIXEL_SIZE;
 
-            gCurrentSprite.drawOrder = 0x3;
+            gCurrentSprite.drawOrder = 3;
             break;
 
         case KRAID_PART_RIGHT_FEET:
             gCurrentSprite.samusCollision = SSC_HURTS_SAMUS;
 
-            gCurrentSprite.drawDistanceTop = 0x36;
-            gCurrentSprite.drawDistanceBottom = 0x28;
-            gCurrentSprite.drawDistanceHorizontal = 0x70;
+            gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 3 + QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE);
+            gCurrentSprite.drawDistanceBottom = (HALF_BLOCK_SIZE + EIGHTH_BLOCK_SIZE);
+            gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(BLOCK_SIZE * 7);
 
-            gCurrentSprite.hitboxTop = 0x80;
-            gCurrentSprite.hitboxBottom = 0xA0;
-            gCurrentSprite.hitboxLeft = 0xC0;
-            gCurrentSprite.hitboxRight = 0x170;
+            gCurrentSprite.hitboxTop = BLOCK_SIZE * 2;
+            gCurrentSprite.hitboxBottom = BLOCK_SIZE * 2 + HALF_BLOCK_SIZE;
+            gCurrentSprite.hitboxLeft = BLOCK_SIZE * 3;
+            gCurrentSprite.hitboxRight = BLOCK_SIZE * 5 + THREE_QUARTER_BLOCK_SIZE;
 
-            gCurrentSprite.drawOrder = 0xE;
-            gCurrentSprite.bgPriority = 0x3;
+            gCurrentSprite.drawOrder = 14;
+            gCurrentSprite.bgPriority = BGCNT_LOW_PRIORITY;
             gCurrentSprite.pose = KRAID_PART_POSE_CHECK_PROJECTILES;
             gCurrentSprite.status |= SPRITE_STATUS_IGNORE_PROJECTILES;
             break;
@@ -1883,7 +2005,7 @@ void KraidPartInit(void)
  * @brief 1a228 | e8 | Handles the left arm throwing the nails
  * 
  */
-void KraidPartThrowNails(void)
+static void KraidPartThrowNails(void)
 {
     u8 ramSlot;
     u8 threshold;
@@ -1892,52 +2014,52 @@ void KraidPartThrowNails(void)
     ramSlot = gCurrentSprite.primarySpriteRamSlot;
 
     // Check can throw the nails
-    if (gSpriteData[ramSlot].pose > 0x7)
+    if (gSpriteData[ramSlot].pose < KRAID_POSE_FIRST_STEP_INIT)
+        return;
+
+    // Check already throwing
+    if (gCurrentSprite.pOam == sKraidPartOam_LeftArmIdle)
     {
-        // Check already throwing
-        if (gCurrentSprite.pOam == sKraidPartOam_LeftArmIdle)
+        if (MOD_AND(gFrameCounter8Bit, 128) == 0)
         {
-            if (!(gFrameCounter8Bit & 0x7F))
-            {
-                // Try throw
-                nbrDrops = SpriteUtilCountDrops();
-                if (gDifficulty == DIFF_EASY)
-                    threshold = 0x1;
-                else
-                    threshold = 0x3;
+            // Try throw
+            nbrDrops = SpriteUtilCountDrops();
+            if (gDifficulty == DIFF_EASY)
+                threshold = 1;
+            else
+                threshold = 3;
 
-                if (nbrDrops < threshold)
-                {
-                    // Set throwing
-                    gCurrentSprite.pOam = sKraidPartOam_LeftArmThrowingNails;
-                    gCurrentSprite.animationDurationCounter = 0;
-                    gCurrentSprite.currentAnimationFrame = 0;
-                }
-            }
-        }
-        else
-        {
-            // Throw
-            if (gCurrentSprite.currentAnimationFrame == 0x7 && gCurrentSprite.animationDurationCounter == 0x4)
+            if (nbrDrops < threshold)
             {
-                SpriteSpawnSecondary(SSPRITE_KRAID_NAIL, 0, gCurrentSprite.spritesetGfxSlot,
-                    gCurrentSprite.primarySpriteRamSlot, gCurrentSprite.yPosition - (BLOCK_SIZE * 3 + (HALF_BLOCK_SIZE)),
-                    gCurrentSprite.xPosition + (BLOCK_SIZE * 2), 0);
-            }
-            else if (gCurrentSprite.currentAnimationFrame == 0x8 && gCurrentSprite.animationDurationCounter == 0x1)
-            {
-                SpriteSpawnSecondary(SSPRITE_KRAID_NAIL, 0x1, gCurrentSprite.spritesetGfxSlot,
-                    gCurrentSprite.primarySpriteRamSlot, gCurrentSprite.yPosition - (BLOCK_SIZE * 3),
-                    gCurrentSprite.xPosition + (BLOCK_SIZE * 3 + (HALF_BLOCK_SIZE)), 0);
-            }
-
-            if (SpriteUtilCheckEndCurrentSpriteAnim())
-            {
-                // Set idle
-                gCurrentSprite.pOam = sKraidPartOam_LeftArmIdle;
+                // Set throwing
+                gCurrentSprite.pOam = sKraidPartOam_LeftArmThrowingNails;
                 gCurrentSprite.animationDurationCounter = 0;
                 gCurrentSprite.currentAnimationFrame = 0;
             }
+        }
+    }
+    else
+    {
+        // Throw
+        if (gCurrentSprite.currentAnimationFrame == 7 && gCurrentSprite.animationDurationCounter == CONVERT_SECONDS(1.f / 15))
+        {
+            SpriteSpawnSecondary(SSPRITE_KRAID_NAIL, KRAID_NAIL_TYPE_SLOW_ROTATION, gCurrentSprite.spritesetGfxSlot,
+                gCurrentSprite.primarySpriteRamSlot, gCurrentSprite.yPosition - (BLOCK_SIZE * 3 + HALF_BLOCK_SIZE),
+                gCurrentSprite.xPosition + BLOCK_SIZE * 2, 0);
+        }
+        else if (gCurrentSprite.currentAnimationFrame == 8 && gCurrentSprite.animationDurationCounter == DELTA_TIME)
+        {
+            SpriteSpawnSecondary(SSPRITE_KRAID_NAIL, KRAID_NAIL_TYPE_FAST_ROTATION, gCurrentSprite.spritesetGfxSlot,
+                gCurrentSprite.primarySpriteRamSlot, gCurrentSprite.yPosition - (BLOCK_SIZE * 3),
+                gCurrentSprite.xPosition + BLOCK_SIZE * 3 + HALF_BLOCK_SIZE, 0);
+        }
+
+        if (SpriteUtilHasCurrentAnimationEnded())
+        {
+            // Set idle
+            gCurrentSprite.pOam = sKraidPartOam_LeftArmIdle;
+            gCurrentSprite.animationDurationCounter = 0;
+            gCurrentSprite.currentAnimationFrame = 0;
         }
     }
 }
@@ -1946,7 +2068,7 @@ void KraidPartThrowNails(void)
  * @brief 1a310 | d4 | Checks if samus is near enough for the arm attack
  * 
  */
-void KraidPartCheckAttack(void)
+static void KraidPartCheckAttack(void)
 {
     u32 nslr;
     u8 ramSlot;
@@ -1959,7 +2081,7 @@ void KraidPartCheckAttack(void)
     if (gSpriteData[ramSlot].status & SPRITE_STATUS_SAMUS_COLLIDING)
     {
         // Already attacking
-        if (SpriteUtilCheckEndCurrentSpriteAnim())
+        if (SpriteUtilHasCurrentAnimationEnded())
         {
             // Set idle
             gSpriteData[ramSlot].status &= ~SPRITE_STATUS_SAMUS_COLLIDING;
@@ -1972,11 +2094,13 @@ void KraidPartCheckAttack(void)
     {
         // Delay before attacking
         if (gCurrentSprite.work0 != 0)
-            gCurrentSprite.work0--;
+        {
+            APPLY_DELTA_TIME_DEC(gCurrentSprite.work0);
+        }
         else
         {
             nslr = SpriteUtilCheckSamusNearSpriteLeftRight(BLOCK_SIZE * 2, BLOCK_SIZE * 8 + (HALF_BLOCK_SIZE));
-            gCurrentSprite.work0 = 0xB4;
+            gCurrentSprite.work0 = CONVERT_SECONDS(3.f);
         }
 
         // Check can attack
@@ -1998,7 +2122,7 @@ void KraidPartCheckAttack(void)
  * @brief 1a3e4 | c | Calls KraidCheckProjectilesCollidingWithBelly
  * 
  */
-void KraidPartCallKraidCheckProjectilesCollidingWithBelly(void)
+static void KraidPartCallKraidCheckProjectilesCollidingWithBelly(void)
 {
     KraidCheckProjectilesCollidingWithBelly();
 }
@@ -2007,7 +2131,7 @@ void KraidPartCallKraidCheckProjectilesCollidingWithBelly(void)
  * @brief 1a3f0 | 11c | Checks if the spikes should spawn
  * 
  */
-void KraidPartCheckShouldSpawnSpikes(void)
+static void KraidPartCheckShouldSpawnSpikes(void)
 {
     u8 ramSlot;
     u8 roomSlot;
@@ -2034,7 +2158,7 @@ void KraidPartCheckShouldSpawnSpikes(void)
 
     if (roomSlot == KRAID_PART_BOTTOM_HOLE_LEFT)
     {
-        if (gSubSpriteData1.health >= (GET_PSPRITE_HEALTH(PSPRITE_KRAID) >> 2) * 3 &&
+        if (gSubSpriteData1.health >= DIV_SHIFT(GET_PSPRITE_HEALTH(PSPRITE_KRAID), 4) * 3 &&
             gSamusData.yPosition < gCurrentSprite.yPosition - BLOCK_SIZE * 2)
             return;
 
@@ -2051,7 +2175,7 @@ void KraidPartCheckShouldSpawnSpikes(void)
         gSpriteData[ramSlot].status &= ~SPRITE_STATUS_MOSAIC;
 
         // 1 frame delay
-        gCurrentSprite.yPositionSpawn = 1;
+        gCurrentSprite.yPositionSpawn = DELTA_TIME;
     }
     else if (roomSlot == KRAID_PART_MIDDLE_HOLE_LEFT)
     {
@@ -2060,7 +2184,7 @@ void KraidPartCheckShouldSpawnSpikes(void)
             return;
 
         // 1 second delay
-        gCurrentSprite.yPositionSpawn = 60;
+        gCurrentSprite.yPositionSpawn = CONVERT_SECONDS(1.f);
     }
     else
     {
@@ -2069,7 +2193,7 @@ void KraidPartCheckShouldSpawnSpikes(void)
             return;
 
         // 2 second delay
-        gCurrentSprite.yPositionSpawn = 60 * 2;
+        gCurrentSprite.yPositionSpawn = CONVERT_SECONDS(2.f);
     }
 
     gCurrentSprite.pose = KRAID_PART_POSE_SPAWN_SPIKES;
@@ -2079,7 +2203,7 @@ void KraidPartCheckShouldSpawnSpikes(void)
  * @brief 1a50c | 8c | Spawn a spike
  * 
  */
-void KraidPartSpawnSpike(void)
+static void KraidPartSpawnSpike(void)
 {
     u8 ramSlot;
     u8 roomSlot;
@@ -2088,7 +2212,7 @@ void KraidPartSpawnSpike(void)
     KraidCheckProjectilesCollidingWithBelly();
 
     // Delay before shooting
-    gCurrentSprite.yPositionSpawn--;
+    APPLY_DELTA_TIME_DEC(gCurrentSprite.yPositionSpawn);
     if (gCurrentSprite.yPositionSpawn == 0)
     {
         ramSlot = gCurrentSprite.primarySpriteRamSlot;
@@ -2113,7 +2237,7 @@ void KraidPartSpawnSpike(void)
  * @brief 1a598 | b0 | Initializes a Kraid part to be dying
  * 
  */
-void KraidPartDyingInit(void)
+static void KraidPartDyingInit(void)
 {
     switch (gCurrentSprite.roomSlot)
     {
@@ -2121,21 +2245,21 @@ void KraidPartDyingInit(void)
             gCurrentSprite.pOam = sKraidPartOam_LeftArmDying;
             gCurrentSprite.animationDurationCounter = 0;
             gCurrentSprite.currentAnimationFrame = 0;
-            gCurrentSprite.yPositionSpawn = 0x190;
+            gCurrentSprite.yPositionSpawn = CONVERT_SECONDS(6.f) + TWO_THIRD_SECOND;
             gCurrentSprite.pose = KRAID_PART_POSE_ARM_DYING;
-            gCurrentSprite.drawOrder = 0xA;
+            gCurrentSprite.drawOrder = 10;
             break;
 
         case KRAID_PART_RIGHT_ARM:
             gCurrentSprite.pOam = sKraidPartOam_RightArmDying;
             gCurrentSprite.animationDurationCounter = 0;
             gCurrentSprite.currentAnimationFrame = 0;
-            gCurrentSprite.yPositionSpawn = 0x190;
+            gCurrentSprite.yPositionSpawn = CONVERT_SECONDS(6.f) + TWO_THIRD_SECOND;
             gCurrentSprite.pose = KRAID_PART_POSE_ARM_DYING;
             break;
 
         case KRAID_PART_LEFT_FEET:
-            gCurrentSprite.drawOrder = 0xA;
+            gCurrentSprite.drawOrder = 10;
             gCurrentSprite.pose = KRAID_PART_POSE_DYING_STATIONNARY;
             break;
 
@@ -2160,37 +2284,37 @@ void KraidPartDyingInit(void)
  * @brief 1a648 | 80 | Handles the arm while Kraid is dying and sinking
  * 
  */
-void KraidPartDyingSinking(void)
+static void KraidPartDyingSinking(void)
 {
     if (gCurrentSprite.yPositionSpawn != 0)
     {
-        gCurrentSprite.yPositionSpawn--;
+        APPLY_DELTA_TIME_DEC(gCurrentSprite.yPositionSpawn);
         if (gCurrentSprite.roomSlot == KRAID_PART_RIGHT_ARM || gCurrentSprite.roomSlot == KRAID_PART_LEFT_ARM)
-            gCurrentSprite.animationDurationCounter++;
+            gCurrentSprite.animationDurationCounter += CONVERT_SECONDS(1.f / 60);
     }
     else
     {
         if (gCurrentSprite.roomSlot == KRAID_PART_RIGHT_ARM)
         {
-            if (SpriteUtilCheckEndCurrentSpriteAnim())
+            if (SpriteUtilHasCurrentAnimationEnded())
             {
                 gCurrentSprite.pOam = sKraidPartOam_RightArmIdle;
                 gCurrentSprite.animationDurationCounter = 0;
                 gCurrentSprite.currentAnimationFrame = 0;
-                gCurrentSprite.drawDistanceTop = 0x28;
-                gCurrentSprite.drawDistanceBottom = 0x18;
+                gCurrentSprite.drawDistanceTop = (HALF_BLOCK_SIZE + EIGHTH_BLOCK_SIZE);
+                gCurrentSprite.drawDistanceBottom = (QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE);
                 gCurrentSprite.pose = KRAID_PART_POSE_DYING_STATIONNARY;
             }
         }
         else if (gCurrentSprite.roomSlot == KRAID_PART_LEFT_ARM)
         {
-            if (SpriteUtilCheckEndCurrentSpriteAnim())
+            if (SpriteUtilHasCurrentAnimationEnded())
             {
                 gCurrentSprite.pOam = sKraidPartOam_LeftArmIdle;
                 gCurrentSprite.animationDurationCounter = 0;
                 gCurrentSprite.currentAnimationFrame = 0;
-                gCurrentSprite.drawDistanceTop = 0x40;
-                gCurrentSprite.drawDistanceBottom = 0x18;
+                gCurrentSprite.drawDistanceTop = BLOCK_SIZE;
+                gCurrentSprite.drawDistanceBottom = (QUARTER_BLOCK_SIZE + EIGHTH_BLOCK_SIZE);
                 gCurrentSprite.pose = KRAID_PART_POSE_DYING_STATIONNARY;
             }
         }
@@ -2201,13 +2325,13 @@ void KraidPartDyingSinking(void)
  * @brief 1a6c8 | 188 | Handles the death of a Kraid part
  * 
  */
-void KraidPartDyingStationary(void)
+static void KraidPartDyingStationary(void)
 {
     u8 ramSlot;
     
     // Speed up arm animation
     if (gCurrentSprite.roomSlot == KRAID_PART_RIGHT_ARM || gCurrentSprite.roomSlot == KRAID_PART_LEFT_ARM)
-        gCurrentSprite.animationDurationCounter += 0x2;
+        gCurrentSprite.animationDurationCounter += CONVERT_SECONDS(1.f / 30);
 
     ramSlot = gCurrentSprite.primarySpriteRamSlot;
     if (gSpriteData[ramSlot].spriteId == PSPRITE_KRAID)
@@ -2218,57 +2342,57 @@ void KraidPartDyingStationary(void)
     {
         case KRAID_PART_BELLY:
             SpriteUtilSpriteDeath(DEATH_NORMAL, gSubSpriteData1.yPosition - BLOCK_SIZE,
-                gSubSpriteData1.xPosition - (BLOCK_SIZE * 2), FALSE, PE_SPRITE_EXPLOSION_MEDIUM);
+                gSubSpriteData1.xPosition - BLOCK_SIZE * 2, FALSE, PE_SPRITE_EXPLOSION_MEDIUM);
             break;
 
         case KRAID_PART_TOP_HOLE_LEFT:
-            SpriteUtilSpriteDeath(DEATH_NORMAL, gSubSpriteData1.yPosition - (BLOCK_SIZE * 2),
-                gSubSpriteData1.xPosition + (BLOCK_SIZE * 4), FALSE, PE_SPRITE_EXPLOSION_BIG);
+            SpriteUtilSpriteDeath(DEATH_NORMAL, gSubSpriteData1.yPosition - BLOCK_SIZE * 2,
+                gSubSpriteData1.xPosition + BLOCK_SIZE * 4, FALSE, PE_SPRITE_EXPLOSION_BIG);
             break;
 
         case KRAID_PART_TOP_HOLE_RIGHT:
-            SpriteUtilSpriteDeath(DEATH_NORMAL, gSubSpriteData1.yPosition - (BLOCK_SIZE * 3),
-                gSubSpriteData1.xPosition - (BLOCK_SIZE * 6), FALSE, PE_SPRITE_EXPLOSION_MEDIUM);
+            SpriteUtilSpriteDeath(DEATH_NORMAL, gSubSpriteData1.yPosition - BLOCK_SIZE * 3,
+                gSubSpriteData1.xPosition - BLOCK_SIZE * 6, FALSE, PE_SPRITE_EXPLOSION_MEDIUM);
             break;
 
         case KRAID_PART_MIDDLE_HOLE_LEFT:
-            SpriteUtilSpriteDeath(DEATH_NORMAL, gSubSpriteData1.yPosition - (BLOCK_SIZE * 4),
-                gSubSpriteData1.xPosition + (BLOCK_SIZE * 4), FALSE, PE_SPRITE_EXPLOSION_MEDIUM);
+            SpriteUtilSpriteDeath(DEATH_NORMAL, gSubSpriteData1.yPosition - BLOCK_SIZE * 4,
+                gSubSpriteData1.xPosition + BLOCK_SIZE * 4, FALSE, PE_SPRITE_EXPLOSION_MEDIUM);
             break;
 
         case KRAID_PART_MIDDLE_HOLE_RIGHT:
-            SpriteUtilSpriteDeath(DEATH_NORMAL, gSubSpriteData1.yPosition - (BLOCK_SIZE * 5),
+            SpriteUtilSpriteDeath(DEATH_NORMAL, gSubSpriteData1.yPosition - BLOCK_SIZE * 5,
                 gSubSpriteData1.xPosition - BLOCK_SIZE, FALSE, PE_SPRITE_EXPLOSION_SINGLE_THEN_BIG);
             break;
 
         case KRAID_PART_BOTTOM_HOLE_LEFT:
             SpriteUtilSpriteDeath(DEATH_NORMAL, gSubSpriteData1.yPosition - BLOCK_SIZE,
-                gSubSpriteData1.xPosition + (BLOCK_SIZE * 3), FALSE, PE_SPRITE_EXPLOSION_MEDIUM);
+                gSubSpriteData1.xPosition + BLOCK_SIZE * 3, FALSE, PE_SPRITE_EXPLOSION_MEDIUM);
             break;
 
         case KRAID_PART_BOTTOM_HOLE_RIGHT:
-            SpriteUtilSpriteDeath(DEATH_NORMAL, gSubSpriteData1.yPosition - (BLOCK_SIZE * 2),
-                gSubSpriteData1.xPosition - (BLOCK_SIZE * 5), FALSE, PE_SPRITE_EXPLOSION_MEDIUM);
+            SpriteUtilSpriteDeath(DEATH_NORMAL, gSubSpriteData1.yPosition - BLOCK_SIZE * 2,
+                gSubSpriteData1.xPosition - BLOCK_SIZE * 5, FALSE, PE_SPRITE_EXPLOSION_MEDIUM);
             break;
 
         case KRAID_PART_LEFT_ARM:
-            SpriteUtilSpriteDeath(DEATH_NORMAL, gSubSpriteData1.yPosition - (BLOCK_SIZE * 3),
-                gSubSpriteData1.xPosition + (BLOCK_SIZE * 3), FALSE, PE_SPRITE_EXPLOSION_BIG);
+            SpriteUtilSpriteDeath(DEATH_NORMAL, gSubSpriteData1.yPosition - BLOCK_SIZE * 3,
+                gSubSpriteData1.xPosition + BLOCK_SIZE * 3, FALSE, PE_SPRITE_EXPLOSION_BIG);
             break;
 
         case KRAID_PART_RIGHT_ARM:
-            SpriteUtilSpriteDeath(DEATH_NORMAL, gSubSpriteData1.yPosition - (BLOCK_SIZE * 4),
+            SpriteUtilSpriteDeath(DEATH_NORMAL, gSubSpriteData1.yPosition - BLOCK_SIZE * 4,
                 gSubSpriteData1.xPosition - BLOCK_SIZE, FALSE, PE_SPRITE_EXPLOSION_MEDIUM);
             break;
 
         case KRAID_PART_LEFT_FEET:
-            SpriteUtilSpriteDeath(DEATH_NORMAL, gSubSpriteData1.yPosition - (BLOCK_SIZE * 5),
-                gSubSpriteData1.xPosition + (BLOCK_SIZE * 2), FALSE, PE_SPRITE_EXPLOSION_MEDIUM);
+            SpriteUtilSpriteDeath(DEATH_NORMAL, gSubSpriteData1.yPosition - BLOCK_SIZE * 5,
+                gSubSpriteData1.xPosition + BLOCK_SIZE * 2, FALSE, PE_SPRITE_EXPLOSION_MEDIUM);
             break;
 
         case KRAID_PART_RIGHT_FEET:
             SpriteUtilSpriteDeath(DEATH_NORMAL, gSubSpriteData1.yPosition - BLOCK_SIZE,
-                gSubSpriteData1.xPosition - (BLOCK_SIZE * 3), FALSE, PE_SPRITE_EXPLOSION_BIG);
+                gSubSpriteData1.xPosition - BLOCK_SIZE * 3, FALSE, PE_SPRITE_EXPLOSION_BIG);
             break;
 
         default:
@@ -2280,7 +2404,7 @@ void KraidPartDyingStationary(void)
  * @brief 1a850 | 1ec | Handles the movement of a Kraid nail
  * 
  */
-void KraidNailMovement(void)
+static void KraidNailMovement(void)
 {
     u16 velocity;
     u32 spawnX;
@@ -2294,9 +2418,9 @@ void KraidNailMovement(void)
     u16 spriteY;
     u8 acceleration;
 
-    velocity = 0x4;
+    velocity = PIXEL_SIZE;
     if (gDifficulty == DIFF_HARD)
-        velocity = 0x8;
+        velocity = EIGHTH_BLOCK_SIZE;
 
     acceleration = ++gCurrentSprite.work1;
     if (acceleration == 0)
@@ -2304,10 +2428,16 @@ void KraidNailMovement(void)
         gCurrentSprite.status = 0;
         return;
     }
+
     velocity *= acceleration;
 
+    #ifdef REGION_US_BETA
+    spawnY = gCurrentSprite.work3 * BLOCK_SIZE + HALF_BLOCK_SIZE;
+    spawnX = gCurrentSprite.work2 * BLOCK_SIZE + HALF_BLOCK_SIZE;
+    #else // !REGION_US_BETA
     spawnY = gCurrentSprite.work3 * BLOCK_SIZE;
     spawnX = gCurrentSprite.work2 * BLOCK_SIZE;
+    #endif // REGION_US_BETA
 
     if (gCurrentSprite.status & SPRITE_STATUS_FACING_DOWN)
         distanceYUp = gCurrentSprite.yPositionSpawn - spawnY;
@@ -2326,8 +2456,8 @@ void KraidNailMovement(void)
             totalDistance = (u16)Sqrt(distanceXRight * distanceXRight + distanceYUp * distanceYUp);
             if (totalDistance != 0)
             {
-                gCurrentSprite.yPosition = spawnY + ((velocity * ((s32)(distanceYUp << 0xA) / totalDistance) >> 0xA));
-                gCurrentSprite.xPosition = spawnX + ((velocity * ((s32)(distanceXRight << 0xA) / totalDistance) >> 0xA));
+                gCurrentSprite.yPosition = spawnY + (velocity * ((s32)(distanceYUp << 0xA) / totalDistance) >> 0xA);
+                gCurrentSprite.xPosition = spawnX + (velocity * ((s32)(distanceXRight << 0xA) / totalDistance) >> 0xA);
             }
         }
         else
@@ -2335,8 +2465,8 @@ void KraidNailMovement(void)
             totalDistance = (u16)Sqrt(distanceXRight * distanceXRight + distanceYDown * distanceYDown);
             if (totalDistance != 0)
             {
-                gCurrentSprite.yPosition = spawnY - ((velocity * ((s32)(distanceYDown << 0xA) / totalDistance) >> 0xA));
-                gCurrentSprite.xPosition = spawnX + ((velocity * ((s32)(distanceXRight << 0xA) / totalDistance) >> 0xA));
+                gCurrentSprite.yPosition = spawnY - (velocity * ((s32)(distanceYDown << 0xA) / totalDistance) >> 0xA);
+                gCurrentSprite.xPosition = spawnX + (velocity * ((s32)(distanceXRight << 0xA) / totalDistance) >> 0xA);
             }
         }
     }
@@ -2347,8 +2477,8 @@ void KraidNailMovement(void)
             totalDistance = (u16)Sqrt(distanceXLeft * distanceXLeft + distanceYUp * distanceYUp);
             if (totalDistance != 0)
             {
-                gCurrentSprite.yPosition = spawnY + ((velocity * ((s32)(distanceYUp << 0xA) / totalDistance) >> 0xA));
-                gCurrentSprite.xPosition = spawnX - ((velocity * ((s32)(distanceXLeft << 0xA) / totalDistance) >> 0xA));
+                gCurrentSprite.yPosition = spawnY + (velocity * ((s32)(distanceYUp << 0xA) / totalDistance) >> 0xA);
+                gCurrentSprite.xPosition = spawnX - (velocity * ((s32)(distanceXLeft << 0xA) / totalDistance) >> 0xA);
             }
         }
         else
@@ -2356,8 +2486,8 @@ void KraidNailMovement(void)
             totalDistance = (u16)Sqrt(distanceXLeft * distanceXLeft + distanceYDown * distanceYDown);
             if (totalDistance != 0)
             {
-                gCurrentSprite.yPosition = spawnY - ((velocity * ((s32)(distanceYDown << 0xA) / totalDistance) >> 0xA));
-                gCurrentSprite.xPosition = spawnX - ((velocity * ((s32)(distanceXLeft << 0xA) / totalDistance) >> 0xA));
+                gCurrentSprite.yPosition = spawnY - (velocity * ((s32)(distanceYDown << 0xA) / totalDistance) >> 0xA);
+                gCurrentSprite.xPosition = spawnX - (velocity * ((s32)(distanceXLeft << 0xA) / totalDistance) >> 0xA);
             }
         }
     }
@@ -2374,7 +2504,7 @@ void Kraid(void)
 
     switch (gCurrentSprite.pose)
     {
-        case 0:
+        case SPRITE_POSE_UNINITIALIZED:
             KraidInit();
             break;
 
@@ -2517,8 +2647,8 @@ void Kraid(void)
             }
         }
 
-        if (gSubSpriteData1.workVariable1 != 0)
-            gSubSpriteData1.animationDurationCounter += 4;
+        if (gSubSpriteData1.work1 != 0)
+            gSubSpriteData1.animationDurationCounter += CONVERT_SECONDS(1.f / 15);
 
         gLockScreen.lock = LOCK_SCREEN_TYPE_POSITION;
         gLockScreen.yPositionCenter = gSamusData.yPosition;
@@ -2529,11 +2659,16 @@ void Kraid(void)
             if (!(gCurrentSprite.status & SPRITE_STATUS_FACING_DOWN))
                 gCurrentSprite.status |= SPRITE_STATUS_FACING_DOWN;
         }
-        else if (gCurrentSprite.status & SPRITE_STATUS_FACING_DOWN)
-            gCurrentSprite.status &= ~SPRITE_STATUS_FACING_DOWN;
+        else
+        {
+            if (gCurrentSprite.status & SPRITE_STATUS_FACING_DOWN)
+                gCurrentSprite.status &= ~SPRITE_STATUS_FACING_DOWN;
+        }
     }
     else
+    {
         gLockScreen.lock = LOCK_SCREEN_TYPE_NONE;
+    }
 }
 
 /**
@@ -2561,7 +2696,7 @@ void KraidPart(void)
     
     switch (gCurrentSprite.pose)
     {
-        case 0:
+        case SPRITE_POSE_UNINITIALIZED:
             KraidPartInit();
             break;
 
@@ -2632,10 +2767,11 @@ void KraidPart(void)
     else
     {
         KraidSyncSubSprites();
-        if (gSubSpriteData1.workVariable1 != 0 &&
-            (gCurrentSprite.roomSlot == KRAID_PART_LEFT_FEET || gCurrentSprite.roomSlot == KRAID_PART_RIGHT_FEET)
-            && gCurrentSprite.animationDurationCounter <= 0xB)
-            gCurrentSprite.animationDurationCounter += 0x4;
+        if (gSubSpriteData1.work1 != 0 && (gCurrentSprite.roomSlot == KRAID_PART_LEFT_FEET || gCurrentSprite.roomSlot == KRAID_PART_RIGHT_FEET))
+        {
+            if (gCurrentSprite.animationDurationCounter < CONVERT_SECONDS(.2f))
+                gCurrentSprite.animationDurationCounter += CONVERT_SECONDS(1.f / 15);
+        }
 
     }
 }
@@ -2651,72 +2787,75 @@ void KraidSpike(void)
     u16 yPosition;
     u16 caf;
     u16 timer;
+    u8 mainPalette;
     u8 palette;
-    u8* pPalette;
 
     if (gSubSpriteData1.health == 0)
-        gCurrentSprite.pose = 0x62;
+        gCurrentSprite.pose = SPRITE_POSE_DESTROYED;
 
     ramSlot = gCurrentSprite.primarySpriteRamSlot;
 
-    pPalette = &gCurrentSprite.absolutePaletteRow;
-    palette = gSpriteData[ramSlot].absolutePaletteRow;
-    if (*pPalette != gSpriteData[ramSlot].absolutePaletteRow)
+    ramSlot = gCurrentSprite.primarySpriteRamSlot;
+    palette = gCurrentSprite.absolutePaletteRow;
+    mainPalette = gSpriteData[ramSlot].absolutePaletteRow;
+    if (gCurrentSprite.absolutePaletteRow != mainPalette)
     {
-        gCurrentSprite.absolutePaletteRow = palette;
+        gCurrentSprite.absolutePaletteRow = mainPalette;
         if (gCurrentSprite.paletteRow == 0)
-            gCurrentSprite.paletteRow = palette;
+            gCurrentSprite.paletteRow = mainPalette;
     }
 
     switch (gCurrentSprite.pose)
     {
-        case 0:
+        case SPRITE_POSE_UNINITIALIZED:
             gCurrentSprite.status &= ~SPRITE_STATUS_NOT_DRAWN;
             gCurrentSprite.health = GET_SSPRITE_HEALTH(gCurrentSprite.spriteId);
             gCurrentSprite.pose = KRAID_SPIKE_POSE_DELAY_BEFORE_MOVING;
             gCurrentSprite.samusCollision = SSC_HURTS_SAMUS;
 
-            gCurrentSprite.drawDistanceTop = 0x10;
-            gCurrentSprite.drawDistanceBottom = 0x10;
-            gCurrentSprite.drawDistanceHorizontal = 0x30;
+            gCurrentSprite.drawDistanceTop = QUARTER_BLOCK_SIZE;
+            gCurrentSprite.drawDistanceBottom = QUARTER_BLOCK_SIZE;
+            gCurrentSprite.drawDistanceHorizontal = THREE_QUARTER_BLOCK_SIZE;
 
-            gCurrentSprite.hitboxTop = -0x20;
-            gCurrentSprite.hitboxBottom = 0x20;
+            gCurrentSprite.hitboxTop = -HALF_BLOCK_SIZE;
+            gCurrentSprite.hitboxBottom = HALF_BLOCK_SIZE;
             gCurrentSprite.hitboxLeft = 0;
-            gCurrentSprite.hitboxRight = 0x8;
+            gCurrentSprite.hitboxRight = EIGHTH_BLOCK_SIZE;
 
-            gCurrentSprite.drawOrder = 0xC;
+            gCurrentSprite.drawOrder = 12;
             gCurrentSprite.pOam = sKraidSpikeOam;
             gCurrentSprite.animationDurationCounter = 0;
             gCurrentSprite.currentAnimationFrame = 0;
 
-            gCurrentSprite.work0 = 0x14;
+            gCurrentSprite.work0 = ONE_THIRD_SECOND;
             SoundPlay(SOUND_KRAID_SPIKE_SPAWNING);
             
         case KRAID_SPIKE_POSE_DELAY_BEFORE_MOVING:
             caf = gCurrentSprite.currentAnimationFrame;
-            if (caf < 0x5)
+            if (caf <= 4)
             {
-                if (caf == 0x1)
-                    gCurrentSprite.hitboxRight = 0x20;
-                else if (caf == 0x2)
-                    gCurrentSprite.hitboxRight = 0x40;
-                else if (caf == 0x3)
-                    gCurrentSprite.hitboxRight = 0x60;
-                else if (caf == 0x4)
-                    gCurrentSprite.hitboxRight = 0x80;
+                if (caf == 1)
+                    gCurrentSprite.hitboxRight = HALF_BLOCK_SIZE;
+                else if (caf == 2)
+                    gCurrentSprite.hitboxRight = BLOCK_SIZE;
+                else if (caf == 3)
+                    gCurrentSprite.hitboxRight = BLOCK_SIZE + HALF_BLOCK_SIZE;
+                else if (caf == 4)
+                    gCurrentSprite.hitboxRight = BLOCK_SIZE * 2;
             }
             else
             {
                 gCurrentSprite.samusCollision = SSC_HURTS_RIGHT_CAN_STAND_ON_TOP;
-                gCurrentSprite.hitboxLeft = 0x10;
-                gCurrentSprite.hitboxRight = 0xA0;
+                gCurrentSprite.hitboxLeft = QUARTER_BLOCK_SIZE;
+                gCurrentSprite.hitboxRight = BLOCK_SIZE * 2 + HALF_BLOCK_SIZE;
                 if (gCurrentSprite.work0 != 0)
-                    gCurrentSprite.work0--;
+                {
+                    APPLY_DELTA_TIME_DEC(gCurrentSprite.work0);
+                }
                 else
                 {
                     gCurrentSprite.pose = KRAID_SPIKE_POSE_MOVING;
-                    gCurrentSprite.work0 = 0x4;
+                    gCurrentSprite.work0 = CONVERT_SECONDS(1.f / 15);
                     SoundPlay(SOUND_KRAID_SPIKE_EMERGING);
                 }
             }
@@ -2728,21 +2867,23 @@ void KraidSpike(void)
         case KRAID_SPIKE_POSE_MOVING:
             if (gCurrentSprite.work0 != 0)
             {
-                gCurrentSprite.work0--;
+                APPLY_DELTA_TIME_DEC(gCurrentSprite.work0);
                 if (gCurrentSprite.work0 == 0)
-                    gCurrentSprite.drawOrder = 0x4;
+                    gCurrentSprite.drawOrder = 4;
             }
 
             if (gCurrentSprite.status & SPRITE_STATUS_SAMUS_ON_TOP &&
                 SpriteUtilGetCollisionAtPosition(gSamusData.yPosition - HALF_BLOCK_SIZE, gSamusData.xPosition + HALF_BLOCK_SIZE) == COLLISION_AIR)
-                gSamusData.xPosition += 0x8;
+            {
+                gSamusData.xPosition += EIGHTH_BLOCK_SIZE;
+            }
 
-            gCurrentSprite.xPosition += 0x8;
+            gCurrentSprite.xPosition += EIGHTH_BLOCK_SIZE;
             yPosition = gCurrentSprite.yPosition;
             xPosition = gCurrentSprite.xPosition + BLOCK_SIZE * 2;
 
             if (gCurrentSprite.roomSlot == KRAID_PART_TOP_HOLE_LEFT)
-                yPosition -= 0x20;
+                yPosition -= HALF_BLOCK_SIZE;
 
             if (SpriteUtilGetCollisionAtPosition(yPosition, xPosition) != COLLISION_AIR)
             {
@@ -2750,51 +2891,62 @@ void KraidSpike(void)
                 {
                     gCurrentClipdataAffectingAction = CAA_REMOVE_SOLID;
                     ClipdataProcess(yPosition, xPosition);
+
                     ParticleSet(yPosition, xPosition, PE_SPRITE_EXPLOSION_MEDIUM);
-                    SpriteDebrisInit(0, 0x11, yPosition - 0x1A - gSpriteRng, xPosition);
-                    SpriteDebrisInit(0, 0x12, yPosition - 0x10, xPosition + 0x8 + gSpriteRng);
-                    SpriteDebrisInit(0, 0x13, yPosition - 0x40 - gSpriteRng, xPosition + 0x10);
-                    SpriteDebrisInit(0, 0x4, yPosition - 0x26, xPosition - 0x1C - gSpriteRng);
+
+                    SpriteDebrisInit(0, 0x11, yPosition - (HALF_BLOCK_SIZE - PIXEL_SIZE - PIXEL_SIZE / 2) - gSpriteRng, xPosition);
+                    SpriteDebrisInit(0, 0x12, yPosition - QUARTER_BLOCK_SIZE,
+                        xPosition + EIGHTH_BLOCK_SIZE + gSpriteRng);
+                    SpriteDebrisInit(0, 0x13, yPosition - BLOCK_SIZE - gSpriteRng,
+                        xPosition + QUARTER_BLOCK_SIZE);
+                    SpriteDebrisInit(0, 0x4, yPosition - (HALF_BLOCK_SIZE + PIXEL_SIZE + PIXEL_SIZE / 2),
+                        xPosition - (HALF_BLOCK_SIZE - PIXEL_SIZE) - gSpriteRng);
 
                     if (gCurrentSprite.roomSlot == KRAID_PART_TOP_HOLE_LEFT)
                     {
-                        if (!(gSubSpriteData1.workVariable3 & 0x1))
+                        if (!(gSubSpriteData1.work3 & DESTROYED_BLOCK_STATUS_TOP))
                         {
-                            gSubSpriteData1.workVariable3 |= 0x1;
+                            gSubSpriteData1.work3 |= DESTROYED_BLOCK_STATUS_TOP;
                             SoundPlay(SOUND_KRAID_SPIKE_DESTROYING_PLATFORM);
                         }
                     }
                     else if (gCurrentSprite.roomSlot == KRAID_PART_MIDDLE_HOLE_LEFT)
                     {
-                        if (!(gSubSpriteData1.workVariable3 & 0x2))
+                        if (!(gSubSpriteData1.work3 & DESTROYED_BLOCK_STATUS_MIDDLE))
                         {
-                            gSubSpriteData1.workVariable3 |= 0x2;
+                            gSubSpriteData1.work3 |= DESTROYED_BLOCK_STATUS_MIDDLE;
                             SoundPlay(SOUND_KRAID_SPIKE_DESTROYING_BLOCKS);
                         }
+
                         gCurrentClipdataAffectingAction = CAA_REMOVE_SOLID;
                         ClipdataProcess(yPosition - BLOCK_SIZE, xPosition);
                         gCurrentClipdataAffectingAction = CAA_REMOVE_SOLID;
                         ClipdataProcess(yPosition - BLOCK_SIZE * 2, xPosition);
+
                         ParticleSet(yPosition - BLOCK_SIZE * 2, xPosition, PE_SPRITE_EXPLOSION_MEDIUM);
                     }
                     else if (gCurrentSprite.roomSlot == KRAID_PART_BOTTOM_HOLE_LEFT)
                     {
-                        if (!(gSubSpriteData1.workVariable3 & 0x4))
+                        if (!(gSubSpriteData1.work3 & DESTROYED_BLOCK_STATUS_BOTTOM))
                         {
-                            gSubSpriteData1.workVariable3 |= 0x4;
+                            gSubSpriteData1.work3 |= DESTROYED_BLOCK_STATUS_BOTTOM;
                             SoundPlay(SOUND_KRAID_SPIKE_DESTROYING_BLOCKS);
                         }
+
                         gCurrentClipdataAffectingAction = CAA_REMOVE_SOLID;
                         ClipdataProcess(yPosition - BLOCK_SIZE, xPosition);
                         gCurrentClipdataAffectingAction = CAA_REMOVE_SOLID;
                         ClipdataProcess(yPosition + BLOCK_SIZE, xPosition);
+    
                         ParticleSet(yPosition + BLOCK_SIZE, xPosition, PE_SPRITE_EXPLOSION_MEDIUM);
                     }
                 }
                 else
                 {
                     if (gCurrentSprite.roomSlot == KRAID_PART_TOP_HOLE_LEFT)
-                        yPosition += 0x20;
+                    {
+                        yPosition += HALF_BLOCK_SIZE;
+                    }
                     else if (gCurrentSprite.roomSlot == KRAID_PART_MIDDLE_HOLE_LEFT)
                     {
                         if (SpriteUtilGetCollisionAtPosition(yPosition - BLOCK_SIZE * 3, xPosition - HALF_BLOCK_SIZE) != COLLISION_AIR)
@@ -2819,29 +2971,31 @@ void KraidSpike(void)
                         }
                     }
 
-                    SpriteDebrisInit(0, 0x11, yPosition - gSpriteRng, xPosition + 0x10);
-                    SpriteDebrisInit(0, 0x12, yPosition + 0x10, xPosition + gSpriteRng * 0x2);
-                    SpriteDebrisInit(0, 0x13, yPosition + gSpriteRng, xPosition - 0x10);
-                    SpriteDebrisInit(0, 0x4, yPosition - 0x10, xPosition - gSpriteRng * 0x2);
-                    gCurrentSprite.yPositionSpawn = 0x168;
+                    SpriteDebrisInit(0, 0x11, yPosition - gSpriteRng, xPosition + QUARTER_BLOCK_SIZE);
+                    SpriteDebrisInit(0, 0x12, yPosition + QUARTER_BLOCK_SIZE, xPosition + gSpriteRng * PIXEL_SIZE / 2);
+                    SpriteDebrisInit(0, 0x13, yPosition + gSpriteRng, xPosition - QUARTER_BLOCK_SIZE);
+                    SpriteDebrisInit(0, 0x4, yPosition - QUARTER_BLOCK_SIZE, xPosition - gSpriteRng * PIXEL_SIZE / 2);
+                    gCurrentSprite.yPositionSpawn = CONVERT_SECONDS(6.f);
                     gCurrentSprite.pose = KRAID_SPIKE_POSE_IN_WALL;
-                    gCurrentSprite.drawOrder = 0x4;
+                    gCurrentSprite.drawOrder = 4;
                     SoundPlay(SOUND_KRAID_SPIKE_HITTING_WALL);
                 }
             }
             break;
 
         case KRAID_SPIKE_POSE_IN_WALL:
-            timer = --gCurrentSprite.yPositionSpawn;
-            if (timer <= 0x3C && !(timer & 0x3))
+            timer = APPLY_DELTA_TIME_DEC(gCurrentSprite.yPositionSpawn);
+            if (timer <= CONVERT_SECONDS(1.f) && MOD_AND(timer, 4) == 0)
             {
-                if (timer & 0x4)
-                    gCurrentSprite.paletteRow = 0xE - (gCurrentSprite.spritesetGfxSlot + gCurrentSprite.frozenPaletteRowOffset);
+                if (MOD_BLOCK_AND(timer, 4))
+                {
+                    gCurrentSprite.paletteRow = SPRITE_GET_STUN_PALETTE(gCurrentSprite);
+                }
                 else
                 {
                     gCurrentSprite.paletteRow = gCurrentSprite.absolutePaletteRow;
                     if (timer == 0)
-                        gCurrentSprite.pose = 0x62;
+                        gCurrentSprite.pose = SPRITE_POSE_DESTROYED;
                 }
             }
             break;
@@ -2849,8 +3003,9 @@ void KraidSpike(void)
         default:
             if (gCurrentSprite.standingOnSprite != SAMUS_STANDING_ON_SPRITE_OFF && gSamusData.standingStatus == STANDING_ENEMY)
                 gSamusData.standingStatus = STANDING_MIDAIR;
+
             gCurrentSprite.status = 0;
-            ParticleSet(gCurrentSprite.yPosition, gCurrentSprite.xPosition + 0x50, PE_SPRITE_EXPLOSION_HUGE);
+            ParticleSet(gCurrentSprite.yPosition, gCurrentSprite.xPosition + BLOCK_SIZE + QUARTER_BLOCK_SIZE, PE_SPRITE_EXPLOSION_HUGE);
             SoundPlay(SOUND_138);
             break;
     }
@@ -2867,51 +3022,71 @@ void KraidNail(void)
 
     switch (gCurrentSprite.pose)
     {
-        case 0:
+        case SPRITE_POSE_UNINITIALIZED:
             gCurrentSprite.status &= ~SPRITE_STATUS_NOT_DRAWN;
             gCurrentSprite.health = GET_SSPRITE_HEALTH(gCurrentSprite.spriteId);
-            gCurrentSprite.pose = 0x9;
+            gCurrentSprite.pose = KRAID_NAIL_POSE_MOVING;
             gCurrentSprite.samusCollision = SSC_HURTS_SAMUS;
 
-            gCurrentSprite.drawDistanceTop = 0x8;
-            gCurrentSprite.drawDistanceBottom = 0x8;
-            gCurrentSprite.drawDistanceHorizontal = 0x8;
+            gCurrentSprite.drawDistanceTop = SUB_PIXEL_TO_PIXEL(HALF_BLOCK_SIZE);
+            gCurrentSprite.drawDistanceBottom = SUB_PIXEL_TO_PIXEL(HALF_BLOCK_SIZE);
+            gCurrentSprite.drawDistanceHorizontal = SUB_PIXEL_TO_PIXEL(HALF_BLOCK_SIZE);
 
-            gCurrentSprite.hitboxTop = -0x1C;
-            gCurrentSprite.hitboxBottom = 0x1C;
-            gCurrentSprite.hitboxLeft = -0x1C;
-            gCurrentSprite.hitboxRight = 0x1C;
+            gCurrentSprite.hitboxTop = -(HALF_BLOCK_SIZE - PIXEL_SIZE);
+            gCurrentSprite.hitboxBottom = (HALF_BLOCK_SIZE - PIXEL_SIZE);
+            gCurrentSprite.hitboxLeft = -(HALF_BLOCK_SIZE - PIXEL_SIZE);
+            gCurrentSprite.hitboxRight = (HALF_BLOCK_SIZE - PIXEL_SIZE);
 
             gCurrentSprite.pOam = sKraidNailOam;
             gCurrentSprite.animationDurationCounter = 0;
             gCurrentSprite.currentAnimationFrame = 0;
 
-            gCurrentSprite.drawOrder = 0x3;
-            gCurrentSprite.bgPriority = 0x1;
-            gCurrentSprite.status |= SPRITE_STATUS_UNKNOWN_80;
+            gCurrentSprite.drawOrder = 3;
+            gCurrentSprite.bgPriority = BGCNT_HIGH_MID_PRIORITY;
+            gCurrentSprite.status |= SPRITE_STATUS_ROTATION_SCALING_SINGLE;
             gCurrentSprite.scaling = Q_8_8(1.f);
             gCurrentSprite.work1 = 0;
 
-            gCurrentSprite.work3 = gCurrentSprite.yPosition >> 0x6;
-            gCurrentSprite.work2 = gCurrentSprite.xPosition >> 0x6;
+            #ifdef REGION_US_BETA
+            gCurrentSprite.work3 = SUB_PIXEL_TO_BLOCK_(gCurrentSprite.yPosition - HALF_BLOCK_SIZE);
+            gCurrentSprite.work2 = SUB_PIXEL_TO_BLOCK_(gCurrentSprite.xPosition - HALF_BLOCK_SIZE);
+            #else // !REGION_US_BETA
+            gCurrentSprite.work3 = SUB_PIXEL_TO_BLOCK(gCurrentSprite.yPosition);
+            gCurrentSprite.work2 = SUB_PIXEL_TO_BLOCK(gCurrentSprite.xPosition);
+            #endif // REGION_US_BETA
 
             if (gCurrentSprite.roomSlot != 0)
             {
                 dstY = gSamusData.yPosition;
-                gCurrentSprite.rotation = 0x40;
+                gCurrentSprite.rotation = BLOCK_SIZE;
             }
             else
             {
-                dstY = gSamusData.yPosition - (BLOCK_SIZE * 2 + (HALF_BLOCK_SIZE));
+                dstY = gSamusData.yPosition - (BLOCK_SIZE * 2 + HALF_BLOCK_SIZE);
                 gCurrentSprite.rotation = 0;
             }
 
             dstX = gSamusData.xPosition;
 
-            if (dstY < (gCurrentSprite.work3 * BLOCK_SIZE))
+            #ifdef REGION_US_BETA
+            if (dstY < gCurrentSprite.yPosition)
+            {
+                if (gCurrentSprite.yPosition - dstY < HALF_BLOCK_SIZE)
+                    dstY = gSamusData.yPosition - HALF_BLOCK_SIZE;
+                gCurrentSprite.status &= ~SPRITE_STATUS_FACING_DOWN;
+            }
+            else
+            {
+                if (dstY - gCurrentSprite.yPosition < HALF_BLOCK_SIZE)
+                    dstY = gSamusData.yPosition + HALF_BLOCK_SIZE;
+                gCurrentSprite.status |= SPRITE_STATUS_FACING_DOWN;
+            }
+            #else // !REGION_US_BETA
+            if (dstY < BLOCK_TO_SUB_PIXEL(gCurrentSprite.work3))
                 gCurrentSprite.status &= ~SPRITE_STATUS_FACING_DOWN;
             else
                 gCurrentSprite.status |= SPRITE_STATUS_FACING_DOWN;
+            #endif // REGION_US_BETA
 
             if (dstX < gCurrentSprite.xPosition)
                 dstX = gSamusData.xPosition + BLOCK_SIZE;
@@ -2920,7 +3095,7 @@ void KraidNail(void)
             gCurrentSprite.yPositionSpawn = dstY;
             gCurrentSprite.xPositionSpawn = dstX;
 
-        case 0x9:
+        case KRAID_NAIL_POSE_MOVING:
             if (SpriteUtilGetCollisionAtPosition(gCurrentSprite.yPosition, gCurrentSprite.xPosition) != COLLISION_AIR)
             {
                 ParticleSet(gCurrentSprite.yPosition, gCurrentSprite.xPosition, PE_SPRITE_EXPLOSION_SMALL);
@@ -2932,21 +3107,21 @@ void KraidNail(void)
             {
                 if (gDifficulty == DIFF_HARD)
                 {
-                    if (gCurrentSprite.roomSlot != 0)
-                        gCurrentSprite.rotation += 0x14;
+                    if (gCurrentSprite.roomSlot != KRAID_NAIL_TYPE_SLOW_ROTATION)
+                        gCurrentSprite.rotation += (u32)(PI * .15625f);
                     else
-                        gCurrentSprite.rotation += 0x16;
+                        gCurrentSprite.rotation += (u32)(PI * .171875f);
                 }
                 else
                 {
-                    if (gCurrentSprite.roomSlot != 0)
-                        gCurrentSprite.rotation += 0xC;
+                    if (gCurrentSprite.roomSlot != KRAID_NAIL_TYPE_SLOW_ROTATION)
+                        gCurrentSprite.rotation += (u32)(PI * .09375f);
                     else
-                        gCurrentSprite.rotation += 0xE;
+                        gCurrentSprite.rotation += (u32)(PI * .109375);
                 }
 
                 if (gCurrentSprite.health == 0)
-                    gCurrentSprite.pose = 0x42;
+                    gCurrentSprite.pose = SPRITE_POSE_STOPPED;
                 else
                     KraidNailMovement();
             }

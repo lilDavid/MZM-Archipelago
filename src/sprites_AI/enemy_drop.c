@@ -11,11 +11,21 @@
 #include "structs/sprite.h"
 #include "structs/samus.h"
 
+#define ENEMY_DROP_POSE_IDLE 0x9
+
+// Amount refilled by each drop
+
+#define SMALL_ENERGY_DROP_REFILL 5
+#define LARGE_ENERGY_DROP_REFILL 20
+#define MISSILE_DROP_REFILL 2
+#define SUPER_MISSILE_DROP_REFILL 2
+#define POWER_BOMB_DROP_REFILL 1
+
 /**
  * @brief 12d14 | 17a | Initializes an enemy drop sprite
  * 
  */
-void EnemyDropInit(void)
+static void EnemyDropInit(void)
 {
     gCurrentSprite.ignoreSamusCollisionTimer = ONE_THIRD_SECOND;
     gCurrentSprite.status |= SPRITE_STATUS_IGNORE_PROJECTILES;
@@ -39,38 +49,38 @@ void EnemyDropInit(void)
     switch (gCurrentSprite.spriteId)
     {
         case PSPRITE_POWER_BOMB_DROP:
-            gCurrentSprite.pOam = sEnemyDropOAM_PowerBomb;
+            gCurrentSprite.pOam = sEnemyDropOam_PowerBomb;
             gCurrentSprite.samusCollision = SSC_POWER_BOMB_DROP;
             break;
 
         case PSPRITE_SUPER_MISSILE_DROP:
-            gCurrentSprite.pOam = sEnemyDropOAM_SuperMissile;
+            gCurrentSprite.pOam = sEnemyDropOam_SuperMissile;
             gCurrentSprite.samusCollision = SSC_SUPER_MISSILE_DROP;
             break;
 
         case PSPRITE_MISSILE_DROP:
-            gCurrentSprite.pOam = sEnemyDropOAM_Missile;
+            gCurrentSprite.pOam = sEnemyDropOam_Missile;
             gCurrentSprite.samusCollision = SSC_MISSILE_DROP;
             break;
 
         case PSPRITE_LARGE_ENERGY_DROP:
-            gCurrentSprite.pOam = sEnemyDropOAM_LargeEnergy;
+            gCurrentSprite.pOam = sEnemyDropOam_LargeEnergy;
             gCurrentSprite.samusCollision = SSC_LARGE_ENERGY_DROP;
             break;
 
         case PSPRITE_MULTIPLE_LARGE_ENERGY:
             if (gCurrentSprite.roomSlot == 1)
-                gCurrentSprite.pOam = sEnemyDropOAM_MultipleLargeEnergySlot1;
+                gCurrentSprite.pOam = sEnemyDropOam_MultipleLargeEnergySlot1;
             else if (gCurrentSprite.roomSlot == 2)
-                gCurrentSprite.pOam = sEnemyDropOAM_MultipleLargeEnergySlot2;
+                gCurrentSprite.pOam = sEnemyDropOam_MultipleLargeEnergySlot2;
             else
-                gCurrentSprite.pOam = sEnemyDropOAM_MultipleLargeEnergySlot3;
+                gCurrentSprite.pOam = sEnemyDropOam_MultipleLargeEnergySlot3;
 
             gCurrentSprite.samusCollision = SSC_MULTIPLE_LARGE_ENERGY_DROP;
             break;
 
         default:
-            gCurrentSprite.pOam = sEnemyDropOAM_SmallEnergy;
+            gCurrentSprite.pOam = sEnemyDropOam_SmallEnergy;
             gCurrentSprite.samusCollision = SSC_SMALL_ENERGY_DROP;
     }
 
@@ -84,7 +94,7 @@ void EnemyDropInit(void)
  * @brief 12e98 | 158 | Handles an enemy drop being idle
  * 
  */
-void EnemyDropIdle(void)
+static void EnemyDropIdle(void)
 {
     u16 status;
     u8 timer;

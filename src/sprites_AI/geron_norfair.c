@@ -1,4 +1,5 @@
 #include "sprites_AI/geron_norfair.h"
+#include "sprites_AI/geron.h"
 #include "macros.h"
 
 #include "data/sprites/geron_norfair.h"
@@ -33,8 +34,8 @@ void GeronNorfair(void)
 
         gCurrentSprite.hitboxTop = -(BLOCK_SIZE * 3);
         gCurrentSprite.hitboxBottom = 0;
-        gCurrentSprite.hitboxLeft = -(QUARTER_BLOCK_SIZE * 3);
-        gCurrentSprite.hitboxRight = (QUARTER_BLOCK_SIZE * 3);
+        gCurrentSprite.hitboxLeft = -(THREE_QUARTER_BLOCK_SIZE);
+        gCurrentSprite.hitboxRight = THREE_QUARTER_BLOCK_SIZE;
 
         gCurrentSprite.drawOrder = 5;
 
@@ -42,9 +43,9 @@ void GeronNorfair(void)
         gCurrentSprite.animationDurationCounter = 0;
         gCurrentSprite.samusCollision = SSC_NONE;
 
-        gCurrentSprite.pose = 0x9;
+        gCurrentSprite.pose = GERON_POSE_IDLE;
         gCurrentSprite.health = 1;
-        gCurrentSprite.pOam = sGeronNorfairOAM_Idle;
+        gCurrentSprite.pOam = sGeronNorfairOam_Idle;
 
         yPosition = gCurrentSprite.yPosition - HALF_BLOCK_SIZE;
         xPosition = gCurrentSprite.xPosition;

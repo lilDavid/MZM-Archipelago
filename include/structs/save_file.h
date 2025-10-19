@@ -6,6 +6,8 @@
 #include "gba.h"
 #include "sram_misc.h"
 
+#include "constants/samus.h"
+
 #include "structs/game_state.h"
 #include "structs/samus.h"
 #include "structs/scroll.h"
@@ -22,11 +24,13 @@
 
 #define SRAM_GET_CHECKSUM_SIZE(type, iteration, checksumType) ((s32)(sizeof(type) / iteration / sizeof(checksumType)))
 
-struct StartingInfo {
-    u8 startingArea;
-    u8 unk_1;
-    u8 unk_2;
-    u8 unk_3;
+struct SectionInfo {
+    u8 sectionIndex;
+    u8 starIndex;
+    u8 downloadedMaps;
+    // 3
+    u8 onMapScreen:1;
+    u8 unk_3_1:7;
 };
 
 struct SaveFileInfo {
@@ -37,10 +41,10 @@ struct SaveFileInfo {
     u16 maxEnergy;
     u16 currentMissiles;
     u16 maxMissiles;
-    u8 suitType;
+    SuitType suitType;
     u8 igtHours;
     u8 igtMinutes;
-    u8 igtSconds;
+    u8 igtSeconds;
     u8 hasSaved;
     s8 completedGame;
     s8 introPlayed;
@@ -125,7 +129,7 @@ struct SaveFile {
 
     struct RandoSaveData randoSaveData;
 
-    u8 freespace[160 - sizeof(struct RandoSaveData)];
+    u8 freeSpace[160 - sizeof(struct RandoSaveData)];
 
     struct SaveWorldData worldData;
 };
@@ -162,7 +166,7 @@ struct SaveFileScreenOptions {
     u16 galleryImages;
     u8 soundTestAndOriginalMetroid;
 
-    u8 unk_F;
+    u8 region;
     u8 unk_10;
     u8 unk_11;
     u8 unk_12;
@@ -170,7 +174,7 @@ struct SaveFileScreenOptions {
     u16 fusionGalleryImages;
 
     u32 timeAttack;
-    u8 ZeroMissionUSA_Text[20];
+    u8 ZeroMissionVer_Text[20];
 
     u8 padding_2A[16];
 };
@@ -204,6 +208,14 @@ struct SaveTimeAttack {
     u8 padding_68[152];
 };
 
+struct SaveBootDebug {
+    u8 zeroSaveText[8];
+    u8 unk_8[4];
+    u8 debugMode;
+    u8 sectionIndex;
+    u8 unk_E[2];
+};
+
 struct Sram {
     struct SaveFileScreenOptions fileScreenOptions_fileA;
     struct SaveFileScreenOptions fileScreenOptions_fileB;
@@ -227,7 +239,7 @@ struct Sram {
 
     u8 padding_7a80[1264];
 
-    u8 unk_7f70[16];
+    struct SaveBootDebug bootDebugSave;
     u8 MetZeroSramCheck_Text[SRAM_TEXT_SIZE];
 };
 
@@ -236,14 +248,19 @@ STATIC_ASSERT(sizeof(struct Sram) <= SRAM_SIZE, SramStructSize);
 
 extern u8 gSramOperationStage;
 extern u8 gSramCorruptFlag;
-extern struct Sram gSram;
 
-extern u8 gUnk_3000c20;
+extern u8 gUnk_3000C20;
 extern struct SaveFileInfo gSaveFilesInfo[3];
-extern struct StartingInfo gStartingInfo;
+extern struct SectionInfo gSectionInfo;
 
 // Place holder symbols?
 extern u16 gSramDemoInputData[DEMO_MAX_DURATION];
 extern u16 gSramDemoInputDuration[DEMO_MAX_DURATION];
+
+#ifdef USE_EWRAM_SYMBOLS
+extern struct Sram gSram;
+#else
+#define gSram (*(struct Sram*)(EWRAM_BASE + 0x38000))
+#endif /* USE_EWRAM_SYMBOLS */
 
 #endif /* SAVE_FILE_STRUCT_H */

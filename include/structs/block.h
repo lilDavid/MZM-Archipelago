@@ -6,11 +6,9 @@
 #define MAX_AMOUNT_OF_MAKE_SOLID_BLOCKS 64
 #define MAX_AMOUNT_OF_BROKEN_BLOCKS 48
 #define MAX_AMOUNT_OF_BOMB_CHAINS 4
-#define MAX_AMOUNT_OF_BLOCKS 48  // CLIP_BEHAVIOR_UNDERWATER_POWER_BOMB_TANK - CLIP_BEHAVIOR_SHOT_BLOCK_NEVER_REFORM + 1
-#define MAX_AMOUNT_OF_TANK_TYPES 12  // CLIP_BEHAVIOR_UNDERWATER_POWER_BOMB_TANK - CLIP_BEHAVIOR_HIDDEN_ENERGY_TANK + 1
 
 struct BrokenBlock {
-    u8 broken;
+    boolu8 broken;
     u8 stage;
     u8 type;
     u8 xPosition;
@@ -57,7 +55,7 @@ struct BombChainReverseData {
 
 struct TankBehavior {
     u8 itemType;
-    u8 underwater;
+    boolu8 underwater;
     u8 messageID;
     u16 revealedClipdata;
 };
@@ -69,4 +67,4 @@ extern u16 gMakeSolidBlocks[MAX_AMOUNT_OF_MAKE_SOLID_BLOCKS];
 extern struct BombChain gBombChains[MAX_AMOUNT_OF_BOMB_CHAINS];
 extern u8 gActiveBombChainTypes;
 
-#endif
+#endif /* BLOCK_STRUCT_H */

@@ -3,8 +3,10 @@
 
 #include "types.h"
 
+#include "constants/event.h"
+
 extern u32 gEventsTriggered[8];
 
-u32 EventFunction(u8 action, u8 event);
+u32 EventFunction(EventAction action, Event event);
 
 #endif /* EVENT_H */

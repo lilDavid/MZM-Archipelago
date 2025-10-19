@@ -1,7 +1,13 @@
 #ifndef EVENT_CONSTANTS_H
 #define EVENT_CONSTANTS_H
 
-enum Event {
+#include "macros.h"
+
+/**
+ * @brief List of event flags
+ * 
+ */
+MAKE_ENUM(u8, Event) {
     EVENT_NONE,
     EVENT_EASY,
     EVENT_HARD,
@@ -89,7 +95,7 @@ enum Event {
     EVENT_COUNT
 };
 
-enum {
+MAKE_ENUM(u8, EventAction) {
     EVENT_ACTION_CLEARING,
     EVENT_ACTION_SETTING,
     EVENT_ACTION_TOGGLING,

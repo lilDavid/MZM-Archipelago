@@ -1,7 +1,10 @@
 #ifndef GAME_OVER_CONSTANTS_H
 #define GAME_OVER_CONSTANTS_H
 
-enum GameOverCursorAction {
+#include "types.h"
+#include "macros.h"
+
+MAKE_ENUM(u8, GameOverCursorAction) {
     SAMUS_CURSOR_ACTION_LOADING,
     SAMUS_CURSOR_ACTION_MOVING,
     SAMUS_CURSOR_ACTION_SELECTING,
@@ -9,7 +12,7 @@ enum GameOverCursorAction {
     SAMUS_CURSOR_ACTION_END
 };
 
-enum GameOverOamId {
+MAKE_ENUM(u8, GameOverOamId) {
     GAME_OVER_OAM_ID_SUIT_MOVING = 1,
     GAME_OVER_OAM_ID_SUIT_LOADING,
 
@@ -22,4 +25,4 @@ enum GameOverOamId {
     GAME_OVER_OAM_ID_END
 };
 
-#endif
+#endif /* GAME_OVER_CONSTANTS_H */

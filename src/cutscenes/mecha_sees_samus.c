@@ -1,21 +1,27 @@
 #include "cutscenes/mecha_sees_samus.h"
 #include "cutscenes/cutscene_utils.h"
+#include "audio_wrappers.h"
+#include "dma.h"
+#include "oam_id.h"
 #include "syscall_wrappers.h"
 
 #include "data/cutscenes/cutscenes_data.h"
-#include "data/cutscenes/internal_mecha_sees_samus_data.h"
 #include "data/cutscenes/mecha_sees_samus_data.h"
 #include "data/shortcut_pointers.h"
 
 #include "constants/audio.h"
 #include "constants/cutscene.h"
 
+#include "structs/cutscene.h"
+
+static void MechaRidleySeesSamusProcessOAM(void);
+
 /**
  * @brief 65924 | 100 | Handles the eye part of the mecha sees samus cutscene
  * 
  * @return u8 FALSE
  */
-u8 MechaRidleySeesSamusEyeOpen(void)
+static u8 MechaRidleySeesSamusEyeOpen(void)
 {
     switch (CUTSCENE_DATA.timeInfo.subStage)
     {
@@ -79,6 +85,10 @@ u8 MechaRidleySeesSamusEyeOpen(void)
             }
     }
 
+    #ifdef DEBUG
+    CutsceneCheckSkipStage(1);
+    #endif // DEBUG
+
     return FALSE;
 }
 
@@ -87,11 +97,8 @@ u8 MechaRidleySeesSamusEyeOpen(void)
  * 
  * @return u8 FALSE
  */
-u8 MechaRidleySeesSamusInit(void)
+static u8 MechaRidleySeesSamusInit(void)
 {
-    u16 bg;
-    u32 priority;
-
     CutsceneFadeScreenToBlack();
     DmaTransfer(3, sMechaSeesSamusPal, PALRAM_BASE, sizeof(sMechaSeesSamusPal), 16);
     DmaTransfer(3, PALRAM_BASE, PALRAM_OBJ, PAL_SIZE, 32);
@@ -104,30 +111,43 @@ u8 MechaRidleySeesSamusInit(void)
 
     CutsceneSetBgcntPageData(sMechaRidleySeesSamusPagesData[0]);
 
-    bg = sMechaRidleySeesSamusPagesData[0].bg;
-    CutsceneSetBackgroundPosition(CUTSCENE_BG_EDIT_HOFS | CUTSCENE_BG_EDIT_VOFS, bg, NON_GAMEPLAY_START_BG_POS);
+    CutsceneSetBackgroundPosition(CUTSCENE_BG_EDIT_HOFS | CUTSCENE_BG_EDIT_VOFS, sMechaRidleySeesSamusPagesData[0].bg, NON_GAMEPLAY_START_BG_POS);
     CutsceneReset();
 
-    CUTSCENE_DATA.oam[0].xPosition = BLOCK_SIZE * 7 + BLOCK_SIZE / 2;
-    CUTSCENE_DATA.oam[0].yPosition = BLOCK_SIZE * 5;
-    priority = sMechaRidleySeesSamusPagesData[0].priority;
-    CUTSCENE_DATA.oam[0].priority = priority;
+    CUTSCENE_DATA.oam[0].xPosition = SCREEN_SIZE_X_SUB_PIXEL / 2;
+    CUTSCENE_DATA.oam[0].yPosition = SCREEN_SIZE_Y_SUB_PIXEL / 2;
+    CUTSCENE_DATA.oam[0].priority = sMechaRidleySeesSamusPagesData[0].priority;
     UpdateCutsceneOamDataID(&CUTSCENE_DATA.oam[0], 1);
 
-    CUTSCENE_DATA.oam[1].xPosition = BLOCK_SIZE * 7 + BLOCK_SIZE / 2;
-    CUTSCENE_DATA.oam[1].yPosition = BLOCK_SIZE * 5;
-    CUTSCENE_DATA.oam[1].priority = priority + 1;
+    CUTSCENE_DATA.oam[1].xPosition = SCREEN_SIZE_X_SUB_PIXEL / 2;
+    CUTSCENE_DATA.oam[1].yPosition = SCREEN_SIZE_Y_SUB_PIXEL / 2;
+    CUTSCENE_DATA.oam[1].priority = sMechaRidleySeesSamusPagesData[0].priority + 1;
     UpdateCutsceneOamDataID(&CUTSCENE_DATA.oam[1], 3);
 
     CutsceneStartBackgroundFading(2);
 
-    CUTSCENE_DATA.dispcnt = bg | DCNT_OBJ;
+    CUTSCENE_DATA.dispcnt = sMechaRidleySeesSamusPagesData[0].bg | DCNT_OBJ;
     CUTSCENE_DATA.timeInfo.timer = 0;
     CUTSCENE_DATA.timeInfo.subStage = 0;
     CUTSCENE_DATA.timeInfo.stage++;
 
     return FALSE;
 }
+
+static struct CutsceneSubroutineData sMechaSeesSamusSubroutineData[3] = {
+    [0] = {
+        .pFunction = MechaRidleySeesSamusInit,
+        .oamLength = 2
+    },
+    [1] = {
+        .pFunction = MechaRidleySeesSamusEyeOpen,
+        .oamLength = 2
+    },
+    [2] = {
+        .pFunction = CutsceneEndFunction,
+        .oamLength = 2
+    }
+};
 
 /**
  * @brief 65b6c | 34 | Mecha ridley sees Samus cutscene subroutine
@@ -149,7 +169,7 @@ u8 MechaRidleySeesSamusSubroutine(void)
  * @brief 65ba0 | 38 | Processes the OAM for the cutscene
  * 
  */
-void MechaRidleySeesSamusProcessOAM(void)
+static void MechaRidleySeesSamusProcessOAM(void)
 {
     gNextOamSlot = 0;
     ProcessCutsceneOam(sMechaSeesSamusSubroutineData[CUTSCENE_DATA.timeInfo.stage].oamLength, CUTSCENE_DATA.oam, sMechaSeesSamusCutsceneOam);
