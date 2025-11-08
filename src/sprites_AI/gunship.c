@@ -19,6 +19,9 @@
 #include "structs/sprite.h"
 #include "structs/samus.h"
 
+#include "constants/escape.h"
+#include "escape.h"
+
 #define GUNSHIP_START_FLYING(flyDuration)       \
 do {                                            \
     gCurrentSprite.pose = GUNSHIP_POSE_FLYING;  \
@@ -227,7 +230,7 @@ void GunshipInit(void)
         
         gCurrentSprite.yPositionSpawn = 0;
         gCurrentSprite.samusCollision = SSC_CAN_STAND_ON_TOP;
-        if (EventFunction(EVENT_ACTION_CHECKING, EVENT_MOTHER_BRAIN_KILLED) && !EventFunction(EVENT_ACTION_CHECKING, EVENT_ESCAPED_ZEBES))
+        if (EscapeDetermineTimer() == ESCAPE_MOTHER_BRAIN)
             gCurrentSprite.pose = GUNSHIP_POSE_CHECK_ESCAPE;
         else
             gCurrentSprite.pose = GUNSHIP_POSE_IDLE;
