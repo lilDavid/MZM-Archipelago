@@ -1,11 +1,12 @@
 {
-    "sections": [ "ewram", "iwram", "rom" ],
-    "rom": [
+    "sections": [ "ewram", "iwram", ".rodata", ".data", "rando_data" ],
+    "iwram": [
+        "src/globals1.o"
+    ],
+    ".rodata": [
         "src/data/common_pals.o",
         "src/data/engine_pointers.o",
         "src/data/hatch_data.o",
-        "src/data/text_data.o",
-        "src/data/text_pointers.o",
         "src/data/menus/pause_screen_data.o",
         "src/data/menus/pause_screen_map_data.o",
         "src/data/menus/status_screen_data.o",
@@ -13,9 +14,13 @@
         "src/data/sprites/chozo_statue.o",
         "src/data/sprites/morph_ball.o",
         "src/data/sprites/power_grip.o",
-        "src/data/sprites/unknown_item_chozo_statue.o",
+        "src/data/sprites/unknown_item_chozo_statue.o"
+    ],
+    ".data": [
+        "src/data/text_data.o"
+    ],
+    "rando_data": [
         "src/data/rando.o",
-        "src/data/rando_graphics_data.o",
-        "src/data/rando_names.o"
+        "src/data/rando_graphics_data.o"
     ]
 }

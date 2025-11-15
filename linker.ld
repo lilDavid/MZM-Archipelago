@@ -879,7 +879,7 @@ SECTIONS {
         src/data/rando.o(.rodata);
         src/data/rando_data.o(.rodata);
         src/data/rando_graphics_data.o(.rodata);
-        src/data/rando_names.o(.rodata);
+        sRandoExtraData = .;
     } >rom
 
     /* DWARF debug sections.
