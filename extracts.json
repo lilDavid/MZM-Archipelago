@@ -17,6 +17,9 @@
         "src/data/sprites/unknown_item_chozo_statue.o"
     ],
     ".data": [
+        "src/room.o",
+        "src/text.o",
+        "src/cutscenes/story_text_cutscene.o",
         "src/data/text_data.o"
     ],
     "rando_data": [
