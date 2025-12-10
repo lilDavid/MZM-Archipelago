@@ -104,7 +104,7 @@ void RandoGiveItem(const struct RandoItem* item) {
             break;
         case RANDO_ITEM_CUSTOM:
             gRandoEquipment.customItems |= item->value;
-            if (item->value == CIF_FULLY_POWERED_SUIT) {
+            if (item->value & CIF_FULLY_POWERED_SUIT && gEquipment.suitType != SUIT_SUITLESS) {
                 gEquipment.beamBombsActivation |= gEquipment.beamBombs & BBF_PLASMA_BEAM;
                 ProjectileCallLoadGraphicsAndClearProjectiles();
                 gEquipment.suitMiscActivation |= gEquipment.suitMisc & SMF_UNKNOWN_ITEMS;
