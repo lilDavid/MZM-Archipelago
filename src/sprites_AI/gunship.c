@@ -1294,7 +1294,8 @@ void Gunship(void)
 
     GunshipEntranceFlashingAnim();
 
-    if (!EventFunction(EVENT_ACTION_CHECKING, EVENT_ESCAPED_ZEBES) && gCurrentSprite.yPositionSpawn != 0)
+    // This event check is always true in vanilla because yPositionSpawn is only set when loading the game
+    if (/*!EventFunction(EVENT_ACTION_CHECKING, EVENT_ESCAPED_ZEBES) && */gCurrentSprite.yPositionSpawn != 0)
     {
         gCurrentSprite.yPositionSpawn--;
         if (gCurrentSprite.yPositionSpawn == 0)
