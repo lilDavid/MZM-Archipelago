@@ -149,7 +149,7 @@ static void EnemyDropIdle(void)
                 break;
 
             case SSC_POWER_BOMB_DROP:
-                gEquipment.currentPowerBombs += POWER_BOMB_DROP_REFILL * (sRandoSeed.options.buffPowerBombDrops ? 1 : 2);
+                gEquipment.currentPowerBombs += POWER_BOMB_DROP_REFILL * (sRandoSeed.options.buffPowerBombDrops ? 2 : 1);
 
                 if (gEquipment.currentPowerBombs > gEquipment.maxPowerBombs)
                     gEquipment.currentPowerBombs = gEquipment.maxPowerBombs;

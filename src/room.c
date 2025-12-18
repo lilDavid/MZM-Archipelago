@@ -131,6 +131,7 @@ void RoomLoad(void)
         gSamusData.lastWallTouchedMidAir = TRUE;
         gCurrentItemBeingAcquired = ITEM_ACQUISITION_GRAVITY;
 #endif // 0
+        gDisablePause = FALSE;
         gSamusWeaponInfo.chargeCounter = 0;
     }
     else if (gPauseScreenFlag == PAUSE_SCREEN_SUITLESS_ITEMS)

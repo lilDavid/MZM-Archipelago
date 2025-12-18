@@ -19,6 +19,9 @@
 #include "structs/sprite.h"
 #include "structs/samus.h"
 
+#include "constants/escape.h"
+#include "escape.h"
+
 #define GUNSHIP_POSE_IDLE 0x9
 #define GUNSHIP_POSE_CHECK_ESCAPE 0xF
 #define GUNSHIP_POSE_SAMUS_ENTERING_WHEN_ESCAPING 0x11
@@ -274,7 +277,7 @@ static void GunshipInit(void)
         gCurrentSprite.yPositionSpawn = 0;
         gCurrentSprite.samusCollision = SSC_CAN_STAND_ON_TOP;
 
-        if (EventFunction(EVENT_ACTION_CHECKING, EVENT_MOTHER_BRAIN_KILLED) && !EventFunction(EVENT_ACTION_CHECKING, EVENT_ESCAPED_ZEBES))
+        if (EscapeDetermineTimer() == ESCAPE_MOTHER_BRAIN)
             gCurrentSprite.pose = GUNSHIP_POSE_CHECK_ESCAPE;
         else
             gCurrentSprite.pose = GUNSHIP_POSE_IDLE;
@@ -1388,7 +1391,8 @@ void Gunship(void)
 
     GunshipEntranceFlashingAnim();
 
-    if (!EventFunction(EVENT_ACTION_CHECKING, EVENT_ESCAPED_ZEBES) && gCurrentSprite.yPositionSpawn != 0)
+    // This event check is always true in vanilla because yPositionSpawn is only set when loading the game
+    if (/*!EventFunction(EVENT_ACTION_CHECKING, EVENT_ESCAPED_ZEBES) && */gCurrentSprite.yPositionSpawn != 0)
     {
         gCurrentSprite.yPositionSpawn--;
         if (gCurrentSprite.yPositionSpawn == 0)
