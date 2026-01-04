@@ -7,6 +7,7 @@
         "src/data/common_pals.o",
         "src/data/engine_pointers.o",
         "src/data/hatch_data.o",
+        "src/data/rooms_data.o",
         "src/data/menus/pause_screen_data.o",
         "src/data/menus/pause_screen_map_data.o",
         "src/data/menus/status_screen_data.o",
