@@ -18,7 +18,7 @@ extern const struct RandoMessage sEmptyRandoMessage;
 extern const struct StartingLocationData sStartingLocation;
 
 extern const u8 sRandoMultiworldDangerousSpritesets[16];
-extern const u8 sRandoMultiworldDangerousRooms[15][2];
+extern const u8 sRandoMultiworldDangerousRooms[17][2];
 extern const u8 sRandoDisallowedExistingSprites[5];
 extern const u8 sRandoChozodiaSaveAndMapRooms[8];
 extern const u8 sRandoDisallowedSamusPoses[4];

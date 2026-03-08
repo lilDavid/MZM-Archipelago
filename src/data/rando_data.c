@@ -71,6 +71,8 @@ const u8 sRandoMultiworldDangerousRooms[][2] = {
     {AREA_BRINSTAR, 13},  // Hallway on the way to bridge and hive (bugs)
     {AREA_KRAID, 29},  // Gadora to boss (gadora)
 //  {AREA_KRAID, 30},  // Kraid boss room (Kraid)
+    {AREA_NORFAIR, 24},  // Fake lava pool access (green reo)
+    {AREA_NORFAIR, 33},  // Larva arena access (green reo)
 //  {AREA_RIDLEY, 12},  // Ridley boss room (Ridley)
     {AREA_RIDLEY, 24},  // Tangle vine room (green geruta)
     {AREA_TOURIAN, 3},  // Farming room (green rinkas)
