@@ -265,7 +265,7 @@ void RandoGiveItemFromCheck(u32 location) {
                     gCurrentRandoMessage.data = sRandoText_MetroidDNAAcquired1Remaining;
                 } else {
                     i = 0;
-                    while (sRandoText_MetroidDNAAcquired[i] != 0x041F) {
+                    while (sRandoText_MetroidDNAAcquired[i] != 0x005F) {
                         gDynamicMessageBuffer[i] = sRandoText_MetroidDNAAcquired[i];
                         i++;
                     }
